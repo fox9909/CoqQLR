@@ -1,0 +1,2926 @@
+DIGEST fa355a952847a4a25f5369dd7e7e7b77
+FQuan.QIMP
+R15:19 Coq.Reals.Reals <> <> lib
+R37:54 Coquelicot.Complex <> <> lib
+R72:85 Coq.Strings.String <> <> lib
+R103:112 Coq.Lists.List <> <> lib
+R132:149 Coq.FSets.FMapList <> <> lib
+R153:180 Coq.Structures.OrderedTypeEx <> <> lib
+R319:324 Quan.Matrix <> <> lib
+R352:358 Quan.Quantum <> <> lib
+R386:391 Quan.QState <> <> lib
+R419:434 Quan.Basic_Supplement <> <> lib
+ind 576:579 <> aexp
+constr 595:598 <> ANum
+constr 614:616 <> AId
+constr 644:648 <> APlus
+constr 669:674 <> AMinus
+constr 695:699 <> AMult
+R605:607 Coq.Init.Datatypes <> nat ind
+binder 601:601 <> n:3
+R623:625 Coq.Init.Datatypes <> nat ind
+binder 619:619 <> i:4
+R659:662 Quan.QIMP <> aexp:1 ind
+binder 651:652 <> a1:5
+binder 654:655 <> a2:6
+R685:688 Quan.QIMP <> aexp:1 ind
+binder 677:678 <> a1:7
+binder 680:681 <> a2:8
+R710:713 Quan.QIMP <> aexp:1 ind
+binder 702:703 <> a1:9
+binder 705:706 <> a2:10
+def 729:730 <> X0
+R734:736 Coq.Init.Datatypes <> nat ind
+def 755:756 <> X1
+R760:762 Coq.Init.Datatypes <> nat ind
+def 781:782 <> X2
+R786:788 Coq.Init.Datatypes <> nat ind
+ind 807:810 <> bexp
+constr 826:830 <> BTrue
+constr 836:841 <> BFalse
+constr 847:849 <> BEq
+constr 870:873 <> BNeq
+constr 894:896 <> BLe
+constr 917:919 <> BGt
+constr 940:943 <> BNot
+constr 960:963 <> BAnd
+R860:863 Quan.QIMP <> aexp ind
+binder 852:853 <> a1:13
+binder 855:856 <> a2:14
+R884:887 Quan.QIMP <> aexp ind
+binder 876:877 <> a1:15
+binder 879:880 <> a2:16
+R907:910 Quan.QIMP <> aexp ind
+binder 899:900 <> a1:17
+binder 902:903 <> a2:18
+R930:933 Quan.QIMP <> aexp ind
+binder 922:923 <> a1:19
+binder 925:926 <> a2:20
+R950:953 Quan.QIMP <> bexp:11 ind
+binder 946:946 <> b:21
+R974:977 Quan.QIMP <> bexp:11 ind
+binder 966:967 <> b1:22
+binder 969:970 <> b2:23
+R982:1008 Quan.QIMP <> AId constr
+not 1100:1100 <> ::com_scope:'<{'_x_'}>'
+not 1176:1176 <> :com:com_scope:'('_x_')'
+not 1242:1242 <> :com:com_scope:x
+not 1321:1321 <> :com:com_scope:x_x_'..'_x
+R1545:1549 Quan.QIMP <> APlus constr
+not 1531:1531 <> :com::x_'+'_x
+R1628:1633 Quan.QIMP <> AMinus constr
+not 1614:1614 <> :com::x_'-'_x
+R1712:1716 Quan.QIMP <> AMult constr
+not 1698:1698 <> :com::x_'*'_x
+R1839:1843 Quan.QIMP <> BTrue constr
+not 1826:1826 <> :com::'true'
+R1941:1946 Quan.QIMP <> BFalse constr
+not 1928:1928 <> :com::'false'
+R1999:2001 Quan.QIMP <> BLe constr
+not 1985:1985 <> :com::x_'<='_x
+R2078:2080 Quan.QIMP <> BGt constr
+not 2064:2064 <> :com::x_'>'_x
+R2157:2159 Quan.QIMP <> BEq constr
+not 2143:2143 <> :com::x_'='_x
+R2236:2239 Quan.QIMP <> BNeq constr
+not 2222:2222 <> :com::x_'<>'_x
+R2316:2319 Quan.QIMP <> BAnd constr
+not 2302:2302 <> :com::x_'&&'_x
+R2398:2401 Quan.QIMP <> BNot constr
+not 2384:2384 <> :com::'~'_x
+ind 2467:2469 <> com
+constr 2485:2489 <> CSkip
+constr 2495:2500 <> CAbort
+constr 2506:2510 <> CAsgn
+constr 2535:2538 <> CSeq
+constr 2558:2560 <> CIf
+constr 2591:2596 <> CWhile
+constr 2623:2627 <> QInit
+constr 2645:2653 <> QUnit_One
+constr 2691:2700 <> QUnit_Ctrl
+constr 2748:2752 <> QMeas
+R2515:2517 Coq.Init.Datatypes <> nat ind
+binder 2513:2513 <> i:26
+R2525:2528 Quan.QIMP <> aexp ind
+binder 2521:2521 <> a:27
+R2549:2551 Quan.QIMP <> com:24 ind
+binder 2541:2542 <> c1:28
+binder 2544:2545 <> c2:29
+R2567:2570 Quan.QIMP <> bexp ind
+binder 2563:2563 <> b:30
+R2582:2584 Quan.QIMP <> com:24 ind
+binder 2574:2575 <> c1:31
+binder 2577:2578 <> c2:32
+R2603:2606 Quan.QIMP <> bexp ind
+binder 2599:2599 <> b:33
+R2614:2616 Quan.QIMP <> com:24 ind
+binder 2610:2610 <> c:34
+R2635:2637 Coq.Init.Datatypes <> nat ind
+binder 2630:2630 <> s:35
+binder 2632:2632 <> e:36
+R2660:2662 Coq.Init.Datatypes <> nat ind
+binder 2656:2656 <> s:37
+binder 2658:2658 <> e:38
+R2669:2674 Quan.Matrix <> Square abbrev
+R2678:2679 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2683:2683 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2681:2681 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R2680:2680 Quan.QIMP <> e:38 var
+R2682:2682 Quan.QIMP <> s:37 var
+R2678:2679 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2683:2683 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2681:2681 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R2680:2680 Quan.QIMP <> e:38 var
+R2682:2682 Quan.QIMP <> s:37 var
+binder 2666:2666 <> U:39
+R2715:2717 Coq.Init.Datatypes <> nat ind
+binder 2703:2704 <> s0:40
+binder 2706:2707 <> e0:41
+binder 2709:2710 <> s1:42
+binder 2712:2713 <> e1:43
+R2724:2729 Quan.Matrix <> Square abbrev
+R2733:2734 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2740:2740 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2737:2737 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R2735:2736 Quan.QIMP <> e1:43 var
+R2738:2739 Quan.QIMP <> s1:42 var
+R2733:2734 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2740:2740 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R2737:2737 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R2735:2736 Quan.QIMP <> e1:43 var
+R2738:2739 Quan.QIMP <> s1:42 var
+binder 2721:2721 <> U:44
+R2759:2761 Coq.Init.Datatypes <> nat ind
+binder 2755:2755 <> i:45
+R2769:2771 Coq.Init.Datatypes <> nat ind
+binder 2765:2765 <> s:46
+binder 2767:2767 <> e:47
+R2808:2812 Quan.QIMP <> CSkip constr
+not 2786:2786 <> :com:com_scope:'skip'
+R2886:2891 Quan.QIMP <> CAbort constr
+not 2863:2863 <> :com:com_scope:'abort'
+R2964:2968 Quan.QIMP <> CAsgn constr
+not 2941:2941 <> :com:com_scope:x_':='_x
+R3124:3127 Quan.QIMP <> CSeq constr
+not 3103:3103 <> :com:com_scope:x_';'_x
+R3274:3276 Quan.QIMP <> CIf constr
+not 3228:3228 <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end'
+R3441:3446 Quan.QIMP <> CWhile constr
+not 3403:3403 <> :com:com_scope:'while'_x_'do'_x_'end'
+R3588:3592 Quan.QIMP <> QInit constr
+not 3557:3557 <> :com:com_scope:'('_x_x_')'_':Q='_'0'
+R3784:3792 Quan.QIMP <> QUnit_One constr
+not 3750:3750 <> :com:com_scope:x_'[['_x_x_']]'
+R3977:3986 Quan.QIMP <> QUnit_Ctrl constr
+not 3934:3934 <> :com:com_scope:x_'[['_x_x_']]'_'[['_x_x_']]'
+R4139:4143 Quan.QIMP <> QMeas constr
+not 4102:4102 <> :com:com_scope:x_':=M'_'[['_x_x_']]'
+def 4298:4308 <> fact_in_coq
+R4312:4314 Quan.QIMP <> com ind
+R4321:4323 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4415:4417 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4331:4337 Quan.QIMP <> :com:com_scope:x_';'_x not
+R4325:4328 Quan.QIMP <> :com:com_scope:x_':='_x not
+R4329:4330 Quan.QIMP <> X0 def
+R4345:4351 Quan.QIMP <> :com:com_scope:x_';'_x not
+R4340:4343 Quan.QIMP <> :com:com_scope:x_':='_x not
+R4338:4339 Quan.QIMP <> X1 def
+R4352:4357 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R4364:4374 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R4406:4414 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R4359:4362 Quan.QIMP <> :com::x_'<>'_x not
+R4387:4395 Quan.QIMP <> :com:com_scope:x_';'_x not
+R4377:4380 Quan.QIMP <> :com:com_scope:x_':='_x not
+R4375:4376 Quan.QIMP <> X1 def
+R4383:4385 Quan.QIMP <> :com::x_'*'_x not
+R4381:4382 Quan.QIMP <> X0 def
+R4397:4400 Quan.QIMP <> :com:com_scope:x_':='_x not
+R4402:4404 Quan.QIMP <> :com::x_'-'_x not
+def 4505:4509 <> aeval
+R4513:4515 Coq.Init.Datatypes <> nat ind
+binder 4511:4511 <> n:48
+R4523:4527 Quan.QState <> state def
+R4529:4529 Quan.QIMP <> n:48 var
+binder 4519:4520 <> st:49
+R4553:4556 Quan.QIMP <> aexp ind
+binder 4549:4549 <> a:50
+R4561:4563 Coq.Init.Datatypes <> nat ind
+R4576:4576 Quan.QIMP <> a:50 var
+R4587:4590 Quan.QIMP <> ANum constr
+R4597:4597 Quan.QIMP <> n:48 var
+R4603:4605 Quan.QIMP <> AId constr
+R4612:4617 Quan.QState <> c_find def
+R4622:4624 Coq.Init.Datatypes <> fst def
+R4626:4627 Quan.QIMP <> st:49 var
+R4665:4666 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4674:4675 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4669:4671 Quan.QIMP <> :com::x_'+'_x not
+R4680:4680 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R4692:4696 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R4708:4708 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R4681:4685 Quan.QIMP <> aeval:51 def
+R4687:4688 Quan.QIMP <> st:49 var
+R4697:4701 Quan.QIMP <> aeval:51 def
+R4703:4704 Quan.QIMP <> st:49 var
+R4714:4715 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4723:4724 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4718:4720 Quan.QIMP <> :com::x_'-'_x not
+R4729:4729 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R4741:4745 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R4757:4757 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R4730:4734 Quan.QIMP <> aeval:51 def
+R4736:4737 Quan.QIMP <> st:49 var
+R4746:4750 Quan.QIMP <> aeval:51 def
+R4752:4753 Quan.QIMP <> st:49 var
+R4763:4764 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4772:4773 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4767:4769 Quan.QIMP <> :com::x_'*'_x not
+R4778:4778 Coq.Init.Peano <> ::nat_scope:x_'*'_x not
+R4790:4794 Coq.Init.Peano <> ::nat_scope:x_'*'_x not
+R4806:4806 Coq.Init.Peano <> ::nat_scope:x_'*'_x not
+R4779:4783 Quan.QIMP <> aeval:51 def
+R4785:4786 Quan.QIMP <> st:49 var
+R4795:4799 Quan.QIMP <> aeval:51 def
+R4801:4802 Quan.QIMP <> st:49 var
+def 4826:4830 <> beval
+R4835:4837 Coq.Init.Datatypes <> nat ind
+binder 4832:4832 <> n:53
+R4846:4850 Quan.QState <> state def
+R4852:4852 Quan.QIMP <> n:53 var
+binder 4841:4842 <> st:54
+R4876:4879 Quan.QIMP <> bexp ind
+binder 4872:4872 <> b:55
+R4884:4887 Coq.Init.Datatypes <> bool ind
+R4900:4900 Quan.QIMP <> b:55 var
+R4911:4912 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4917:4918 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4913:4916 Quan.QIMP <> :com::'true' not
+R4928:4931 Coq.Init.Datatypes <> true constr
+R4937:4938 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4944:4945 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4939:4943 Quan.QIMP <> :com::'false' not
+R4954:4958 Coq.Init.Datatypes <> false constr
+R4964:4965 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4973:4974 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R4968:4970 Quan.QIMP <> :com::x_'='_x not
+R4981:4981 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R4993:4998 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R5010:5010 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R4982:4986 Quan.QIMP <> aeval def
+R4988:4989 Quan.QIMP <> st:54 var
+R4999:5003 Quan.QIMP <> aeval def
+R5005:5006 Quan.QIMP <> st:54 var
+R5016:5017 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5026:5027 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5020:5023 Quan.QIMP <> :com::x_'<>'_x not
+R5033:5036 Coq.Init.Datatypes <> negb def
+R5039:5039 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R5051:5056 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R5068:5068 Coq.Arith.PeanoNat <> ::nat_scope:x_'=?'_x not
+R5040:5044 Quan.QIMP <> aeval def
+R5046:5047 Quan.QIMP <> st:54 var
+R5057:5061 Quan.QIMP <> aeval def
+R5063:5064 Quan.QIMP <> st:54 var
+R5075:5076 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5085:5086 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5079:5082 Quan.QIMP <> :com::x_'<='_x not
+R5092:5092 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5104:5110 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5122:5122 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5093:5097 Quan.QIMP <> aeval def
+R5099:5100 Quan.QIMP <> st:54 var
+R5111:5115 Quan.QIMP <> aeval def
+R5117:5118 Quan.QIMP <> st:54 var
+R5128:5129 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5137:5138 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5132:5134 Quan.QIMP <> :com::x_'>'_x not
+R5145:5148 Coq.Init.Datatypes <> negb def
+R5151:5151 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5163:5169 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5181:5181 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R5152:5156 Quan.QIMP <> aeval def
+R5158:5159 Quan.QIMP <> st:54 var
+R5170:5174 Quan.QIMP <> aeval def
+R5176:5177 Quan.QIMP <> st:54 var
+R5188:5189 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5194:5195 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5190:5191 Quan.QIMP <> :com::'~'_x not
+R5205:5208 Coq.Init.Datatypes <> negb def
+R5211:5215 Quan.QIMP <> beval:56 def
+R5217:5218 Quan.QIMP <> st:54 var
+R5228:5229 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5238:5239 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R5232:5235 Quan.QIMP <> :com::x_'&&'_x not
+R5245:5248 Coq.Init.Datatypes <> andb def
+R5265:5269 Quan.QIMP <> beval:56 def
+R5271:5272 Quan.QIMP <> st:54 var
+R5251:5255 Quan.QIMP <> beval:56 def
+R5257:5258 Quan.QIMP <> st:54 var
+R5315:5317 Quan.Basic_Supplement <> Vec def
+R5321:5321 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+not 5295:5295 <> ::matrix_scope:'∣'_x_'⟩_'_x
+R5385:5391 Quan.Matrix <> adjoint def
+R5394:5396 Quan.Basic_Supplement <> Vec def
+R5400:5400 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+not 5365:5365 <> ::matrix_scope:'⟨'_x_'∣_'_x
+R5442:5445 Quan.QIMP <> ::matrix_scope:'∣'_x_'⟩_'_x not
+R5447:5452 Quan.QIMP <> ::matrix_scope:'∣'_x_'⟩_'_x not
+def 5466:5470 <> exp_U
+R5474:5476 Coq.Init.Datatypes <> nat ind
+binder 5472:5472 <> n:58
+R5482:5487 Quan.Matrix <> Square abbrev
+R5491:5491 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5492:5492 Quan.QIMP <> n:58 var
+R5491:5491 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5492:5492 Quan.QIMP <> n:58 var
+binder 5480:5480 <> U:59
+R5499:5501 Coq.Init.Datatypes <> nat ind
+binder 5497:5497 <> i:60
+R5505:5510 Quan.Matrix <> Square abbrev
+R5514:5514 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5515:5515 Quan.QIMP <> n:58 var
+R5514:5514 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5515:5515 Quan.QIMP <> n:58 var
+R5531:5531 Quan.QIMP <> i:60 var
+R5547:5547 Quan.Matrix <> I def
+R5551:5551 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5552:5552 Quan.QIMP <> n:58 var
+R5560:5560 Coq.Init.Datatypes <> S constr
+R5568:5572 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R5583:5583 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R5567:5567 Quan.QIMP <> U:59 var
+R5573:5577 Quan.QIMP <> exp_U:61 def
+R5579:5579 Quan.QIMP <> U:59 var
+R5613:5617 Quan.QIMP <> exp_U def
+not 5603:5603 <> :::x_'^'_x
+def 5636:5642 <> big_app
+R5646:5648 Coq.Init.Datatypes <> nat ind
+binder 5644:5644 <> n:63
+R5659:5662 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R5656:5658 Coq.Init.Datatypes <> nat ind
+R5663:5666 Coq.Init.Datatypes <> list ind
+R5675:5677 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R5669:5674 Quan.QState <> cstate def
+R5678:5683 Quan.QState <> qstate def
+R5685:5685 Quan.QIMP <> n:63 var
+binder 5652:5652 <> f:64
+R5696:5698 Coq.Init.Datatypes <> nat ind
+binder 5690:5692 <> n_0:65
+R5703:5706 Coq.Init.Datatypes <> list ind
+R5715:5717 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R5709:5714 Quan.QState <> cstate def
+R5718:5723 Quan.QState <> qstate def
+R5725:5725 Quan.QIMP <> n:63 var
+R5740:5742 Quan.QIMP <> n_0:65 var
+R5758:5760 Coq.Init.Datatypes <> nil constr
+R5766:5766 Coq.Init.Datatypes <> S constr
+R5773:5789 Quan.QState StateMap.Raw map2 def
+R5819:5819 Quan.QIMP <> f:64 var
+R5803:5809 Quan.QIMP <> big_app:66 def
+R5811:5811 Quan.QIMP <> f:64 var
+R5791:5800 Quan.QState <> option_app def
+R5893:5909 Quan.QState StateMap.Raw map2 def
+R5911:5920 Quan.QState <> option_app def
+not 5874:5874 <> ::state_scope:x_'+l'_x
+ind 6054:6065 <> ceval_single
+constr 6151:6155 <> E_nil
+constr 6196:6201 <> E_Skip
+constr 6279:6285 <> E_Abort
+constr 6349:6354 <> E_Asgn
+constr 6652:6662 <> E_Qunit_One
+constr 7033:7044 <> E_QUnit_Ctrl
+constr 7669:7674 <> E_Meas
+constr 8107:8111 <> E_Seq
+constr 8352:8360 <> E_IF_true
+constr 8749:8758 <> E_IF_false
+constr 9137:9148 <> E_While_true
+constr 9550:9562 <> E_While_false
+R6069:6071 Coq.Init.Datatypes <> nat ind
+binder 6067:6067 <> n:68
+R6078:6080 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6075:6077 Quan.QIMP <> com ind
+R6107:6110 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6081:6084 Coq.Init.Datatypes <> list ind
+R6093:6096 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6105:6105 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6087:6092 Quan.QState <> cstate def
+R6097:6102 Quan.QState <> qstate def
+R6137:6140 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6111:6114 Coq.Init.Datatypes <> list ind
+R6123:6126 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6135:6135 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6117:6122 Quan.QState <> cstate def
+R6127:6132 Quan.QState <> qstate def
+binder 6167:6167 <> c:71
+R6170:6181 Quan.QIMP <> ceval_single:69 ind
+R6189:6191 Coq.Init.Datatypes <> nil constr
+R6185:6187 Coq.Init.Datatypes <> nil constr
+R6183:6183 Quan.QIMP <> c:71 var
+binder 6203:6207 <> sigma:72
+binder 6209:6211 <> rho:73
+binder 6213:6214 <> mu:74
+R6218:6229 Quan.QIMP <> ceval_single:69 ind
+R6270:6271 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6259:6259 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6265:6265 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6269:6269 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6260:6264 Quan.QIMP <> sigma:72 var
+R6266:6268 Quan.QIMP <> rho:73 var
+R6272:6273 Quan.QIMP <> mu:74 var
+R6252:6253 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6241:6241 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6247:6247 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6251:6251 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6242:6246 Quan.QIMP <> sigma:72 var
+R6248:6250 Quan.QIMP <> rho:73 var
+R6254:6255 Quan.QIMP <> mu:74 var
+R6231:6232 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R6237:6238 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R6233:6236 Quan.QIMP <> :com:com_scope:'skip' not
+binder 6287:6291 <> sigma:75
+binder 6293:6295 <> rho:76
+binder 6297:6298 <> mu:77
+R6301:6312 Quan.QIMP <> ceval_single:69 ind
+R6342:6344 Coq.Init.Datatypes <> nil constr
+R6336:6337 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6325:6325 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6331:6331 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6335:6335 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6326:6330 Quan.QIMP <> sigma:75 var
+R6332:6334 Quan.QIMP <> rho:76 var
+R6338:6339 Quan.QIMP <> mu:77 var
+R6314:6315 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R6321:6322 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R6316:6320 Quan.QIMP <> :com:com_scope:'abort' not
+binder 6356:6360 <> sigma:78
+binder 6362:6364 <> rho:79
+binder 6366:6367 <> mu:80
+binder 6377:6377 <> x:81
+binder 6379:6379 <> a:82
+binder 6381:6383 <> mu':83
+R6437:6456 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6406:6417 Quan.QIMP <> ceval_single:69 ind
+R6434:6436 Quan.QIMP <> mu':83 var
+R6431:6432 Quan.QIMP <> mu:80 var
+R6420:6424 Quan.QIMP <> CAsgn constr
+R6426:6426 Quan.QIMP <> x:81 var
+R6428:6428 Quan.QIMP <> a:82 var
+R6457:6468 Quan.QIMP <> ceval_single:69 ind
+R6522:6538 Quan.QState StateMap.Raw map2 def
+R6644:6646 Quan.QIMP <> mu':83 var
+R6572:6572 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R6621:6621 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R6573:6574 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6614:6616 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6620:6620 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6575:6582 Quan.QState <> c_update def
+R6584:6584 Quan.QIMP <> x:81 var
+R6587:6591 Quan.QIMP <> aeval def
+R6606:6606 Quan.QIMP <> a:82 var
+R6593:6593 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6599:6600 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6604:6604 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6594:6598 Quan.QIMP <> sigma:78 var
+R6601:6603 Quan.QIMP <> rho:79 var
+R6609:6613 Quan.QIMP <> sigma:78 var
+R6617:6619 Quan.QIMP <> rho:79 var
+R6540:6549 Quan.QState <> option_app def
+R6494:6495 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6483:6483 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6489:6489 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6493:6493 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6484:6488 Quan.QIMP <> sigma:78 var
+R6490:6492 Quan.QIMP <> rho:79 var
+R6496:6497 Quan.QIMP <> mu:80 var
+R6471:6475 Quan.QIMP <> CAsgn constr
+R6477:6477 Quan.QIMP <> x:81 var
+R6479:6479 Quan.QIMP <> a:82 var
+binder 6664:6668 <> sigma:84
+binder 6670:6672 <> rho:85
+binder 6674:6675 <> mu:86
+binder 6685:6687 <> mu':87
+R6694:6696 Coq.Init.Datatypes <> nat ind
+binder 6690:6690 <> s:88
+binder 6692:6692 <> e:89
+R6703:6708 Quan.Matrix <> Square abbrev
+R6712:6713 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6717:6717 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6715:6715 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R6714:6714 Quan.QIMP <> e:89 var
+R6716:6716 Quan.QIMP <> s:88 var
+R6712:6713 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6717:6717 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6715:6715 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R6714:6714 Quan.QIMP <> e:89 var
+R6716:6716 Quan.QIMP <> s:88 var
+binder 6700:6700 <> U:90
+R6742:6742 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6753:6773 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6747:6748 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R6744:6745 Coq.Init.Peano <> ::nat_scope:x_'<='_x not
+R6746:6746 Quan.QIMP <> s:88 var
+R6750:6751 Coq.Init.Peano <> ::nat_scope:x_'<='_x not
+R6749:6749 Quan.QIMP <> e:89 var
+R6752:6752 Quan.QIMP <> n:68 var
+R6774:6774 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6787:6808 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6775:6784 Quan.Quantum <> WF_Unitary def
+R6786:6786 Quan.QIMP <> U:90 var
+R6846:6865 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6809:6820 Quan.QIMP <> ceval_single:69 ind
+R6843:6845 Quan.QIMP <> mu':87 var
+R6840:6841 Quan.QIMP <> mu:86 var
+R6823:6831 Quan.QIMP <> QUnit_One constr
+R6833:6833 Quan.QIMP <> s:88 var
+R6835:6835 Quan.QIMP <> e:89 var
+R6837:6837 Quan.QIMP <> U:90 var
+R6866:6877 Quan.QIMP <> ceval_single:69 ind
+R6933:6949 Quan.QState StateMap.Raw map2 def
+R7025:7027 Quan.QIMP <> mu':87 var
+R6962:6962 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R7023:7023 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R6963:6963 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6969:6970 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7021:7022 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6964:6968 Quan.QIMP <> sigma:84 var
+R6971:6978 Quan.QState <> q_update def
+R7018:7020 Quan.QIMP <> rho:85 var
+R6997:7002 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7014:7014 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R6991:6995 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R6982:6982 Quan.Matrix <> I def
+R6986:6987 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6989:6989 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6988:6988 Quan.QIMP <> s:88 var
+R6996:6996 Quan.QIMP <> U:90 var
+R7003:7003 Quan.Matrix <> I def
+R7007:7008 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7012:7012 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7010:7010 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7009:7009 Quan.QIMP <> n:68 var
+R7011:7011 Quan.QIMP <> e:89 var
+R6951:6960 Quan.QState <> option_app def
+R6909:6910 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6898:6898 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6904:6904 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6908:6908 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6899:6903 Quan.QIMP <> sigma:84 var
+R6905:6907 Quan.QIMP <> rho:85 var
+R6911:6912 Quan.QIMP <> mu:86 var
+R6880:6888 Quan.QIMP <> QUnit_One constr
+R6890:6890 Quan.QIMP <> s:88 var
+R6892:6892 Quan.QIMP <> e:89 var
+R6894:6894 Quan.QIMP <> U:90 var
+binder 7046:7050 <> sigma:91
+binder 7052:7054 <> rho:92
+binder 7056:7057 <> mu:93
+binder 7067:7069 <> mu':94
+R7084:7086 Coq.Init.Datatypes <> nat ind
+binder 7072:7073 <> s0:95
+binder 7075:7076 <> e0:96
+binder 7078:7079 <> s1:97
+binder 7081:7082 <> e1:98
+R7093:7098 Quan.Matrix <> Square abbrev
+R7102:7103 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7109:7109 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7106:7106 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7104:7105 Quan.QIMP <> e1:98 var
+R7107:7108 Quan.QIMP <> s1:97 var
+R7102:7103 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7109:7109 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7106:7106 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7104:7105 Quan.QIMP <> e1:98 var
+R7107:7108 Quan.QIMP <> s1:97 var
+binder 7090:7090 <> U:99
+R7163:7184 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7135:7135 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R7141:7144 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R7137:7138 Coq.Init.Peano <> ::nat_scope:x_'<='_x not
+R7139:7140 Quan.QIMP <> s0:95 var
+R7145:7145 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R7152:7157 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R7162:7162 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R7148:7149 Coq.Init.Peano <> ::nat_scope:x_'<='_x not
+R7146:7147 Quan.QIMP <> e0:96 var
+R7150:7151 Quan.QIMP <> s1:97 var
+R7160:7160 Coq.Init.Peano <> ::nat_scope:x_'<'_x not
+R7158:7159 Quan.QIMP <> e1:98 var
+R7161:7161 Quan.QIMP <> n:68 var
+R7185:7185 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7198:7221 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7186:7195 Quan.Quantum <> WF_Unitary def
+R7197:7197 Quan.QIMP <> U:99 var
+R7268:7290 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7222:7233 Quan.QIMP <> ceval_single:69 ind
+R7265:7267 Quan.QIMP <> mu':94 var
+R7262:7263 Quan.QIMP <> mu:93 var
+R7236:7245 Quan.QIMP <> QUnit_Ctrl constr
+R7247:7248 Quan.QIMP <> s0:95 var
+R7250:7251 Quan.QIMP <> e0:96 var
+R7253:7254 Quan.QIMP <> s1:97 var
+R7256:7257 Quan.QIMP <> e1:98 var
+R7259:7259 Quan.QIMP <> U:99 var
+R7291:7302 Quan.QIMP <> ceval_single:69 ind
+R7367:7383 Quan.QState StateMap.Raw map2 def
+R7661:7663 Quan.QIMP <> mu':94 var
+R7396:7396 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R7659:7659 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R7397:7397 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7403:7404 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7657:7658 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7398:7402 Quan.QIMP <> sigma:91 var
+R7405:7412 Quan.QState <> q_update def
+R7654:7656 Quan.QIMP <> rho:92 var
+R7433:7439 Quan.Summation <> big_sum def
+R7646:7647 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7649:7649 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7648:7648 Quan.QIMP <> n:68 var
+R7448:7450 Coq.Init.Datatypes <> nat ind
+binder 7446:7446 <> i:100
+R7455:7459 Quan.Matrix <> Mmult def
+R7463:7464 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7466:7466 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7465:7465 Quan.QIMP <> n:68 var
+R7471:7472 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7474:7474 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7473:7473 Quan.QIMP <> n:68 var
+R7479:7480 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7482:7482 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7481:7481 Quan.QIMP <> n:68 var
+R7560:7565 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7578:7578 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7512:7517 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7558:7559 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7502:7502 Quan.Matrix <> I def
+R7506:7507 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7510:7510 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7508:7509 Quan.QIMP <> s0:95 var
+R7536:7539 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R7518:7521 Quan.QIMP <> ::matrix_scope:'∣'_x_'⟩_'_x not
+R7523:7529 Quan.QIMP <> ::matrix_scope:'∣'_x_'⟩_'_x not
+R7535:7535 Quan.QIMP <> ::matrix_scope:'∣'_x_'⟩_'_x not
+R7532:7532 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7530:7531 Quan.QIMP <> e0:96 var
+R7533:7534 Quan.QIMP <> s0:95 var
+R7522:7522 Quan.QIMP <> i:100 var
+R7540:7543 Quan.QIMP <> ::matrix_scope:'⟨'_x_'∣_'_x not
+R7545:7551 Quan.QIMP <> ::matrix_scope:'⟨'_x_'∣_'_x not
+R7557:7557 Quan.QIMP <> ::matrix_scope:'⟨'_x_'∣_'_x not
+R7554:7554 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7552:7553 Quan.QIMP <> e0:96 var
+R7555:7556 Quan.QIMP <> s0:95 var
+R7544:7544 Quan.QIMP <> i:100 var
+R7566:7566 Quan.Matrix <> I def
+R7570:7571 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7576:7576 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7573:7573 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7572:7572 Quan.QIMP <> n:68 var
+R7574:7575 Quan.QIMP <> e0:96 var
+R7622:7627 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7640:7640 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7610:7615 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7621:7621 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7600:7600 Quan.Matrix <> I def
+R7604:7605 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7608:7608 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7606:7607 Quan.QIMP <> s1:97 var
+R7617:7619 Quan.QIMP <> :::x_'^'_x not
+R7616:7616 Quan.QIMP <> U:99 var
+R7620:7620 Quan.QIMP <> i:100 var
+R7628:7628 Quan.Matrix <> I def
+R7632:7633 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7638:7638 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7635:7635 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R7634:7634 Quan.QIMP <> n:68 var
+R7636:7637 Quan.QIMP <> e1:98 var
+R7385:7394 Quan.QState <> option_app def
+R7343:7344 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R7332:7332 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7338:7338 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7342:7342 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7333:7337 Quan.QIMP <> sigma:91 var
+R7339:7341 Quan.QIMP <> rho:92 var
+R7345:7346 Quan.QIMP <> mu:93 var
+R7305:7314 Quan.QIMP <> QUnit_Ctrl constr
+R7316:7317 Quan.QIMP <> s0:95 var
+R7319:7320 Quan.QIMP <> e0:96 var
+R7322:7323 Quan.QIMP <> s1:97 var
+R7325:7326 Quan.QIMP <> e1:98 var
+R7328:7328 Quan.QIMP <> U:99 var
+binder 7676:7680 <> sigma:101
+binder 7682:7684 <> rho:102
+binder 7686:7687 <> mu:103
+binder 7697:7699 <> mu':104
+R7704:7706 Coq.Init.Datatypes <> nat ind
+binder 7702:7702 <> i:105
+R7714:7716 Coq.Init.Datatypes <> nat ind
+binder 7710:7710 <> s:106
+binder 7712:7712 <> e:107
+R7771:7792 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7738:7749 Quan.QIMP <> ceval_single:69 ind
+R7768:7770 Quan.QIMP <> mu':104 var
+R7765:7766 Quan.QIMP <> mu:103 var
+R7752:7756 Quan.QIMP <> QMeas constr
+R7758:7758 Quan.QIMP <> i:105 var
+R7760:7760 Quan.QIMP <> s:106 var
+R7762:7762 Quan.QIMP <> e:107 var
+R7793:7804 Quan.QIMP <> ceval_single:69 ind
+R7857:7873 Quan.QState StateMap.Raw map2 def
+R8082:8084 Quan.QIMP <> mu':104 var
+R7906:7912 Quan.QIMP <> big_app def
+R8073:8074 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8078:8078 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8076:8076 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R8075:8075 Quan.QIMP <> e:107 var
+R8077:8077 Quan.QIMP <> s:106 var
+R7921:7923 Coq.Init.Datatypes <> nat ind
+binder 7919:7919 <> j:108
+R7946:7946 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R8067:8067 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R7947:7948 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7967:7970 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8065:8066 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7949:7956 Quan.QState <> c_update def
+R7958:7958 Quan.QIMP <> i:105 var
+R7960:7960 Quan.QIMP <> j:108 var
+R7962:7966 Quan.QIMP <> sigma:101 var
+R7971:7978 Quan.QState <> q_update def
+R8062:8064 Quan.QIMP <> rho:102 var
+R8041:8046 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R8058:8058 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7982:7982 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7992:7998 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R8040:8040 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R7983:7983 Quan.Matrix <> I def
+R7987:7988 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7990:7990 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7989:7989 Quan.QIMP <> s:106 var
+R7999:7999 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R8015:8019 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R8000:8002 Quan.Basic_Supplement <> Vec def
+R8004:8004 Quan.QIMP <> j:108 var
+R8008:8009 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8013:8013 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8011:8011 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R8010:8010 Quan.QIMP <> e:107 var
+R8012:8012 Quan.QIMP <> s:106 var
+R8020:8020 Quan.Matrix <> ::matrix_scope:x_'†' not
+R8036:8039 Quan.Matrix <> ::matrix_scope:x_'†' not
+R8021:8023 Quan.Basic_Supplement <> Vec def
+R8025:8025 Quan.QIMP <> j:108 var
+R8029:8030 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8034:8034 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8032:8032 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R8031:8031 Quan.QIMP <> e:107 var
+R8033:8033 Quan.QIMP <> s:106 var
+R8047:8047 Quan.Matrix <> I def
+R8051:8052 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8056:8056 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R8054:8054 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R8053:8053 Quan.QIMP <> n:68 var
+R8055:8055 Quan.QIMP <> e:107 var
+R7875:7884 Quan.QState <> option_app def
+R7832:7833 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R7821:7821 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7827:7827 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7831:7831 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R7822:7826 Quan.QIMP <> sigma:101 var
+R7828:7830 Quan.QIMP <> rho:102 var
+R7834:7835 Quan.QIMP <> mu:103 var
+R7807:7811 Quan.QIMP <> QMeas constr
+R7813:7813 Quan.QIMP <> i:105 var
+R7815:7815 Quan.QIMP <> s:106 var
+R7817:7817 Quan.QIMP <> e:107 var
+binder 8113:8117 <> sigma:109
+binder 8119:8121 <> rho:110
+binder 8123:8124 <> mu:111
+binder 8135:8136 <> c1:112
+binder 8138:8139 <> c2:113
+R8150:8153 Coq.Init.Datatypes <> list ind
+R8162:8165 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8174:8174 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8156:8161 Quan.QState <> cstate def
+R8166:8171 Quan.QState <> qstate def
+R8173:8173 Quan.QIMP <> n:68 var
+binder 8142:8144 <> mu1:114
+binder 8146:8148 <> mu2:115
+R8236:8257 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8199:8210 Quan.QIMP <> ceval_single:69 ind
+R8233:8235 Quan.QIMP <> mu1:114 var
+R8227:8228 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R8216:8216 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8222:8222 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8226:8226 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8217:8221 Quan.QIMP <> sigma:109 var
+R8223:8225 Quan.QIMP <> rho:110 var
+R8229:8230 Quan.QIMP <> mu:111 var
+R8212:8213 Quan.QIMP <> c1:112 var
+R8281:8301 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8258:8269 Quan.QIMP <> ceval_single:69 ind
+R8278:8280 Quan.QIMP <> mu2:115 var
+R8274:8276 Quan.QIMP <> mu1:114 var
+R8271:8272 Quan.QIMP <> c2:113 var
+R8302:8313 Quan.QIMP <> ceval_single:69 ind
+R8345:8347 Quan.QIMP <> mu2:115 var
+R8339:8340 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R8328:8328 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8334:8334 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8338:8338 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8329:8333 Quan.QIMP <> sigma:109 var
+R8335:8337 Quan.QIMP <> rho:110 var
+R8341:8342 Quan.QIMP <> mu:111 var
+R8316:8317 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R8323:8324 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R8320:8320 Quan.QIMP <> :com:com_scope:x_';'_x not
+R8318:8319 Quan.QIMP <> c1:112 var
+R8321:8322 Quan.QIMP <> c2:113 var
+binder 8362:8366 <> sigma:116
+binder 8368:8370 <> rho:117
+binder 8372:8373 <> mu:118
+R8393:8396 Coq.Init.Datatypes <> list ind
+R8405:8408 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8417:8417 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8399:8404 Quan.QState <> cstate def
+R8409:8414 Quan.QState <> qstate def
+R8416:8416 Quan.QIMP <> n:68 var
+binder 8384:8386 <> mu':119
+binder 8388:8391 <> mu'':120
+binder 8421:8422 <> c1:121
+binder 8424:8425 <> c2:122
+binder 8427:8427 <> b:123
+R8482:8508 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8455:8455 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R8476:8477 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R8456:8460 Quan.QIMP <> beval def
+R8475:8475 Quan.QIMP <> b:123 var
+R8462:8462 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8468:8469 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8473:8473 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8463:8467 Quan.QIMP <> sigma:116 var
+R8470:8472 Quan.QIMP <> rho:117 var
+R8478:8481 Coq.Init.Datatypes <> true constr
+R8543:8569 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8509:8520 Quan.QIMP <> ceval_single:69 ind
+R8539:8542 Quan.QIMP <> mu'':120 var
+R8536:8537 Quan.QIMP <> mu:118 var
+R8523:8525 Quan.QIMP <> CIf constr
+R8527:8527 Quan.QIMP <> b:123 var
+R8529:8530 Quan.QIMP <> c1:121 var
+R8532:8533 Quan.QIMP <> c2:122 var
+R8605:8631 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8570:8581 Quan.QIMP <> ceval_single:69 ind
+R8602:8604 Quan.QIMP <> mu':119 var
+R8587:8587 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R8599:8599 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R8588:8588 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8594:8594 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8598:8598 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8589:8593 Quan.QIMP <> sigma:116 var
+R8595:8597 Quan.QIMP <> rho:117 var
+R8583:8584 Quan.QIMP <> c1:121 var
+R8632:8643 Quan.QIMP <> ceval_single:69 ind
+R8707:8723 Quan.QState StateMap.Raw map2 def
+R8740:8743 Quan.QIMP <> mu'':120 var
+R8736:8738 Quan.QIMP <> mu':119 var
+R8725:8734 Quan.QState <> option_app def
+R8671:8672 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R8660:8660 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8666:8666 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8670:8670 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8661:8665 Quan.QIMP <> sigma:116 var
+R8667:8669 Quan.QIMP <> rho:117 var
+R8673:8674 Quan.QIMP <> mu:118 var
+R8646:8648 Quan.QIMP <> CIf constr
+R8650:8650 Quan.QIMP <> b:123 var
+R8652:8653 Quan.QIMP <> c1:121 var
+R8655:8656 Quan.QIMP <> c2:122 var
+binder 8760:8764 <> sigma:124
+binder 8766:8768 <> rho:125
+binder 8770:8771 <> mu:126
+R8791:8794 Coq.Init.Datatypes <> list ind
+R8803:8806 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8815:8815 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R8797:8802 Quan.QState <> cstate def
+R8807:8812 Quan.QState <> qstate def
+R8814:8814 Quan.QIMP <> n:68 var
+binder 8782:8784 <> mu':127
+binder 8786:8789 <> mu'':128
+binder 8819:8820 <> c1:129
+binder 8822:8823 <> c2:130
+binder 8825:8825 <> b:131
+R8879:8903 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8851:8851 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R8872:8873 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R8852:8856 Quan.QIMP <> beval def
+R8871:8871 Quan.QIMP <> b:131 var
+R8858:8858 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8864:8865 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8869:8869 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8859:8863 Quan.QIMP <> sigma:124 var
+R8866:8868 Quan.QIMP <> rho:125 var
+R8874:8878 Coq.Init.Datatypes <> false constr
+R8938:8962 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8904:8915 Quan.QIMP <> ceval_single:69 ind
+R8934:8937 Quan.QIMP <> mu'':128 var
+R8931:8932 Quan.QIMP <> mu:126 var
+R8918:8920 Quan.QIMP <> CIf constr
+R8922:8922 Quan.QIMP <> b:131 var
+R8924:8925 Quan.QIMP <> c1:129 var
+R8927:8928 Quan.QIMP <> c2:130 var
+R8998:9022 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8963:8974 Quan.QIMP <> ceval_single:69 ind
+R8995:8997 Quan.QIMP <> mu':127 var
+R8980:8980 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R8992:8992 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R8981:8981 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8987:8987 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8991:8991 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8982:8986 Quan.QIMP <> sigma:124 var
+R8988:8990 Quan.QIMP <> rho:125 var
+R8976:8977 Quan.QIMP <> c2:130 var
+R9023:9034 Quan.QIMP <> ceval_single:69 ind
+R9095:9111 Quan.QState StateMap.Raw map2 def
+R9128:9131 Quan.QIMP <> mu'':128 var
+R9124:9126 Quan.QIMP <> mu':127 var
+R9113:9122 Quan.QState <> option_app def
+R9062:9063 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9051:9051 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9057:9057 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9061:9061 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9052:9056 Quan.QIMP <> sigma:124 var
+R9058:9060 Quan.QIMP <> rho:125 var
+R9064:9065 Quan.QIMP <> mu:126 var
+R9037:9039 Quan.QIMP <> CIf constr
+R9041:9041 Quan.QIMP <> b:131 var
+R9043:9044 Quan.QIMP <> c1:129 var
+R9046:9047 Quan.QIMP <> c2:130 var
+binder 9150:9154 <> sigma:132
+binder 9156:9158 <> rho:133
+binder 9160:9161 <> mu:134
+R9181:9184 Coq.Init.Datatypes <> list ind
+R9193:9196 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R9205:9205 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R9187:9192 Quan.QState <> cstate def
+R9197:9202 Quan.QState <> qstate def
+R9204:9204 Quan.QIMP <> n:68 var
+binder 9172:9174 <> mu':135
+binder 9176:9179 <> mu'':136
+binder 9209:9209 <> c:137
+binder 9211:9211 <> b:138
+R9266:9292 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9239:9239 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9260:9261 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9240:9244 Quan.QIMP <> beval def
+R9259:9259 Quan.QIMP <> b:138 var
+R9246:9246 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9252:9253 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9257:9257 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9247:9251 Quan.QIMP <> sigma:132 var
+R9254:9256 Quan.QIMP <> rho:133 var
+R9262:9265 Coq.Init.Datatypes <> true constr
+R9326:9352 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9293:9304 Quan.QIMP <> ceval_single:69 ind
+R9322:9325 Quan.QIMP <> mu'':136 var
+R9319:9320 Quan.QIMP <> mu:134 var
+R9307:9312 Quan.QIMP <> CWhile constr
+R9314:9314 Quan.QIMP <> b:138 var
+R9316:9316 Quan.QIMP <> c:137 var
+R9407:9433 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9353:9364 Quan.QIMP <> ceval_single:69 ind
+R9404:9406 Quan.QIMP <> mu':135 var
+R9389:9389 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R9401:9401 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R9390:9390 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9396:9396 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9400:9400 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9391:9395 Quan.QIMP <> sigma:132 var
+R9397:9399 Quan.QIMP <> rho:133 var
+R9367:9370 Quan.QIMP <> CSeq constr
+R9372:9372 Quan.QIMP <> c:137 var
+R9375:9380 Quan.QIMP <> CWhile constr
+R9382:9382 Quan.QIMP <> b:138 var
+R9384:9384 Quan.QIMP <> c:137 var
+R9434:9445 Quan.QIMP <> ceval_single:69 ind
+R9508:9524 Quan.QState StateMap.Raw map2 def
+R9541:9544 Quan.QIMP <> mu'':136 var
+R9537:9539 Quan.QIMP <> mu':135 var
+R9526:9535 Quan.QState <> option_app def
+R9472:9473 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9461:9461 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9467:9467 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9471:9471 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9462:9466 Quan.QIMP <> sigma:132 var
+R9468:9470 Quan.QIMP <> rho:133 var
+R9474:9475 Quan.QIMP <> mu:134 var
+R9448:9453 Quan.QIMP <> CWhile constr
+R9455:9455 Quan.QIMP <> b:138 var
+R9457:9457 Quan.QIMP <> c:137 var
+binder 9564:9568 <> sigma:139
+binder 9570:9572 <> rho:140
+binder 9574:9575 <> mu:141
+R9590:9593 Coq.Init.Datatypes <> list ind
+R9602:9605 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R9614:9614 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R9596:9601 Quan.QState <> cstate def
+R9606:9611 Quan.QState <> qstate def
+R9613:9613 Quan.QIMP <> n:68 var
+binder 9586:9588 <> mu':142
+binder 9618:9618 <> c:143
+binder 9620:9620 <> b:144
+R9674:9698 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9646:9646 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9667:9668 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9647:9651 Quan.QIMP <> beval def
+R9666:9666 Quan.QIMP <> b:144 var
+R9653:9653 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9659:9660 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9664:9664 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9654:9658 Quan.QIMP <> sigma:139 var
+R9661:9663 Quan.QIMP <> rho:140 var
+R9669:9673 Coq.Init.Datatypes <> false constr
+R9731:9755 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9699:9710 Quan.QIMP <> ceval_single:69 ind
+R9728:9730 Quan.QIMP <> mu':142 var
+R9725:9726 Quan.QIMP <> mu:141 var
+R9713:9718 Quan.QIMP <> CWhile constr
+R9720:9720 Quan.QIMP <> b:144 var
+R9722:9722 Quan.QIMP <> c:143 var
+R9756:9767 Quan.QIMP <> ceval_single:69 ind
+R9826:9842 Quan.QState StateMap.Raw map2 def
+R9869:9871 Quan.QIMP <> mu':142 var
+R9855:9855 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R9867:9867 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R9856:9856 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9862:9862 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9866:9866 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9857:9861 Quan.QIMP <> sigma:139 var
+R9863:9865 Quan.QIMP <> rho:140 var
+R9844:9853 Quan.QState <> option_app def
+R9794:9795 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9783:9783 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9789:9789 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9793:9793 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9784:9788 Quan.QIMP <> sigma:139 var
+R9790:9792 Quan.QIMP <> rho:140 var
+R9796:9797 Quan.QIMP <> mu:141 var
+R9770:9775 Quan.QIMP <> CWhile constr
+R9777:9777 Quan.QIMP <> b:144 var
+R9779:9779 Quan.QIMP <> c:143 var
+def 9965:9968 <> CSet
+R9971:9976 Quan.QState NSet t def
+def 9988:9996 <> Free_aexp
+R10001:10004 Quan.QIMP <> aexp ind
+binder 9999:9999 <> a:145
+R10009:10012 Quan.QIMP <> CSet def
+R10025:10025 Quan.QIMP <> a:145 var
+R10036:10039 Quan.QIMP <> ANum constr
+R10046:10055 Quan.QState NSet empty def
+R10062:10064 Quan.QIMP <> AId constr
+R10071:10078 Quan.QState NSet add def
+R10083:10092 Quan.QState NSet empty def
+R10121:10122 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10130:10131 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10125:10127 Quan.QIMP <> :com::x_'+'_x not
+R10136:10145 Quan.QState NSet union def
+R10164:10172 Quan.QIMP <> Free_aexp:146 def
+R10148:10156 Quan.QIMP <> Free_aexp:146 def
+R10182:10183 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10191:10192 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10186:10188 Quan.QIMP <> :com::x_'-'_x not
+R10197:10206 Quan.QState NSet union def
+R10225:10233 Quan.QIMP <> Free_aexp:146 def
+R10209:10217 Quan.QIMP <> Free_aexp:146 def
+R10243:10244 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10252:10253 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10247:10249 Quan.QIMP <> :com::x_'*'_x not
+R10258:10267 Quan.QState NSet union def
+R10286:10294 Quan.QIMP <> Free_aexp:146 def
+R10270:10278 Quan.QIMP <> Free_aexp:146 def
+def 10317:10325 <> Free_bexp
+R10330:10333 Quan.QIMP <> bexp ind
+binder 10328:10328 <> b:148
+R10336:10339 Quan.QIMP <> CSet def
+R10351:10351 Quan.QIMP <> b:148 var
+R10364:10365 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10373:10374 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10368:10370 Quan.QIMP <> :com::x_'='_x not
+R10381:10390 Quan.QState NSet union def
+R10409:10417 Quan.QIMP <> Free_aexp def
+R10393:10401 Quan.QIMP <> Free_aexp def
+R10429:10430 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10439:10440 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10433:10436 Quan.QIMP <> :com::x_'<>'_x not
+R10446:10455 Quan.QState NSet union def
+R10474:10482 Quan.QIMP <> Free_aexp def
+R10458:10466 Quan.QIMP <> Free_aexp def
+R10494:10495 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10504:10505 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10498:10501 Quan.QIMP <> :com::x_'<='_x not
+R10511:10520 Quan.QState NSet union def
+R10539:10547 Quan.QIMP <> Free_aexp def
+R10523:10531 Quan.QIMP <> Free_aexp def
+R10559:10560 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10568:10569 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10563:10565 Quan.QIMP <> :com::x_'>'_x not
+R10576:10585 Quan.QState NSet union def
+R10604:10612 Quan.QIMP <> Free_aexp def
+R10588:10596 Quan.QIMP <> Free_aexp def
+R10624:10625 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10629:10630 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10626:10627 Quan.QIMP <> :com::'~'_x not
+R10641:10649 Quan.QIMP <> Free_bexp:149 def
+R10651:10651 Quan.QIMP <> b:148 var
+R10661:10662 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10671:10672 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10665:10668 Quan.QIMP <> :com::x_'&&'_x not
+R10678:10687 Quan.QState NSet union def
+R10706:10714 Quan.QIMP <> Free_bexp:149 def
+R10690:10698 Quan.QIMP <> Free_bexp:149 def
+R10728:10737 Quan.QState NSet empty def
+def 10759:10761 <> Var
+R10766:10768 Quan.QIMP <> com ind
+binder 10764:10764 <> c:151
+R10777:10779 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R10773:10776 Quan.QIMP <> CSet def
+R10780:10783 Quan.QState <> QSet def
+R10797:10797 Quan.QIMP <> c:151 var
+R10809:10811 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10816:10818 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10813:10814 Quan.QIMP <> :com:com_scope:x_':='_x not
+R10823:10823 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10848:10849 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10860:10860 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10824:10831 Quan.QState NSet add def
+R10836:10844 Quan.QIMP <> Free_aexp def
+R10850:10859 Quan.QState NSet empty def
+R10867:10869 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10875:10877 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10872:10872 Quan.QIMP <> :com:com_scope:x_';'_x not
+R10870:10871 Coq.Reals.RiemannInt <> c1 proj
+R10882:10882 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10923:10924 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10965:10965 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10883:10892 Quan.QState NSet union def
+R10910:10912 Coq.Init.Datatypes <> fst def
+R10915:10917 Quan.QIMP <> Var:152 def
+R10895:10897 Coq.Init.Datatypes <> fst def
+R10900:10902 Quan.QIMP <> Var:152 def
+R10925:10934 Quan.QState NSet union def
+R10952:10954 Coq.Init.Datatypes <> snd def
+R10957:10959 Quan.QIMP <> Var:152 def
+R10937:10939 Coq.Init.Datatypes <> snd def
+R10942:10944 Quan.QIMP <> Var:152 def
+R10973:10975 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11000:11002 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R10976:10978 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R10980:10985 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R10988:10993 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R10996:10999 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R10986:10987 Coq.Reals.RiemannInt <> c1 proj
+R11016:11016 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11084:11100 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11141:11142 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11017:11026 Quan.QState NSet union def
+R11043:11052 Quan.QState NSet union def
+R11070:11072 Coq.Init.Datatypes <> fst def
+R11075:11077 Quan.QIMP <> Var:152 def
+R11055:11057 Coq.Init.Datatypes <> fst def
+R11060:11062 Quan.QIMP <> Var:152 def
+R11029:11037 Quan.QIMP <> Free_bexp def
+R11101:11110 Quan.QState NSet union def
+R11128:11130 Coq.Init.Datatypes <> snd def
+R11133:11135 Quan.QIMP <> Var:152 def
+R11113:11115 Coq.Init.Datatypes <> snd def
+R11118:11120 Quan.QIMP <> Var:152 def
+R11149:11150 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11167:11168 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11151:11156 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R11158:11161 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R11163:11166 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R11182:11182 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11221:11223 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11235:11236 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11183:11192 Quan.QState NSet union def
+R11209:11211 Coq.Init.Datatypes <> fst def
+R11214:11216 Quan.QIMP <> Var:152 def
+R11218:11218 Quan.QIMP <> c:151 var
+R11195:11203 Quan.QIMP <> Free_bexp def
+R11224:11226 Coq.Init.Datatypes <> snd def
+R11229:11231 Quan.QIMP <> Var:152 def
+R11233:11233 Quan.QIMP <> c:151 var
+R11243:11245 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11256:11258 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11246:11247 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R11249:11249 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R11251:11255 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R11272:11272 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11283:11284 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11300:11300 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11273:11282 Quan.QState NSet empty def
+R11285:11295 Quan.QState <> Qsys_to_Set def
+R11308:11316 Quan.QIMP <> QUnit_One constr
+R11337:11337 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11348:11349 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11366:11366 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11338:11347 Quan.QState NSet empty def
+R11350:11360 Quan.QState <> Qsys_to_Set def
+R11374:11383 Quan.QIMP <> QUnit_Ctrl constr
+R11412:11412 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11423:11424 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11475:11475 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11413:11422 Quan.QState NSet empty def
+R11425:11434 Quan.QState NSet union def
+R11457:11467 Quan.QState <> Qsys_to_Set def
+R11437:11447 Quan.QState <> Qsys_to_Set def
+R11482:11484 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11498:11500 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11486:11492 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R11494:11494 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R11496:11497 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R11514:11514 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11525:11526 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11543:11544 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11515:11524 Quan.QState NSet empty def
+R11527:11537 Quan.QState <> Qsys_to_Set def
+R11554:11554 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11565:11566 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11577:11577 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11555:11564 Quan.QState NSet empty def
+R11567:11576 Quan.QState NSet empty def
+def 11626:11629 <> MVar
+R11634:11636 Quan.QIMP <> com ind
+binder 11632:11632 <> c:154
+R11645:11647 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R11641:11644 Quan.QIMP <> CSet def
+R11648:11651 Quan.QState <> QSet def
+R11665:11665 Quan.QIMP <> c:154 var
+R11677:11679 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11684:11686 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11681:11682 Quan.QIMP <> :com:com_scope:x_':='_x not
+R11691:11691 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11716:11717 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11728:11728 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11692:11699 Quan.QState NSet add def
+R11704:11712 Quan.QIMP <> Free_aexp def
+R11718:11727 Quan.QState NSet empty def
+R11735:11737 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11743:11745 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11740:11740 Quan.QIMP <> :com:com_scope:x_';'_x not
+R11738:11739 Coq.Reals.RiemannInt <> c1 proj
+R11750:11750 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11793:11794 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11837:11837 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11751:11760 Quan.QState NSet union def
+R11779:11781 Coq.Init.Datatypes <> fst def
+R11784:11787 Quan.QIMP <> MVar:155 def
+R11763:11765 Coq.Init.Datatypes <> fst def
+R11768:11771 Quan.QIMP <> MVar:155 def
+R11795:11804 Quan.QState NSet union def
+R11823:11825 Coq.Init.Datatypes <> snd def
+R11828:11831 Quan.QIMP <> MVar:155 def
+R11807:11809 Coq.Init.Datatypes <> snd def
+R11812:11815 Quan.QIMP <> MVar:155 def
+R11845:11847 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11872:11874 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R11848:11850 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R11852:11857 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R11860:11865 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R11868:11871 Quan.QIMP <> :com:com_scope:'if'_x_'then'_x_'else'_x_'end' not
+R11858:11859 Coq.Reals.RiemannInt <> c1 proj
+R11888:11889 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11932:11949 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11992:11993 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R11890:11899 Quan.QState NSet union def
+R11918:11920 Coq.Init.Datatypes <> fst def
+R11923:11926 Quan.QIMP <> MVar:155 def
+R11902:11904 Coq.Init.Datatypes <> fst def
+R11907:11910 Quan.QIMP <> MVar:155 def
+R11950:11959 Quan.QState NSet union def
+R11978:11980 Coq.Init.Datatypes <> snd def
+R11983:11986 Quan.QIMP <> MVar:155 def
+R11962:11964 Coq.Init.Datatypes <> snd def
+R11967:11970 Quan.QIMP <> MVar:155 def
+R12000:12001 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12018:12019 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12002:12007 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R12009:12012 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R12014:12017 Quan.QIMP <> :com:com_scope:'while'_x_'do'_x_'end' not
+R12033:12036 Quan.QIMP <> MVar:155 def
+R12038:12038 Quan.QIMP <> c:154 var
+R12045:12047 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12059:12061 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12048:12049 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R12051:12051 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R12053:12058 Quan.QIMP <> :com:com_scope:'('_x_x_')'_':Q='_'0' not
+R12075:12075 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12086:12087 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12104:12104 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12076:12085 Quan.QState NSet empty def
+R12088:12098 Quan.QState <> Qsys_to_Set def
+R12112:12120 Quan.QIMP <> QUnit_One constr
+R12141:12141 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12152:12153 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12169:12169 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12142:12151 Quan.QState NSet empty def
+R12154:12164 Quan.QState <> Qsys_to_Set def
+R12177:12186 Quan.QIMP <> QUnit_Ctrl constr
+R12215:12215 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12226:12227 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12278:12278 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12216:12225 Quan.QState NSet empty def
+R12228:12237 Quan.QState NSet union def
+R12260:12270 Quan.QState <> Qsys_to_Set def
+R12240:12250 Quan.QState <> Qsys_to_Set def
+R12285:12287 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12302:12304 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R12289:12296 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R12298:12298 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R12300:12301 Quan.QIMP <> :com:com_scope:x_':=M'_'[['_x_x_']]' not
+R12318:12318 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12329:12330 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12346:12348 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12319:12328 Quan.QState NSet empty def
+R12331:12341 Quan.QState <> Qsys_to_Set def
+R12358:12358 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12369:12370 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12381:12381 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R12359:12368 Quan.QState NSet empty def
+R12371:12380 Quan.QState NSet empty def
+prf 13832:13849 <> map2_app_not_nil_l
+R13853:13855 Coq.Init.Datatypes <> nat ind
+binder 13851:13851 <> n:157
+R13875:13878 Coq.Init.Datatypes <> list ind
+R13887:13889 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R13881:13886 Quan.QState <> cstate def
+R13890:13895 Quan.QState <> qstate def
+R13897:13897 Quan.QIMP <> n:157 var
+binder 13868:13869 <> mu:158
+binder 13871:13873 <> mu':159
+R13902:13902 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13910:13913 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13905:13906 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R13903:13904 Quan.QIMP <> mu:158 var
+R13907:13909 Coq.Init.Datatypes <> nil constr
+R13949:13952 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R13914:13930 Quan.QState StateMap.Raw map2 def
+R13946:13948 Quan.QIMP <> mu':159 var
+R13943:13944 Quan.QIMP <> mu:158 var
+R13932:13941 Quan.QState <> option_app def
+R13953:13954 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R14076:14086 Quan.QState <> map2_l_refl thm
+R14076:14086 Quan.QState <> map2_l_refl thm
+R14076:14086 Quan.QState <> map2_l_refl thm
+R14165:14184 Quan.QState Cstate_as_OT compare defax
+R14165:14184 Quan.QState Cstate_as_OT compare defax
+R14630:14647 Quan.QIMP <> map2_app_not_nil_l thm
+R14649:14649 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R14656:14656 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R14650:14650 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14652:14653 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14655:14655 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14699:14703 Coq.Init.Logic <> False ind
+R14699:14703 Coq.Init.Logic <> False ind
+prf 14755:14763 <> ceval_nil
+R14767:14769 Coq.Init.Datatypes <> nat ind
+binder 14765:14765 <> n:160
+R14784:14787 Coq.Init.Datatypes <> list ind
+R14796:14797 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R14790:14795 Quan.QState <> cstate def
+R14798:14803 Quan.QState <> qstate def
+R14805:14805 Quan.QIMP <> n:160 var
+binder 14781:14782 <> mu:161
+binder 14809:14809 <> c:162
+R14832:14834 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14812:14823 Quan.QIMP <> ceval_single ind
+R14830:14831 Quan.QIMP <> mu:161 var
+R14827:14828 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R14825:14825 Quan.QIMP <> c:162 var
+R14837:14837 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14835:14836 Quan.QIMP <> mu:161 var
+R14838:14840 Coq.Init.Datatypes <> nil constr
+prf 14907:14918 <> ceval_skip_1
+R14922:14924 Coq.Init.Datatypes <> nat ind
+binder 14920:14920 <> n:163
+R14943:14946 Coq.Init.Datatypes <> list ind
+R14955:14956 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R14949:14954 Quan.QState <> cstate def
+R14957:14962 Quan.QState <> qstate def
+R14964:14964 Quan.QIMP <> n:163 var
+binder 14936:14937 <> mu:164
+binder 14939:14941 <> mu':165
+R14997:14998 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14969:14980 Quan.QIMP <> ceval_single ind
+R14994:14996 Quan.QIMP <> mu':165 var
+R14991:14992 Quan.QIMP <> mu:164 var
+R14982:14983 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R14988:14989 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R14984:14987 Quan.QIMP <> :com:com_scope:'skip' not
+R15001:15001 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14999:15000 Quan.QIMP <> mu:164 var
+R15002:15004 Quan.QIMP <> mu':165 var
+prf 16315:16324 <> ceval_skip
+R16328:16330 Coq.Init.Datatypes <> nat ind
+binder 16326:16326 <> n:166
+R16345:16348 Coq.Init.Datatypes <> list ind
+R16357:16358 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R16351:16356 Quan.QState <> cstate def
+R16359:16364 Quan.QState <> qstate def
+R16366:16366 Quan.QIMP <> n:166 var
+binder 16342:16343 <> mu:167
+R16371:16382 Quan.QIMP <> ceval_single ind
+R16396:16397 Quan.QIMP <> mu:167 var
+R16393:16394 Quan.QIMP <> mu:167 var
+R16384:16385 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16390:16391 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16386:16389 Quan.QIMP <> :com:com_scope:'skip' not
+R16435:16439 Quan.QIMP <> E_nil constr
+R16435:16439 Quan.QIMP <> E_nil constr
+R16461:16466 Quan.QIMP <> E_Skip constr
+R16461:16466 Quan.QIMP <> E_Skip constr
+prf 16482:16492 <> ceval_abort
+R16496:16498 Coq.Init.Datatypes <> nat ind
+binder 16494:16494 <> n:168
+R16513:16516 Coq.Init.Datatypes <> list ind
+R16525:16526 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R16519:16524 Quan.QState <> cstate def
+R16527:16532 Quan.QState <> qstate def
+R16534:16534 Quan.QIMP <> n:168 var
+binder 16510:16511 <> mu:169
+R16539:16550 Quan.QIMP <> ceval_single ind
+R16565:16566 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R16562:16563 Quan.QIMP <> mu:169 var
+R16552:16553 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16559:16560 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16554:16558 Quan.QIMP <> :com:com_scope:'abort' not
+R16605:16609 Quan.QIMP <> E_nil constr
+R16605:16609 Quan.QIMP <> E_nil constr
+R16630:16636 Quan.QIMP <> E_Abort constr
+R16630:16636 Quan.QIMP <> E_Abort constr
+prf 16653:16665 <> ceval_abort_1
+R16669:16671 Coq.Init.Datatypes <> nat ind
+binder 16667:16667 <> n:170
+R16690:16693 Coq.Init.Datatypes <> list ind
+R16702:16703 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R16696:16701 Quan.QState <> cstate def
+R16704:16709 Quan.QState <> qstate def
+R16711:16711 Quan.QIMP <> n:170 var
+binder 16683:16684 <> mu:171
+binder 16686:16688 <> mu':172
+R16745:16746 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16716:16727 Quan.QIMP <> ceval_single ind
+R16742:16744 Quan.QIMP <> mu':172 var
+R16739:16740 Quan.QIMP <> mu:171 var
+R16729:16730 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16736:16737 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16731:16735 Quan.QIMP <> :com:com_scope:'abort' not
+R16750:16751 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R16747:16749 Quan.QIMP <> mu':172 var
+R16752:16753 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+prf 16829:16837 <> ceval_seq
+R16841:16843 Coq.Init.Datatypes <> nat ind
+binder 16839:16839 <> n:173
+binder 16854:16855 <> c1:174
+binder 16857:16858 <> c2:175
+R16873:16876 Coq.Init.Datatypes <> list ind
+R16885:16886 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R16879:16884 Quan.QState <> cstate def
+R16887:16892 Quan.QState <> qstate def
+R16894:16894 Quan.QIMP <> n:173 var
+binder 16861:16862 <> mu:176
+binder 16864:16866 <> mu':177
+binder 16868:16871 <> mu'':178
+R16921:16923 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16899:16910 Quan.QIMP <> ceval_single ind
+R16918:16920 Quan.QIMP <> mu':177 var
+R16915:16916 Quan.QIMP <> mu:176 var
+R16912:16913 Quan.QIMP <> c1:174 var
+R16948:16950 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16924:16935 Quan.QIMP <> ceval_single ind
+R16944:16947 Quan.QIMP <> mu'':178 var
+R16940:16942 Quan.QIMP <> mu':177 var
+R16937:16938 Quan.QIMP <> c2:175 var
+R16951:16962 Quan.QIMP <> ceval_single ind
+R16977:16980 Quan.QIMP <> mu'':178 var
+R16974:16975 Quan.QIMP <> mu:176 var
+R16964:16965 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16971:16972 Quan.QIMP <> ::com_scope:'<{'_x_'}>' not
+R16968:16968 Quan.QIMP <> :com:com_scope:x_';'_x not
+R16966:16967 Quan.QIMP <> c1:174 var
+R16969:16970 Quan.QIMP <> c2:175 var
+R17057:17061 Quan.QIMP <> E_nil constr
+R17057:17061 Quan.QIMP <> E_nil constr
+R17091:17095 Quan.QIMP <> E_Seq constr
+R17091:17095 Quan.QIMP <> E_Seq constr
+R17152:17165 Coq.Logic.Classical_Prop <> <> lib
+prf 17174:17185 <> map2_app_nil
+binder 17195:17195 <> n:179
+R17203:17206 Coq.Init.Datatypes <> list ind
+R17215:17216 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R17209:17214 Quan.QState <> cstate def
+R17217:17222 Quan.QState <> qstate def
+R17224:17224 Quan.QIMP <> n:179 var
+binder 17198:17198 <> x:180
+binder 17200:17200 <> y:181
+R17266:17269 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17231:17233 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17229:17230 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17234:17250 Quan.QState StateMap.Raw map2 def
+R17265:17265 Quan.QIMP <> y:181 var
+R17263:17263 Quan.QIMP <> x:180 var
+R17252:17261 Quan.QState <> option_app def
+R17275:17278 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R17271:17271 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17270:17270 Quan.QIMP <> x:180 var
+R17272:17274 Coq.Init.Datatypes <> nil constr
+R17280:17280 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17279:17279 Quan.QIMP <> y:181 var
+R17281:17283 Coq.Init.Datatypes <> nil constr
+R17312:17313 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R17309:17309 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17310:17311 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17315:17316 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R17317:17318 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17312:17313 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R17309:17309 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17310:17311 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17315:17316 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R17317:17318 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17336:17342 Coq.Logic.Classical_Prop <> classic prfax
+R17336:17342 Coq.Logic.Classical_Prop <> classic prfax
+R17364:17365 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R17361:17361 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17362:17363 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17367:17368 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R17369:17370 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17364:17365 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R17361:17361 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17362:17363 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17367:17368 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R17369:17370 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R17387:17393 Coq.Logic.Classical_Prop <> classic prfax
+R17387:17393 Coq.Logic.Classical_Prop <> classic prfax
+R17447:17464 Quan.QIMP <> map2_app_not_nil_l thm
+R17447:17464 Quan.QIMP <> map2_app_not_nil_l thm
+R17493:17501 Quan.QState <> map2_comm thm
+R17493:17501 Quan.QState <> map2_comm thm
+R17493:17501 Quan.QState <> map2_comm thm
+R17577:17594 Quan.QIMP <> map2_app_not_nil_l thm
+R17577:17594 Quan.QIMP <> map2_app_not_nil_l thm
+prf 17671:17683 <> state_eq_aexp
+R17687:17689 Coq.Init.Datatypes <> nat ind
+binder 17685:17685 <> n:182
+R17708:17712 Quan.QState <> state def
+R17714:17714 Quan.QIMP <> n:182 var
+binder 17701:17702 <> st:183
+binder 17704:17706 <> st':184
+R17722:17725 Quan.QIMP <> aexp ind
+binder 17720:17720 <> a:185
+R17749:17751 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17729:17729 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17736:17740 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17748:17748 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17730:17732 Coq.Init.Datatypes <> fst def
+R17734:17735 Quan.QIMP <> st:183 var
+R17741:17743 Coq.Init.Datatypes <> fst def
+R17745:17747 Quan.QIMP <> st':184 var
+R17752:17752 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17763:17766 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17753:17757 Quan.QIMP <> aeval def
+R17762:17762 Quan.QIMP <> a:185 var
+R17759:17760 Quan.QIMP <> st:183 var
+R17767:17771 Quan.QIMP <> aeval def
+R17777:17777 Quan.QIMP <> a:185 var
+R17773:17775 Quan.QIMP <> st':184 var
+prf 18052:18064 <> state_eq_bexp
+R18068:18070 Coq.Init.Datatypes <> nat ind
+binder 18066:18066 <> n:186
+R18089:18093 Quan.QState <> state def
+R18095:18095 Quan.QIMP <> n:186 var
+binder 18082:18083 <> st:187
+binder 18085:18087 <> st':188
+R18101:18104 Quan.QIMP <> bexp ind
+binder 18099:18099 <> b:189
+R18128:18130 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R18108:18108 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18115:18119 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18127:18127 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18109:18111 Coq.Init.Datatypes <> fst def
+R18113:18114 Quan.QIMP <> st:187 var
+R18120:18122 Coq.Init.Datatypes <> fst def
+R18124:18126 Quan.QIMP <> st':188 var
+R18131:18131 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18142:18145 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18132:18136 Quan.QIMP <> beval def
+R18141:18141 Quan.QIMP <> b:189 var
+R18138:18139 Quan.QIMP <> st:187 var
+R18146:18150 Quan.QIMP <> beval def
+R18156:18156 Quan.QIMP <> b:189 var
+R18152:18154 Quan.QIMP <> st':188 var
+R18271:18283 Quan.QIMP <> state_eq_aexp thm
+R18271:18283 Quan.QIMP <> state_eq_aexp thm
+R18271:18283 Quan.QIMP <> state_eq_aexp thm
+R18271:18283 Quan.QIMP <> state_eq_aexp thm
+R18314:18326 Quan.QIMP <> state_eq_aexp thm
+R18314:18326 Quan.QIMP <> state_eq_aexp thm
+R18314:18326 Quan.QIMP <> state_eq_aexp thm
+R18314:18326 Quan.QIMP <> state_eq_aexp thm
+R18411:18423 Quan.QIMP <> state_eq_aexp thm
+R18411:18423 Quan.QIMP <> state_eq_aexp thm
+R18411:18423 Quan.QIMP <> state_eq_aexp thm
+R18411:18423 Quan.QIMP <> state_eq_aexp thm
+R18452:18464 Quan.QIMP <> state_eq_aexp thm
+R18452:18464 Quan.QIMP <> state_eq_aexp thm
+R18452:18464 Quan.QIMP <> state_eq_aexp thm
+R18452:18464 Quan.QIMP <> state_eq_aexp thm
+R18547:18559 Quan.QIMP <> state_eq_aexp thm
+R18547:18559 Quan.QIMP <> state_eq_aexp thm
+R18547:18559 Quan.QIMP <> state_eq_aexp thm
+R18547:18559 Quan.QIMP <> state_eq_aexp thm
+R18589:18601 Quan.QIMP <> state_eq_aexp thm
+R18589:18601 Quan.QIMP <> state_eq_aexp thm
+R18589:18601 Quan.QIMP <> state_eq_aexp thm
+R18589:18601 Quan.QIMP <> state_eq_aexp thm
+R18684:18696 Quan.QIMP <> state_eq_aexp thm
+R18684:18696 Quan.QIMP <> state_eq_aexp thm
+R18684:18696 Quan.QIMP <> state_eq_aexp thm
+R18684:18696 Quan.QIMP <> state_eq_aexp thm
+R18725:18737 Quan.QIMP <> state_eq_aexp thm
+R18725:18737 Quan.QIMP <> state_eq_aexp thm
+R18725:18737 Quan.QIMP <> state_eq_aexp thm
+R18725:18737 Quan.QIMP <> state_eq_aexp thm
+R18912:18917 Coq.Sorting.Sorted <> <> mod
+prf 20919:20925 <> ceval_3
+R20929:20931 Coq.Init.Datatypes <> nat ind
+binder 20927:20927 <> n:190
+binder 20943:20943 <> c:191
+R20956:20959 Coq.Init.Datatypes <> list ind
+R20968:20969 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R20962:20967 Quan.QState <> cstate def
+R20970:20975 Quan.QState <> qstate def
+R20977:20977 Quan.QIMP <> n:190 var
+binder 20948:20948 <> x:192
+binder 20950:20950 <> y:193
+binder 20952:20953 <> mu:194
+R21036:21041 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R20984:20995 Quan.QIMP <> ceval_single ind
+R21034:21035 Quan.QIMP <> mu:194 var
+R21000:21016 Quan.QState StateMap.Raw map2 def
+R21031:21031 Quan.QIMP <> y:193 var
+R21029:21029 Quan.QIMP <> x:192 var
+R21018:21027 Quan.QState <> option_app def
+R20997:20997 Quan.QIMP <> c:191 var
+R21042:21048 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R21056:21059 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R21150:21150 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 21049:21051 <> mu1:195
+binder 21053:21055 <> mu2:196
+R21080:21084 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R21060:21071 Quan.QIMP <> ceval_single ind
+R21077:21079 Quan.QIMP <> mu1:195 var
+R21075:21075 Quan.QIMP <> x:192 var
+R21073:21073 Quan.QIMP <> c:191 var
+R21105:21110 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R21085:21096 Quan.QIMP <> ceval_single ind
+R21102:21104 Quan.QIMP <> mu2:196 var
+R21100:21100 Quan.QIMP <> y:193 var
+R21098:21098 Quan.QIMP <> c:191 var
+R21113:21113 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21111:21112 Quan.QIMP <> mu:194 var
+R21114:21130 Quan.QState StateMap.Raw map2 def
+R21147:21149 Quan.QIMP <> mu2:196 var
+R21143:21145 Quan.QIMP <> mu1:195 var
+R21132:21141 Quan.QState <> option_app def
+R21252:21261 Quan.QIMP <> ceval_skip thm
+R21252:21261 Quan.QIMP <> ceval_skip thm
+R21287:21296 Quan.QIMP <> ceval_skip thm
+R21287:21296 Quan.QIMP <> ceval_skip thm
+R21314:21325 Quan.QIMP <> ceval_skip_1 thm
+R21314:21325 Quan.QIMP <> ceval_skip_1 thm
+R21369:21371 Coq.Init.Datatypes <> nil constr
+R21369:21371 Coq.Init.Datatypes <> nil constr
+R21381:21383 Coq.Init.Datatypes <> nil constr
+R21381:21383 Coq.Init.Datatypes <> nil constr
+R21408:21418 Quan.QIMP <> ceval_abort thm
+R21408:21418 Quan.QIMP <> ceval_abort thm
+R21443:21453 Quan.QIMP <> ceval_abort thm
+R21443:21453 Quan.QIMP <> ceval_abort thm
+R21477:21489 Quan.QIMP <> ceval_abort_1 thm
+R21477:21489 Quan.QIMP <> ceval_abort_1 thm
+R21575:21577 Coq.Init.Datatypes <> nil constr
+R21575:21577 Coq.Init.Datatypes <> nil constr
+R21587:21589 Coq.Init.Datatypes <> nil constr
+R21587:21589 Coq.Init.Datatypes <> nil constr
+R21614:21618 Quan.QIMP <> E_nil constr
+R21614:21618 Quan.QIMP <> E_nil constr
+R21634:21638 Quan.QIMP <> E_nil constr
+R21634:21638 Quan.QIMP <> E_nil constr
+R21744:21754 Quan.QState <> map2_r_refl thm
+R21744:21754 Quan.QState <> map2_r_refl thm
+R21744:21754 Quan.QState <> map2_r_refl thm
+R21807:21809 Coq.Init.Datatypes <> nil constr
+R21807:21809 Coq.Init.Datatypes <> nil constr
+R21821:21837 Quan.QState StateMap.Raw map2 def
+R21859:21859 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R21894:21894 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R21860:21860 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21890:21891 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21893:21893 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21861:21868 Quan.QState <> c_update def
+R21873:21877 Quan.QIMP <> aeval def
+R21879:21879 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21881:21882 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21884:21884 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21839:21848 Quan.QState <> option_app def
+R21821:21837 Quan.QState StateMap.Raw map2 def
+R21859:21859 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R21894:21894 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R21860:21860 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21890:21891 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21893:21893 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21861:21868 Quan.QState <> c_update def
+R21873:21877 Quan.QIMP <> aeval def
+R21879:21879 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21881:21882 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21884:21884 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21839:21848 Quan.QState <> option_app def
+R21925:21929 Quan.QIMP <> E_nil constr
+R21925:21929 Quan.QIMP <> E_nil constr
+R21967:21976 Quan.QState <> map2_nil_l thm
+R21967:21976 Quan.QState <> map2_nil_l thm
+R21967:21976 Quan.QState <> map2_nil_l thm
+R21987:21997 Quan.QState <> map2_r_refl thm
+R21987:21997 Quan.QState <> map2_r_refl thm
+R21987:21997 Quan.QState <> map2_r_refl thm
+R22055:22065 Quan.QState <> map2_l_refl thm
+R22055:22065 Quan.QState <> map2_l_refl thm
+R22055:22065 Quan.QState <> map2_l_refl thm
+R22120:22136 Quan.QState StateMap.Raw map2 def
+R22158:22158 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22193:22193 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22159:22159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22189:22190 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22192:22192 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22160:22167 Quan.QState <> c_update def
+R22172:22176 Quan.QIMP <> aeval def
+R22178:22178 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22180:22181 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22183:22183 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22138:22147 Quan.QState <> option_app def
+R22120:22136 Quan.QState StateMap.Raw map2 def
+R22158:22158 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22193:22193 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22159:22159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22189:22190 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22192:22192 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22160:22167 Quan.QState <> c_update def
+R22172:22176 Quan.QIMP <> aeval def
+R22178:22178 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22180:22181 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22183:22183 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22138:22147 Quan.QState <> option_app def
+R22218:22220 Coq.Init.Datatypes <> nil constr
+R22218:22220 Coq.Init.Datatypes <> nil constr
+R22265:22269 Quan.QIMP <> E_nil constr
+R22265:22269 Quan.QIMP <> E_nil constr
+R22289:22296 Quan.QState <> map2_nil thm
+R22289:22296 Quan.QState <> map2_nil thm
+R22289:22296 Quan.QState <> map2_nil thm
+R22307:22317 Quan.QState <> map2_l_refl thm
+R22307:22317 Quan.QState <> map2_l_refl thm
+R22307:22317 Quan.QState <> map2_l_refl thm
+R22399:22418 Quan.QState Cstate_as_OT compare defax
+R22399:22418 Quan.QState Cstate_as_OT compare defax
+R22559:22575 Quan.QState StateMap.Raw map2 def
+R22596:22596 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22631:22631 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22597:22597 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22627:22628 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22630:22630 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22598:22605 Quan.QState <> c_update def
+R22610:22614 Quan.QIMP <> aeval def
+R22616:22616 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22618:22619 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22621:22621 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22577:22586 Quan.QState <> option_app def
+R22559:22575 Quan.QState StateMap.Raw map2 def
+R22596:22596 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22631:22631 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22597:22597 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22627:22628 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22630:22630 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22598:22605 Quan.QState <> c_update def
+R22610:22614 Quan.QIMP <> aeval def
+R22616:22616 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22618:22619 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22621:22621 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22577:22586 Quan.QState <> option_app def
+R22702:22707 Quan.QIMP <> E_Asgn constr
+R22702:22707 Quan.QIMP <> E_Asgn constr
+R22919:22935 Quan.QState StateMap.Raw map2 def
+R22956:22956 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22991:22991 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22957:22957 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22987:22988 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22990:22990 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22958:22965 Quan.QState <> c_update def
+R22970:22974 Quan.QIMP <> aeval def
+R22976:22976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22978:22979 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22981:22981 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22937:22946 Quan.QState <> option_app def
+R22919:22935 Quan.QState StateMap.Raw map2 def
+R22956:22956 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22991:22991 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R22957:22957 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22987:22988 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22990:22990 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22958:22965 Quan.QState <> c_update def
+R22970:22974 Quan.QIMP <> aeval def
+R22976:22976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22978:22979 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22981:22981 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R22937:22946 Quan.QState <> option_app def
+R23016:23032 Quan.QState StateMap.Raw map2 def
+R23053:23053 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23094:23094 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23054:23054 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23089:23090 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23093:23093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23055:23062 Quan.QState <> c_update def
+R23067:23071 Quan.QIMP <> aeval def
+R23073:23073 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23076:23078 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23081:23082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23034:23043 Quan.QState <> option_app def
+R23016:23032 Quan.QState StateMap.Raw map2 def
+R23053:23053 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23094:23094 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23054:23054 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23089:23090 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23093:23093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23055:23062 Quan.QState <> c_update def
+R23067:23071 Quan.QIMP <> aeval def
+R23073:23073 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23076:23078 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23081:23082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23034:23043 Quan.QState <> option_app def
+R23174:23179 Quan.QIMP <> E_Asgn constr
+R23174:23179 Quan.QIMP <> E_Asgn constr
+R23230:23235 Quan.QIMP <> E_Asgn constr
+R23230:23235 Quan.QIMP <> E_Asgn constr
+R23464:23480 Quan.QState StateMap.Raw map2 def
+R23493:23493 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23532:23532 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23494:23494 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23527:23528 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23531:23531 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23495:23502 Quan.QState <> c_update def
+R23507:23511 Quan.QIMP <> aeval def
+R23513:23513 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23516:23517 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23520:23520 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23482:23491 Quan.QState <> option_app def
+R23464:23480 Quan.QState StateMap.Raw map2 def
+R23493:23493 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23532:23532 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R23494:23494 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23527:23528 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23531:23531 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23495:23502 Quan.QState <> c_update def
+R23507:23511 Quan.QIMP <> aeval def
+R23513:23513 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23516:23517 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23520:23520 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R23482:23491 Quan.QState <> option_app def
+R23619:23624 Quan.QIMP <> E_Asgn constr
+R23619:23624 Quan.QIMP <> E_Asgn constr
+R23714:23725 Quan.QIMP <> map2_app_nil thm
+R23714:23725 Quan.QIMP <> map2_app_nil thm
+R23767:23769 Coq.Init.Datatypes <> nil constr
+R23767:23769 Coq.Init.Datatypes <> nil constr
+R23779:23781 Coq.Init.Datatypes <> nil constr
+R23779:23781 Coq.Init.Datatypes <> nil constr
+R23803:23807 Quan.QIMP <> E_nil constr
+R23803:23807 Quan.QIMP <> E_nil constr
+R23823:23827 Quan.QIMP <> E_nil constr
+R23823:23827 Quan.QIMP <> E_nil constr
+R24123:24131 Quan.QIMP <> ceval_seq thm
+R24123:24131 Quan.QIMP <> ceval_seq thm
+R24190:24198 Quan.QIMP <> ceval_seq thm
+R24190:24198 Quan.QIMP <> ceval_seq thm
+R24332:24334 Coq.Init.Datatypes <> nil constr
+R24332:24334 Coq.Init.Datatypes <> nil constr
+R24344:24346 Coq.Init.Datatypes <> nil constr
+R24344:24346 Coq.Init.Datatypes <> nil constr
+R24366:24370 Quan.QIMP <> E_nil constr
+R24366:24370 Quan.QIMP <> E_nil constr
+R24386:24390 Quan.QIMP <> E_nil constr
+R24386:24390 Quan.QIMP <> E_nil constr
+R24453:24463 Quan.QState <> map2_r_refl thm
+R24453:24463 Quan.QState <> map2_r_refl thm
+R24453:24463 Quan.QState <> map2_r_refl thm
+R24482:24484 Coq.Init.Datatypes <> nil constr
+R24482:24484 Coq.Init.Datatypes <> nil constr
+R24517:24521 Quan.QIMP <> E_nil constr
+R24517:24521 Quan.QIMP <> E_nil constr
+R24554:24563 Quan.QState <> map2_nil_l thm
+R24554:24563 Quan.QState <> map2_nil_l thm
+R24554:24563 Quan.QState <> map2_nil_l thm
+R24574:24584 Quan.QState <> map2_r_refl thm
+R24574:24584 Quan.QState <> map2_r_refl thm
+R24574:24584 Quan.QState <> map2_r_refl thm
+R24636:24646 Quan.QState <> map2_l_refl thm
+R24636:24646 Quan.QState <> map2_l_refl thm
+R24636:24646 Quan.QState <> map2_l_refl thm
+R24682:24684 Coq.Init.Datatypes <> nil constr
+R24682:24684 Coq.Init.Datatypes <> nil constr
+R24724:24728 Quan.QIMP <> E_nil constr
+R24724:24728 Quan.QIMP <> E_nil constr
+R24743:24750 Quan.QState <> map2_nil thm
+R24743:24750 Quan.QState <> map2_nil thm
+R24743:24750 Quan.QState <> map2_nil thm
+R24761:24771 Quan.QState <> map2_l_refl thm
+R24761:24771 Quan.QState <> map2_l_refl thm
+R24761:24771 Quan.QState <> map2_l_refl thm
+R24842:24861 Quan.QState Cstate_as_OT compare defax
+R24842:24861 Quan.QState Cstate_as_OT compare defax
+R24983:24999 Quan.QState StateMap.Raw map2 def
+R25001:25010 Quan.QState <> option_app def
+R24983:24999 Quan.QState StateMap.Raw map2 def
+R25001:25010 Quan.QState <> option_app def
+R25050:25058 Quan.QIMP <> E_IF_true constr
+R25050:25058 Quan.QIMP <> E_IF_true constr
+R25231:25247 Quan.QState StateMap.Raw map2 def
+R25249:25258 Quan.QState <> option_app def
+R25231:25247 Quan.QState StateMap.Raw map2 def
+R25249:25258 Quan.QState <> option_app def
+R25298:25307 Quan.QIMP <> E_IF_false constr
+R25298:25307 Quan.QIMP <> E_IF_false constr
+R25504:25510 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R25545:25550 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R25521:25524 Coq.Init.Datatypes <> list ind
+R25533:25535 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R25527:25532 Quan.QState <> cstate def
+R25536:25541 Quan.QState <> qstate def
+binder 25511:25513 <> mu1:197
+R25521:25524 Coq.Init.Datatypes <> list ind
+R25533:25535 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R25527:25532 Quan.QState <> cstate def
+R25536:25541 Quan.QState <> qstate def
+binder 25515:25517 <> mu2:198
+R25578:25585 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R25551:25562 Quan.QIMP <> ceval_single ind
+R25575:25577 Quan.QIMP <> mu1:197 var
+R25567:25567 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25573:25573 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25568:25568 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25570:25570 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25572:25572 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25615:25622 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R25586:25597 Quan.QIMP <> ceval_single ind
+R25612:25614 Quan.QIMP <> mu2:198 var
+R25602:25602 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25610:25610 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25603:25603 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25605:25606 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25609:25609 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25626:25628 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R25629:25645 Quan.QState StateMap.Raw map2 def
+R25662:25664 Quan.QIMP <> mu2:198 var
+R25658:25660 Quan.QIMP <> mu1:197 var
+R25647:25656 Quan.QState <> option_app def
+R25504:25510 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R25545:25550 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R25521:25524 Coq.Init.Datatypes <> list ind
+R25533:25535 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R25527:25532 Quan.QState <> cstate def
+R25536:25541 Quan.QState <> qstate def
+binder 25511:25513 <> mu1:199
+R25521:25524 Coq.Init.Datatypes <> list ind
+R25533:25535 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R25527:25532 Quan.QState <> cstate def
+R25536:25541 Quan.QState <> qstate def
+binder 25515:25517 <> mu2:200
+R25578:25585 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R25551:25562 Quan.QIMP <> ceval_single ind
+R25575:25577 Quan.QIMP <> mu1:199 var
+R25567:25567 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25573:25573 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25568:25568 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25570:25570 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25572:25572 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25615:25622 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R25586:25597 Quan.QIMP <> ceval_single ind
+R25612:25614 Quan.QIMP <> mu2:200 var
+R25602:25602 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25610:25610 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R25603:25603 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25605:25606 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25609:25609 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25626:25628 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R25629:25645 Quan.QState StateMap.Raw map2 def
+R25662:25664 Quan.QIMP <> mu2:200 var
+R25658:25660 Quan.QIMP <> mu1:199 var
+R25647:25656 Quan.QState <> option_app def
+R25702:25721 Quan.QState Cstate_as_OT compare defax
+R25702:25721 Quan.QState Cstate_as_OT compare defax
+R25739:25760 Quan.QState Cstate_as_OT lt_not_eq prfax
+R25739:25760 Quan.QState Cstate_as_OT lt_not_eq prfax
+R25801:25822 Quan.QState Cstate_as_OT lt_not_eq prfax
+R25801:25822 Quan.QState Cstate_as_OT lt_not_eq prfax
+R25910:25926 Quan.QState StateMap.Raw map2 def
+R25928:25937 Quan.QState <> option_app def
+R25910:25926 Quan.QState StateMap.Raw map2 def
+R25928:25937 Quan.QState <> option_app def
+R25961:25977 Quan.QState StateMap.Raw map2 def
+R25979:25988 Quan.QState <> option_app def
+R25961:25977 Quan.QState StateMap.Raw map2 def
+R25979:25988 Quan.QState <> option_app def
+R26017:26025 Quan.QIMP <> E_IF_true constr
+R26017:26025 Quan.QIMP <> E_IF_true constr
+R26037:26049 Quan.QIMP <> state_eq_bexp thm
+R26053:26053 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26055:26056 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26064:26064 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26058:26061 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26037:26049 Quan.QIMP <> state_eq_bexp thm
+R26053:26053 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26055:26056 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26064:26064 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26058:26061 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26037:26049 Quan.QIMP <> state_eq_bexp thm
+R26053:26053 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26055:26056 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26064:26064 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26058:26061 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26037:26049 Quan.QIMP <> state_eq_bexp thm
+R26053:26053 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26055:26056 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26064:26064 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26058:26061 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26137:26145 Quan.QIMP <> E_IF_true constr
+R26137:26145 Quan.QIMP <> E_IF_true constr
+R26157:26169 Quan.QIMP <> state_eq_bexp thm
+R26173:26173 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26175:26176 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26184:26184 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26178:26181 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26157:26169 Quan.QIMP <> state_eq_bexp thm
+R26173:26173 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26175:26176 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26184:26184 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26178:26181 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26157:26169 Quan.QIMP <> state_eq_bexp thm
+R26173:26173 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26175:26176 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26184:26184 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26178:26181 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26157:26169 Quan.QIMP <> state_eq_bexp thm
+R26173:26173 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26175:26176 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26184:26184 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26178:26181 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26238:26252 Quan.QState Cstate_as_OT eq def
+R26411:26417 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R26452:26457 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R26428:26431 Coq.Init.Datatypes <> list ind
+R26440:26442 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R26434:26439 Quan.QState <> cstate def
+R26443:26448 Quan.QState <> qstate def
+binder 26418:26420 <> mu1:201
+R26428:26431 Coq.Init.Datatypes <> list ind
+R26440:26442 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R26434:26439 Quan.QState <> cstate def
+R26443:26448 Quan.QState <> qstate def
+binder 26422:26424 <> mu2:202
+R26485:26492 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R26458:26469 Quan.QIMP <> ceval_single ind
+R26482:26484 Quan.QIMP <> mu1:201 var
+R26474:26474 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26480:26480 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26475:26475 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26477:26477 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26479:26479 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26522:26529 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R26493:26504 Quan.QIMP <> ceval_single ind
+R26519:26521 Quan.QIMP <> mu2:202 var
+R26509:26509 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26517:26517 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26510:26510 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26512:26513 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26516:26516 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26533:26535 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R26536:26552 Quan.QState StateMap.Raw map2 def
+R26569:26571 Quan.QIMP <> mu2:202 var
+R26565:26567 Quan.QIMP <> mu1:201 var
+R26554:26563 Quan.QState <> option_app def
+R26411:26417 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R26452:26457 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R26428:26431 Coq.Init.Datatypes <> list ind
+R26440:26442 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R26434:26439 Quan.QState <> cstate def
+R26443:26448 Quan.QState <> qstate def
+binder 26418:26420 <> mu1:203
+R26428:26431 Coq.Init.Datatypes <> list ind
+R26440:26442 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R26434:26439 Quan.QState <> cstate def
+R26443:26448 Quan.QState <> qstate def
+binder 26422:26424 <> mu2:204
+R26485:26492 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R26458:26469 Quan.QIMP <> ceval_single ind
+R26482:26484 Quan.QIMP <> mu1:203 var
+R26474:26474 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26480:26480 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26475:26475 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26477:26477 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26479:26479 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26522:26529 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R26493:26504 Quan.QIMP <> ceval_single ind
+R26519:26521 Quan.QIMP <> mu2:204 var
+R26509:26509 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26517:26517 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R26510:26510 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26512:26513 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26516:26516 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26533:26535 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R26536:26552 Quan.QState StateMap.Raw map2 def
+R26569:26571 Quan.QIMP <> mu2:204 var
+R26565:26567 Quan.QIMP <> mu1:203 var
+R26554:26563 Quan.QState <> option_app def
+R26609:26628 Quan.QState Cstate_as_OT compare defax
+R26609:26628 Quan.QState Cstate_as_OT compare defax
+R26646:26667 Quan.QState Cstate_as_OT lt_not_eq prfax
+R26646:26667 Quan.QState Cstate_as_OT lt_not_eq prfax
+R26708:26729 Quan.QState Cstate_as_OT lt_not_eq prfax
+R26708:26729 Quan.QState Cstate_as_OT lt_not_eq prfax
+R26817:26833 Quan.QState StateMap.Raw map2 def
+R26835:26844 Quan.QState <> option_app def
+R26817:26833 Quan.QState StateMap.Raw map2 def
+R26835:26844 Quan.QState <> option_app def
+R26868:26884 Quan.QState StateMap.Raw map2 def
+R26886:26895 Quan.QState <> option_app def
+R26868:26884 Quan.QState StateMap.Raw map2 def
+R26886:26895 Quan.QState <> option_app def
+R26924:26933 Quan.QIMP <> E_IF_false constr
+R26924:26933 Quan.QIMP <> E_IF_false constr
+R26945:26957 Quan.QIMP <> state_eq_bexp thm
+R26961:26961 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26963:26964 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26972:26972 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26966:26969 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26945:26957 Quan.QIMP <> state_eq_bexp thm
+R26961:26961 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26963:26964 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26972:26972 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26966:26969 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26945:26957 Quan.QIMP <> state_eq_bexp thm
+R26961:26961 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26963:26964 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26972:26972 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26966:26969 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R26945:26957 Quan.QIMP <> state_eq_bexp thm
+R26961:26961 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26963:26964 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26972:26972 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R26966:26969 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R27045:27054 Quan.QIMP <> E_IF_false constr
+R27045:27054 Quan.QIMP <> E_IF_false constr
+R27066:27078 Quan.QIMP <> state_eq_bexp thm
+R27082:27082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27084:27085 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27093:27093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27087:27090 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R27066:27078 Quan.QIMP <> state_eq_bexp thm
+R27082:27082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27084:27085 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27093:27093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27087:27090 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R27066:27078 Quan.QIMP <> state_eq_bexp thm
+R27082:27082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27084:27085 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27093:27093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27087:27090 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R27066:27078 Quan.QIMP <> state_eq_bexp thm
+R27082:27082 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27084:27085 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27093:27093 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27087:27090 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R27147:27161 Quan.QState Cstate_as_OT eq def
+R27358:27374 Quan.QState StateMap.Raw map2 def
+R27376:27385 Quan.QState <> option_app def
+R27358:27374 Quan.QState StateMap.Raw map2 def
+R27376:27385 Quan.QState <> option_app def
+R27436:27444 Quan.QIMP <> E_IF_true constr
+R27436:27444 Quan.QIMP <> E_IF_true constr
+R27611:27627 Quan.QState StateMap.Raw map2 def
+R27629:27638 Quan.QState <> option_app def
+R27611:27627 Quan.QState StateMap.Raw map2 def
+R27629:27638 Quan.QState <> option_app def
+R27689:27698 Quan.QIMP <> E_IF_false constr
+R27689:27698 Quan.QIMP <> E_IF_false constr
+R27843:27845 Coq.Init.Datatypes <> nil constr
+R27843:27845 Coq.Init.Datatypes <> nil constr
+R27855:27857 Coq.Init.Datatypes <> nil constr
+R27855:27857 Coq.Init.Datatypes <> nil constr
+R27873:27877 Quan.QIMP <> E_nil constr
+R27873:27877 Quan.QIMP <> E_nil constr
+R27893:27897 Quan.QIMP <> E_nil constr
+R27893:27897 Quan.QIMP <> E_nil constr
+R27952:27962 Quan.QState <> map2_r_refl thm
+R27952:27962 Quan.QState <> map2_r_refl thm
+R27952:27962 Quan.QState <> map2_r_refl thm
+R27977:27979 Coq.Init.Datatypes <> nil constr
+R27977:27979 Coq.Init.Datatypes <> nil constr
+R28008:28012 Quan.QIMP <> E_nil constr
+R28008:28012 Quan.QIMP <> E_nil constr
+R28041:28050 Quan.QState <> map2_nil_l thm
+R28041:28050 Quan.QState <> map2_nil_l thm
+R28041:28050 Quan.QState <> map2_nil_l thm
+R28061:28071 Quan.QState <> map2_r_refl thm
+R28061:28071 Quan.QState <> map2_r_refl thm
+R28061:28071 Quan.QState <> map2_r_refl thm
+R28119:28129 Quan.QState <> map2_l_refl thm
+R28119:28129 Quan.QState <> map2_l_refl thm
+R28119:28129 Quan.QState <> map2_l_refl thm
+R28157:28159 Coq.Init.Datatypes <> nil constr
+R28157:28159 Coq.Init.Datatypes <> nil constr
+R28195:28199 Quan.QIMP <> E_nil constr
+R28195:28199 Quan.QIMP <> E_nil constr
+R28210:28217 Quan.QState <> map2_nil thm
+R28210:28217 Quan.QState <> map2_nil thm
+R28210:28217 Quan.QState <> map2_nil thm
+R28228:28238 Quan.QState <> map2_l_refl thm
+R28228:28238 Quan.QState <> map2_l_refl thm
+R28228:28238 Quan.QState <> map2_l_refl thm
+R28301:28320 Quan.QState Cstate_as_OT compare defax
+R28301:28320 Quan.QState Cstate_as_OT compare defax
+R28427:28443 Quan.QState StateMap.Raw map2 def
+R28445:28454 Quan.QState <> option_app def
+R28427:28443 Quan.QState StateMap.Raw map2 def
+R28445:28454 Quan.QState <> option_app def
+R28490:28501 Quan.QIMP <> E_While_true constr
+R28490:28501 Quan.QIMP <> E_While_true constr
+R28654:28670 Quan.QState StateMap.Raw map2 def
+R28683:28683 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28690:28690 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28684:28684 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28687:28687 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28689:28689 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28672:28681 Quan.QState <> option_app def
+R28654:28670 Quan.QState StateMap.Raw map2 def
+R28683:28683 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28690:28690 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28684:28684 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28687:28687 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28689:28689 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28672:28681 Quan.QState <> option_app def
+R28722:28734 Quan.QIMP <> E_While_false constr
+R28722:28734 Quan.QIMP <> E_While_false constr
+R28914:28920 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R28956:28957 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R28932:28935 Coq.Init.Datatypes <> list ind
+R28944:28946 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R28938:28943 Quan.QState <> cstate def
+R28947:28952 Quan.QState <> qstate def
+binder 28921:28924 <> mu1':205
+R28932:28935 Coq.Init.Datatypes <> list ind
+R28944:28946 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R28938:28943 Quan.QState <> cstate def
+R28947:28952 Quan.QState <> qstate def
+binder 28926:28928 <> mu2:206
+R28988:28991 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R28958:28969 Quan.QIMP <> ceval_single ind
+R28984:28987 Quan.QIMP <> mu1':205 var
+R28975:28975 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28982:28982 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28976:28976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28979:28979 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28981:28981 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29023:29026 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R28992:29003 Quan.QIMP <> ceval_single ind
+R29020:29022 Quan.QIMP <> mu2:206 var
+R29009:29009 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R29018:29018 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R29010:29010 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29013:29014 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29017:29017 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29030:29032 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R29033:29049 Quan.QState StateMap.Raw map2 def
+R29067:29069 Quan.QIMP <> mu2:206 var
+R29062:29065 Quan.QIMP <> mu1':205 var
+R29051:29060 Quan.QState <> option_app def
+R28914:28920 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R28956:28957 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R28932:28935 Coq.Init.Datatypes <> list ind
+R28944:28946 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R28938:28943 Quan.QState <> cstate def
+R28947:28952 Quan.QState <> qstate def
+binder 28921:28924 <> mu1':207
+R28932:28935 Coq.Init.Datatypes <> list ind
+R28944:28946 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R28938:28943 Quan.QState <> cstate def
+R28947:28952 Quan.QState <> qstate def
+binder 28926:28928 <> mu2:208
+R28988:28991 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R28958:28969 Quan.QIMP <> ceval_single ind
+R28984:28987 Quan.QIMP <> mu1':207 var
+R28975:28975 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28982:28982 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R28976:28976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28979:28979 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R28981:28981 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29023:29026 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R28992:29003 Quan.QIMP <> ceval_single ind
+R29020:29022 Quan.QIMP <> mu2:208 var
+R29009:29009 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R29018:29018 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R29010:29010 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29013:29014 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29017:29017 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29030:29032 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R29033:29049 Quan.QState StateMap.Raw map2 def
+R29067:29069 Quan.QIMP <> mu2:208 var
+R29062:29065 Quan.QIMP <> mu1':207 var
+R29051:29060 Quan.QState <> option_app def
+R29098:29112 Quan.QState Cstate_as_OT eq def
+R29137:29156 Quan.QState Cstate_as_OT compare defax
+R29137:29156 Quan.QState Cstate_as_OT compare defax
+R29172:29193 Quan.QState Cstate_as_OT lt_not_eq prfax
+R29172:29193 Quan.QState Cstate_as_OT lt_not_eq prfax
+R29776:29794 Coq.Logic.Eqdep_dec <> <> lib
+R29812:29830 Coq.Arith.Peano_dec <> <> lib
+prf 29841:29847 <> ceval_4
+R29851:29853 Coq.Init.Datatypes <> nat ind
+binder 29849:29849 <> n:209
+binder 29865:29865 <> c:210
+binder 29867:29871 <> sigma:211
+R29879:29884 Quan.QState <> qstate def
+R29886:29886 Quan.QIMP <> n:209 var
+binder 29874:29876 <> rho:212
+R29898:29901 Coq.Init.Datatypes <> list ind
+R29910:29911 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R29904:29909 Quan.QState <> cstate def
+R29912:29917 Quan.QState <> qstate def
+R29919:29919 Quan.QIMP <> n:209 var
+binder 29890:29891 <> mu:213
+binder 29893:29895 <> mu':214
+R29961:29964 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R29924:29935 Quan.QIMP <> ceval_single ind
+R29958:29960 Quan.QIMP <> mu':214 var
+R29952:29953 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R29940:29940 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29946:29947 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29951:29951 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R29941:29945 Quan.QIMP <> sigma:211 var
+R29948:29950 Quan.QIMP <> rho:212 var
+R29954:29955 Quan.QIMP <> mu:213 var
+R29937:29937 Quan.QIMP <> c:210 var
+R29965:29971 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R29979:29982 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R30084:30084 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 29972:29974 <> mu1:215
+binder 29976:29978 <> mu2:216
+R30015:30018 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R29983:29994 Quan.QIMP <> ceval_single ind
+R30012:30014 Quan.QIMP <> mu1:215 var
+R29998:29998 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30010:30010 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R29999:29999 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30005:30005 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30009:30009 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30000:30004 Quan.QIMP <> sigma:211 var
+R30006:30008 Quan.QIMP <> rho:212 var
+R29996:29996 Quan.QIMP <> c:210 var
+R30040:30043 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R30019:30030 Quan.QIMP <> ceval_single ind
+R30037:30039 Quan.QIMP <> mu2:216 var
+R30034:30035 Quan.QIMP <> mu:213 var
+R30032:30032 Quan.QIMP <> c:210 var
+R30047:30047 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R30044:30046 Quan.QIMP <> mu':214 var
+R30048:30064 Quan.QState StateMap.Raw map2 def
+R30081:30083 Quan.QIMP <> mu2:216 var
+R30077:30079 Quan.QIMP <> mu1:215 var
+R30066:30075 Quan.QState <> option_app def
+R30152:30152 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30164:30164 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30153:30153 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30159:30159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30163:30163 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30152:30152 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30164:30164 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30153:30153 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30159:30159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30163:30163 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30195:30200 Quan.QIMP <> E_Skip constr
+R30195:30200 Quan.QIMP <> E_Skip constr
+R30221:30230 Quan.QIMP <> ceval_skip thm
+R30221:30230 Quan.QIMP <> ceval_skip thm
+R30276:30278 Coq.Init.Datatypes <> nil constr
+R30276:30278 Coq.Init.Datatypes <> nil constr
+R30288:30290 Coq.Init.Datatypes <> nil constr
+R30288:30290 Coq.Init.Datatypes <> nil constr
+R30306:30312 Quan.QIMP <> E_Abort constr
+R30306:30312 Quan.QIMP <> E_Abort constr
+R30328:30338 Quan.QIMP <> ceval_abort thm
+R30328:30338 Quan.QIMP <> ceval_abort thm
+R30385:30385 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30437:30437 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30386:30386 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30431:30432 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30436:30436 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30387:30394 Quan.QState <> c_update def
+R30400:30404 Quan.QIMP <> aeval def
+R30407:30407 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30413:30414 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30418:30418 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30385:30385 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30437:30437 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R30386:30386 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30431:30432 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30436:30436 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30387:30394 Quan.QState <> c_update def
+R30400:30404 Quan.QIMP <> aeval def
+R30407:30407 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30413:30414 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30418:30418 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R30609:30615 Quan.QIMP <> ceval_3 prfax
+R30609:30615 Quan.QIMP <> ceval_3 prfax
+R30715:30719 Quan.QIMP <> E_Seq constr
+R30715:30719 Quan.QIMP <> E_Seq constr
+R30765:30773 Quan.QIMP <> ceval_seq thm
+R30765:30773 Quan.QIMP <> ceval_seq thm
+R30895:30895 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R30896:30912 Quan.QState StateMap.Raw map2 def
+R30930:30931 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R30914:30923 Quan.QState <> option_app def
+R30895:30895 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R30896:30912 Quan.QState StateMap.Raw map2 def
+R30930:30931 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R30914:30923 Quan.QState <> option_app def
+R30944:30951 Quan.QState <> map2_nil thm
+R30944:30951 Quan.QState <> map2_nil thm
+R30944:30951 Quan.QState <> map2_nil thm
+R30962:30972 Quan.QState <> map2_l_refl thm
+R30962:30972 Quan.QState <> map2_l_refl thm
+R30962:30972 Quan.QState <> map2_l_refl thm
+R31010:31018 Quan.QIMP <> E_IF_true constr
+R31010:31018 Quan.QIMP <> E_IF_true constr
+R31041:31045 Quan.QIMP <> E_nil constr
+R31041:31045 Quan.QIMP <> E_nil constr
+R31148:31148 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31149:31165 Quan.QState StateMap.Raw map2 def
+R31183:31184 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31167:31176 Quan.QState <> option_app def
+R31148:31148 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31149:31165 Quan.QState StateMap.Raw map2 def
+R31183:31184 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31167:31176 Quan.QState <> option_app def
+R31196:31203 Quan.QState <> map2_nil thm
+R31196:31203 Quan.QState <> map2_nil thm
+R31196:31203 Quan.QState <> map2_nil thm
+R31214:31224 Quan.QState <> map2_l_refl thm
+R31214:31224 Quan.QState <> map2_l_refl thm
+R31214:31224 Quan.QState <> map2_l_refl thm
+R31260:31269 Quan.QIMP <> E_IF_false constr
+R31260:31269 Quan.QIMP <> E_IF_false constr
+R31291:31295 Quan.QIMP <> E_nil constr
+R31291:31295 Quan.QIMP <> E_nil constr
+R31424:31424 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31425:31441 Quan.QState StateMap.Raw map2 def
+R31459:31460 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31443:31452 Quan.QState <> option_app def
+R31424:31424 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31425:31441 Quan.QState StateMap.Raw map2 def
+R31459:31460 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31443:31452 Quan.QState <> option_app def
+R31474:31481 Quan.QState <> map2_nil thm
+R31474:31481 Quan.QState <> map2_nil thm
+R31474:31481 Quan.QState <> map2_nil thm
+R31492:31502 Quan.QState <> map2_l_refl thm
+R31492:31502 Quan.QState <> map2_l_refl thm
+R31492:31502 Quan.QState <> map2_l_refl thm
+R31542:31553 Quan.QIMP <> E_While_true constr
+R31542:31553 Quan.QIMP <> E_While_true constr
+R31577:31581 Quan.QIMP <> E_nil constr
+R31577:31581 Quan.QIMP <> E_nil constr
+R31638:31638 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31651:31651 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31639:31639 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31645:31646 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31650:31650 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31638:31638 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31651:31651 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31639:31639 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31645:31646 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31650:31650 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31697:31697 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31683:31683 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31696:31696 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31684:31684 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31690:31691 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31695:31695 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31698:31714 Quan.QState StateMap.Raw map2 def
+R31742:31743 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31727:31727 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31740:31740 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31728:31728 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31734:31735 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31739:31739 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31716:31725 Quan.QState <> option_app def
+R31697:31697 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R31683:31683 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31696:31696 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31684:31684 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31690:31691 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31695:31695 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31698:31714 Quan.QState StateMap.Raw map2 def
+R31742:31743 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R31727:31727 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31740:31740 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31728:31728 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31734:31735 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31739:31739 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31716:31725 Quan.QState <> option_app def
+R31756:31763 Quan.QState <> map2_nil thm
+R31756:31763 Quan.QState <> map2_nil thm
+R31756:31763 Quan.QState <> map2_nil thm
+R31774:31784 Quan.QState <> map2_l_refl thm
+R31774:31784 Quan.QState <> map2_l_refl thm
+R31774:31784 Quan.QState <> map2_l_refl thm
+R31822:31834 Quan.QIMP <> E_While_false constr
+R31822:31834 Quan.QIMP <> E_While_false constr
+R31858:31862 Quan.QIMP <> E_nil constr
+R31858:31862 Quan.QIMP <> E_nil constr
+R31920:31935 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R31920:31935 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R31968:31968 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R32043:32043 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31969:31969 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31975:31976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R32042:32042 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31977:31984 Quan.QState <> q_update def
+R32008:32015 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R32001:32005 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R31989:31989 Quan.Matrix <> I def
+R31993:31996 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R31998:31999 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32016:32016 Quan.Matrix <> I def
+R32027:32030 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32035:32035 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32032:32033 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R31968:31968 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R32043:32043 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R31969:31969 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31975:31976 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R32042:32042 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R31977:31984 Quan.QState <> q_update def
+R32008:32015 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R32001:32005 Quan.Matrix <> ::matrix_scope:x_'⊗'_x not
+R31989:31989 Quan.Matrix <> I def
+R31993:31996 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R31998:31999 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32016:32016 Quan.Matrix <> I def
+R32027:32030 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32035:32035 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R32032:32033 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R32135:32144 Coq.Arith.PeanoNat Nat eq_dec thm
+R32135:32144 Coq.Arith.PeanoNat Nat eq_dec thm
+R32174:32179 Coq.Sorting.Sorted <> <> lib
+prf 32188:32201 <> big_app_sorted
+R32205:32207 Coq.Init.Datatypes <> nat ind
+binder 32203:32203 <> n:217
+R32226:32229 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R32223:32225 Coq.Init.Datatypes <> nat ind
+R32230:32233 Coq.Init.Datatypes <> list ind
+R32242:32244 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R32236:32241 Quan.QState <> cstate def
+R32245:32250 Quan.QState <> qstate def
+R32252:32252 Quan.QIMP <> n:217 var
+binder 32219:32219 <> f:218
+R32261:32263 Coq.Init.Datatypes <> nat ind
+binder 32257:32259 <> n_0:219
+R32267:32267 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R32328:32331 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+binder 32275:32275 <> i:220
+R32278:32283 Coq.Sorting.Sorted <> Sorted ind
+R32324:32324 Quan.QIMP <> f:218 var
+R32326:32326 Quan.QIMP <> i:220 var
+R32286:32304 Quan.QState StateMap.Raw.PX ltk def
+R32312:32317 Quan.QState <> qstate def
+R32319:32319 Quan.QIMP <> n:217 var
+R32332:32337 Coq.Sorting.Sorted <> Sorted ind
+R32378:32384 Quan.QIMP <> big_app def
+R32388:32390 Quan.QIMP <> n_0:219 var
+R32386:32386 Quan.QIMP <> f:218 var
+R32340:32358 Quan.QState StateMap.Raw.PX ltk def
+R32366:32371 Quan.QState <> qstate def
+R32373:32373 Quan.QIMP <> n:217 var
+R32439:32448 Coq.Sorting.Sorted <> Sorted_nil constr
+R32439:32448 Coq.Sorting.Sorted <> Sorted_nil constr
+R32465:32488 Quan.QState StateMap.Raw map2_sorted thm
+R32465:32488 Quan.QState StateMap.Raw map2_sorted thm
+prf 32541:32552 <> ceval_sorted
+R32557:32559 Coq.Init.Datatypes <> nat ind
+binder 32555:32555 <> n:221
+binder 32570:32570 <> c:222
+R32580:32583 Coq.Init.Datatypes <> list ind
+R32592:32593 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R32586:32591 Quan.QState <> cstate def
+R32594:32599 Quan.QState <> qstate def
+R32601:32601 Quan.QIMP <> n:221 var
+binder 32573:32574 <> mu:223
+binder 32576:32578 <> mu':224
+R32611:32616 Coq.Sorting.Sorted <> Sorted ind
+R32656:32657 Quan.QIMP <> mu:223 var
+R32619:32637 Quan.QState StateMap.Raw.PX ltk def
+R32645:32650 Quan.QState <> qstate def
+R32652:32652 Quan.QIMP <> n:221 var
+binder 32607:32608 <> Hm:225
+R32663:32674 Quan.QIMP <> ceval_single ind
+R32681:32683 Quan.QIMP <> mu':224 var
+R32678:32679 Quan.QIMP <> mu:223 var
+R32676:32676 Quan.QIMP <> c:222 var
+binder 32661:32661 <> H:226
+R32687:32692 Coq.Sorting.Sorted <> Sorted ind
+R32732:32734 Quan.QIMP <> mu':224 var
+R32695:32713 Quan.QState StateMap.Raw.PX ltk def
+R32721:32726 Quan.QState <> qstate def
+R32728:32728 Quan.QIMP <> n:221 var
+R32922:32945 Quan.QState StateMap.Raw map2_sorted thm
+R32922:32945 Quan.QState StateMap.Raw map2_sorted thm
+R32957:32967 Coq.Sorting.Sorted <> Sorted_cons constr
+R32957:32967 Coq.Sorting.Sorted <> Sorted_cons constr
+R32979:32988 Coq.Sorting.Sorted <> Sorted_nil constr
+R32979:32988 Coq.Sorting.Sorted <> Sorted_nil constr
+R32998:33006 Coq.Sorting.Sorted <> HdRel_nil constr
+R32998:33006 Coq.Sorting.Sorted <> HdRel_nil constr
+R33157:33160 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R33145:33145 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33151:33152 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33156:33156 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33157:33160 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R33145:33145 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33151:33152 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33156:33156 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33262:33285 Quan.QState StateMap.Raw map2_sorted thm
+R33262:33285 Quan.QState StateMap.Raw map2_sorted thm
+R33306:33306 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33319:33319 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33307:33307 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33313:33314 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33318:33318 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33306:33306 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33319:33319 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33307:33307 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33313:33314 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33318:33318 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33329:33339 Coq.Sorting.Sorted <> Sorted_cons constr
+R33329:33339 Coq.Sorting.Sorted <> Sorted_cons constr
+R33349:33358 Coq.Sorting.Sorted <> Sorted_nil constr
+R33349:33358 Coq.Sorting.Sorted <> Sorted_nil constr
+R33368:33376 Coq.Sorting.Sorted <> HdRel_nil constr
+R33368:33376 Coq.Sorting.Sorted <> HdRel_nil constr
+R33453:33476 Quan.QState StateMap.Raw map2_sorted thm
+R33453:33476 Quan.QState StateMap.Raw map2_sorted thm
+R33497:33497 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33510:33510 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33498:33498 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33504:33505 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33509:33509 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33497:33497 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33510:33510 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R33498:33498 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33504:33505 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33509:33509 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R33520:33530 Coq.Sorting.Sorted <> Sorted_cons constr
+R33520:33530 Coq.Sorting.Sorted <> Sorted_cons constr
+R33540:33549 Coq.Sorting.Sorted <> Sorted_nil constr
+R33540:33549 Coq.Sorting.Sorted <> Sorted_nil constr
+R33559:33567 Coq.Sorting.Sorted <> HdRel_nil constr
+R33559:33567 Coq.Sorting.Sorted <> HdRel_nil constr
+R33709:33732 Quan.QState StateMap.Raw map2_sorted thm
+R33709:33732 Quan.QState StateMap.Raw map2_sorted thm
+R33741:33751 Coq.Sorting.Sorted <> Sorted_cons constr
+R33741:33751 Coq.Sorting.Sorted <> Sorted_cons constr
+R33762:33771 Coq.Sorting.Sorted <> Sorted_nil constr
+R33762:33771 Coq.Sorting.Sorted <> Sorted_nil constr
+R33781:33789 Coq.Sorting.Sorted <> HdRel_nil constr
+R33781:33789 Coq.Sorting.Sorted <> HdRel_nil constr
+R33916:33939 Quan.QState StateMap.Raw map2_sorted thm
+R33916:33939 Quan.QState StateMap.Raw map2_sorted thm
+R33949:33959 Coq.Sorting.Sorted <> Sorted_cons constr
+R33949:33959 Coq.Sorting.Sorted <> Sorted_cons constr
+R33969:33978 Coq.Sorting.Sorted <> Sorted_nil constr
+R33969:33978 Coq.Sorting.Sorted <> Sorted_nil constr
+R33988:33996 Coq.Sorting.Sorted <> HdRel_nil constr
+R33988:33996 Coq.Sorting.Sorted <> HdRel_nil constr
+R34049:34064 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R34049:34064 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R34080:34095 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R34080:34095 Coq.Logic.Eqdep_dec <> inj_pair2_eq_dec thm
+R34136:34145 Coq.Arith.PeanoNat Nat eq_dec thm
+R34136:34145 Coq.Arith.PeanoNat Nat eq_dec thm
+R34154:34163 Coq.Arith.PeanoNat Nat eq_dec thm
+R34154:34163 Coq.Arith.PeanoNat Nat eq_dec thm
+R34234:34257 Quan.QState StateMap.Raw map2_sorted thm
+R34234:34257 Quan.QState StateMap.Raw map2_sorted thm
+R34269:34282 Quan.QIMP <> big_app_sorted thm
+R34269:34282 Quan.QIMP <> big_app_sorted thm
+R34300:34310 Coq.Sorting.Sorted <> Sorted_cons constr
+R34300:34310 Coq.Sorting.Sorted <> Sorted_cons constr
+R34319:34328 Coq.Sorting.Sorted <> Sorted_nil constr
+R34319:34328 Coq.Sorting.Sorted <> Sorted_nil constr
+R34338:34346 Coq.Sorting.Sorted <> HdRel_nil constr
+R34338:34346 Coq.Sorting.Sorted <> HdRel_nil constr
+ind 34426:34430 <> ceval
+constr 34476:34480 <> E_com
+R34434:34436 Coq.Init.Datatypes <> nat ind
+binder 34432:34432 <> n:227
+R34443:34446 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34440:34442 Quan.QIMP <> com ind
+R34455:34457 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34447:34452 Quan.QState <> dstate def
+R34466:34467 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34458:34463 Quan.QState <> dstate def
+binder 34491:34491 <> c:230
+R34501:34506 Quan.QState <> dstate def
+R34508:34508 Quan.QIMP <> n:227 var
+binder 34494:34495 <> mu:231
+binder 34497:34499 <> mu':232
+R34533:34535 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34521:34529 Quan.QState <> WF_dstate def
+R34531:34532 Quan.QIMP <> mu:231 var
+R34549:34558 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34536:34544 Quan.QState <> WF_dstate def
+R34546:34548 Quan.QIMP <> mu':232 var
+R34559:34559 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34613:34624 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34560:34571 Quan.QIMP <> ceval_single ind
+R34595:34607 Quan.QState StateMap this proj
+R34609:34611 Quan.QIMP <> mu':232 var
+R34576:34588 Quan.QState StateMap this proj
+R34590:34591 Quan.QIMP <> mu:231 var
+R34573:34573 Quan.QIMP <> c:230 var
+R34625:34629 Quan.QIMP <> ceval:228 ind
+R34636:34638 Quan.QIMP <> mu':232 var
+R34633:34634 Quan.QIMP <> mu:231 var
+R34631:34631 Quan.QIMP <> c:230 var
+prf 34649:34655 <> ceval_2
+R34659:34661 Coq.Init.Datatypes <> nat ind
+binder 34657:34657 <> n:233
+binder 34672:34672 <> b:234
+binder 34674:34675 <> c1:235
+binder 34677:34678 <> c2:236
+R34689:34692 Coq.Init.Datatypes <> list ind
+R34701:34702 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R34695:34700 Quan.QState <> cstate def
+R34703:34708 Quan.QState <> qstate def
+R34710:34710 Quan.QIMP <> n:233 var
+binder 34681:34682 <> mu:237
+binder 34684:34686 <> mu':238
+R34715:34715 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34844:34847 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34725:34730 Quan.QState <> cstate def
+binder 34723:34723 <> x:239
+R34780:34783 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34772:34775 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R34733:34745 Quan.QState <> option_qstate def
+R34749:34765 Quan.QState StateMap.Raw find def
+R34769:34770 Quan.QIMP <> mu:237 var
+R34767:34767 Quan.QIMP <> x:239 var
+R34776:34779 Quan.Matrix <> Zero def
+R34784:34784 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R34838:34839 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R34785:34789 Quan.QIMP <> beval def
+R34837:34837 Quan.QIMP <> b:234 var
+R34791:34791 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R34793:34795 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R34834:34835 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R34792:34792 Quan.QIMP <> x:239 var
+R34796:34808 Quan.QState <> option_qstate def
+R34811:34827 Quan.QState StateMap.Raw find def
+R34831:34832 Quan.QIMP <> mu:237 var
+R34829:34829 Quan.QIMP <> x:239 var
+R34840:34843 Coq.Init.Datatypes <> true constr
+R34870:34873 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R34848:34859 Quan.QIMP <> ceval_single ind
+R34867:34869 Quan.QIMP <> mu':238 var
+R34864:34865 Quan.QIMP <> mu:237 var
+R34861:34862 Quan.QIMP <> c1:235 var
+R34874:34885 Quan.QIMP <> ceval_single ind
+R34904:34906 Quan.QIMP <> mu':238 var
+R34901:34902 Quan.QIMP <> mu:237 var
+R34888:34890 Quan.QIMP <> CIf constr
+R34892:34892 Quan.QIMP <> b:234 var
+R34894:34895 Quan.QIMP <> c1:235 var
+R34897:34898 Quan.QIMP <> c2:236 var
+R34959:34963 Quan.QIMP <> E_nil constr
+R34959:34963 Quan.QIMP <> E_nil constr
+R34993:34999 Quan.QIMP <> ceval_4 prfax
+R34993:34999 Quan.QIMP <> ceval_4 prfax
+R35078:35086 Quan.QIMP <> E_IF_true constr
+R35078:35086 Quan.QIMP <> E_IF_true constr
+prf 35156:35163 <> WF_ceval
+R35167:35169 Coq.Init.Datatypes <> nat ind
+binder 35165:35165 <> n:240
+binder 35181:35181 <> c:241
+R35191:35194 Coq.Init.Datatypes <> list ind
+R35203:35204 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R35197:35202 Quan.QState <> cstate def
+R35205:35210 Quan.QState <> qstate def
+R35212:35212 Quan.QIMP <> n:240 var
+binder 35184:35185 <> mu:242
+binder 35187:35189 <> mu':243
+R35234:35236 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R35218:35230 Quan.QState <> WF_dstate_aux ind
+R35232:35233 Quan.QIMP <> mu:242 var
+R35258:35260 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R35237:35248 Quan.QIMP <> ceval_single ind
+R35255:35257 Quan.QIMP <> mu':243 var
+R35252:35253 Quan.QIMP <> mu:242 var
+R35250:35250 Quan.QIMP <> c:241 var
+R35261:35273 Quan.QState <> WF_dstate_aux ind
+R35275:35277 Quan.QIMP <> mu':243 var
+R35317:35328 Quan.QIMP <> ceval_skip_1 thm
+R35317:35328 Quan.QIMP <> ceval_skip_1 thm
+R35379:35391 Quan.QIMP <> ceval_abort_1 thm
+R35379:35391 Quan.QIMP <> ceval_abort_1 thm
+R35418:35423 Quan.QState <> WF_nil constr
+R35418:35423 Quan.QState <> WF_nil constr
+R35477:35482 Quan.QState <> WF_nil constr
+R35477:35482 Quan.QState <> WF_nil constr
+R35536:35553 Coq.Arith.PeanoNat <> <> lib
+prf 35563:35572 <> pred_sub_1
+R35583:35585 Coq.Init.Datatypes <> nat ind
+binder 35581:35581 <> n:244
+R35594:35594 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R35588:35591 Coq.Init.Peano <> pred abbrev
+R35593:35593 Quan.QIMP <> n:244 var
+R35596:35596 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R35595:35595 Quan.QIMP <> n:244 var
+prf 35625:35631 <> S_add_1
+R35642:35644 Coq.Init.Datatypes <> nat ind
+binder 35640:35640 <> n:245
+R35650:35650 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R35647:35647 Coq.Init.Datatypes <> S constr
+R35649:35649 Quan.QIMP <> n:245 var
+R35652:35652 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R35651:35651 Quan.QIMP <> n:245 var
+prf 35681:35693 <> add_sub_assoc
+R35710:35712 Coq.Init.Datatypes <> nat ind
+binder 35704:35704 <> a:246
+binder 35706:35706 <> b:247
+binder 35708:35708 <> c:248
+R35716:35716 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R35721:35725 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R35718:35719 Coq.Init.Peano <> ::nat_scope:x_'<='_x not
+R35717:35717 Quan.QIMP <> b:247 var
+R35720:35720 Quan.QIMP <> c:248 var
+R35733:35733 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R35727:35728 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R35732:35732 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R35726:35726 Quan.QIMP <> a:246 var
+R35730:35730 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R35729:35729 Quan.QIMP <> b:247 var
+R35731:35731 Quan.QIMP <> c:248 var
+R35737:35737 Coq.Init.Peano <> ::nat_scope:x_'-'_x not
+R35735:35735 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R35734:35734 Quan.QIMP <> a:246 var
+R35736:35736 Quan.QIMP <> b:247 var
+R35738:35738 Quan.QIMP <> c:248 var
+prf 36186:36190 <> pow_1
+R36202:36204 Coq.Init.Datatypes <> nat ind
+binder 36200:36200 <> a:249
+R36210:36210 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R36208:36208 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36209:36209 Quan.QIMP <> a:249 var
+prf 36238:36246 <> Npow_mult
+binder 36256:36256 <> a:250
+binder 36258:36258 <> b:251
+binder 36260:36260 <> c:252
+R36270:36271 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R36263:36263 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36267:36268 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36265:36265 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36264:36264 Quan.QIMP <> a:250 var
+R36266:36266 Quan.QIMP <> b:251 var
+R36269:36269 Quan.QIMP <> c:252 var
+R36273:36274 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36278:36278 Coq.Reals.Rfunctions <> ::R_scope:x_'^'_x not
+R36272:36272 Quan.QIMP <> a:250 var
+R36276:36276 Coq.Init.Peano <> ::nat_scope:x_'*'_x not
+R36275:36275 Quan.QIMP <> b:251 var
+R36277:36277 Quan.QIMP <> c:252 var
+prf 36369:36388 <> inner_product_qubit0
+R36409:36409 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R36398:36401 Quan.Matrix <> ::matrix_scope:x_'×'_x not
+R36391:36397 Quan.Quantum <> :::'⟨0∣' not
+R36402:36408 Quan.Quantum <> :::'∣0⟩' not
+R36410:36410 Quan.Matrix <> I def
+prf 36440:36448 <> qubit01_I
+R36483:36485 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R36465:36468 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R36451:36464 Quan.Quantum <> :::'∣0⟩⟨0∣' not
+R36469:36482 Quan.Quantum <> :::'∣1⟩⟨1∣' not
+R36486:36486 Quan.Matrix <> I def
