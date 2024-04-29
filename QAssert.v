@@ -35,41 +35,47 @@ Inductive State_formula :Type:=
 |SNot (F:State_formula)
 |Assn_sub (i:nat) (a:aexp) (F:State_formula).
 
-Inductive probabilistic_formula :Type := 
+(* Inductive probabilistic_formula :Type := 
 |PState (p:R) (F:State_formula)
-|POplus (pF1 pF2: probabilistic_formula).
+|POplus   (pF1 pF2: probabilistic_formula).
 
 Inductive unprobabilistic_formula: Type:=
 |NState (F: State_formula)
-|NOplus (nF1 nF2:unprobabilistic_formula).
+|NOplus (nF1 nF2:unprobabilistic_formula). *)
 
-Local Open Scope R_scope.
+(* Local Open Scope R_scope.
 Fixpoint mode (pF: probabilistic_formula):=
   match pF with 
   |PState p F=> p
   |POplus pF1 pF2=> (mode pF1) + (mode pF2)
-  end.
+  end. *)
+
+Definition pro_formula := list (R * State_formula).
+Definition npro_formula := list (State_formula).
+  
 
 Inductive Assertion : Type:=
-|APro (pF:probabilistic_formula) 
-|ANpro (nF:unprobabilistic_formula).
+|APro (pF: pro_formula)
+|ANpro (nF: npro_formula).
+
+Definition State_formula_to_npro (F:State_formula):npro_formula:=
+  [F] .
+
 
 Local Open Scope R_scope.
-
 Coercion PBexp : bexp >-> Pure_formula.
 Coercion SPure : Pure_formula >-> State_formula.
 Coercion SQuan : QExp >-> State_formula.
-(* Coercion APro : probabilistic_formula H >-> Assertion. *)
-Coercion NState : State_formula >-> unprobabilistic_formula.
-Coercion ANpro : unprobabilistic_formula >-> Assertion.
-
+Coercion State_formula_to_npro : State_formula >-> npro_formula.
+Coercion APro : pro_formula >-> Assertion.
+Coercion ANpro : npro_formula >-> Assertion.
 
 Declare Custom Entry assert.
 Declare Scope assert_scope.
 Bind Scope assert_scope with Pure_formula.
 Bind Scope assert_scope with QExp.
 Bind Scope assert_scope with State_formula.
-Bind Scope assert_scope with probabilistic_formula.
+(* Bind Scope assert_scope with probabilistic_formula. *)
 Bind Scope assert_scope with Assertion.
 Delimit Scope assert_scope with assertion.
 Open Scope assert_scope.
@@ -84,13 +90,32 @@ Infix " ⊗*  " := (QExp_t)(at level 80) :assert_scope.
 Notation "~ F" := (SNot F ) : assert_scope.
 Notation "F1 /\ F2" := (SAnd F1  F2) : assert_scope.
 Notation " F1 ⊙ F2" := (SOdot F1 F2)(at level 80):assert_scope.
-Notation " F [ X |-> a ] " := (Assn_sub X a F)   (at level 10) : assert_scope.
+(* Notation " F [ X |-> a ] " := (Assn_sub X a F)   (at level 10) : assert_scope. *)
 
-Notation " p · F" :=(PState p F)(at level 80):assert_scope.
-Infix " ⊕p " :=  (POplus) (at level 80):assert_scope.
-Infix " ⊕np " :=  (NOplus ) (at level 80):assert_scope.
+(* Notation " p · F" :=(PState p F)(at level 80):assert_scope.
+Infix "  ⊕p " :=  (POplus) (at level 80):assert_scope.
+Infix " ⊕np " :=  (NOplus ) (at level 80):assert_scope. *)
+
+Definition sum_over_list_formula (pF: pro_formula) := 
+  big_sum (fun i => fst (nth i pF (0, SPure (PBexp BFalse)))) (length pF).
+
+Definition distribution_formula (pF: pro_formula) := 
+  and (Forall (fun x => 0 <= fst x) pF)  (sum_over_list_formula pF = 1).
+
+Lemma sum_over_list_nil_formula : sum_over_list_formula [] = 0.
+Proof. unfold sum_over_list_formula. simpl. reflexivity. Qed.
 
 
+Lemma sum_over_list_cons_formula : forall x l,
+  sum_over_list_formula (x :: l) = (fst x + sum_over_list_formula l)%R.
+Proof.
+  intros x l.
+  unfold sum_over_list_formula.
+  simpl length. 
+  rewrite big_sum_shift.
+  simpl nth.
+  reflexivity.
+Qed.
 
 (*----------------------------------FreeV--------------------------------------*)
 Local Open Scope assert_scope.
@@ -118,18 +143,18 @@ Fixpoint Free_state (F: State_formula) : (CSet * QSet):=
     | Assn_sub X a F => Free_state F
   end.
 
-Fixpoint Free_pro(pF: probabilistic_formula): (CSet * QSet) :=
+Fixpoint Free_pro(pF: pro_formula): (CSet * QSet) :=
   match pF with
-  |PState p F => Free_state F
-  |POplus pF1 pF2 => (NSet.union (fst (Free_pro pF1)) (fst(Free_pro pF2)),
-                   NSet.union (snd (Free_pro pF1))  (snd (Free_pro pF2)))
+  |[] => (NSet.empty, NSet.empty)
+  |(p,F)::pF' => (NSet.union (fst (Free_state F)) (fst(Free_pro pF')),
+                   NSet.union (snd (Free_state F))  (snd (Free_pro pF')))
   end.
 
-Fixpoint Free_npro(nF: unprobabilistic_formula): (CSet * QSet) :=
+Fixpoint Free_npro(nF: npro_formula): (CSet * QSet) :=
     match nF with
-    |NState F => Free_state F
-    |NOplus nF1 nF2 => (NSet.union (fst (Free_npro nF1)) (fst(Free_npro nF2)), 
-                      NSet.union (snd (Free_npro nF1))  (snd (Free_npro nF2)))
+    |[] => (NSet.empty, NSet.empty)
+    |F::nF'=> (NSet.union (fst (Free_state F)) (fst(Free_npro nF')), 
+                      NSet.union (snd (Free_state F))  (snd (Free_npro nF')))
     end.
 
 Definition Free (d: Assertion) : (CSet * QSet):=
@@ -187,45 +212,95 @@ end.  *)
 
 Local Open Scope R_scope.
 
-Inductive sat_State {n:nat}:(dstate n) -> (State_formula)-> Prop:=
-  |sat_F: forall (mu:dstate n) F, WF_dstate mu -> State_eval_dstate F (StateMap.this mu)
+Inductive sat_State {n:nat}:(dstate (2^n)) -> (State_formula)-> Prop:=
+  |sat_F: forall (mu:dstate (2^n)) F, WF_dstate mu -> State_eval_dstate F (StateMap.this mu)
                                            ->sat_State mu F.
 
-Inductive sat_Pro {n:nat}: (dstate n)-> (probabilistic_formula)-> Prop:=
-|sat_PState: forall (mu:dstate n) (F:State_formula) (p:R),  (0<p<=1) 
-                                  -> (exists (mu':dstate n),  (d_trace mu'=d_trace mu)
-                                  /\ (dstate_eq mu  (d_scalar p mu')) 
+(* Fixpoint scale_pro ( p: R) ( pF: probabilistic_formula ): probabilistic_formula := 
+  match pF with 
+  |PState p1 F => PState (p*p1) F 
+  |POplus pF1 pF2 =>POplus (scale_pro p pF1) (scale_pro p pF2)
+  end. *)
+                                           
+(* Inductive sat_Pro {n:nat}: (dstate (2^n))-> (probabilistic_formula)-> Prop:=
+|sat_PState: forall (mu:dstate (2^n)) (F:State_formula) (p:R),  (0<p<=1) 
+                                  -> (exists (mu':dstate (2^n)), d_trace mu'=1/\ 
+                                  (dstate_eq mu  (d_scalar p mu')) 
                                    /\ (sat_State  mu' F))
                                   -> sat_Pro  mu ((PState p F))
-|sat_POplus: forall (mu:dstate n) (pF1 pF2:probabilistic_formula), 
-                                  (0<mode pF1 + mode pF2<=1)
-                                  -> (exists (mu1 mu2:dstate n),  
-                                  (d_trace mu1=d_trace mu)/\ (d_trace mu2=d_trace mu)
-                                  /\ dstate_eq mu (d_app mu1 mu2) 
+|sat_POplus: forall (mu:dstate (2^n))  (pF1 pF2:probabilistic_formula), 
+                                  (0<mode pF1 + mode pF2 <=1) 
+                                  -> (exists (mu1 mu2:dstate (2^n)),  
+                                    dstate_eq mu (d_app mu1 mu2 )
                                   /\ sat_Pro mu1 pF1 /\ sat_Pro mu2 pF2)
-                                  -> (sat_Pro  mu (POplus pF1 pF2)).
+                                  -> (sat_Pro  mu (POplus pF1 pF2)). *)
 
-Inductive sat_Npro {n:nat}:  (dstate n)-> (unprobabilistic_formula)-> Prop:=
-|sat_NState: forall (mu:dstate n) F,(sat_State mu F) -> sat_Npro mu ((NState F))
-|sat_NOplus: forall (mu:dstate n) (nF1 nF2:unprobabilistic_formula), 
-                    (exists p (mu1 mu2:dstate n), (0<p<=1) 
-                    /\ (d_trace mu1=d_trace mu) /\ (d_trace mu2=d_trace mu) /\
-                   (dstate_eq mu (d_app (d_scalar p mu1) (d_scalar (1-p) mu2)))
-                   /\ (sat_Npro mu1 nF1 /\ (sat_Npro mu2 nF2 ) ))
-                    -> sat_Npro mu (NOplus nF1 nF2).
+(* Inductive sat_Npro {n:nat}:  (dstate (2^n))-> (unprobabilistic_formula)-> Prop:=
+|sat_NState: forall (mu:dstate (2^n)) F,(sat_State mu F) -> sat_Npro mu ((NState F))
+|sat_NOplus: forall (mu:dstate (2^n)) F (nF:unprobabilistic_formula), 
+WF_dstate mu->
+                    (exists (mu1 mu2:dstate n), 
+                   (dstate_eq mu (d_app mu1 mu2))
+                    /\ (sat_Npro mu1 F /\ (sat_Npro mu2 nF ) ))
+                    -> sat_Npro mu (NOplus F nF). *)
+Fixpoint big_and (f : nat -> Prop) (n_0 : nat) : Prop := 
+  match n_0 with
+  | 0 => True
+  | S n' => (big_and f n') /\ (f n')
+  end.
+
+Fixpoint big_pOplus (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) : pro_formula := 
+ match n_0 with
+| 0 => []
+| S n' =>(f n', g n')::(big_pOplus f g n')  
+end.
+
+Fixpoint big_Oplus  (g : nat -> State_formula) (n_0 : nat) : npro_formula := 
+ match n_0 with
+| 0 => []
+| S n' =>(g n')::(big_Oplus g n')  
+end.
+
+(* Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate (2^n))) (n_0 : nat) : list (cstate * qstate n) := 
+  match n_0 with
+  | 0 => nil
+  | S n' =>StateMap.Raw.map2 option_app (big_app f n')  (f n')
+  end. *)
+
+Fixpoint big_dapp{n:nat} (f : nat -> dstate (2^n)) (n_0 : nat) : dstate (2^n) := 
+  match n_0 with
+  | 0 => d_empty (2^n)
+  | S n' =>d_app (big_dapp f n')  (f n')
+  end.
+
+Fixpoint npro_to_pro_formula (nF:npro_formula ) (p_n: list R): pro_formula:=
+  match nF, p_n with 
+  |[], _ => []
+  |_, [] => []
+  |F :: nF', h::p' => (h, F):: (npro_to_pro_formula nF' p')
+  end.
+
+  Fixpoint get_pro_formula (pF:pro_formula): list R:=
+    match pF with 
+    |[] => []
+    |(p, F)::pF' => p:: (get_pro_formula pF')
+    end. 
 
 Local Open Scope R_scope.
-Inductive sat_Assert {n:nat}: (dstate n)-> (Assertion)-> Prop:=
-|sat_APro: forall (mu:dstate n) pF, sat_Pro mu pF-> sat_Assert mu (APro pF)
-|sat_ANpro: forall (mu:dstate n) nF, sat_Npro mu nF-> sat_Assert mu nF.
-  
+Inductive sat_Assert {n:nat}: (dstate (2^n))-> (Assertion)-> Prop:=
+|sat_APro: forall (mu:dstate (2^n)) pF (mu_n: list (dstate (2^n))), 
+                 WF_dstate mu -> distribution_formula pF-> 
+                dstate_eq mu (big_dapp (fun i:nat=>d_scalar (fst (nth i pF (0, SPure (PBexp BFalse)))) 
+                   (nth i mu_n (d_empty (2^n)))) (length pF))
+                /\ big_and (fun i:nat=> (sat_State (nth i mu_n (d_empty (2^n))) (snd (nth i pF (0, SPure (PBexp BFalse))))) 
+                /\ d_trace mu= d_trace ((nth i mu_n (d_empty (2^n)))) ) (length pF)
+                    -> sat_Assert mu (APro pF)
+|sat_ANpro: forall (mu:dstate (2^n)) nF (p_n:list R), 
+                    (nF <> []) -> sat_Assert mu (npro_to_pro_formula nF p_n)
+                    ->sat_Assert mu (ANpro nF).
 
-Coercion sat_ANpro : sat_Npro >-> sat_Assert.
-(* Coercion sat_APro : sat_Pro >-> sat_Assert. *)
-Coercion sat_NState : sat_State >-> sat_Npro.
 
-
-Lemma WF_sat_State{n:nat}: forall  (mu:dstate n) (F:State_formula), 
+Lemma WF_sat_State{n:nat}: forall  (mu:dstate (2^n)) (F:State_formula), 
 sat_State mu F -> StateMap.this mu <> [] /\ WF_dstate mu.
 Proof. intros. 
       inversion_clear H. destruct mu as [mu IHmu].
@@ -234,7 +309,7 @@ Proof. intros.
       split. discriminate. intuition. 
 Qed.
 
-Lemma WF_dstate_eq{n}: forall (mu mu': dstate n),
+Lemma WF_dstate_eq{n}: forall (mu mu': dstate (2^n)),
 dstate_eq mu mu'-> WF_dstate mu -> WF_dstate mu'.
 Proof. unfold WF_dstate. unfold dstate_eq. 
       intros (mu,IHmu) (mu', IHmu').
@@ -242,54 +317,47 @@ Proof. unfold WF_dstate. unfold dstate_eq.
      assumption.
 Qed.
 
-Lemma dstate_eq_sym{n:nat}:forall (mu1 mu2: dstate n),
+Lemma dstate_eq_sym{n:nat}:forall (mu1 mu2: dstate (2^n)),
 dstate_eq mu1 mu2-> dstate_eq mu2 mu1 .
 Proof. intros  (mu1,IHmu1) (mu2,IHmu2).
 unfold dstate_eq. simpl. intuition.
 Qed.
        
-Lemma WF_sat_Pro{n:nat}: forall  (mu:dstate n) (pF:probabilistic_formula), 
+(* Lemma WF_sat_Pro{n:nat}: forall  (mu:dstate (2^n)) (pF:probabilistic_formula), 
 sat_Pro mu pF-> StateMap.this mu <> [] /\ WF_dstate mu.
 Proof. intros. induction pF.
       inversion_clear H. 
-        destruct H1. destruct H0. destruct H. destruct H2.  
+        destruct H1. destruct H0. destruct H.
+        destruct H2.   
         apply (WF_sat_State ) in H3. destruct H3.
         split. admit.       
       apply WF_dstate_eq with ((d_scalar p x)).
        apply dstate_eq_sym. assumption.
       apply WF_d_scalar. intuition. intuition.  
       inversion_clear H. destruct H1. destruct H.
-      destruct H. destruct H1. destruct H2.
+      destruct H. destruct H1. 
       split. admit.
       apply WF_dstate_eq with ((d_app x x0)).
-      apply dstate_eq_sym. assumption. 
-      admit.
+      apply dstate_eq_sym. assumption.
+    admit.
 Admitted.
        
-Lemma WF_sat_Npro{n:nat}: forall (nF:unprobabilistic_formula)  (mu:dstate n) , 
+Lemma WF_sat_Npro{n:nat}: forall (nF:unprobabilistic_formula)  (mu:dstate (2^n)) , 
 sat_Npro mu nF-> StateMap.this mu <> [] /\ WF_dstate mu.
 Proof. induction nF;intros; inversion_clear H.
        apply WF_sat_State in H0. assumption.
-       destruct H0. destruct H. destruct H.
-       destruct H. destruct H0. 
-       destruct H1. destruct H2. destruct H3.
        split. admit. 
-       apply WF_dstate_eq with ((d_app (d_scalar x x0)
-       (d_scalar (1 - x) x1))). apply dstate_eq_sym. assumption. 
-       apply WF_d_app.  split. assumption. admit.
-       admit. apply IHnF1 in  H3. apply H3. 
-       apply IHnF2 in H4. apply H4.
-Admitted.
+      intuition.
+Admitted. *)
 
 
-Lemma WF_sat_Assert{n:nat}: forall (mu:dstate n) (D:Assertion), 
+Lemma WF_sat_Assert{n:nat}: forall (mu:dstate (2^n)) (D:Assertion), 
 sat_Assert  mu D-> StateMap.this mu <> [] /\ WF_dstate mu.
-Proof. intros. induction D. 
-        inversion_clear H.
-        apply WF_sat_Pro in H0. assumption.
-        inversion_clear H.
-        apply WF_sat_Npro in H0. assumption. 
-Qed.
+Proof. intros. induction D; 
+        inversion_clear H. split.  admit.
+        intuition. inversion_clear H1. split. admit.
+        intuition.
+Admitted.
 
 
 Lemma state_eq_aexp{n:nat}: forall (st st':state n )  (a:aexp),
@@ -366,7 +434,7 @@ split. assumption. assumption.
 Qed.
 
 Definition assert_implies (P Q : Assertion) : Prop :=
-    forall (n:nat) (mu:dstate n), sat_Assert  mu P -> sat_Assert  mu Q.
+    forall (n:nat) (mu:dstate (2^n)), sat_Assert  mu P -> sat_Assert  mu Q.
 
 Notation "P ->> Q" := (assert_implies P Q)
     (at level 90) : assert_scope.
@@ -535,7 +603,7 @@ Qed.
 
 
 Local Open Scope R_scope.
-Lemma d_seman_scalar: forall n (p:R) (mu:dstate n) (F:State_formula),
+Lemma d_seman_scalar: forall n (p:R) (mu:dstate (2^n)) (F:State_formula),
 0<p<=1->
 sat_State mu F -> sat_State  (d_scalar p mu) F.
 Proof. 
@@ -598,7 +666,7 @@ Require Import Classical_Prop.
 
 
   Local Open Scope R_scope.
-Lemma d_seman_app: forall n (F:State_formula)  (mu mu':dstate n) (p0 p1:R),
+Lemma d_seman_app: forall n (F:State_formula)  (mu mu':dstate (2^n)) (p0 p1:R),
 (0 < p0 <= 1)->(0 < p1 <= 1)
 ->(0<(p0+p1)<=1)->
 sat_State mu F  -> sat_State  (mu') F

@@ -171,7 +171,7 @@ Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
 Notation "U ^ i":=(exp_U U i).
 
 
-Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate n)) (n_0 : nat) : list (cstate * qstate n) := 
+Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate (2^n))) (n_0 : nat) : list (cstate * qstate n) := 
   match n_0 with
   | 0 => nil
   | S n' =>StateMap.Raw.map2 option_app (big_app f n')  (f n')
@@ -880,7 +880,8 @@ Proof. intros. induction n_0.
 Qed.      
 
 
-Lemma ceval_sorted{ n:nat}: forall c (mu mu':list (cstate *qstate n))  (Hm: Sorted (StateMap.Raw.PX.ltk (elt:=qstate n)) mu)
+Lemma ceval_sorted{ n:nat}: forall c (mu mu':list (cstate *qstate n)) 
+ (Hm: Sorted (StateMap.Raw.PX.ltk (elt:=qstate n)) mu)
 (H:ceval_single c mu mu'),
 Sorted (StateMap.Raw.PX.ltk (elt:=qstate n)) mu'.
 Proof.  induction c. 

@@ -1,4 +1,4 @@
-DIGEST a22e5ebc9cc079bbf1177ff28d2f144a
+DIGEST 1c6f969aea8079093844bf4427370359
 FQuan.QAssert
 R15:19 Coq.Reals.Reals <> <> lib
 R37:54 Coquelicot.Complex <> <> lib
@@ -68,1544 +68,1512 @@ R948:951 Quan.QIMP <> aexp ind
 binder 946:946 <> a:23
 R957:969 Quan.QAssert <> State_formula:13 ind
 binder 955:955 <> F:24
-ind 984:1004 <> probabilistic_formula
-constr 1017:1022 <> PState
-constr 1049:1054 <> POplus
-R1027:1027 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 1025:1025 <> p:27
-R1033:1045 Quan.QAssert <> State_formula ind
-binder 1031:1031 <> F:28
-R1066:1086 Quan.QAssert <> probabilistic_formula:25 ind
-binder 1057:1059 <> pF1:29
-binder 1061:1063 <> pF2:30
-ind 1101:1123 <> unprobabilistic_formula
-constr 1134:1139 <> NState
-constr 1161:1166 <> NOplus
-R1145:1157 Quan.QAssert <> State_formula ind
-binder 1142:1142 <> F:33
-R1177:1199 Quan.QAssert <> unprobabilistic_formula:31 ind
-binder 1169:1171 <> nF1:34
-binder 1173:1175 <> nF2:35
-def 1239:1242 <> mode
-R1249:1269 Quan.QAssert <> probabilistic_formula ind
-binder 1245:1246 <> pF:36
-R1282:1283 Quan.QAssert <> pF:36 var
-R1294:1299 Quan.QAssert <> PState constr
-R1312:1317 Quan.QAssert <> POplus constr
-R1329:1329 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R1338:1342 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R1351:1351 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R1330:1333 Quan.QAssert <> mode:37 def
-R1343:1346 Quan.QAssert <> mode:37 def
-ind 1371:1379 <> Assertion
-constr 1391:1394 <> APro
-constr 1425:1429 <> ANpro
-R1400:1420 Quan.QAssert <> probabilistic_formula ind
-binder 1397:1398 <> pF:41
-R1435:1457 Quan.QAssert <> unprobabilistic_formula ind
-binder 1432:1433 <> nF:42
-R1489:1526 Quan.QAssert <> PBexp constr
-R1529:1575 Quan.QAssert <> SPure constr
-R1578:1616 Quan.QAssert <> SQuan constr
-R1680:1738 Quan.QAssert <> NState constr
-R1741:1794 Quan.QAssert <> ANpro constr
-R2168:2174 Quan.QAssert <> PUniver constr
-not 2148:2148 <> ::assert_scope:'univer'_x_x
-R2307:2312 Quan.QAssert <> QExp_s constr
-not 2286:2286 <> ::assert_scope:'|'_x_'>['_x_'-'_x_']'
-R2371:2376 Quan.QAssert <> QExp_t constr
-not 2357:2357 <> ::assert_scope:x_'⊗*'_x
-R2428:2431 Quan.QAssert <> SNot constr
-not 2418:2418 <> ::assert_scope:'~'_x
-R2477:2480 Quan.QAssert <> SAnd constr
-not 2462:2462 <> ::assert_scope:x_'/\'_x
-R2532:2536 Quan.QAssert <> SOdot constr
-not 2515:2515 <> ::assert_scope:x_'⊙'_x
-R2603:2610 Quan.QAssert <> Assn_sub constr
-not 2581:2581 <> ::assert_scope:x_'['_x_'|->'_x_']'
-R2674:2679 Quan.QAssert <> PState constr
-not 2661:2661 <> ::assert_scope:x_'·'_x
-R2733:2738 Quan.QAssert <> POplus constr
-not 2719:2719 <> ::assert_scope:x_'⊕p'_x
-R2790:2795 Quan.QAssert <> NOplus constr
-not 2775:2775 <> ::assert_scope:x_'⊕np'_x
-R2950:2953 Quan.QIMP <> <> mod
-def 2965:2973 <> Free_pure
-R2979:2990 Quan.QAssert <> Pure_formula ind
-binder 2976:2976 <> P:43
-R2995:2998 Quan.QIMP <> CSet def
-R3011:3011 Quan.QAssert <> P:43 var
-R3026:3030 Quan.QAssert <> PBexp constr
-R3036:3044 Quan.QIMP <> Free_bexp def
-R3056:3062 Quan.QAssert <> PUniver constr
-R3072:3080 Quan.QAssert <> Free_pure:44 def
-def 3102:3110 <> Free_Qexp
-R3117:3120 Quan.QAssert <> QExp ind
-binder 3113:3114 <> qs:46
-R3125:3128 Quan.QState <> QSet def
-R3141:3142 Quan.QAssert <> qs:46 var
-R3155:3160 Quan.QAssert <> QExp_s constr
-R3171:3181 Quan.QState <> Qsys_to_Set def
-R3193:3198 Quan.QAssert <> QExp_t constr
-R3211:3220 Quan.QState NSet union def
-R3239:3247 Quan.QAssert <> Free_Qexp:47 def
-R3223:3231 Quan.QAssert <> Free_Qexp:47 def
-def 3302:3311 <> Free_state
-R3317:3329 Quan.QAssert <> State_formula ind
-binder 3314:3314 <> F:49
-R3339:3341 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R3335:3338 Quan.QIMP <> CSet def
-R3342:3345 Quan.QState <> QSet def
-R3358:3358 Quan.QAssert <> F:49 var
-R3371:3375 Quan.QAssert <> SPure constr
-R3382:3382 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3394:3396 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3407:3407 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3383:3391 Quan.QAssert <> Free_pure def
-R3397:3406 Quan.QState NSet empty def
-R3414:3418 Quan.QAssert <> SQuan constr
-R3425:3425 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3436:3437 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3450:3450 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3426:3435 Quan.QState NSet empty def
-R3438:3446 Quan.QAssert <> Free_Qexp def
-R3457:3461 Quan.QAssert <> SOdot constr
-R3472:3472 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3526:3527 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3583:3583 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3473:3482 Quan.QState NSet union def
-R3507:3509 Coq.Init.Datatypes <> fst def
-R3511:3520 Quan.QAssert <> Free_state:50 def
-R3485:3487 Coq.Init.Datatypes <> fst def
-R3490:3499 Quan.QAssert <> Free_state:50 def
-R3528:3537 Quan.QState NSet union def
-R3563:3565 Coq.Init.Datatypes <> snd def
-R3568:3577 Quan.QAssert <> Free_state:50 def
-R3540:3542 Coq.Init.Datatypes <> snd def
-R3545:3554 Quan.QAssert <> Free_state:50 def
-R3590:3593 Quan.QAssert <> SAnd constr
-R3604:3604 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3658:3659 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3715:3715 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3605:3614 Quan.QState NSet union def
-R3639:3641 Coq.Init.Datatypes <> fst def
-R3643:3652 Quan.QAssert <> Free_state:50 def
-R3617:3619 Coq.Init.Datatypes <> fst def
-R3622:3631 Quan.QAssert <> Free_state:50 def
-R3660:3669 Quan.QState NSet union def
-R3695:3697 Coq.Init.Datatypes <> snd def
-R3700:3709 Quan.QAssert <> Free_state:50 def
-R3672:3674 Coq.Init.Datatypes <> snd def
-R3677:3686 Quan.QAssert <> Free_state:50 def
-R3722:3725 Quan.QAssert <> SNot constr
-R3732:3741 Quan.QAssert <> Free_state:50 def
-R3752:3759 Quan.QAssert <> Assn_sub constr
-R3770:3779 Quan.QAssert <> Free_state:50 def
-R3781:3781 Quan.QAssert <> F:49 var
-def 3800:3807 <> Free_pro
-R3813:3833 Quan.QAssert <> probabilistic_formula ind
-binder 3809:3810 <> pF:52
-R3842:3844 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R3838:3841 Quan.QIMP <> CSet def
-R3845:3848 Quan.QState <> QSet def
-R3862:3863 Quan.QAssert <> pF:52 var
-R3873:3878 Quan.QAssert <> PState constr
-R3887:3896 Quan.QAssert <> Free_state def
-R3903:3908 Quan.QAssert <> POplus constr
-R3921:3921 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3973:3993 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R4047:4047 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R3922:3931 Quan.QState NSet union def
-R3955:3957 Coq.Init.Datatypes <> fst def
-R3959:3966 Quan.QAssert <> Free_pro:53 def
-R3934:3936 Coq.Init.Datatypes <> fst def
-R3939:3946 Quan.QAssert <> Free_pro:53 def
-R3994:4003 Quan.QState NSet union def
-R4028:4030 Coq.Init.Datatypes <> snd def
-R4033:4040 Quan.QAssert <> Free_pro:53 def
-R4006:4008 Coq.Init.Datatypes <> snd def
-R4011:4018 Quan.QAssert <> Free_pro:53 def
-def 4066:4074 <> Free_npro
-R4080:4102 Quan.QAssert <> unprobabilistic_formula ind
-binder 4076:4077 <> nF:55
-R4111:4113 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R4107:4110 Quan.QIMP <> CSet def
-R4114:4117 Quan.QState <> QSet def
-R4133:4134 Quan.QAssert <> nF:55 var
-R4146:4151 Quan.QAssert <> NState constr
-R4158:4167 Quan.QAssert <> Free_state def
-R4176:4181 Quan.QAssert <> NOplus constr
-R4194:4194 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R4248:4272 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R4328:4328 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R4195:4204 Quan.QState NSet union def
-R4229:4231 Coq.Init.Datatypes <> fst def
-R4233:4241 Quan.QAssert <> Free_npro:56 def
-R4207:4209 Coq.Init.Datatypes <> fst def
-R4212:4220 Quan.QAssert <> Free_npro:56 def
+def 1386:1396 <> pro_formula
+R1401:1404 Coq.Init.Datatypes <> list ind
+R1408:1410 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R1407:1407 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+R1411:1423 Quan.QAssert <> State_formula ind
+def 1438:1449 <> npro_formula
+R1454:1457 Coq.Init.Datatypes <> list ind
+R1460:1472 Quan.QAssert <> State_formula ind
+ind 1490:1498 <> Assertion
+constr 1510:1513 <> APro
+constr 1534:1538 <> ANpro
+R1520:1530 Quan.QAssert <> pro_formula def
+binder 1516:1517 <> pF:27
+R1545:1556 Quan.QAssert <> npro_formula def
+binder 1541:1542 <> nF:28
+def 1572:1592 <> State_formula_to_npro
+R1597:1609 Quan.QAssert <> State_formula ind
+binder 1595:1595 <> F:29
+R1612:1623 Quan.QAssert <> npro_formula def
+R1629:1629 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R1631:1631 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R1630:1630 Quan.QAssert <> F:29 var
+R1663:1700 Quan.QAssert <> PBexp constr
+R1703:1749 Quan.QAssert <> SPure constr
+R1752:1790 Quan.QAssert <> SQuan constr
+R1793:1855 Quan.QAssert <> State_formula_to_npro def
+R1858:1898 Quan.QAssert <> APro constr
+R1901:1943 Quan.QAssert <> ANpro constr
+R2322:2328 Quan.QAssert <> PUniver constr
+not 2302:2302 <> ::assert_scope:'univer'_x_x
+R2461:2466 Quan.QAssert <> QExp_s constr
+not 2440:2440 <> ::assert_scope:'|'_x_'>['_x_'-'_x_']'
+R2525:2530 Quan.QAssert <> QExp_t constr
+not 2511:2511 <> ::assert_scope:x_'⊗*'_x
+R2582:2585 Quan.QAssert <> SNot constr
+not 2572:2572 <> ::assert_scope:'~'_x
+R2631:2634 Quan.QAssert <> SAnd constr
+not 2616:2616 <> ::assert_scope:x_'/\'_x
+R2686:2690 Quan.QAssert <> SOdot constr
+not 2669:2669 <> ::assert_scope:x_'⊙'_x
+def 3006:3026 <> sum_over_list_formula
+R3033:3043 Quan.QAssert <> pro_formula def
+binder 3029:3030 <> pF:30
+R3052:3058 Quan.Summation <> big_sum def
+R3113:3118 Coq.Init.Datatypes <> length def
+R3120:3121 Quan.QAssert <> pF:30 var
+binder 3065:3065 <> i:31
+R3070:3072 Coq.Init.Datatypes <> fst def
+R3075:3077 Coq.Lists.List <> nth def
+R3084:3084 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R3086:3087 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R3108:3108 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R3088:3092 Quan.QAssert <> SPure constr
+R3095:3099 Quan.QAssert <> PBexp constr
+R3101:3106 Quan.QIMP <> BFalse constr
+R3081:3082 Quan.QAssert <> pF:30 var
+R3079:3079 Quan.QAssert <> i:31 var
+def 3137:3156 <> distribution_formula
+R3163:3173 Quan.QAssert <> pro_formula def
+binder 3159:3160 <> pF:32
+R3182:3184 Coq.Init.Logic <> and ind
+R3246:3248 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3222:3242 Quan.QAssert <> sum_over_list_formula def
+R3244:3245 Quan.QAssert <> pF:32 var
+R3187:3192 Coq.Lists.List <> Forall ind
+R3216:3217 Quan.QAssert <> pF:32 var
+binder 3199:3199 <> x:33
+R3205:3208 Coq.Reals.Rdefinitions <> ::R_scope:x_'<='_x not
+R3209:3211 Coq.Init.Datatypes <> fst def
+R3213:3213 Quan.QAssert <> x:33 var
+prf 3260:3284 <> sum_over_list_nil_formula
+R3312:3314 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3288:3308 Quan.QAssert <> sum_over_list_formula def
+R3310:3311 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R3332:3352 Quan.QAssert <> sum_over_list_formula def
+prf 3388:3413 <> sum_over_list_cons_formula
+binder 3424:3424 <> x:34
+binder 3426:3426 <> l:35
+R3461:3463 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3431:3451 Quan.QAssert <> sum_over_list_formula def
+R3455:3458 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R3454:3454 Quan.QAssert <> x:34 var
+R3459:3459 Quan.QAssert <> l:35 var
+R3470:3472 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
+R3465:3467 Coq.Init.Datatypes <> fst def
+R3469:3469 Quan.QAssert <> x:34 var
+R3473:3493 Quan.QAssert <> sum_over_list_formula def
+R3495:3495 Quan.QAssert <> l:35 var
+R3531:3551 Quan.QAssert <> sum_over_list_formula def
+R3581:3593 Quan.Summation <> big_sum_shift thm
+R3581:3593 Quan.Summation <> big_sum_shift thm
+R3581:3593 Quan.Summation <> big_sum_shift thm
+R3750:3753 Quan.QIMP <> <> mod
+def 3765:3773 <> Free_pure
+R3779:3790 Quan.QAssert <> Pure_formula ind
+binder 3776:3776 <> P:36
+R3795:3798 Quan.QIMP <> CSet def
+R3811:3811 Quan.QAssert <> P:36 var
+R3826:3830 Quan.QAssert <> PBexp constr
+R3836:3844 Quan.QIMP <> Free_bexp def
+R3856:3862 Quan.QAssert <> PUniver constr
+R3872:3880 Quan.QAssert <> Free_pure:37 def
+def 3902:3910 <> Free_Qexp
+R3917:3920 Quan.QAssert <> QExp ind
+binder 3913:3914 <> qs:39
+R3925:3928 Quan.QState <> QSet def
+R3941:3942 Quan.QAssert <> qs:39 var
+R3955:3960 Quan.QAssert <> QExp_s constr
+R3971:3981 Quan.QState <> Qsys_to_Set def
+R3993:3998 Quan.QAssert <> QExp_t constr
+R4011:4020 Quan.QState NSet union def
+R4039:4047 Quan.QAssert <> Free_Qexp:40 def
+R4023:4031 Quan.QAssert <> Free_Qexp:40 def
+def 4102:4111 <> Free_state
+R4117:4129 Quan.QAssert <> State_formula ind
+binder 4114:4114 <> F:42
+R4139:4141 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R4135:4138 Quan.QIMP <> CSet def
+R4142:4145 Quan.QState <> QSet def
+R4158:4158 Quan.QAssert <> F:42 var
+R4171:4175 Quan.QAssert <> SPure constr
+R4182:4182 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4194:4196 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4207:4207 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4183:4191 Quan.QAssert <> Free_pure def
+R4197:4206 Quan.QState NSet empty def
+R4214:4218 Quan.QAssert <> SQuan constr
+R4225:4225 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4236:4237 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4250:4250 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4226:4235 Quan.QState NSet empty def
+R4238:4246 Quan.QAssert <> Free_Qexp def
+R4257:4261 Quan.QAssert <> SOdot constr
+R4272:4272 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4326:4327 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4383:4383 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
 R4273:4282 Quan.QState NSet union def
-R4308:4310 Coq.Init.Datatypes <> snd def
-R4313:4321 Quan.QAssert <> Free_npro:56 def
-R4285:4287 Coq.Init.Datatypes <> snd def
-R4290:4298 Quan.QAssert <> Free_npro:56 def
-def 4351:4354 <> Free
-R4360:4368 Quan.QAssert <> Assertion ind
-binder 4357:4357 <> d:58
-R4378:4380 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R4374:4377 Quan.QIMP <> CSet def
-R4381:4384 Quan.QState <> QSet def
-R4397:4397 Quan.QAssert <> d:58 var
-R4410:4413 Quan.QAssert <> APro constr
-R4421:4428 Quan.QAssert <> Free_pro def
-R4438:4442 Quan.QAssert <> ANpro constr
-R4448:4456 Quan.QAssert <> Free_npro def
-def 4679:4687 <> Pure_eval
-R4691:4693 Coq.Init.Datatypes <> nat ind
-binder 4689:4689 <> n:60
-R4700:4711 Quan.QAssert <> Pure_formula ind
-binder 4697:4698 <> pf:61
-R4718:4722 Quan.QState <> state def
-R4724:4724 Quan.QAssert <> n:60 var
-binder 4715:4716 <> st:62
-R4744:4745 Quan.QAssert <> pf:61 var
-R4755:4759 Quan.QAssert <> PBexp constr
-R4771:4775 Quan.QIMP <> beval def
-R4777:4778 Quan.QAssert <> st:62 var
-R4799:4803 Coq.Init.Logic <> False ind
-R4789:4792 Coq.Init.Logic <> True ind
-R4807:4813 Quan.QAssert <> PUniver constr
-binder 4828:4828 <> a:65
-R4831:4839 Quan.QAssert <> Pure_eval:63 def
-R4844:4858 Quan.QState <> s_update_cstate def
-R4864:4865 Quan.QAssert <> st:62 var
-R4862:4862 Quan.QAssert <> a:65 var
-def 4886:4894 <> QExp_eval
-R4898:4900 Coq.Init.Datatypes <> nat ind
-binder 4896:4896 <> n:66
-R4908:4911 Quan.QAssert <> QExp ind
-binder 4904:4905 <> qs:67
-R4919:4923 Quan.QState <> state def
-R4925:4925 Quan.QAssert <> n:66 var
-binder 4915:4916 <> st:68
-R4955:4956 Quan.QAssert <> qs:67 var
-R4967:4972 Quan.QAssert <> QExp_s constr
-R5071:5072 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R4983:4993 Quan.Basic_Supplement <> PMpar_trace def
-R5068:5068 Coq.Init.Nat <> ::nat_scope:x_'-'_x not
-R5067:5067 Quan.QAssert <> n:66 var
-R4998:5002 Quan.Matrix <> scale def
-R5006:5007 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5009:5009 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5008:5008 Quan.QAssert <> n:66 var
-R5014:5015 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5017:5017 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5016:5016 Quan.QAssert <> n:66 var
-R5023:5026 Quan.Complex <> ::C_scope:x_'/'_x not
-R5050:5050 Quan.Complex <> ::C_scope:x_'/'_x not
-R5021:5022 Quan.Complex <> C1 abbrev
-R5028:5032 Quan.Matrix <> trace def
-R5036:5037 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5039:5039 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R5038:5038 Quan.QAssert <> n:66 var
-R5043:5045 Coq.Init.Datatypes <> snd def
-R5047:5048 Quan.QAssert <> st:68 var
-R5055:5057 Coq.Init.Datatypes <> snd def
-R5059:5060 Quan.QAssert <> st:68 var
-R5073:5085 Quan.Matrix <> outer_product def
-R5095:5100 Quan.QAssert <> QExp_t constr
-R5166:5201 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5154:5155 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R5112:5121 Quan.QState NSet inter def
-R5140:5148 Quan.QAssert <> Free_Qexp def
-R5124:5132 Quan.QAssert <> Free_Qexp def
-R5156:5165 Quan.QState NSet empty def
-R5218:5221 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5202:5210 Quan.QAssert <> QExp_eval:69 def
-R5216:5217 Quan.QAssert <> st:68 var
-R5222:5230 Quan.QAssert <> QExp_eval:69 def
-R5236:5237 Quan.QAssert <> st:68 var
-def 5275:5284 <> State_eval
-R5288:5290 Coq.Init.Datatypes <> nat ind
-binder 5286:5286 <> n:71
-R5297:5309 Quan.QAssert <> State_formula ind
-binder 5294:5295 <> sf:72
-R5316:5320 Quan.QState <> state def
-R5322:5322 Quan.QAssert <> n:71 var
-binder 5313:5314 <> st:73
-R5339:5340 Quan.QAssert <> sf:72 var
-R5349:5353 Quan.QAssert <> SPure constr
-R5360:5368 Quan.QAssert <> Pure_eval def
-R5372:5373 Quan.QAssert <> st:73 var
-R5376:5380 Quan.QAssert <> SQuan constr
-R5386:5394 Quan.QAssert <> QExp_eval def
-R5398:5399 Quan.QAssert <> st:73 var
-R5402:5406 Quan.QAssert <> SOdot constr
-R5483:5486 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5471:5472 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R5417:5426 Quan.QState NSet inter def
-R5451:5453 Coq.Init.Datatypes <> snd def
-R5456:5465 Quan.QAssert <> Free_state def
-R5429:5431 Coq.Init.Datatypes <> snd def
-R5434:5443 Quan.QAssert <> Free_state def
-R5473:5482 Quan.QState NSet empty def
-R5503:5506 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5487:5496 Quan.QAssert <> State_eval:74 def
-R5501:5502 Quan.QAssert <> st:73 var
-R5507:5516 Quan.QAssert <> State_eval:74 def
-R5521:5522 Quan.QAssert <> st:73 var
-R5525:5528 Quan.QAssert <> SAnd constr
-R5555:5558 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5539:5548 Quan.QAssert <> State_eval:74 def
-R5553:5554 Quan.QAssert <> st:73 var
-R5559:5568 Quan.QAssert <> State_eval:74 def
-R5573:5574 Quan.QAssert <> st:73 var
-R5577:5580 Quan.QAssert <> SNot constr
-R5587:5588 Coq.Init.Logic <> ::type_scope:'~'_x not
-R5604:5604 Coq.Init.Logic <> ::type_scope:'~'_x not
-R5589:5598 Quan.QAssert <> State_eval:74 def
-R5602:5603 Quan.QAssert <> st:73 var
-R5607:5614 Quan.QAssert <> Assn_sub constr
-R5625:5634 Quan.QAssert <> State_eval:74 def
-R5640:5654 Quan.QState <> s_update_cstate def
-R5671:5672 Quan.QAssert <> st:73 var
-R5659:5663 Quan.QIMP <> aeval def
-R5665:5666 Quan.QAssert <> st:73 var
-def 5690:5706 <> State_eval_dstate
-R5711:5713 Coq.Init.Datatypes <> nat ind
-binder 5709:5709 <> n:76
-R5719:5731 Quan.QAssert <> State_formula ind
-binder 5717:5717 <> F:77
-R5738:5741 Coq.Init.Datatypes <> list ind
-R5750:5752 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R5761:5761 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R5744:5749 Quan.QState <> cstate def
-R5753:5758 Quan.QState <> qstate def
-R5760:5760 Quan.QAssert <> n:76 var
-binder 5735:5736 <> mu:78
-R5781:5782 Quan.QAssert <> mu:78 var
-R5792:5794 Coq.Init.Datatypes <> nil constr
-R5798:5802 Coq.Init.Logic <> False ind
-R5807:5807 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
-R5819:5819 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
-R5808:5808 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5814:5814 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5818:5818 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5809:5813 Coq.Reals.Rsigma <> sigma def
-R5823:5832 Quan.QAssert <> State_eval def
-R5836:5836 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5842:5843 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5847:5847 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5834:5834 Quan.QAssert <> F:77 var
-R5863:5864 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
-R5852:5852 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5858:5858 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5862:5862 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5853:5857 Coq.Reals.Rsigma <> sigma def
-R5895:5898 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R5870:5879 Quan.QAssert <> State_eval def
-R5883:5883 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5889:5890 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5894:5894 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R5881:5881 Quan.QAssert <> F:77 var
-R5899:5915 Quan.QAssert <> State_eval_dstate:79 def
-R5917:5917 Quan.QAssert <> F:77 var
-ind 6156:6164 <> sat_State
-constr 6216:6220 <> sat_F
-R6169:6171 Coq.Init.Datatypes <> nat ind
-binder 6167:6167 <> n:81
-R6174:6174 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6183:6187 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6175:6180 Quan.QState <> dstate def
-R6188:6188 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6202:6205 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6189:6201 Quan.QAssert <> State_formula ind
-R6234:6239 Quan.QState <> dstate def
-R6241:6241 Quan.QAssert <> n:81 var
-binder 6231:6232 <> mu:84
-binder 6244:6244 <> F:85
-R6259:6262 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6247:6255 Quan.QState <> WF_dstate def
-R6257:6258 Quan.QAssert <> mu:84 var
-R6301:6346 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6263:6279 Quan.QAssert <> State_eval_dstate def
-R6284:6296 Quan.QState StateMap this proj
-R6298:6299 Quan.QAssert <> mu:84 var
-R6281:6281 Quan.QAssert <> F:85 var
-R6347:6355 Quan.QAssert <> sat_State:82 ind
-R6360:6360 Quan.QAssert <> F:85 var
-R6357:6358 Quan.QAssert <> mu:84 var
-ind 6374:6380 <> sat_Pro
-constr 6438:6447 <> sat_PState
-constr 6788:6797 <> sat_POplus
-R6385:6387 Coq.Init.Datatypes <> nat ind
-binder 6383:6383 <> n:86
-R6391:6391 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6400:6403 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6392:6397 Quan.QState <> dstate def
-R6404:6404 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6426:6429 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6405:6425 Quan.QAssert <> probabilistic_formula ind
-R6461:6466 Quan.QState <> dstate def
-R6468:6468 Quan.QAssert <> n:86 var
-binder 6458:6459 <> mu:89
-R6474:6486 Quan.QAssert <> State_formula ind
-binder 6472:6472 <> F:90
-R6492:6492 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 6490:6490 <> p:91
-R6497:6497 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6504:6543 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6499:6499 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R6501:6502 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R6500:6500 Quan.QAssert <> p:91 var
-R6500:6500 Quan.QAssert <> p:91 var
-R6544:6544 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6721:6759 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6545:6552 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-R6565:6568 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-R6557:6562 Quan.QState <> dstate def
-R6564:6564 Quan.QAssert <> n:86 var
-binder 6553:6555 <> mu':92
-R6569:6569 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R6592:6630 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R6581:6581 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R6570:6576 Quan.QState <> d_trace def
-R6578:6580 Quan.QAssert <> mu':92 var
-R6582:6588 Quan.QState <> d_trace def
-R6590:6591 Quan.QAssert <> mu:89 var
-R6631:6631 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R6662:6703 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R6720:6720 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R6632:6640 Quan.QState <> dstate_eq def
-R6647:6654 Quan.QState <> d_scalar def
-R6658:6660 Quan.QAssert <> mu':92 var
-R6656:6656 Quan.QAssert <> p:91 var
-R6642:6643 Quan.QAssert <> mu:89 var
-R6704:6712 Quan.QAssert <> sat_State ind
-R6719:6719 Quan.QAssert <> F:90 var
-R6715:6717 Quan.QAssert <> mu':92 var
-R6760:6766 Quan.QAssert <> sat_Pro:87 ind
-R6774:6779 Quan.QAssert <> PState constr
-R6781:6781 Quan.QAssert <> p:91 var
-R6783:6783 Quan.QAssert <> F:90 var
-R6769:6770 Quan.QAssert <> mu:89 var
-R6811:6816 Quan.QState <> dstate def
-R6818:6818 Quan.QAssert <> n:86 var
-binder 6808:6809 <> mu:93
-R6830:6850 Quan.QAssert <> probabilistic_formula ind
-binder 6822:6824 <> pF1:94
-binder 6826:6828 <> pF2:95
-R6889:6889 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6914:6952 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6891:6891 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R6911:6912 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R6900:6902 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R6892:6895 Quan.QAssert <> mode def
-R6897:6899 Quan.QAssert <> pF1:94 var
-R6903:6906 Quan.QAssert <> mode def
-R6908:6910 Quan.QAssert <> pF2:95 var
-R6900:6902 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R6892:6895 Quan.QAssert <> mode def
-R6897:6899 Quan.QAssert <> pF1:94 var
-R6903:6906 Quan.QAssert <> mode def
-R6908:6910 Quan.QAssert <> pF2:95 var
-R6953:6953 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7207:7246 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7275:7275 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R6954:6961 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-R6978:7016 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-R6970:6975 Quan.QState <> dstate def
-R6977:6977 Quan.QAssert <> n:86 var
-binder 6962:6964 <> mu1:96
-R6970:6975 Quan.QState <> dstate def
-R6977:6977 Quan.QAssert <> n:86 var
-binder 6966:6968 <> mu2:97
-R7017:7017 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7040:7043 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7029:7029 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R7018:7024 Quan.QState <> d_trace def
-R7026:7028 Quan.QAssert <> mu1:96 var
-R7030:7036 Quan.QState <> d_trace def
-R7038:7039 Quan.QAssert <> mu:93 var
-R7044:7044 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7067:7105 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7056:7056 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R7045:7051 Quan.QState <> d_trace def
-R7053:7055 Quan.QAssert <> mu2:97 var
-R7057:7063 Quan.QState <> d_trace def
-R7065:7066 Quan.QAssert <> mu:93 var
-R7134:7172 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7106:7114 Quan.QState <> dstate_eq def
-R7120:7124 Quan.QState <> d_app def
-R7130:7132 Quan.QAssert <> mu2:97 var
-R7126:7128 Quan.QAssert <> mu1:96 var
-R7116:7117 Quan.QAssert <> mu:93 var
-R7188:7191 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7173:7179 Quan.QAssert <> sat_Pro:87 ind
-R7185:7187 Quan.QAssert <> pF1:94 var
-R7181:7183 Quan.QAssert <> mu1:96 var
-R7192:7198 Quan.QAssert <> sat_Pro:87 ind
-R7204:7206 Quan.QAssert <> pF2:95 var
-R7200:7202 Quan.QAssert <> mu2:97 var
-R7247:7253 Quan.QAssert <> sat_Pro:87 ind
-R7260:7265 Quan.QAssert <> POplus constr
-R7267:7269 Quan.QAssert <> pF1:94 var
-R7271:7273 Quan.QAssert <> pF2:95 var
-R7256:7257 Quan.QAssert <> mu:93 var
-ind 7289:7296 <> sat_Npro
-constr 7357:7366 <> sat_NState
-constr 7438:7447 <> sat_NOplus
-R7301:7303 Coq.Init.Datatypes <> nat ind
-binder 7299:7299 <> n:98
-R7308:7308 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7317:7320 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7309:7314 Quan.QState <> dstate def
-R7321:7321 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7345:7348 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7322:7344 Quan.QAssert <> unprobabilistic_formula ind
-R7380:7385 Quan.QState <> dstate def
-R7387:7387 Quan.QAssert <> n:98 var
-binder 7377:7378 <> mu:101
-binder 7390:7390 <> F:102
-R7392:7392 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7407:7411 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7393:7401 Quan.QAssert <> sat_State ind
-R7406:7406 Quan.QAssert <> F:102 var
-R7403:7404 Quan.QAssert <> mu:101 var
-R7412:7419 Quan.QAssert <> sat_Npro:99 ind
-R7426:7431 Quan.QAssert <> NState constr
-R7433:7433 Quan.QAssert <> F:102 var
-R7421:7422 Quan.QAssert <> mu:101 var
-R7461:7466 Quan.QState <> dstate def
-R7468:7468 Quan.QAssert <> n:98 var
-binder 7458:7459 <> mu:103
-R7480:7502 Quan.QAssert <> unprobabilistic_formula ind
-binder 7472:7474 <> nF1:104
-binder 7476:7478 <> nF2:105
-R7527:7527 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7790:7814 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7528:7534 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-R7554:7556 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
-binder 7535:7535 <> p:106
-R7546:7551 Quan.QState <> dstate def
-R7553:7553 Quan.QAssert <> n:98 var
-binder 7538:7540 <> mu1:107
-R7546:7551 Quan.QState <> dstate def
-R7553:7553 Quan.QAssert <> n:98 var
-binder 7542:7544 <> mu2:108
-R7557:7557 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7564:7589 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7559:7559 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R7561:7562 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R7560:7560 Quan.QAssert <> p:106 var
-R7560:7560 Quan.QAssert <> p:106 var
-R7590:7590 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7613:7617 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7602:7602 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R7591:7597 Quan.QState <> d_trace def
-R7599:7601 Quan.QAssert <> mu1:107 var
-R7603:7609 Quan.QState <> d_trace def
-R7611:7612 Quan.QAssert <> mu:103 var
-R7618:7618 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7641:7664 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7630:7630 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R7619:7625 Quan.QState <> d_trace def
-R7627:7629 Quan.QAssert <> mu2:108 var
-R7631:7637 Quan.QState <> d_trace def
-R7639:7640 Quan.QAssert <> mu:103 var
-R7665:7665 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7724:7748 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7788:7789 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7666:7674 Quan.QState <> dstate_eq def
-R7680:7684 Quan.QState <> d_app def
-R7704:7711 Quan.QState <> d_scalar def
-R7719:7721 Quan.QAssert <> mu2:108 var
-R7715:7715 Coq.Reals.Rdefinitions <> ::R_scope:x_'-'_x not
-R7716:7716 Quan.QAssert <> p:106 var
-R7687:7694 Quan.QState <> d_scalar def
-R7698:7700 Quan.QAssert <> mu1:107 var
-R7696:7696 Quan.QAssert <> p:106 var
-R7676:7677 Quan.QAssert <> mu:103 var
-R7765:7769 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7786:7787 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R7749:7756 Quan.QAssert <> sat_Npro:99 ind
-R7762:7764 Quan.QAssert <> nF1:104 var
-R7758:7760 Quan.QAssert <> mu1:107 var
-R7770:7777 Quan.QAssert <> sat_Npro:99 ind
-R7783:7785 Quan.QAssert <> nF2:105 var
-R7779:7781 Quan.QAssert <> mu2:108 var
-R7815:7822 Quan.QAssert <> sat_Npro:99 ind
-R7828:7833 Quan.QAssert <> NOplus constr
-R7835:7837 Quan.QAssert <> nF1:104 var
-R7839:7841 Quan.QAssert <> nF2:105 var
-R7824:7825 Quan.QAssert <> mu:103 var
-ind 7882:7891 <> sat_Assert
-constr 7937:7944 <> sat_APro
-constr 8013:8021 <> sat_ANpro
-R7896:7898 Coq.Init.Datatypes <> nat ind
-binder 7894:7894 <> n:109
-R7902:7902 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7911:7914 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7903:7908 Quan.QState <> dstate def
-R7915:7915 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7925:7928 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7916:7924 Quan.QAssert <> Assertion ind
-R7958:7963 Quan.QState <> dstate def
-R7965:7965 Quan.QAssert <> n:109 var
-binder 7955:7956 <> mu:112
-binder 7968:7969 <> pF:113
-R7985:7987 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R7972:7978 Quan.QAssert <> sat_Pro ind
-R7983:7984 Quan.QAssert <> pF:113 var
-R7980:7981 Quan.QAssert <> mu:112 var
-R7988:7997 Quan.QAssert <> sat_Assert:110 ind
-R8003:8006 Quan.QAssert <> APro constr
-R8008:8009 Quan.QAssert <> pF:113 var
-R7999:8000 Quan.QAssert <> mu:112 var
-R8035:8040 Quan.QState <> dstate def
-R8042:8042 Quan.QAssert <> n:109 var
-binder 8032:8033 <> mu:114
-binder 8045:8046 <> nF:115
-R8063:8065 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R8049:8056 Quan.QAssert <> sat_Npro ind
-R8061:8062 Quan.QAssert <> nF:115 var
-R8058:8059 Quan.QAssert <> mu:114 var
-R8066:8075 Quan.QAssert <> sat_Assert:110 ind
-R8080:8081 Quan.QAssert <> nF:115 var
-R8077:8078 Quan.QAssert <> mu:114 var
-R8088:8131 Quan.QAssert <> sat_ANpro constr
-R8184:8227 Quan.QAssert <> sat_NState constr
-prf 8238:8249 <> WF_sat_State
-R8253:8255 Coq.Init.Datatypes <> nat ind
-binder 8251:8251 <> n:116
-R8271:8276 Quan.QState <> dstate def
-R8278:8278 Quan.QAssert <> n:116 var
-binder 8268:8269 <> mu:117
-R8284:8296 Quan.QAssert <> State_formula ind
-binder 8282:8282 <> F:118
-R8315:8318 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R8301:8309 Quan.QAssert <> sat_State ind
-R8314:8314 Quan.QAssert <> F:118 var
-R8311:8312 Quan.QAssert <> mu:117 var
-R8341:8344 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R8335:8338 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R8319:8331 Quan.QState StateMap this proj
-R8333:8334 Quan.QAssert <> mu:117 var
-R8339:8340 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R8345:8353 Quan.QState <> WF_dstate def
-R8355:8356 Quan.QAssert <> mu:117 var
-prf 8531:8542 <> WF_dstate_eq
-binder 8544:8544 <> n:119
-R8564:8569 Quan.QState <> dstate def
-R8571:8571 Quan.QAssert <> n:119 var
-binder 8556:8557 <> mu:120
-binder 8559:8561 <> mu':121
-R8591:8593 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R8575:8583 Quan.QState <> dstate_eq def
-R8588:8590 Quan.QAssert <> mu':121 var
-R8585:8586 Quan.QAssert <> mu:120 var
-R8606:8609 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R8594:8602 Quan.QState <> WF_dstate def
-R8604:8605 Quan.QAssert <> mu:120 var
-R8610:8618 Quan.QState <> WF_dstate def
-R8620:8622 Quan.QAssert <> mu':121 var
-R8639:8647 Quan.QState <> WF_dstate def
-R8657:8665 Quan.QState <> dstate_eq def
-prf 8771:8783 <> dstate_eq_sym
-R8787:8789 Coq.Init.Datatypes <> nat ind
-binder 8785:8785 <> n:122
-R8809:8814 Quan.QState <> dstate def
-R8816:8816 Quan.QAssert <> n:122 var
-binder 8800:8802 <> mu1:123
-binder 8804:8806 <> mu2:124
-R8837:8839 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R8820:8828 Quan.QState <> dstate_eq def
-R8834:8836 Quan.QAssert <> mu2:124 var
-R8830:8832 Quan.QAssert <> mu1:123 var
-R8840:8848 Quan.QState <> dstate_eq def
-R8854:8856 Quan.QAssert <> mu1:123 var
-R8850:8852 Quan.QAssert <> mu2:124 var
-R8907:8915 Quan.QState <> dstate_eq def
-prf 8955:8964 <> WF_sat_Pro
-R8968:8970 Coq.Init.Datatypes <> nat ind
-binder 8966:8966 <> n:125
-R8986:8991 Quan.QState <> dstate def
-R8993:8993 Quan.QAssert <> n:125 var
-binder 8983:8984 <> mu:126
-R9000:9020 Quan.QAssert <> probabilistic_formula ind
-binder 8997:8998 <> pF:127
-R9038:9040 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R9025:9031 Quan.QAssert <> sat_Pro ind
-R9036:9037 Quan.QAssert <> pF:127 var
-R9033:9034 Quan.QAssert <> mu:126 var
-R9063:9066 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R9057:9060 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R9041:9053 Quan.QState StateMap this proj
-R9055:9056 Quan.QAssert <> mu:126 var
-R9061:9062 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R9067:9075 Quan.QState <> WF_dstate def
-R9077:9078 Quan.QAssert <> mu:126 var
-R9212:9223 Quan.QAssert <> WF_sat_State thm
-R9212:9223 Quan.QAssert <> WF_sat_State thm
-R9308:9315 Quan.QState <> d_scalar def
-R9288:9299 Quan.QAssert <> WF_dstate_eq thm
-R9308:9315 Quan.QState <> d_scalar def
-R9288:9299 Quan.QAssert <> WF_dstate_eq thm
-R9337:9349 Quan.QAssert <> dstate_eq_sym thm
-R9337:9349 Quan.QAssert <> dstate_eq_sym thm
-R9376:9386 Quan.QState <> WF_d_scalar thm
-R9376:9386 Quan.QState <> WF_d_scalar thm
-R9559:9563 Quan.QState <> d_app def
-R9539:9550 Quan.QAssert <> WF_dstate_eq thm
-R9559:9563 Quan.QState <> d_app def
-R9539:9550 Quan.QAssert <> WF_dstate_eq thm
-R9585:9597 Quan.QAssert <> dstate_eq_sym thm
-R9585:9597 Quan.QAssert <> dstate_eq_sym thm
-prf 9650:9660 <> WF_sat_Npro
-R9664:9666 Coq.Init.Datatypes <> nat ind
-binder 9662:9662 <> n:128
-R9681:9703 Quan.QAssert <> unprobabilistic_formula ind
-binder 9678:9679 <> nF:129
-R9711:9716 Quan.QState <> dstate def
-R9718:9718 Quan.QAssert <> n:128 var
-binder 9708:9709 <> mu:130
-R9738:9740 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R9724:9731 Quan.QAssert <> sat_Npro ind
-R9736:9737 Quan.QAssert <> nF:129 var
-R9733:9734 Quan.QAssert <> mu:130 var
-R9763:9766 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R9757:9760 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R9741:9753 Quan.QState StateMap this proj
-R9755:9756 Quan.QAssert <> mu:130 var
-R9761:9762 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R9767:9775 Quan.QState <> WF_dstate def
-R9777:9778 Quan.QAssert <> mu:130 var
-R9841:9852 Quan.QAssert <> WF_sat_State thm
-R9841:9852 Quan.QAssert <> WF_sat_State thm
-R10051:10055 Quan.QState <> d_app def
-R10081:10088 Quan.QState <> d_scalar def
-R10092:10094 Coq.Reals.Rdefinitions <> ::R_scope:x_'-'_x not
-R10058:10065 Quan.QState <> d_scalar def
-R10031:10042 Quan.QAssert <> WF_dstate_eq thm
-R10051:10055 Quan.QState <> d_app def
-R10081:10088 Quan.QState <> d_scalar def
-R10092:10094 Coq.Reals.Rdefinitions <> ::R_scope:x_'-'_x not
-R10058:10065 Quan.QState <> d_scalar def
-R10031:10042 Quan.QAssert <> WF_dstate_eq thm
-R10111:10123 Quan.QAssert <> dstate_eq_sym thm
-R10111:10123 Quan.QAssert <> dstate_eq_sym thm
-R10152:10159 Quan.QState <> WF_d_app thm
-R10152:10159 Quan.QState <> WF_d_app thm
-prf 10288:10300 <> WF_sat_Assert
-R10304:10306 Coq.Init.Datatypes <> nat ind
-binder 10302:10302 <> n:131
-R10321:10326 Quan.QState <> dstate def
-R10328:10328 Quan.QAssert <> n:131 var
-binder 10318:10319 <> mu:132
-R10334:10342 Quan.QAssert <> Assertion ind
-binder 10332:10332 <> D:133
-R10363:10365 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R10347:10356 Quan.QAssert <> sat_Assert ind
-R10362:10362 Quan.QAssert <> D:133 var
-R10359:10360 Quan.QAssert <> mu:132 var
-R10388:10391 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
-R10382:10385 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R10366:10378 Quan.QState StateMap this proj
-R10380:10381 Quan.QAssert <> mu:132 var
-R10386:10387 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R10392:10400 Quan.QState <> WF_dstate def
-R10402:10403 Quan.QAssert <> mu:132 var
-R10476:10485 Quan.QAssert <> WF_sat_Pro prfax
-R10476:10485 Quan.QAssert <> WF_sat_Pro prfax
-R10547:10557 Quan.QAssert <> WF_sat_Npro prfax
-R10547:10557 Quan.QAssert <> WF_sat_Npro prfax
-prf 10592:10604 <> state_eq_aexp
-R10608:10610 Coq.Init.Datatypes <> nat ind
-binder 10606:10606 <> n:134
-R10629:10633 Quan.QState <> state def
-R10635:10635 Quan.QAssert <> n:134 var
-binder 10622:10623 <> st:135
-binder 10625:10627 <> st':136
-R10643:10646 Quan.QIMP <> aexp ind
-binder 10641:10641 <> a:137
-R10670:10672 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R10650:10650 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R10657:10661 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R10669:10669 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R10651:10653 Coq.Init.Datatypes <> fst def
-R10655:10656 Quan.QAssert <> st:135 var
-R10662:10664 Coq.Init.Datatypes <> fst def
-R10666:10668 Quan.QAssert <> st':136 var
-R10673:10673 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R10684:10687 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R10674:10678 Quan.QIMP <> aeval def
-R10683:10683 Quan.QAssert <> a:137 var
-R10680:10681 Quan.QAssert <> st:135 var
-R10688:10692 Quan.QIMP <> aeval def
-R10698:10698 Quan.QAssert <> a:137 var
-R10694:10696 Quan.QAssert <> st':136 var
-prf 10973:10985 <> state_eq_bexp
-R10989:10991 Coq.Init.Datatypes <> nat ind
-binder 10987:10987 <> n:138
-R11010:11014 Quan.QState <> state def
-R11016:11016 Quan.QAssert <> n:138 var
-binder 11003:11004 <> st:139
-binder 11006:11008 <> st':140
-R11022:11025 Quan.QIMP <> bexp ind
-binder 11020:11020 <> b:141
-R11049:11051 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R11029:11029 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11036:11040 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11048:11048 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11030:11032 Coq.Init.Datatypes <> fst def
-R11034:11035 Quan.QAssert <> st:139 var
-R11041:11043 Coq.Init.Datatypes <> fst def
-R11045:11047 Quan.QAssert <> st':140 var
-R11052:11052 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11063:11066 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11053:11057 Quan.QIMP <> beval def
-R11062:11062 Quan.QAssert <> b:141 var
-R11059:11060 Quan.QAssert <> st:139 var
-R11067:11071 Quan.QIMP <> beval def
-R11077:11077 Quan.QAssert <> b:141 var
-R11073:11075 Quan.QAssert <> st':140 var
-R11192:11204 Quan.QAssert <> state_eq_aexp thm
-R11192:11204 Quan.QAssert <> state_eq_aexp thm
-R11192:11204 Quan.QAssert <> state_eq_aexp thm
-R11192:11204 Quan.QAssert <> state_eq_aexp thm
-R11235:11247 Quan.QAssert <> state_eq_aexp thm
-R11235:11247 Quan.QAssert <> state_eq_aexp thm
-R11235:11247 Quan.QAssert <> state_eq_aexp thm
-R11235:11247 Quan.QAssert <> state_eq_aexp thm
-R11332:11344 Quan.QAssert <> state_eq_aexp thm
-R11332:11344 Quan.QAssert <> state_eq_aexp thm
-R11332:11344 Quan.QAssert <> state_eq_aexp thm
-R11332:11344 Quan.QAssert <> state_eq_aexp thm
-R11373:11385 Quan.QAssert <> state_eq_aexp thm
-R11373:11385 Quan.QAssert <> state_eq_aexp thm
-R11373:11385 Quan.QAssert <> state_eq_aexp thm
-R11373:11385 Quan.QAssert <> state_eq_aexp thm
-R11468:11480 Quan.QAssert <> state_eq_aexp thm
-R11468:11480 Quan.QAssert <> state_eq_aexp thm
-R11468:11480 Quan.QAssert <> state_eq_aexp thm
-R11468:11480 Quan.QAssert <> state_eq_aexp thm
-R11510:11522 Quan.QAssert <> state_eq_aexp thm
-R11510:11522 Quan.QAssert <> state_eq_aexp thm
-R11510:11522 Quan.QAssert <> state_eq_aexp thm
-R11510:11522 Quan.QAssert <> state_eq_aexp thm
-R11605:11617 Quan.QAssert <> state_eq_aexp thm
-R11605:11617 Quan.QAssert <> state_eq_aexp thm
-R11605:11617 Quan.QAssert <> state_eq_aexp thm
-R11605:11617 Quan.QAssert <> state_eq_aexp thm
-R11646:11658 Quan.QAssert <> state_eq_aexp thm
-R11646:11658 Quan.QAssert <> state_eq_aexp thm
-R11646:11658 Quan.QAssert <> state_eq_aexp thm
-R11646:11658 Quan.QAssert <> state_eq_aexp thm
-prf 11861:11872 <> bexp_Pure_eq
-R11876:11878 Coq.Init.Datatypes <> nat ind
-binder 11874:11874 <> n:142
-R11898:11902 Quan.QState <> state def
-R11904:11904 Quan.QAssert <> n:142 var
-binder 11891:11892 <> st:143
-binder 11894:11896 <> st':144
-R11911:11914 Quan.QIMP <> bexp ind
-binder 11909:11909 <> b:145
-R11920:11920 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R11947:11951 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R11921:11921 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11932:11935 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R11922:11926 Quan.QIMP <> beval def
-R11931:11931 Quan.QAssert <> b:145 var
-R11928:11929 Quan.QAssert <> st:143 var
-R11936:11940 Quan.QIMP <> beval def
-R11946:11946 Quan.QAssert <> b:145 var
-R11942:11944 Quan.QAssert <> st':144 var
-R11952:11952 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R11968:11972 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R11989:11989 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R11953:11962 Quan.QAssert <> State_eval def
-R11966:11967 Quan.QAssert <> st:143 var
-R11964:11964 Quan.QAssert <> b:145 var
-R11973:11982 Quan.QAssert <> State_eval def
-R11986:11988 Quan.QAssert <> st':144 var
-R11984:11984 Quan.QAssert <> b:145 var
-R12026:12030 Quan.QIMP <> beval def
-R12026:12030 Quan.QIMP <> beval def
-prf 12118:12130 <> state_eq_Pure
-R12134:12136 Coq.Init.Datatypes <> nat ind
-binder 12132:12132 <> n:146
-R12150:12161 Quan.QAssert <> Pure_formula ind
-binder 12148:12148 <> P:147
-R12172:12176 Quan.QState <> state def
-R12178:12178 Quan.QAssert <> n:146 var
-binder 12165:12166 <> st:148
-binder 12168:12170 <> st':149
-R12202:12204 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R12183:12183 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R12190:12193 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R12201:12201 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R12184:12186 Coq.Init.Datatypes <> fst def
-R12188:12189 Quan.QAssert <> st:148 var
-R12194:12196 Coq.Init.Datatypes <> fst def
-R12198:12200 Quan.QAssert <> st':149 var
-R12205:12205 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R12221:12225 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R12206:12215 Quan.QAssert <> State_eval def
-R12219:12220 Quan.QAssert <> st:148 var
-R12217:12217 Quan.QAssert <> P:147 var
-R12226:12235 Quan.QAssert <> State_eval def
-R12239:12241 Quan.QAssert <> st':149 var
-R12237:12237 Quan.QAssert <> P:147 var
-R12286:12297 Quan.QAssert <> bexp_Pure_eq thm
-R12286:12297 Quan.QAssert <> bexp_Pure_eq thm
-R12326:12338 Quan.QAssert <> state_eq_bexp thm
-R12326:12338 Quan.QAssert <> state_eq_bexp thm
-R12326:12338 Quan.QAssert <> state_eq_bexp thm
-R12326:12338 Quan.QAssert <> state_eq_bexp thm
-R12444:12458 Quan.QState <> s_update_cstate def
-R12556:12556 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12572:12573 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12575:12575 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12557:12564 Quan.QState <> c_update def
-R12556:12556 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12572:12573 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12575:12575 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12557:12564 Quan.QState <> c_update def
-R12633:12634 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12650:12652 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12655:12655 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12635:12642 Quan.QState <> c_update def
-R12633:12634 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12650:12652 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12655:12655 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R12635:12642 Quan.QState <> c_update def
-prf 12709:12722 <> qstate_eq_Qexp
-R12736:12739 Quan.QAssert <> QExp ind
-binder 12732:12733 <> qs:150
-R12746:12748 Coq.Init.Datatypes <> nat ind
-binder 12744:12744 <> n:151
-R12759:12763 Quan.QState <> state def
-R12765:12765 Quan.QAssert <> n:151 var
-binder 12752:12753 <> st:152
-binder 12755:12757 <> st':153
-R12787:12792 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R12778:12779 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R12772:12774 Coq.Init.Datatypes <> snd def
-R12776:12777 Quan.QAssert <> st:152 var
-R12780:12782 Coq.Init.Datatypes <> snd def
-R12784:12786 Quan.QAssert <> st':153 var
-R12809:12812 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R12793:12801 Quan.QAssert <> QExp_eval def
-R12807:12808 Quan.QAssert <> st:152 var
-R12804:12805 Quan.QAssert <> qs:150 var
-R12813:12821 Quan.QAssert <> QExp_eval def
-R12827:12829 Quan.QAssert <> st':153 var
-R12824:12825 Quan.QAssert <> qs:150 var
-def 13056:13069 <> assert_implies
-R13078:13086 Quan.QAssert <> Assertion ind
-binder 13072:13072 <> P:154
-binder 13074:13074 <> Q:155
-R13113:13115 Coq.Init.Datatypes <> nat ind
-binder 13111:13111 <> n:156
-R13122:13127 Quan.QState <> dstate def
-R13129:13129 Quan.QAssert <> n:156 var
-binder 13119:13120 <> mu:157
-R13149:13152 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R13133:13142 Quan.QAssert <> sat_Assert ind
-R13148:13148 Quan.QAssert <> P:154 var
-R13145:13146 Quan.QAssert <> mu:157 var
-R13153:13162 Quan.QAssert <> sat_Assert ind
-R13168:13168 Quan.QAssert <> Q:155 var
-R13165:13166 Quan.QAssert <> mu:157 var
-R13195:13208 Quan.QAssert <> assert_implies def
-not 13181:13181 <> ::assert_scope:x_'->>'_x
-R13309:13309 Quan.QAssert <> ::assert_scope:x_'/\'_x not
-R13317:13322 Quan.QAssert <> ::assert_scope:x_'/\'_x not
-R13330:13330 Quan.QAssert <> ::assert_scope:x_'/\'_x not
-R13311:13315 Quan.QAssert <> ::assert_scope:x_'->>'_x not
-R13324:13328 Quan.QAssert <> ::assert_scope:x_'->>'_x not
-not 13289:13289 <> ::assert_scope:x_'<<->>'_x
-prf 13397:13409 <> Mscale_not_0'
-R13423:13425 Coq.Init.Datatypes <> nat ind
-binder 13419:13419 <> m:158
-binder 13421:13421 <> n:159
-R13431:13436 Quan.Matrix <> Matrix def
-R13438:13438 Quan.QAssert <> m:158 var
-R13440:13440 Quan.QAssert <> n:159 var
-binder 13429:13429 <> A:160
-R13447:13447 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 13444:13444 <> p:161
-R13465:13468 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R13457:13460 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R13453:13455 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R13452:13452 Quan.QAssert <> p:161 var
-R13456:13456 Quan.QAssert <> A:160 var
-R13461:13464 Quan.Matrix <> Zero def
-R13470:13471 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R13469:13469 Quan.QAssert <> A:160 var
-R13472:13475 Quan.Matrix <> Zero def
-R13493:13495 Coq.Init.Logic <> not def
-R13534:13543 Quan.Matrix <> Mscale_0_r thm
-R13534:13543 Quan.Matrix <> Mscale_0_r thm
-R13534:13543 Quan.Matrix <> Mscale_0_r thm
-prf 13602:13620 <> s_seman_scalar_Qexp
-R13635:13638 Quan.QAssert <> QExp ind
-binder 13632:13633 <> qs:162
-R13644:13644 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 13642:13642 <> p:163
-R13651:13653 Coq.Init.Datatypes <> nat ind
-binder 13649:13649 <> n:164
-R13660:13664 Quan.QState <> state def
-R13666:13666 Quan.QAssert <> n:164 var
-binder 13657:13658 <> st:165
-R13676:13679 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R13671:13671 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R13673:13674 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R13672:13672 Quan.QAssert <> p:163 var
-R13672:13672 Quan.QAssert <> p:163 var
-R13691:13695 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R13744:13744 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R13680:13687 Quan.QState <> WF_state def
-R13689:13690 Quan.QAssert <> st:165 var
-R13711:13715 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R13696:13704 Quan.QAssert <> QExp_eval def
-R13709:13710 Quan.QAssert <> st:165 var
-R13706:13707 Quan.QAssert <> qs:162 var
-R13716:13724 Quan.QAssert <> QExp_eval def
-R13730:13737 Quan.QState <> s_scalar def
-R13741:13742 Quan.QAssert <> st:165 var
-R13739:13739 Quan.QAssert <> p:163 var
-R13726:13727 Quan.QAssert <> qs:162 var
-R13863:13877 Quan.Matrix <> trace_mult_dist thm
-R13863:13877 Quan.Matrix <> trace_mult_dist thm
-R13863:13877 Quan.Matrix <> trace_mult_dist thm
-R13894:13904 Quan.Complex <> Cdiv_unfold thm
-R13894:13904 Quan.Complex <> Cdiv_unfold thm
-R13894:13904 Quan.Complex <> Cdiv_unfold thm
-R13921:13932 Quan.Matrix <> Mscale_assoc thm
-R13921:13932 Quan.Matrix <> Mscale_assoc thm
-R13921:13932 Quan.Matrix <> Mscale_assoc thm
-R13951:13961 Quan.Complex <> Cmult_assoc thm
-R13951:13961 Quan.Complex <> Cmult_assoc thm
-R13951:13961 Quan.Complex <> Cmult_assoc thm
-R13978:13992 Quan.Complex <> Cinv_mult_distr thm
-R13978:13992 Quan.Complex <> Cinv_mult_distr thm
-R13978:13992 Quan.Complex <> Cinv_mult_distr thm
-R13978:13992 Quan.Complex <> Cinv_mult_distr thm
-R13978:13992 Quan.Complex <> Cinv_mult_distr thm
-R14012:14022 Quan.Complex <> Cmult_assoc thm
-R14012:14022 Quan.Complex <> Cmult_assoc thm
-R14012:14022 Quan.Complex <> Cmult_assoc thm
-R14060:14063 Quan.Complex <> RtoC def
-R14039:14048 Quan.Complex <> Cmult_comm thm
-R14060:14063 Quan.Complex <> RtoC def
-R14039:14048 Quan.Complex <> Cmult_comm thm
-R14060:14063 Quan.Complex <> RtoC def
-R14039:14048 Quan.Complex <> Cmult_comm thm
-R14106:14109 Quan.Complex <> RtoC def
-R14084:14094 Quan.Complex <> Cmult_assoc thm
-R14106:14109 Quan.Complex <> RtoC def
-R14084:14094 Quan.Complex <> Cmult_assoc thm
-R14106:14109 Quan.Complex <> RtoC def
-R14084:14094 Quan.Complex <> Cmult_assoc thm
-R14130:14135 Quan.Complex <> Cinv_l thm
-R14130:14135 Quan.Complex <> Cinv_l thm
-R14130:14135 Quan.Complex <> Cinv_l thm
-R14130:14135 Quan.Complex <> Cinv_l thm
-R14152:14162 Quan.Complex <> Cmult_assoc thm
-R14152:14162 Quan.Complex <> Cmult_assoc thm
-R14152:14162 Quan.Complex <> Cmult_assoc thm
-R14179:14187 Quan.Complex <> Cmult_1_l thm
-R14179:14187 Quan.Complex <> Cmult_1_l thm
-R14179:14187 Quan.Complex <> Cmult_1_l thm
-R14220:14227 Quan.Complex <> RtoC_neq thm
-R14220:14227 Quan.Complex <> RtoC_neq thm
-R14282:14289 Quan.Complex <> RtoC_neq thm
-R14282:14289 Quan.Complex <> RtoC_neq thm
-R14344:14356 Quan.QState <> WF_state_gt_0 thm
-R14344:14356 Quan.QState <> WF_state_gt_0 thm
-R14391:14393 Coq.Init.Logic <> not def
-R14418:14424 Quan.QState <> s_trace def
-R14482:14487 Quan.Complex <> Cmod_0 thm
-R14482:14487 Quan.Complex <> Cmod_0 thm
-R14482:14487 Quan.Complex <> Cmod_0 thm
-R14749:14763 Quan.Matrix <> trace_mult_dist thm
-R14749:14763 Quan.Matrix <> trace_mult_dist thm
-R14749:14763 Quan.Matrix <> trace_mult_dist thm
-R14780:14790 Quan.Complex <> Cdiv_unfold thm
-R14780:14790 Quan.Complex <> Cdiv_unfold thm
-R14780:14790 Quan.Complex <> Cdiv_unfold thm
-R14807:14818 Quan.Matrix <> Mscale_assoc thm
-R14807:14818 Quan.Matrix <> Mscale_assoc thm
-R14807:14818 Quan.Matrix <> Mscale_assoc thm
-R14837:14847 Quan.Complex <> Cmult_assoc thm
-R14837:14847 Quan.Complex <> Cmult_assoc thm
-R14837:14847 Quan.Complex <> Cmult_assoc thm
-R14864:14878 Quan.Complex <> Cinv_mult_distr thm
-R14864:14878 Quan.Complex <> Cinv_mult_distr thm
-R14864:14878 Quan.Complex <> Cinv_mult_distr thm
-R14864:14878 Quan.Complex <> Cinv_mult_distr thm
-R14864:14878 Quan.Complex <> Cinv_mult_distr thm
-R14898:14908 Quan.Complex <> Cmult_assoc thm
-R14898:14908 Quan.Complex <> Cmult_assoc thm
-R14898:14908 Quan.Complex <> Cmult_assoc thm
-R14946:14949 Quan.Complex <> RtoC def
-R14925:14934 Quan.Complex <> Cmult_comm thm
-R14946:14949 Quan.Complex <> RtoC def
-R14925:14934 Quan.Complex <> Cmult_comm thm
-R14946:14949 Quan.Complex <> RtoC def
-R14925:14934 Quan.Complex <> Cmult_comm thm
-R14992:14995 Quan.Complex <> RtoC def
-R14970:14980 Quan.Complex <> Cmult_assoc thm
-R14992:14995 Quan.Complex <> RtoC def
-R14970:14980 Quan.Complex <> Cmult_assoc thm
-R14992:14995 Quan.Complex <> RtoC def
-R14970:14980 Quan.Complex <> Cmult_assoc thm
-R15016:15021 Quan.Complex <> Cinv_l thm
-R15016:15021 Quan.Complex <> Cinv_l thm
-R15016:15021 Quan.Complex <> Cinv_l thm
-R15016:15021 Quan.Complex <> Cinv_l thm
-R15038:15048 Quan.Complex <> Cmult_assoc thm
-R15038:15048 Quan.Complex <> Cmult_assoc thm
-R15038:15048 Quan.Complex <> Cmult_assoc thm
-R15065:15073 Quan.Complex <> Cmult_1_l thm
-R15065:15073 Quan.Complex <> Cmult_1_l thm
-R15065:15073 Quan.Complex <> Cmult_1_l thm
-R15105:15112 Quan.Complex <> RtoC_neq thm
-R15105:15112 Quan.Complex <> RtoC_neq thm
-R15167:15174 Quan.Complex <> RtoC_neq thm
-R15167:15174 Quan.Complex <> RtoC_neq thm
-R15229:15241 Quan.QState <> WF_state_gt_0 thm
-R15229:15241 Quan.QState <> WF_state_gt_0 thm
-R15276:15278 Coq.Init.Logic <> not def
-R15303:15309 Quan.QState <> s_trace def
-R15362:15367 Quan.Complex <> Cmod_0 thm
-R15362:15367 Quan.Complex <> Cmod_0 thm
-R15362:15367 Quan.Complex <> Cmod_0 thm
-prf 15612:15625 <> s_seman_scalar
-R15638:15650 Quan.QAssert <> State_formula ind
-binder 15636:15636 <> F:166
-R15656:15656 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 15654:15654 <> p:167
-binder 15659:15659 <> n:168
-R15666:15670 Quan.QState <> state def
-R15672:15672 Quan.QAssert <> n:168 var
-binder 15663:15664 <> st:169
-R15682:15684 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R15677:15677 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R15679:15680 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R15678:15678 Quan.QAssert <> p:167 var
-R15678:15678 Quan.QAssert <> p:167 var
-R15685:15685 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R15697:15701 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R15750:15750 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R15686:15693 Quan.QState <> WF_state def
-R15695:15696 Quan.QAssert <> st:169 var
-R15717:15721 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
-R15702:15711 Quan.QAssert <> State_eval def
-R15715:15716 Quan.QAssert <> st:169 var
-R15713:15713 Quan.QAssert <> F:166 var
-R15722:15731 Quan.QAssert <> State_eval def
-R15736:15743 Quan.QState <> s_scalar def
-R15747:15748 Quan.QAssert <> st:169 var
-R15745:15745 Quan.QAssert <> p:167 var
-R15733:15733 Quan.QAssert <> F:166 var
-R15800:15812 Quan.QAssert <> state_eq_Pure thm
-R15821:15828 Quan.QState <> s_scalar def
-R15800:15812 Quan.QAssert <> state_eq_Pure thm
-R15821:15828 Quan.QState <> s_scalar def
-R15884:15896 Quan.QAssert <> state_eq_Pure thm
-R15902:15909 Quan.QState <> s_scalar def
-R15884:15896 Quan.QAssert <> state_eq_Pure thm
-R15902:15909 Quan.QState <> s_scalar def
-R15961:15979 Quan.QAssert <> s_seman_scalar_Qexp thm
-R15961:15979 Quan.QAssert <> s_seman_scalar_Qexp thm
-R16341:16343 Coq.Init.Logic <> not def
-R16366:16368 Coq.Init.Logic <> not def
-R16392:16401 Quan.QAssert <> State_eval def
-R16392:16401 Quan.QAssert <> State_eval def
-R16502:16511 Quan.QAssert <> State_eval def
-R16516:16523 Quan.QState <> s_scalar def
-R16502:16511 Quan.QAssert <> State_eval def
-R16516:16523 Quan.QState <> s_scalar def
-R16668:16682 Quan.QState <> s_update_cstate def
-R16719:16726 Quan.QState <> s_scalar def
-R16753:16753 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16783:16784 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16786:16786 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16754:16761 Quan.QState <> c_update def
-R16766:16770 Quan.QIMP <> aeval def
-R16772:16772 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16774:16775 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16777:16777 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16816:16823 Quan.QState <> s_scalar def
-R16753:16753 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16783:16784 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16786:16786 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16754:16761 Quan.QState <> c_update def
-R16766:16770 Quan.QIMP <> aeval def
-R16772:16772 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16774:16775 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16777:16777 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16856:16857 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R16882:16882 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R16842:16846 Quan.QIMP <> aeval def
-R16848:16848 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16850:16851 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16853:16853 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16859:16863 Quan.QIMP <> aeval def
-R16867:16867 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16869:16871 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16878:16879 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16873:16876 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R16856:16857 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R16882:16882 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R16842:16846 Quan.QIMP <> aeval def
-R16848:16848 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16850:16851 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16853:16853 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16859:16863 Quan.QIMP <> aeval def
-R16867:16867 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16869:16871 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16878:16879 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R16873:16876 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R16894:16906 Quan.QAssert <> state_eq_aexp thm
-R16894:16906 Quan.QAssert <> state_eq_aexp thm
-R16972:16979 Quan.QState <> WF_state def
-R16998:17005 Quan.QState <> WF_state def
-R17051:17057 Quan.QState <> s_trace def
-R17088:17095 Quan.QState <> s_scalar def
-R17138:17138 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R17125:17129 Quan.QIMP <> aeval def
-R17131:17131 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17133:17133 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17135:17135 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17141:17145 Quan.QIMP <> aeval def
-R17149:17149 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17151:17152 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17159:17159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17154:17157 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R17138:17138 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R17125:17129 Quan.QIMP <> aeval def
-R17131:17131 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17133:17133 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17135:17135 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17141:17145 Quan.QIMP <> aeval def
-R17149:17149 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17151:17152 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17159:17159 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17154:17157 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R17174:17186 Quan.QAssert <> state_eq_aexp thm
-R17174:17186 Quan.QAssert <> state_eq_aexp thm
-R17239:17246 Quan.QState <> s_scalar def
-R17287:17287 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17322:17324 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17326:17326 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17288:17295 Quan.QState <> c_update def
-R17300:17304 Quan.QIMP <> aeval def
-R17306:17306 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17308:17309 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17311:17311 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17287:17287 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17322:17324 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17326:17326 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17288:17295 Quan.QState <> c_update def
-R17300:17304 Quan.QIMP <> aeval def
-R17306:17306 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17308:17309 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17311:17311 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17380:17387 Quan.QState <> WF_state def
-R17406:17413 Quan.QState <> WF_state def
-prf 17487:17505 <> d_seman_scalar_Qexp
-R17519:17531 Quan.QAssert <> State_formula ind
-binder 17517:17517 <> F:170
-R17537:17537 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 17535:17535 <> p:171
-R17544:17546 Coq.Init.Datatypes <> nat ind
-binder 17542:17542 <> n:172
-R17553:17556 Coq.Init.Datatypes <> list ind
-R17565:17567 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R17559:17564 Quan.QState <> cstate def
-R17568:17573 Quan.QState <> qstate def
-R17575:17575 Quan.QAssert <> n:172 var
-binder 17550:17551 <> mu:173
-R17586:17589 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R17581:17581 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R17583:17584 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R17582:17582 Quan.QAssert <> p:171 var
-R17582:17582 Quan.QAssert <> p:171 var
-R17606:17610 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R17710:17710 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R17590:17602 Quan.QState <> WF_dstate_aux ind
-R17604:17605 Quan.QAssert <> mu:173 var
-R17633:17635 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R17611:17627 Quan.QAssert <> State_eval_dstate def
-R17631:17632 Quan.QAssert <> mu:173 var
-R17629:17629 Quan.QAssert <> F:170 var
-R17637:17653 Quan.QAssert <> State_eval_dstate def
-R17655:17655 Quan.QAssert <> n:172 var
-R17657:17657 Quan.QAssert <> F:170 var
-R17661:17676 Quan.QState StateMap.Raw map def
-R17707:17708 Quan.QAssert <> mu:173 var
-R17687:17692 Quan.QState <> qstate def
-R17694:17694 Quan.QAssert <> n:172 var
-binder 17683:17683 <> x:174
-R17700:17703 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R17699:17699 Quan.QAssert <> p:171 var
-R17704:17704 Quan.QAssert <> x:174 var
-R17831:17840 Quan.QAssert <> State_eval def
-R17846:17853 Quan.QState <> s_scalar def
-R17857:17857 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17859:17860 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17862:17862 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17831:17840 Quan.QAssert <> State_eval def
-R17846:17853 Quan.QState <> s_scalar def
-R17857:17857 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17859:17860 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17862:17862 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R17880:17893 Quan.QAssert <> s_seman_scalar thm
-R17880:17893 Quan.QAssert <> s_seman_scalar thm
-R17970:17977 Quan.QState <> s_scalar def
-R18067:18076 Quan.QAssert <> State_eval def
-R18081:18088 Quan.QState <> s_scalar def
-R18092:18092 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18094:18095 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18097:18097 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18067:18076 Quan.QAssert <> State_eval def
-R18081:18088 Quan.QState <> s_scalar def
-R18092:18092 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18094:18095 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18097:18097 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18115:18128 Quan.QAssert <> s_seman_scalar thm
-R18115:18128 Quan.QAssert <> s_seman_scalar thm
-R18205:18212 Quan.QState <> s_scalar def
-R18269:18285 Quan.QAssert <> State_eval_dstate def
-R18299:18314 Quan.QState StateMap.Raw map def
-R18364:18367 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
-R18356:18356 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18359:18360 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18363:18363 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18325:18330 Quan.QState <> qstate def
-binder 18321:18321 <> x:175
-R18338:18341 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R18342:18342 Quan.QAssert <> x:175 var
-R18269:18285 Quan.QAssert <> State_eval_dstate def
-R18299:18314 Quan.QState StateMap.Raw map def
-R18364:18367 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
-R18356:18356 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18359:18360 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18363:18363 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R18325:18330 Quan.QState <> qstate def
-binder 18321:18321 <> x:176
-R18338:18341 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
-R18342:18342 Quan.QAssert <> x:176 var
-prf 18547:18560 <> d_seman_scalar
-binder 18570:18570 <> n:177
-R18575:18575 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 18573:18573 <> p:178
-R18582:18587 Quan.QState <> dstate def
-R18589:18589 Quan.QAssert <> n:177 var
-binder 18579:18580 <> mu:179
-R18595:18607 Quan.QAssert <> State_formula ind
-binder 18593:18593 <> F:180
-R18617:18619 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R18612:18612 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R18614:18615 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R18613:18613 Quan.QAssert <> p:178 var
-R18613:18613 Quan.QAssert <> p:178 var
-R18634:18637 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R18620:18628 Quan.QAssert <> sat_State ind
-R18633:18633 Quan.QAssert <> F:180 var
-R18630:18631 Quan.QAssert <> mu:179 var
-R18638:18646 Quan.QAssert <> sat_State ind
-R18665:18665 Quan.QAssert <> F:180 var
-R18650:18657 Quan.QState <> d_scalar def
-R18661:18662 Quan.QAssert <> mu:179 var
-R18659:18659 Quan.QAssert <> p:178 var
-R18731:18738 Quan.QState <> d_scalar def
-R18803:18807 Quan.QAssert <> sat_F constr
-R18803:18807 Quan.QAssert <> sat_F constr
-R18824:18834 Quan.QState <> WF_d_scalar thm
-R18824:18834 Quan.QState <> WF_d_scalar thm
-R18879:18897 Quan.QAssert <> d_seman_scalar_Qexp thm
-R18879:18897 Quan.QAssert <> d_seman_scalar_Qexp thm
-R18925:18933 Quan.QState <> WF_dstate def
-R19007:19020 Coq.Logic.Classical_Prop <> <> lib
-prf 19031:19041 <> Mplus_not_0
-R19056:19058 Coq.Init.Datatypes <> nat ind
-binder 19052:19052 <> m:181
-binder 19054:19054 <> n:182
-R19066:19071 Quan.Matrix <> Matrix def
-R19073:19073 Quan.QAssert <> m:181 var
-R19075:19075 Quan.QAssert <> n:182 var
-binder 19062:19062 <> A:183
-binder 19064:19064 <> B:184
-R19093:19097 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R19120:19120 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R19085:19088 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R19080:19083 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
-R19079:19079 Quan.QAssert <> A:183 var
-R19084:19084 Quan.QAssert <> B:184 var
-R19089:19092 Quan.Matrix <> Zero def
-R19107:19110 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
-R19099:19102 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R19098:19098 Quan.QAssert <> A:183 var
-R19103:19106 Quan.Matrix <> Zero def
-R19112:19115 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R19111:19111 Quan.QAssert <> B:184 var
-R19116:19119 Quan.Matrix <> Zero def
-R19139:19141 Coq.Init.Logic <> not def
-R19165:19168 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
-R19160:19160 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R19161:19164 Quan.Matrix <> Zero def
-R19170:19171 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R19172:19175 Quan.Matrix <> Zero def
-R19165:19168 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
-R19160:19160 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R19161:19164 Quan.Matrix <> Zero def
-R19170:19171 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R19172:19175 Quan.Matrix <> Zero def
-R19194:19200 Coq.Logic.Classical_Prop <> classic prfax
-R19194:19200 Coq.Logic.Classical_Prop <> classic prfax
-R19296:19304 Quan.Matrix <> Mplus_0_l thm
-R19296:19304 Quan.Matrix <> Mplus_0_l thm
-prf 19352:19363 <> d_app_mu_nil
-R19378:19380 Coq.Init.Datatypes <> nat ind
-binder 19374:19374 <> n:185
-R19392:19397 Quan.QState <> dstate def
-R19399:19399 Quan.QAssert <> n:185 var
-binder 19384:19385 <> mu:186
-binder 19387:19389 <> mu':187
-R19426:19430 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R19422:19423 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R19405:19417 Quan.QState StateMap this proj
-R19419:19421 Quan.QAssert <> mu':187 var
-R19424:19425 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R19459:19461 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R19431:19443 Quan.QState StateMap this proj
-R19446:19450 Quan.QState <> d_app def
-R19455:19457 Quan.QAssert <> mu':187 var
-R19452:19453 Quan.QAssert <> mu:186 var
-R19462:19474 Quan.QState StateMap this proj
-R19476:19477 Quan.QAssert <> mu:186 var
-R19562:19572 Quan.QState <> map2_r_refl thm
-R19562:19572 Quan.QState <> map2_r_refl thm
-R19562:19572 Quan.QState <> map2_r_refl thm
-R19668:19678 Quan.QState <> map2_l_refl thm
-R19668:19678 Quan.QState <> map2_l_refl thm
-R19668:19678 Quan.QState <> map2_l_refl thm
-prf 19727:19734 <> map2_nil
-binder 19743:19743 <> n:188
-R19749:19752 Coq.Init.Datatypes <> list ind
-R19761:19762 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R19755:19760 Quan.QState <> cstate def
-R19763:19768 Quan.QState <> qstate def
-R19770:19770 Quan.QAssert <> n:188 var
-binder 19746:19747 <> mu:189
-R19811:19814 Coq.Init.Logic <> ::type_scope:x_'='_x not
-R19777:19793 Quan.QState StateMap.Raw map2 def
-R19809:19810 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R19806:19807 Quan.QAssert <> mu:189 var
-R19795:19804 Quan.QState <> option_app def
-R19815:19833 Quan.QState StateMap.Raw map2_l def
-R19846:19847 Quan.QAssert <> mu:189 var
-R19835:19844 Quan.QState <> option_app def
-prf 19965:19974 <> Rplus_le_1
-R19990:19990 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 19984:19985 <> r1:190
-binder 19987:19988 <> r2:191
-R19998:19999 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R19996:19996 Coq.Reals.Rdefinitions <> ::R_scope:x_'>'_x not
-R19994:19995 Quan.QAssert <> r1:190 var
-R20008:20010 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20005:20006 Coq.Reals.Rdefinitions <> ::R_scope:x_'<='_x not
-R20002:20002 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R20000:20001 Quan.QAssert <> r1:190 var
-R20003:20004 Quan.QAssert <> r2:191 var
-R20013:20014 Coq.Reals.Rdefinitions <> ::R_scope:x_'<='_x not
-R20011:20012 Quan.QAssert <> r2:191 var
-prf 20058:20075 <> map2_scale_not_nil
-binder 20085:20085 <> n:192
-R20090:20090 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 20088:20088 <> p:193
-R20098:20101 Coq.Init.Datatypes <> list ind
-R20110:20112 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
-R20104:20109 Quan.QState <> cstate def
-R20113:20118 Quan.QState <> qstate def
-R20120:20120 Quan.QAssert <> n:192 var
-binder 20094:20095 <> mu:194
-R20134:20137 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20129:20130 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R20127:20128 Quan.QAssert <> mu:194 var
-R20131:20133 Coq.Init.Datatypes <> nil constr
-R20138:20138 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20142:20147 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20140:20140 Coq.Reals.Rdefinitions <> ::R_scope:x_'>'_x not
-R20139:20139 Quan.QAssert <> p:193 var
-R20215:20218 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
-R20148:20163 Quan.QState StateMap.Raw map def
-R20213:20214 Quan.QAssert <> mu:194 var
-R20174:20179 Quan.QState <> qstate def
-R20181:20181 Quan.QAssert <> n:192 var
-binder 20170:20170 <> x:195
-R20186:20190 Quan.Matrix <> scale def
-R20194:20194 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R20195:20195 Quan.QAssert <> n:192 var
-R20200:20200 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
-R20201:20201 Quan.QAssert <> n:192 var
-R20204:20204 Quan.QAssert <> p:193 var
-R20206:20206 Quan.QAssert <> x:195 var
-R20219:20220 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-prf 20366:20376 <> d_seman_app
-binder 20386:20386 <> n:196
-R20391:20403 Quan.QAssert <> State_formula ind
-binder 20389:20389 <> F:197
-R20415:20420 Quan.QState <> dstate def
-R20422:20422 Quan.QAssert <> n:196 var
-binder 20408:20409 <> mu:198
-binder 20411:20413 <> mu':199
-R20432:20432 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
-binder 20426:20427 <> p0:200
-binder 20429:20430 <> p1:201
-R20436:20436 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20448:20450 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20438:20440 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20443:20446 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20441:20442 Quan.QAssert <> p0:200 var
-R20441:20442 Quan.QAssert <> p0:200 var
-R20451:20451 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20463:20466 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20453:20455 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20458:20461 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20456:20457 Quan.QAssert <> p1:201 var
-R20456:20457 Quan.QAssert <> p1:201 var
-R20467:20467 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20480:20483 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20469:20470 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20476:20478 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
-R20473:20473 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R20471:20472 Quan.QAssert <> p0:200 var
-R20474:20475 Quan.QAssert <> p1:201 var
-R20473:20473 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
-R20471:20472 Quan.QAssert <> p0:200 var
-R20474:20475 Quan.QAssert <> p1:201 var
-R20498:20502 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20484:20492 Quan.QAssert <> sat_State ind
-R20497:20497 Quan.QAssert <> F:197 var
-R20494:20495 Quan.QAssert <> mu:198 var
-R20521:20524 Coq.Init.Logic <> ::type_scope:x_'->'_x not
-R20503:20511 Quan.QAssert <> sat_State ind
-R20520:20520 Quan.QAssert <> F:197 var
-R20515:20517 Quan.QAssert <> mu':199 var
-R20525:20533 Quan.QAssert <> sat_State ind
-R20581:20581 Quan.QAssert <> F:197 var
-R20536:20540 Quan.QState <> d_app def
-R20563:20570 Quan.QState <> d_scalar def
-R20575:20577 Quan.QAssert <> mu':199 var
-R20572:20573 Quan.QAssert <> p1:201 var
-R20543:20550 Quan.QState <> d_scalar def
-R20555:20556 Quan.QAssert <> mu:198 var
-R20552:20553 Quan.QAssert <> p0:200 var
-R20697:20701 Quan.QAssert <> sat_F constr
-R20697:20701 Quan.QAssert <> sat_F constr
-R20718:20725 Quan.QState <> WF_d_app thm
-R20718:20725 Quan.QState <> WF_d_app thm
+R4307:4309 Coq.Init.Datatypes <> fst def
+R4311:4320 Quan.QAssert <> Free_state:43 def
+R4285:4287 Coq.Init.Datatypes <> fst def
+R4290:4299 Quan.QAssert <> Free_state:43 def
+R4328:4337 Quan.QState NSet union def
+R4363:4365 Coq.Init.Datatypes <> snd def
+R4368:4377 Quan.QAssert <> Free_state:43 def
+R4340:4342 Coq.Init.Datatypes <> snd def
+R4345:4354 Quan.QAssert <> Free_state:43 def
+R4390:4393 Quan.QAssert <> SAnd constr
+R4404:4404 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4458:4459 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4515:4515 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4405:4414 Quan.QState NSet union def
+R4439:4441 Coq.Init.Datatypes <> fst def
+R4443:4452 Quan.QAssert <> Free_state:43 def
+R4417:4419 Coq.Init.Datatypes <> fst def
+R4422:4431 Quan.QAssert <> Free_state:43 def
+R4460:4469 Quan.QState NSet union def
+R4495:4497 Coq.Init.Datatypes <> snd def
+R4500:4509 Quan.QAssert <> Free_state:43 def
+R4472:4474 Coq.Init.Datatypes <> snd def
+R4477:4486 Quan.QAssert <> Free_state:43 def
+R4522:4525 Quan.QAssert <> SNot constr
+R4532:4541 Quan.QAssert <> Free_state:43 def
+R4552:4559 Quan.QAssert <> Assn_sub constr
+R4570:4579 Quan.QAssert <> Free_state:43 def
+R4581:4581 Quan.QAssert <> F:42 var
+def 4600:4607 <> Free_pro
+R4613:4623 Quan.QAssert <> pro_formula def
+binder 4609:4610 <> pF:45
+R4632:4634 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R4628:4631 Quan.QIMP <> CSet def
+R4635:4638 Quan.QState <> QSet def
+R4652:4653 Quan.QAssert <> pF:45 var
+R4663:4664 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R4669:4669 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4680:4681 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4692:4692 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4670:4679 Quan.QState NSet empty def
+R4682:4691 Quan.QState NSet empty def
+R4702:4703 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R4697:4697 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4699:4699 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4701:4701 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4711:4711 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4763:4783 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4837:4837 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4712:4721 Quan.QState NSet union def
+R4745:4747 Coq.Init.Datatypes <> fst def
+R4749:4756 Quan.QAssert <> Free_pro:46 def
+R4724:4726 Coq.Init.Datatypes <> fst def
+R4729:4738 Quan.QAssert <> Free_state def
+R4784:4793 Quan.QState NSet union def
+R4818:4820 Coq.Init.Datatypes <> snd def
+R4823:4830 Quan.QAssert <> Free_pro:46 def
+R4796:4798 Coq.Init.Datatypes <> snd def
+R4801:4810 Quan.QAssert <> Free_state def
+def 4856:4864 <> Free_npro
+R4870:4881 Quan.QAssert <> npro_formula def
+binder 4866:4867 <> nF:48
+R4890:4892 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R4886:4889 Quan.QIMP <> CSet def
+R4893:4896 Quan.QState <> QSet def
+R4912:4913 Quan.QAssert <> nF:48 var
+R4925:4926 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R4931:4931 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4942:4943 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4954:4954 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4932:4941 Quan.QState NSet empty def
+R4944:4953 Quan.QState NSet empty def
+R4962:4963 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R4970:4970 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R5023:5047 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R5102:5102 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R4971:4980 Quan.QState NSet union def
+R5004:5006 Coq.Init.Datatypes <> fst def
+R5008:5016 Quan.QAssert <> Free_npro:49 def
+R4983:4985 Coq.Init.Datatypes <> fst def
+R4988:4997 Quan.QAssert <> Free_state def
+R5048:5057 Quan.QState NSet union def
+R5082:5084 Coq.Init.Datatypes <> snd def
+R5087:5095 Quan.QAssert <> Free_npro:49 def
+R5060:5062 Coq.Init.Datatypes <> snd def
+R5065:5074 Quan.QAssert <> Free_state def
+def 5125:5128 <> Free
+R5134:5142 Quan.QAssert <> Assertion ind
+binder 5131:5131 <> d:51
+R5152:5154 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R5148:5151 Quan.QIMP <> CSet def
+R5155:5158 Quan.QState <> QSet def
+R5171:5171 Quan.QAssert <> d:51 var
+R5184:5187 Quan.QAssert <> APro constr
+R5195:5202 Quan.QAssert <> Free_pro def
+R5212:5216 Quan.QAssert <> ANpro constr
+R5222:5230 Quan.QAssert <> Free_npro def
+def 5453:5461 <> Pure_eval
+R5465:5467 Coq.Init.Datatypes <> nat ind
+binder 5463:5463 <> n:53
+R5474:5485 Quan.QAssert <> Pure_formula ind
+binder 5471:5472 <> pf:54
+R5492:5496 Quan.QState <> state def
+R5498:5498 Quan.QAssert <> n:53 var
+binder 5489:5490 <> st:55
+R5518:5519 Quan.QAssert <> pf:54 var
+R5529:5533 Quan.QAssert <> PBexp constr
+R5545:5549 Quan.QIMP <> beval def
+R5551:5552 Quan.QAssert <> st:55 var
+R5573:5577 Coq.Init.Logic <> False ind
+R5563:5566 Coq.Init.Logic <> True ind
+R5581:5587 Quan.QAssert <> PUniver constr
+binder 5602:5602 <> a:58
+R5605:5613 Quan.QAssert <> Pure_eval:56 def
+R5618:5632 Quan.QState <> s_update_cstate def
+R5638:5639 Quan.QAssert <> st:55 var
+R5636:5636 Quan.QAssert <> a:58 var
+def 5660:5668 <> QExp_eval
+R5672:5674 Coq.Init.Datatypes <> nat ind
+binder 5670:5670 <> n:59
+R5682:5685 Quan.QAssert <> QExp ind
+binder 5678:5679 <> qs:60
+R5693:5697 Quan.QState <> state def
+R5699:5699 Quan.QAssert <> n:59 var
+binder 5689:5690 <> st:61
+R5729:5730 Quan.QAssert <> qs:60 var
+R5741:5746 Quan.QAssert <> QExp_s constr
+R5845:5846 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R5757:5767 Quan.Basic_Supplement <> PMpar_trace def
+R5842:5842 Coq.Init.Nat <> ::nat_scope:x_'-'_x not
+R5841:5841 Quan.QAssert <> n:59 var
+R5772:5776 Quan.Matrix <> scale def
+R5780:5781 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5783:5783 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5782:5782 Quan.QAssert <> n:59 var
+R5788:5789 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5791:5791 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5790:5790 Quan.QAssert <> n:59 var
+R5797:5800 Quan.Complex <> ::C_scope:x_'/'_x not
+R5824:5824 Quan.Complex <> ::C_scope:x_'/'_x not
+R5795:5796 Quan.Complex <> C1 abbrev
+R5802:5806 Quan.Matrix <> trace def
+R5810:5811 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5813:5813 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R5812:5812 Quan.QAssert <> n:59 var
+R5817:5819 Coq.Init.Datatypes <> snd def
+R5821:5822 Quan.QAssert <> st:61 var
+R5829:5831 Coq.Init.Datatypes <> snd def
+R5833:5834 Quan.QAssert <> st:61 var
+R5847:5859 Quan.Matrix <> outer_product def
+R5869:5874 Quan.QAssert <> QExp_t constr
+R5940:5975 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R5928:5929 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R5886:5895 Quan.QState NSet inter def
+R5914:5922 Quan.QAssert <> Free_Qexp def
+R5898:5906 Quan.QAssert <> Free_Qexp def
+R5930:5939 Quan.QState NSet empty def
+R5992:5995 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R5976:5984 Quan.QAssert <> QExp_eval:62 def
+R5990:5991 Quan.QAssert <> st:61 var
+R5996:6004 Quan.QAssert <> QExp_eval:62 def
+R6010:6011 Quan.QAssert <> st:61 var
+def 6049:6058 <> State_eval
+R6062:6064 Coq.Init.Datatypes <> nat ind
+binder 6060:6060 <> n:64
+R6071:6083 Quan.QAssert <> State_formula ind
+binder 6068:6069 <> sf:65
+R6090:6094 Quan.QState <> state def
+R6096:6096 Quan.QAssert <> n:64 var
+binder 6087:6088 <> st:66
+R6113:6114 Quan.QAssert <> sf:65 var
+R6123:6127 Quan.QAssert <> SPure constr
+R6134:6142 Quan.QAssert <> Pure_eval def
+R6146:6147 Quan.QAssert <> st:66 var
+R6150:6154 Quan.QAssert <> SQuan constr
+R6160:6168 Quan.QAssert <> QExp_eval def
+R6172:6173 Quan.QAssert <> st:66 var
+R6176:6180 Quan.QAssert <> SOdot constr
+R6257:6260 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R6245:6246 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6191:6200 Quan.QState NSet inter def
+R6225:6227 Coq.Init.Datatypes <> snd def
+R6230:6239 Quan.QAssert <> Free_state def
+R6203:6205 Coq.Init.Datatypes <> snd def
+R6208:6217 Quan.QAssert <> Free_state def
+R6247:6256 Quan.QState NSet empty def
+R6277:6280 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R6261:6270 Quan.QAssert <> State_eval:67 def
+R6275:6276 Quan.QAssert <> st:66 var
+R6281:6290 Quan.QAssert <> State_eval:67 def
+R6295:6296 Quan.QAssert <> st:66 var
+R6299:6302 Quan.QAssert <> SAnd constr
+R6329:6332 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R6313:6322 Quan.QAssert <> State_eval:67 def
+R6327:6328 Quan.QAssert <> st:66 var
+R6333:6342 Quan.QAssert <> State_eval:67 def
+R6347:6348 Quan.QAssert <> st:66 var
+R6351:6354 Quan.QAssert <> SNot constr
+R6361:6362 Coq.Init.Logic <> ::type_scope:'~'_x not
+R6378:6378 Coq.Init.Logic <> ::type_scope:'~'_x not
+R6363:6372 Quan.QAssert <> State_eval:67 def
+R6376:6377 Quan.QAssert <> st:66 var
+R6381:6388 Quan.QAssert <> Assn_sub constr
+R6399:6408 Quan.QAssert <> State_eval:67 def
+R6414:6428 Quan.QState <> s_update_cstate def
+R6445:6446 Quan.QAssert <> st:66 var
+R6433:6437 Quan.QIMP <> aeval def
+R6439:6440 Quan.QAssert <> st:66 var
+def 6464:6480 <> State_eval_dstate
+R6485:6487 Coq.Init.Datatypes <> nat ind
+binder 6483:6483 <> n:69
+R6493:6505 Quan.QAssert <> State_formula ind
+binder 6491:6491 <> F:70
+R6512:6515 Coq.Init.Datatypes <> list ind
+R6524:6526 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6535:6535 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R6518:6523 Quan.QState <> cstate def
+R6527:6532 Quan.QState <> qstate def
+R6534:6534 Quan.QAssert <> n:69 var
+binder 6509:6510 <> mu:71
+R6555:6556 Quan.QAssert <> mu:71 var
+R6566:6568 Coq.Init.Datatypes <> nil constr
+R6572:6576 Coq.Init.Logic <> False ind
+R6581:6581 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R6593:6593 Coq.Lists.List ListNotations ::list_scope:'['_x_']' not
+R6582:6582 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6588:6588 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6592:6592 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6583:6587 Coq.Reals.Rsigma <> sigma def
+R6597:6606 Quan.QAssert <> State_eval def
+R6610:6610 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6616:6617 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6621:6621 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6608:6608 Quan.QAssert <> F:70 var
+R6637:6638 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R6626:6626 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6632:6632 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6636:6636 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6627:6631 Coq.Reals.Rsigma <> sigma def
+R6669:6672 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R6644:6653 Quan.QAssert <> State_eval def
+R6657:6657 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6663:6664 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6668:6668 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R6655:6655 Quan.QAssert <> F:70 var
+R6673:6689 Quan.QAssert <> State_eval_dstate:72 def
+R6691:6691 Quan.QAssert <> F:70 var
+ind 6930:6938 <> sat_State
+constr 6994:6998 <> sat_F
+R6943:6945 Coq.Init.Datatypes <> nat ind
+binder 6941:6941 <> n:74
+R6948:6948 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6961:6965 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6949:6954 Quan.QState <> dstate def
+R6958:6958 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R6966:6966 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6980:6983 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R6967:6979 Quan.QAssert <> State_formula ind
+R7012:7017 Quan.QState <> dstate def
+R7021:7021 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R7022:7022 Quan.QAssert <> n:74 var
+binder 7009:7010 <> mu:77
+binder 7026:7026 <> F:78
+R7041:7044 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7029:7037 Quan.QState <> WF_dstate def
+R7039:7040 Quan.QAssert <> mu:77 var
+R7083:7128 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R7045:7061 Quan.QAssert <> State_eval_dstate def
+R7066:7078 Quan.QState StateMap this proj
+R7080:7081 Quan.QAssert <> mu:77 var
+R7063:7063 Quan.QAssert <> F:78 var
+R7129:7137 Quan.QAssert <> sat_State:75 ind
+R7142:7142 Quan.QAssert <> F:78 var
+R7139:7140 Quan.QAssert <> mu:77 var
+def 8727:8733 <> big_and
+R8743:8746 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8740:8742 Coq.Init.Datatypes <> nat ind
+binder 8736:8736 <> f:79
+R8760:8762 Coq.Init.Datatypes <> nat ind
+binder 8754:8756 <> n_0:80
+R8784:8786 Quan.QAssert <> n_0:80 var
+R8802:8805 Coq.Init.Logic <> True ind
+R8811:8811 Coq.Init.Datatypes <> S constr
+R8819:8819 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8832:8837 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8842:8842 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8820:8826 Quan.QAssert <> big_and:81 def
+R8828:8828 Quan.QAssert <> f:79 var
+R8838:8838 Quan.QAssert <> f:79 var
+def 8861:8870 <> big_pOplus
+R8880:8883 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8877:8879 Coq.Init.Datatypes <> nat ind
+R8884:8884 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 8873:8873 <> f:83
+R8895:8898 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8892:8894 Coq.Init.Datatypes <> nat ind
+R8899:8911 Quan.QAssert <> State_formula ind
+binder 8888:8888 <> g:84
+R8921:8923 Coq.Init.Datatypes <> nat ind
+binder 8915:8917 <> n_0:85
+R8928:8938 Quan.QAssert <> pro_formula def
+R8951:8953 Quan.QAssert <> n_0:85 var
+R8967:8968 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R8972:8972 Coq.Init.Datatypes <> S constr
+R8991:8993 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9011:9011 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R8979:8979 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8984:8985 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8990:8990 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R8980:8980 Quan.QAssert <> f:83 var
+R8986:8986 Quan.QAssert <> g:84 var
+R8994:9003 Quan.QAssert <> big_pOplus:86 def
+R9007:9007 Quan.QAssert <> g:84 var
+R9005:9005 Quan.QAssert <> f:83 var
+def 9030:9038 <> big_Oplus
+R9049:9052 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9046:9048 Coq.Init.Datatypes <> nat ind
+R9053:9065 Quan.QAssert <> State_formula ind
+binder 9042:9042 <> g:88
+R9075:9077 Coq.Init.Datatypes <> nat ind
+binder 9069:9071 <> n_0:89
+R9082:9093 Quan.QAssert <> npro_formula def
+R9106:9108 Quan.QAssert <> n_0:89 var
+R9122:9123 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9127:9127 Coq.Init.Datatypes <> S constr
+R9134:9134 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9139:9142 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9157:9157 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9135:9135 Quan.QAssert <> g:88 var
+R9143:9151 Quan.QAssert <> big_Oplus:90 def
+R9153:9153 Quan.QAssert <> g:88 var
+def 9392:9399 <> big_dapp
+R9403:9405 Coq.Init.Datatypes <> nat ind
+binder 9401:9401 <> n:92
+R9416:9419 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9413:9415 Coq.Init.Datatypes <> nat ind
+R9420:9425 Quan.QState <> dstate def
+R9429:9429 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R9430:9430 Quan.QAssert <> n:92 var
+binder 9409:9409 <> f:93
+R9441:9443 Coq.Init.Datatypes <> nat ind
+binder 9435:9437 <> n_0:94
+R9448:9453 Quan.QState <> dstate def
+R9457:9457 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R9458:9458 Quan.QAssert <> n:92 var
+R9473:9475 Quan.QAssert <> n_0:94 var
+R9491:9497 Quan.QState <> d_empty def
+R9501:9501 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R9502:9502 Quan.QAssert <> n:92 var
+R9509:9509 Coq.Init.Datatypes <> S constr
+R9516:9520 Quan.QState <> d_app def
+R9540:9540 Quan.QAssert <> f:93 var
+R9523:9530 Quan.QAssert <> big_dapp:95 def
+R9532:9532 Quan.QAssert <> f:93 var
+def 9563:9581 <> npro_to_pro_formula
+R9587:9598 Quan.QAssert <> npro_formula def
+binder 9584:9585 <> nF:97
+R9608:9611 Coq.Init.Datatypes <> list ind
+R9613:9613 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 9603:9605 <> p_n:98
+R9617:9627 Quan.QAssert <> pro_formula def
+R9643:9645 Quan.QAssert <> p_n:98 var
+R9639:9640 Quan.QAssert <> nF:97 var
+R9656:9657 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9665:9666 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9674:9675 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9680:9681 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9687:9690 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9697:9698 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9711:9714 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9741:9741 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9705:9705 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9707:9708 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9710:9710 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9715:9733 Quan.QAssert <> npro_to_pro_formula:99 def
+def 9762:9776 <> get_pro_formula
+R9782:9792 Quan.QAssert <> pro_formula def
+binder 9779:9780 <> pF:102
+R9796:9799 Coq.Init.Datatypes <> list ind
+R9801:9801 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+R9815:9816 Quan.QAssert <> pF:102 var
+R9829:9830 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9835:9836 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R9849:9850 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9843:9843 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9845:9846 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9848:9848 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R9859:9862 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9882:9882 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R9863:9877 Quan.QAssert <> get_pro_formula:103 def
+ind 9931:9940 <> sat_Assert
+constr 9990:9997 <> sat_APro
+constr 10541:10549 <> sat_ANpro
+R9945:9947 Coq.Init.Datatypes <> nat ind
+binder 9943:9943 <> n:105
+R9951:9951 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9964:9967 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9952:9957 Quan.QState <> dstate def
+R9961:9961 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R9968:9968 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9978:9981 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9969:9977 Quan.QAssert <> Assertion ind
+R10011:10016 Quan.QState <> dstate def
+R10020:10020 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10021:10021 Quan.QAssert <> n:105 var
+binder 10008:10009 <> mu:108
+binder 10025:10026 <> pF:109
+R10035:10038 Coq.Init.Datatypes <> list ind
+R10041:10046 Quan.QState <> dstate def
+R10050:10050 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10051:10051 Quan.QAssert <> n:105 var
+binder 10029:10032 <> mu_n:110
+R10087:10090 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10075:10083 Quan.QState <> WF_dstate def
+R10085:10086 Quan.QAssert <> mu:108 var
+R10114:10133 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10091:10110 Quan.QAssert <> distribution_formula def
+R10112:10113 Quan.QAssert <> pF:109 var
+R10492:10515 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10283:10302 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R10134:10142 Quan.QState <> dstate_eq def
+R10148:10155 Quan.QAssert <> big_dapp def
+R10272:10277 Coq.Init.Datatypes <> length def
+R10279:10280 Quan.QAssert <> pF:109 var
+R10164:10166 Coq.Init.Datatypes <> nat ind
+binder 10162:10162 <> i:111
+R10169:10176 Quan.QState <> d_scalar def
+R10242:10244 Coq.Lists.List <> nth def
+R10254:10260 Quan.QState <> d_empty def
+R10264:10264 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10265:10265 Quan.QAssert <> n:105 var
+R10248:10251 Quan.QAssert <> mu_n:110 var
+R10246:10246 Quan.QAssert <> i:111 var
+R10179:10181 Coq.Init.Datatypes <> fst def
+R10184:10186 Coq.Lists.List <> nth def
+R10193:10193 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10195:10196 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10217:10217 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10197:10201 Quan.QAssert <> SPure constr
+R10204:10208 Quan.QAssert <> PBexp constr
+R10210:10215 Quan.QIMP <> BFalse constr
+R10190:10191 Quan.QAssert <> pF:109 var
+R10188:10188 Quan.QAssert <> i:111 var
+R10144:10145 Quan.QAssert <> mu:108 var
+R10303:10309 Quan.QAssert <> big_and def
+R10318:10320 Coq.Init.Datatypes <> nat ind
+binder 10316:10316 <> i:112
+R10324:10324 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R10406:10427 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R10325:10333 Quan.QAssert <> sat_State ind
+R10365:10367 Coq.Init.Datatypes <> snd def
+R10370:10372 Coq.Lists.List <> nth def
+R10379:10379 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10381:10382 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10403:10403 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R10383:10387 Quan.QAssert <> SPure constr
+R10390:10394 Quan.QAssert <> PBexp constr
+R10396:10401 Quan.QIMP <> BFalse constr
+R10376:10377 Quan.QAssert <> pF:109 var
+R10374:10374 Quan.QAssert <> i:112 var
+R10336:10338 Coq.Lists.List <> nth def
+R10348:10354 Quan.QState <> d_empty def
+R10358:10358 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10359:10359 Quan.QAssert <> n:105 var
+R10342:10345 Quan.QAssert <> mu_n:110 var
+R10340:10340 Quan.QAssert <> i:112 var
+R10438:10439 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10428:10434 Quan.QState <> d_trace def
+R10436:10437 Quan.QAssert <> mu:108 var
+R10440:10446 Quan.QState <> d_trace def
+R10450:10452 Coq.Lists.List <> nth def
+R10462:10468 Quan.QState <> d_empty def
+R10472:10472 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10473:10473 Quan.QAssert <> n:105 var
+R10456:10459 Quan.QAssert <> mu_n:110 var
+R10454:10454 Quan.QAssert <> i:112 var
+R10482:10487 Coq.Init.Datatypes <> length def
+R10489:10490 Quan.QAssert <> pF:109 var
+R10516:10525 Quan.QAssert <> sat_Assert:106 ind
+R10531:10534 Quan.QAssert <> APro constr
+R10536:10537 Quan.QAssert <> pF:109 var
+R10527:10528 Quan.QAssert <> mu:108 var
+R10563:10568 Quan.QState <> dstate def
+R10572:10572 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10573:10573 Quan.QAssert <> n:105 var
+binder 10560:10561 <> mu:113
+binder 10577:10578 <> nF:114
+R10585:10588 Coq.Init.Datatypes <> list ind
+R10590:10590 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 10581:10583 <> p_n:115
+R10615:10615 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10624:10628 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10618:10621 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R10616:10617 Quan.QAssert <> nF:114 var
+R10622:10623 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R10671:10693 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10629:10638 Quan.QAssert <> sat_Assert:106 ind
+R10644:10662 Quan.QAssert <> npro_to_pro_formula def
+R10664:10665 Quan.QAssert <> nF:114 var
+R10667:10669 Quan.QAssert <> p_n:115 var
+R10640:10641 Quan.QAssert <> mu:113 var
+R10694:10703 Quan.QAssert <> sat_Assert:106 ind
+R10709:10713 Quan.QAssert <> ANpro constr
+R10715:10716 Quan.QAssert <> nF:114 var
+R10705:10706 Quan.QAssert <> mu:113 var
+prf 10728:10739 <> WF_sat_State
+R10743:10745 Coq.Init.Datatypes <> nat ind
+binder 10741:10741 <> n:116
+R10761:10766 Quan.QState <> dstate def
+R10770:10770 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R10771:10771 Quan.QAssert <> n:116 var
+binder 10758:10759 <> mu:117
+R10778:10790 Quan.QAssert <> State_formula ind
+binder 10776:10776 <> F:118
+R10809:10812 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10795:10803 Quan.QAssert <> sat_State ind
+R10808:10808 Quan.QAssert <> F:118 var
+R10805:10806 Quan.QAssert <> mu:117 var
+R10835:10838 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R10829:10832 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R10813:10825 Quan.QState StateMap this proj
+R10827:10828 Quan.QAssert <> mu:117 var
+R10833:10834 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R10839:10847 Quan.QState <> WF_dstate def
+R10849:10850 Quan.QAssert <> mu:117 var
+prf 11025:11036 <> WF_dstate_eq
+binder 11038:11038 <> n:119
+R11058:11063 Quan.QState <> dstate def
+R11067:11067 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R11068:11068 Quan.QAssert <> n:119 var
+binder 11050:11051 <> mu:120
+binder 11053:11055 <> mu':121
+R11089:11091 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R11073:11081 Quan.QState <> dstate_eq def
+R11086:11088 Quan.QAssert <> mu':121 var
+R11083:11084 Quan.QAssert <> mu:120 var
+R11104:11107 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R11092:11100 Quan.QState <> WF_dstate def
+R11102:11103 Quan.QAssert <> mu:120 var
+R11108:11116 Quan.QState <> WF_dstate def
+R11118:11120 Quan.QAssert <> mu':121 var
+R11137:11145 Quan.QState <> WF_dstate def
+R11155:11163 Quan.QState <> dstate_eq def
+prf 11269:11281 <> dstate_eq_sym
+R11285:11287 Coq.Init.Datatypes <> nat ind
+binder 11283:11283 <> n:122
+R11307:11312 Quan.QState <> dstate def
+R11316:11316 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R11317:11317 Quan.QAssert <> n:122 var
+binder 11298:11300 <> mu1:123
+binder 11302:11304 <> mu2:124
+R11339:11341 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R11322:11330 Quan.QState <> dstate_eq def
+R11336:11338 Quan.QAssert <> mu2:124 var
+R11332:11334 Quan.QAssert <> mu1:123 var
+R11342:11350 Quan.QState <> dstate_eq def
+R11356:11358 Quan.QAssert <> mu1:123 var
+R11352:11354 Quan.QAssert <> mu2:124 var
+R11409:11417 Quan.QState <> dstate_eq def
+prf 12440:12452 <> WF_sat_Assert
+R12456:12458 Coq.Init.Datatypes <> nat ind
+binder 12454:12454 <> n:125
+R12473:12478 Quan.QState <> dstate def
+R12482:12482 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R12483:12483 Quan.QAssert <> n:125 var
+binder 12470:12471 <> mu:126
+R12490:12498 Quan.QAssert <> Assertion ind
+binder 12488:12488 <> D:127
+R12519:12521 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12503:12512 Quan.QAssert <> sat_Assert ind
+R12518:12518 Quan.QAssert <> D:127 var
+R12515:12516 Quan.QAssert <> mu:126 var
+R12544:12547 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R12538:12541 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R12522:12534 Quan.QState StateMap this proj
+R12536:12537 Quan.QAssert <> mu:126 var
+R12542:12543 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R12548:12556 Quan.QState <> WF_dstate def
+R12558:12559 Quan.QAssert <> mu:126 var
+prf 12723:12735 <> state_eq_aexp
+R12739:12741 Coq.Init.Datatypes <> nat ind
+binder 12737:12737 <> n:128
+R12760:12764 Quan.QState <> state def
+R12766:12766 Quan.QAssert <> n:128 var
+binder 12753:12754 <> st:129
+binder 12756:12758 <> st':130
+R12774:12777 Quan.QIMP <> aexp ind
+binder 12772:12772 <> a:131
+R12801:12803 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12781:12781 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R12788:12792 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R12800:12800 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R12782:12784 Coq.Init.Datatypes <> fst def
+R12786:12787 Quan.QAssert <> st:129 var
+R12793:12795 Coq.Init.Datatypes <> fst def
+R12797:12799 Quan.QAssert <> st':130 var
+R12804:12804 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R12815:12818 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R12805:12809 Quan.QIMP <> aeval def
+R12814:12814 Quan.QAssert <> a:131 var
+R12811:12812 Quan.QAssert <> st:129 var
+R12819:12823 Quan.QIMP <> aeval def
+R12829:12829 Quan.QAssert <> a:131 var
+R12825:12827 Quan.QAssert <> st':130 var
+prf 13104:13116 <> state_eq_bexp
+R13120:13122 Coq.Init.Datatypes <> nat ind
+binder 13118:13118 <> n:132
+R13141:13145 Quan.QState <> state def
+R13147:13147 Quan.QAssert <> n:132 var
+binder 13134:13135 <> st:133
+binder 13137:13139 <> st':134
+R13153:13156 Quan.QIMP <> bexp ind
+binder 13151:13151 <> b:135
+R13180:13182 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13160:13160 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R13167:13171 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R13179:13179 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R13161:13163 Coq.Init.Datatypes <> fst def
+R13165:13166 Quan.QAssert <> st:133 var
+R13172:13174 Coq.Init.Datatypes <> fst def
+R13176:13178 Quan.QAssert <> st':134 var
+R13183:13183 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R13194:13197 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R13184:13188 Quan.QIMP <> beval def
+R13193:13193 Quan.QAssert <> b:135 var
+R13190:13191 Quan.QAssert <> st:133 var
+R13198:13202 Quan.QIMP <> beval def
+R13208:13208 Quan.QAssert <> b:135 var
+R13204:13206 Quan.QAssert <> st':134 var
+R13323:13335 Quan.QAssert <> state_eq_aexp thm
+R13323:13335 Quan.QAssert <> state_eq_aexp thm
+R13323:13335 Quan.QAssert <> state_eq_aexp thm
+R13323:13335 Quan.QAssert <> state_eq_aexp thm
+R13366:13378 Quan.QAssert <> state_eq_aexp thm
+R13366:13378 Quan.QAssert <> state_eq_aexp thm
+R13366:13378 Quan.QAssert <> state_eq_aexp thm
+R13366:13378 Quan.QAssert <> state_eq_aexp thm
+R13463:13475 Quan.QAssert <> state_eq_aexp thm
+R13463:13475 Quan.QAssert <> state_eq_aexp thm
+R13463:13475 Quan.QAssert <> state_eq_aexp thm
+R13463:13475 Quan.QAssert <> state_eq_aexp thm
+R13504:13516 Quan.QAssert <> state_eq_aexp thm
+R13504:13516 Quan.QAssert <> state_eq_aexp thm
+R13504:13516 Quan.QAssert <> state_eq_aexp thm
+R13504:13516 Quan.QAssert <> state_eq_aexp thm
+R13599:13611 Quan.QAssert <> state_eq_aexp thm
+R13599:13611 Quan.QAssert <> state_eq_aexp thm
+R13599:13611 Quan.QAssert <> state_eq_aexp thm
+R13599:13611 Quan.QAssert <> state_eq_aexp thm
+R13641:13653 Quan.QAssert <> state_eq_aexp thm
+R13641:13653 Quan.QAssert <> state_eq_aexp thm
+R13641:13653 Quan.QAssert <> state_eq_aexp thm
+R13641:13653 Quan.QAssert <> state_eq_aexp thm
+R13736:13748 Quan.QAssert <> state_eq_aexp thm
+R13736:13748 Quan.QAssert <> state_eq_aexp thm
+R13736:13748 Quan.QAssert <> state_eq_aexp thm
+R13736:13748 Quan.QAssert <> state_eq_aexp thm
+R13777:13789 Quan.QAssert <> state_eq_aexp thm
+R13777:13789 Quan.QAssert <> state_eq_aexp thm
+R13777:13789 Quan.QAssert <> state_eq_aexp thm
+R13777:13789 Quan.QAssert <> state_eq_aexp thm
+prf 13992:14003 <> bexp_Pure_eq
+R14007:14009 Coq.Init.Datatypes <> nat ind
+binder 14005:14005 <> n:136
+R14029:14033 Quan.QState <> state def
+R14035:14035 Quan.QAssert <> n:136 var
+binder 14022:14023 <> st:137
+binder 14025:14027 <> st':138
+R14042:14045 Quan.QIMP <> bexp ind
+binder 14040:14040 <> b:139
+R14051:14051 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14078:14082 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14052:14052 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14063:14066 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14053:14057 Quan.QIMP <> beval def
+R14062:14062 Quan.QAssert <> b:139 var
+R14059:14060 Quan.QAssert <> st:137 var
+R14067:14071 Quan.QIMP <> beval def
+R14077:14077 Quan.QAssert <> b:139 var
+R14073:14075 Quan.QAssert <> st':138 var
+R14083:14083 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R14099:14103 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R14120:14120 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R14084:14093 Quan.QAssert <> State_eval def
+R14097:14098 Quan.QAssert <> st:137 var
+R14095:14095 Quan.QAssert <> b:139 var
+R14104:14113 Quan.QAssert <> State_eval def
+R14117:14119 Quan.QAssert <> st':138 var
+R14115:14115 Quan.QAssert <> b:139 var
+R14157:14161 Quan.QIMP <> beval def
+R14157:14161 Quan.QIMP <> beval def
+prf 14249:14261 <> state_eq_Pure
+R14265:14267 Coq.Init.Datatypes <> nat ind
+binder 14263:14263 <> n:140
+R14281:14292 Quan.QAssert <> Pure_formula ind
+binder 14279:14279 <> P:141
+R14303:14307 Quan.QState <> state def
+R14309:14309 Quan.QAssert <> n:140 var
+binder 14296:14297 <> st:142
+binder 14299:14301 <> st':143
+R14333:14335 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14314:14314 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14321:14324 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14332:14332 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14315:14317 Coq.Init.Datatypes <> fst def
+R14319:14320 Quan.QAssert <> st:142 var
+R14325:14327 Coq.Init.Datatypes <> fst def
+R14329:14331 Quan.QAssert <> st':143 var
+R14336:14336 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R14352:14356 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R14337:14346 Quan.QAssert <> State_eval def
+R14350:14351 Quan.QAssert <> st:142 var
+R14348:14348 Quan.QAssert <> P:141 var
+R14357:14366 Quan.QAssert <> State_eval def
+R14370:14372 Quan.QAssert <> st':143 var
+R14368:14368 Quan.QAssert <> P:141 var
+R14417:14428 Quan.QAssert <> bexp_Pure_eq thm
+R14417:14428 Quan.QAssert <> bexp_Pure_eq thm
+R14457:14469 Quan.QAssert <> state_eq_bexp thm
+R14457:14469 Quan.QAssert <> state_eq_bexp thm
+R14457:14469 Quan.QAssert <> state_eq_bexp thm
+R14457:14469 Quan.QAssert <> state_eq_bexp thm
+R14575:14589 Quan.QState <> s_update_cstate def
+R14687:14687 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14703:14704 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14706:14706 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14688:14695 Quan.QState <> c_update def
+R14687:14687 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14703:14704 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14706:14706 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14688:14695 Quan.QState <> c_update def
+R14764:14765 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14781:14783 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14786:14786 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14766:14773 Quan.QState <> c_update def
+R14764:14765 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14781:14783 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14786:14786 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R14766:14773 Quan.QState <> c_update def
+prf 14840:14853 <> qstate_eq_Qexp
+R14867:14870 Quan.QAssert <> QExp ind
+binder 14863:14864 <> qs:144
+R14877:14879 Coq.Init.Datatypes <> nat ind
+binder 14875:14875 <> n:145
+R14890:14894 Quan.QState <> state def
+R14896:14896 Quan.QAssert <> n:145 var
+binder 14883:14884 <> st:146
+binder 14886:14888 <> st':147
+R14918:14923 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14909:14910 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R14903:14905 Coq.Init.Datatypes <> snd def
+R14907:14908 Quan.QAssert <> st:146 var
+R14911:14913 Coq.Init.Datatypes <> snd def
+R14915:14917 Quan.QAssert <> st':147 var
+R14940:14943 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14924:14932 Quan.QAssert <> QExp_eval def
+R14938:14939 Quan.QAssert <> st:146 var
+R14935:14936 Quan.QAssert <> qs:144 var
+R14944:14952 Quan.QAssert <> QExp_eval def
+R14958:14960 Quan.QAssert <> st':147 var
+R14955:14956 Quan.QAssert <> qs:144 var
+def 15187:15200 <> assert_implies
+R15209:15217 Quan.QAssert <> Assertion ind
+binder 15203:15203 <> P:148
+binder 15205:15205 <> Q:149
+R15244:15246 Coq.Init.Datatypes <> nat ind
+binder 15242:15242 <> n:150
+R15253:15258 Quan.QState <> dstate def
+R15262:15262 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R15263:15263 Quan.QAssert <> n:150 var
+binder 15250:15251 <> mu:151
+R15284:15287 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15268:15277 Quan.QAssert <> sat_Assert ind
+R15283:15283 Quan.QAssert <> P:148 var
+R15280:15281 Quan.QAssert <> mu:151 var
+R15288:15297 Quan.QAssert <> sat_Assert ind
+R15303:15303 Quan.QAssert <> Q:149 var
+R15300:15301 Quan.QAssert <> mu:151 var
+R15330:15343 Quan.QAssert <> assert_implies def
+not 15316:15316 <> ::assert_scope:x_'->>'_x
+R15444:15444 Quan.QAssert <> ::assert_scope:x_'/\'_x not
+R15452:15457 Quan.QAssert <> ::assert_scope:x_'/\'_x not
+R15465:15465 Quan.QAssert <> ::assert_scope:x_'/\'_x not
+R15446:15450 Quan.QAssert <> ::assert_scope:x_'->>'_x not
+R15459:15463 Quan.QAssert <> ::assert_scope:x_'->>'_x not
+not 15424:15424 <> ::assert_scope:x_'<<->>'_x
+prf 15532:15544 <> Mscale_not_0'
+R15558:15560 Coq.Init.Datatypes <> nat ind
+binder 15554:15554 <> m:152
+binder 15556:15556 <> n:153
+R15566:15571 Quan.Matrix <> Matrix def
+R15573:15573 Quan.QAssert <> m:152 var
+R15575:15575 Quan.QAssert <> n:153 var
+binder 15564:15564 <> A:154
+R15582:15582 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 15579:15579 <> p:155
+R15600:15603 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15592:15595 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R15588:15590 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R15587:15587 Quan.QAssert <> p:155 var
+R15591:15591 Quan.QAssert <> A:154 var
+R15596:15599 Quan.Matrix <> Zero def
+R15605:15606 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R15604:15604 Quan.QAssert <> A:154 var
+R15607:15610 Quan.Matrix <> Zero def
+R15628:15630 Coq.Init.Logic <> not def
+R15669:15678 Quan.Matrix <> Mscale_0_r thm
+R15669:15678 Quan.Matrix <> Mscale_0_r thm
+R15669:15678 Quan.Matrix <> Mscale_0_r thm
+prf 15737:15755 <> s_seman_scalar_Qexp
+R15770:15773 Quan.QAssert <> QExp ind
+binder 15767:15768 <> qs:156
+R15779:15779 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 15777:15777 <> p:157
+R15786:15788 Coq.Init.Datatypes <> nat ind
+binder 15784:15784 <> n:158
+R15795:15799 Quan.QState <> state def
+R15801:15801 Quan.QAssert <> n:158 var
+binder 15792:15793 <> st:159
+R15811:15814 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15806:15806 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R15808:15809 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R15807:15807 Quan.QAssert <> p:157 var
+R15807:15807 Quan.QAssert <> p:157 var
+R15826:15830 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15879:15879 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15815:15822 Quan.QState <> WF_state def
+R15824:15825 Quan.QAssert <> st:159 var
+R15846:15850 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R15831:15839 Quan.QAssert <> QExp_eval def
+R15844:15845 Quan.QAssert <> st:159 var
+R15841:15842 Quan.QAssert <> qs:156 var
+R15851:15859 Quan.QAssert <> QExp_eval def
+R15865:15872 Quan.QState <> s_scalar def
+R15876:15877 Quan.QAssert <> st:159 var
+R15874:15874 Quan.QAssert <> p:157 var
+R15861:15862 Quan.QAssert <> qs:156 var
+R15998:16012 Quan.Matrix <> trace_mult_dist thm
+R15998:16012 Quan.Matrix <> trace_mult_dist thm
+R15998:16012 Quan.Matrix <> trace_mult_dist thm
+R16029:16039 Quan.Complex <> Cdiv_unfold thm
+R16029:16039 Quan.Complex <> Cdiv_unfold thm
+R16029:16039 Quan.Complex <> Cdiv_unfold thm
+R16056:16067 Quan.Matrix <> Mscale_assoc thm
+R16056:16067 Quan.Matrix <> Mscale_assoc thm
+R16056:16067 Quan.Matrix <> Mscale_assoc thm
+R16086:16096 Quan.Complex <> Cmult_assoc thm
+R16086:16096 Quan.Complex <> Cmult_assoc thm
+R16086:16096 Quan.Complex <> Cmult_assoc thm
+R16113:16127 Quan.Complex <> Cinv_mult_distr thm
+R16113:16127 Quan.Complex <> Cinv_mult_distr thm
+R16113:16127 Quan.Complex <> Cinv_mult_distr thm
+R16113:16127 Quan.Complex <> Cinv_mult_distr thm
+R16113:16127 Quan.Complex <> Cinv_mult_distr thm
+R16147:16157 Quan.Complex <> Cmult_assoc thm
+R16147:16157 Quan.Complex <> Cmult_assoc thm
+R16147:16157 Quan.Complex <> Cmult_assoc thm
+R16195:16198 Quan.Complex <> RtoC def
+R16174:16183 Quan.Complex <> Cmult_comm thm
+R16195:16198 Quan.Complex <> RtoC def
+R16174:16183 Quan.Complex <> Cmult_comm thm
+R16195:16198 Quan.Complex <> RtoC def
+R16174:16183 Quan.Complex <> Cmult_comm thm
+R16241:16244 Quan.Complex <> RtoC def
+R16219:16229 Quan.Complex <> Cmult_assoc thm
+R16241:16244 Quan.Complex <> RtoC def
+R16219:16229 Quan.Complex <> Cmult_assoc thm
+R16241:16244 Quan.Complex <> RtoC def
+R16219:16229 Quan.Complex <> Cmult_assoc thm
+R16265:16270 Quan.Complex <> Cinv_l thm
+R16265:16270 Quan.Complex <> Cinv_l thm
+R16265:16270 Quan.Complex <> Cinv_l thm
+R16265:16270 Quan.Complex <> Cinv_l thm
+R16287:16297 Quan.Complex <> Cmult_assoc thm
+R16287:16297 Quan.Complex <> Cmult_assoc thm
+R16287:16297 Quan.Complex <> Cmult_assoc thm
+R16314:16322 Quan.Complex <> Cmult_1_l thm
+R16314:16322 Quan.Complex <> Cmult_1_l thm
+R16314:16322 Quan.Complex <> Cmult_1_l thm
+R16355:16362 Quan.Complex <> RtoC_neq thm
+R16355:16362 Quan.Complex <> RtoC_neq thm
+R16417:16424 Quan.Complex <> RtoC_neq thm
+R16417:16424 Quan.Complex <> RtoC_neq thm
+R16479:16491 Quan.QState <> WF_state_gt_0 thm
+R16479:16491 Quan.QState <> WF_state_gt_0 thm
+R16526:16528 Coq.Init.Logic <> not def
+R16553:16559 Quan.QState <> s_trace def
+R16617:16622 Quan.Complex <> Cmod_0 thm
+R16617:16622 Quan.Complex <> Cmod_0 thm
+R16617:16622 Quan.Complex <> Cmod_0 thm
+R16884:16898 Quan.Matrix <> trace_mult_dist thm
+R16884:16898 Quan.Matrix <> trace_mult_dist thm
+R16884:16898 Quan.Matrix <> trace_mult_dist thm
+R16915:16925 Quan.Complex <> Cdiv_unfold thm
+R16915:16925 Quan.Complex <> Cdiv_unfold thm
+R16915:16925 Quan.Complex <> Cdiv_unfold thm
+R16942:16953 Quan.Matrix <> Mscale_assoc thm
+R16942:16953 Quan.Matrix <> Mscale_assoc thm
+R16942:16953 Quan.Matrix <> Mscale_assoc thm
+R16972:16982 Quan.Complex <> Cmult_assoc thm
+R16972:16982 Quan.Complex <> Cmult_assoc thm
+R16972:16982 Quan.Complex <> Cmult_assoc thm
+R16999:17013 Quan.Complex <> Cinv_mult_distr thm
+R16999:17013 Quan.Complex <> Cinv_mult_distr thm
+R16999:17013 Quan.Complex <> Cinv_mult_distr thm
+R16999:17013 Quan.Complex <> Cinv_mult_distr thm
+R16999:17013 Quan.Complex <> Cinv_mult_distr thm
+R17033:17043 Quan.Complex <> Cmult_assoc thm
+R17033:17043 Quan.Complex <> Cmult_assoc thm
+R17033:17043 Quan.Complex <> Cmult_assoc thm
+R17081:17084 Quan.Complex <> RtoC def
+R17060:17069 Quan.Complex <> Cmult_comm thm
+R17081:17084 Quan.Complex <> RtoC def
+R17060:17069 Quan.Complex <> Cmult_comm thm
+R17081:17084 Quan.Complex <> RtoC def
+R17060:17069 Quan.Complex <> Cmult_comm thm
+R17127:17130 Quan.Complex <> RtoC def
+R17105:17115 Quan.Complex <> Cmult_assoc thm
+R17127:17130 Quan.Complex <> RtoC def
+R17105:17115 Quan.Complex <> Cmult_assoc thm
+R17127:17130 Quan.Complex <> RtoC def
+R17105:17115 Quan.Complex <> Cmult_assoc thm
+R17151:17156 Quan.Complex <> Cinv_l thm
+R17151:17156 Quan.Complex <> Cinv_l thm
+R17151:17156 Quan.Complex <> Cinv_l thm
+R17151:17156 Quan.Complex <> Cinv_l thm
+R17173:17183 Quan.Complex <> Cmult_assoc thm
+R17173:17183 Quan.Complex <> Cmult_assoc thm
+R17173:17183 Quan.Complex <> Cmult_assoc thm
+R17200:17208 Quan.Complex <> Cmult_1_l thm
+R17200:17208 Quan.Complex <> Cmult_1_l thm
+R17200:17208 Quan.Complex <> Cmult_1_l thm
+R17240:17247 Quan.Complex <> RtoC_neq thm
+R17240:17247 Quan.Complex <> RtoC_neq thm
+R17302:17309 Quan.Complex <> RtoC_neq thm
+R17302:17309 Quan.Complex <> RtoC_neq thm
+R17364:17376 Quan.QState <> WF_state_gt_0 thm
+R17364:17376 Quan.QState <> WF_state_gt_0 thm
+R17411:17413 Coq.Init.Logic <> not def
+R17438:17444 Quan.QState <> s_trace def
+R17497:17502 Quan.Complex <> Cmod_0 thm
+R17497:17502 Quan.Complex <> Cmod_0 thm
+R17497:17502 Quan.Complex <> Cmod_0 thm
+prf 17747:17760 <> s_seman_scalar
+R17773:17785 Quan.QAssert <> State_formula ind
+binder 17771:17771 <> F:160
+R17791:17791 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 17789:17789 <> p:161
+binder 17794:17794 <> n:162
+R17801:17805 Quan.QState <> state def
+R17807:17807 Quan.QAssert <> n:162 var
+binder 17798:17799 <> st:163
+R17817:17819 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17812:17812 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R17814:17815 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R17813:17813 Quan.QAssert <> p:161 var
+R17813:17813 Quan.QAssert <> p:161 var
+R17820:17820 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17832:17836 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17885:17885 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17821:17828 Quan.QState <> WF_state def
+R17830:17831 Quan.QAssert <> st:163 var
+R17852:17856 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R17837:17846 Quan.QAssert <> State_eval def
+R17850:17851 Quan.QAssert <> st:163 var
+R17848:17848 Quan.QAssert <> F:160 var
+R17857:17866 Quan.QAssert <> State_eval def
+R17871:17878 Quan.QState <> s_scalar def
+R17882:17883 Quan.QAssert <> st:163 var
+R17880:17880 Quan.QAssert <> p:161 var
+R17868:17868 Quan.QAssert <> F:160 var
+R17935:17947 Quan.QAssert <> state_eq_Pure thm
+R17956:17963 Quan.QState <> s_scalar def
+R17935:17947 Quan.QAssert <> state_eq_Pure thm
+R17956:17963 Quan.QState <> s_scalar def
+R18019:18031 Quan.QAssert <> state_eq_Pure thm
+R18037:18044 Quan.QState <> s_scalar def
+R18019:18031 Quan.QAssert <> state_eq_Pure thm
+R18037:18044 Quan.QState <> s_scalar def
+R18096:18114 Quan.QAssert <> s_seman_scalar_Qexp thm
+R18096:18114 Quan.QAssert <> s_seman_scalar_Qexp thm
+R18476:18478 Coq.Init.Logic <> not def
+R18501:18503 Coq.Init.Logic <> not def
+R18527:18536 Quan.QAssert <> State_eval def
+R18527:18536 Quan.QAssert <> State_eval def
+R18637:18646 Quan.QAssert <> State_eval def
+R18651:18658 Quan.QState <> s_scalar def
+R18637:18646 Quan.QAssert <> State_eval def
+R18651:18658 Quan.QState <> s_scalar def
+R18803:18817 Quan.QState <> s_update_cstate def
+R18854:18861 Quan.QState <> s_scalar def
+R18888:18888 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18918:18919 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18921:18921 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18889:18896 Quan.QState <> c_update def
+R18901:18905 Quan.QIMP <> aeval def
+R18907:18907 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18909:18910 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18912:18912 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18951:18958 Quan.QState <> s_scalar def
+R18888:18888 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18918:18919 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18921:18921 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18889:18896 Quan.QState <> c_update def
+R18901:18905 Quan.QIMP <> aeval def
+R18907:18907 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18909:18910 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18912:18912 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18991:18992 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19017:19017 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18977:18981 Quan.QIMP <> aeval def
+R18983:18983 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18985:18986 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18988:18988 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18994:18998 Quan.QIMP <> aeval def
+R19002:19002 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19004:19006 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19013:19014 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19008:19011 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R18991:18992 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19017:19017 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18977:18981 Quan.QIMP <> aeval def
+R18983:18983 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18985:18986 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18988:18988 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R18994:18998 Quan.QIMP <> aeval def
+R19002:19002 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19004:19006 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19013:19014 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19008:19011 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R19029:19041 Quan.QAssert <> state_eq_aexp thm
+R19029:19041 Quan.QAssert <> state_eq_aexp thm
+R19107:19114 Quan.QState <> WF_state def
+R19133:19140 Quan.QState <> WF_state def
+R19186:19192 Quan.QState <> s_trace def
+R19223:19230 Quan.QState <> s_scalar def
+R19273:19273 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19260:19264 Quan.QIMP <> aeval def
+R19266:19266 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19268:19268 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19270:19270 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19276:19280 Quan.QIMP <> aeval def
+R19284:19284 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19286:19287 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19294:19294 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19289:19292 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R19273:19273 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19260:19264 Quan.QIMP <> aeval def
+R19266:19266 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19268:19268 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19270:19270 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19276:19280 Quan.QIMP <> aeval def
+R19284:19284 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19286:19287 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19294:19294 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19289:19292 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R19309:19321 Quan.QAssert <> state_eq_aexp thm
+R19309:19321 Quan.QAssert <> state_eq_aexp thm
+R19374:19381 Quan.QState <> s_scalar def
+R19422:19422 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19457:19459 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19461:19461 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19423:19430 Quan.QState <> c_update def
+R19435:19439 Quan.QIMP <> aeval def
+R19441:19441 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19443:19444 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19446:19446 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19422:19422 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19457:19459 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19461:19461 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19423:19430 Quan.QState <> c_update def
+R19435:19439 Quan.QIMP <> aeval def
+R19441:19441 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19443:19444 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19446:19446 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19515:19522 Quan.QState <> WF_state def
+R19541:19548 Quan.QState <> WF_state def
+prf 19622:19640 <> d_seman_scalar_Qexp
+R19654:19666 Quan.QAssert <> State_formula ind
+binder 19652:19652 <> F:164
+R19672:19672 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 19670:19670 <> p:165
+R19679:19681 Coq.Init.Datatypes <> nat ind
+binder 19677:19677 <> n:166
+R19688:19691 Coq.Init.Datatypes <> list ind
+R19700:19702 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R19694:19699 Quan.QState <> cstate def
+R19703:19708 Quan.QState <> qstate def
+R19710:19710 Quan.QAssert <> n:166 var
+binder 19685:19686 <> mu:167
+R19721:19724 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R19716:19716 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R19718:19719 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R19717:19717 Quan.QAssert <> p:165 var
+R19717:19717 Quan.QAssert <> p:165 var
+R19741:19745 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R19845:19845 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R19725:19737 Quan.QState <> WF_dstate_aux ind
+R19739:19740 Quan.QAssert <> mu:167 var
+R19768:19770 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R19746:19762 Quan.QAssert <> State_eval_dstate def
+R19766:19767 Quan.QAssert <> mu:167 var
+R19764:19764 Quan.QAssert <> F:164 var
+R19772:19788 Quan.QAssert <> State_eval_dstate def
+R19790:19790 Quan.QAssert <> n:166 var
+R19792:19792 Quan.QAssert <> F:164 var
+R19796:19811 Quan.QState StateMap.Raw map def
+R19842:19843 Quan.QAssert <> mu:167 var
+R19822:19827 Quan.QState <> qstate def
+R19829:19829 Quan.QAssert <> n:166 var
+binder 19818:19818 <> x:168
+R19835:19838 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R19834:19834 Quan.QAssert <> p:165 var
+R19839:19839 Quan.QAssert <> x:168 var
+R19966:19975 Quan.QAssert <> State_eval def
+R19981:19988 Quan.QState <> s_scalar def
+R19992:19992 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19994:19995 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19997:19997 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19966:19975 Quan.QAssert <> State_eval def
+R19981:19988 Quan.QState <> s_scalar def
+R19992:19992 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19994:19995 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R19997:19997 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20015:20028 Quan.QAssert <> s_seman_scalar thm
+R20015:20028 Quan.QAssert <> s_seman_scalar thm
+R20105:20112 Quan.QState <> s_scalar def
+R20202:20211 Quan.QAssert <> State_eval def
+R20216:20223 Quan.QState <> s_scalar def
+R20227:20227 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20229:20230 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20232:20232 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20202:20211 Quan.QAssert <> State_eval def
+R20216:20223 Quan.QState <> s_scalar def
+R20227:20227 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20229:20230 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20232:20232 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20250:20263 Quan.QAssert <> s_seman_scalar thm
+R20250:20263 Quan.QAssert <> s_seman_scalar thm
+R20340:20347 Quan.QState <> s_scalar def
+R20404:20420 Quan.QAssert <> State_eval_dstate def
+R20434:20449 Quan.QState StateMap.Raw map def
+R20499:20502 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R20491:20491 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20494:20495 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20498:20498 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20460:20465 Quan.QState <> qstate def
+binder 20456:20456 <> x:169
+R20473:20476 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R20477:20477 Quan.QAssert <> x:169 var
+R20404:20420 Quan.QAssert <> State_eval_dstate def
+R20434:20449 Quan.QState StateMap.Raw map def
+R20499:20502 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R20491:20491 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20494:20495 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20498:20498 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R20460:20465 Quan.QState <> qstate def
+binder 20456:20456 <> x:170
+R20473:20476 Quan.Matrix <> ::matrix_scope:x_'.*'_x not
+R20477:20477 Quan.QAssert <> x:170 var
+prf 20682:20695 <> d_seman_scalar
+binder 20705:20705 <> n:171
+R20710:20710 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 20708:20708 <> p:172
+R20717:20722 Quan.QState <> dstate def
+R20726:20726 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R20727:20727 Quan.QAssert <> n:171 var
+binder 20714:20715 <> mu:173
+R20734:20746 Quan.QAssert <> State_formula ind
+binder 20732:20732 <> F:174
+R20756:20758 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R20751:20751 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R20753:20754 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R20752:20752 Quan.QAssert <> p:172 var
+R20752:20752 Quan.QAssert <> p:172 var
+R20773:20776 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R20759:20767 Quan.QAssert <> sat_State ind
+R20772:20772 Quan.QAssert <> F:174 var
+R20769:20770 Quan.QAssert <> mu:173 var
+R20777:20785 Quan.QAssert <> sat_State ind
+R20804:20804 Quan.QAssert <> F:174 var
+R20789:20796 Quan.QState <> d_scalar def
+R20800:20801 Quan.QAssert <> mu:173 var
+R20798:20798 Quan.QAssert <> p:172 var
+R20870:20877 Quan.QState <> d_scalar def
+R20942:20946 Quan.QAssert <> sat_F constr
+R20942:20946 Quan.QAssert <> sat_F constr
+R20963:20973 Quan.QState <> WF_d_scalar thm
+R20963:20973 Quan.QState <> WF_d_scalar thm
+R21018:21036 Quan.QAssert <> d_seman_scalar_Qexp thm
+R21018:21036 Quan.QAssert <> d_seman_scalar_Qexp thm
+R21064:21072 Quan.QState <> WF_dstate def
+R21146:21159 Coq.Logic.Classical_Prop <> <> lib
+prf 21170:21180 <> Mplus_not_0
+R21195:21197 Coq.Init.Datatypes <> nat ind
+binder 21191:21191 <> m:175
+binder 21193:21193 <> n:176
+R21205:21210 Quan.Matrix <> Matrix def
+R21212:21212 Quan.QAssert <> m:175 var
+R21214:21214 Quan.QAssert <> n:176 var
+binder 21201:21201 <> A:177
+binder 21203:21203 <> B:178
+R21232:21236 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R21259:21259 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R21224:21227 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R21219:21222 Quan.Matrix <> ::matrix_scope:x_'.+'_x not
+R21218:21218 Quan.QAssert <> A:177 var
+R21223:21223 Quan.QAssert <> B:178 var
+R21228:21231 Quan.Matrix <> Zero def
+R21246:21249 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R21238:21241 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R21237:21237 Quan.QAssert <> A:177 var
+R21242:21245 Quan.Matrix <> Zero def
+R21251:21254 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R21250:21250 Quan.QAssert <> B:178 var
+R21255:21258 Quan.Matrix <> Zero def
+R21278:21280 Coq.Init.Logic <> not def
+R21304:21307 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R21299:21299 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21300:21303 Quan.Matrix <> Zero def
+R21309:21310 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R21311:21314 Quan.Matrix <> Zero def
+R21304:21307 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R21299:21299 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21300:21303 Quan.Matrix <> Zero def
+R21309:21310 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R21311:21314 Quan.Matrix <> Zero def
+R21333:21339 Coq.Logic.Classical_Prop <> classic prfax
+R21333:21339 Coq.Logic.Classical_Prop <> classic prfax
+R21435:21443 Quan.Matrix <> Mplus_0_l thm
+R21435:21443 Quan.Matrix <> Mplus_0_l thm
+prf 21491:21502 <> d_app_mu_nil
+R21517:21519 Coq.Init.Datatypes <> nat ind
+binder 21513:21513 <> n:179
+R21531:21536 Quan.QState <> dstate def
+R21538:21538 Quan.QAssert <> n:179 var
+binder 21523:21524 <> mu:180
+binder 21526:21528 <> mu':181
+R21565:21569 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R21561:21562 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21544:21556 Quan.QState StateMap this proj
+R21558:21560 Quan.QAssert <> mu':181 var
+R21563:21564 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R21598:21600 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21570:21582 Quan.QState StateMap this proj
+R21585:21589 Quan.QState <> d_app def
+R21594:21596 Quan.QAssert <> mu':181 var
+R21591:21592 Quan.QAssert <> mu:180 var
+R21601:21613 Quan.QState StateMap this proj
+R21615:21616 Quan.QAssert <> mu:180 var
+R21701:21711 Quan.QState <> map2_r_refl thm
+R21701:21711 Quan.QState <> map2_r_refl thm
+R21701:21711 Quan.QState <> map2_r_refl thm
+R21807:21817 Quan.QState <> map2_l_refl thm
+R21807:21817 Quan.QState <> map2_l_refl thm
+R21807:21817 Quan.QState <> map2_l_refl thm
+prf 21866:21873 <> map2_nil
+binder 21882:21882 <> n:182
+R21888:21891 Coq.Init.Datatypes <> list ind
+R21900:21901 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R21894:21899 Quan.QState <> cstate def
+R21902:21907 Quan.QState <> qstate def
+R21909:21909 Quan.QAssert <> n:182 var
+binder 21885:21886 <> mu:183
+R21950:21953 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21916:21932 Quan.QState StateMap.Raw map2 def
+R21948:21949 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+R21945:21946 Quan.QAssert <> mu:183 var
+R21934:21943 Quan.QState <> option_app def
+R21954:21972 Quan.QState StateMap.Raw map2_l def
+R21985:21986 Quan.QAssert <> mu:183 var
+R21974:21983 Quan.QState <> option_app def
+prf 22104:22113 <> Rplus_le_1
+R22129:22129 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 22123:22124 <> r1:184
+binder 22126:22127 <> r2:185
+R22137:22138 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22135:22135 Coq.Reals.Rdefinitions <> ::R_scope:x_'>'_x not
+R22133:22134 Quan.QAssert <> r1:184 var
+R22147:22149 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22144:22145 Coq.Reals.Rdefinitions <> ::R_scope:x_'<='_x not
+R22141:22141 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
+R22139:22140 Quan.QAssert <> r1:184 var
+R22142:22143 Quan.QAssert <> r2:185 var
+R22152:22153 Coq.Reals.Rdefinitions <> ::R_scope:x_'<='_x not
+R22150:22151 Quan.QAssert <> r2:185 var
+prf 22197:22214 <> map2_scale_not_nil
+binder 22224:22224 <> n:186
+R22229:22229 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 22227:22227 <> p:187
+R22237:22240 Coq.Init.Datatypes <> list ind
+R22249:22251 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R22243:22248 Quan.QState <> cstate def
+R22252:22257 Quan.QState <> qstate def
+R22259:22259 Quan.QAssert <> n:186 var
+binder 22233:22234 <> mu:188
+R22273:22276 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22268:22269 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R22266:22267 Quan.QAssert <> mu:188 var
+R22270:22272 Coq.Init.Datatypes <> nil constr
+R22277:22277 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22281:22286 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22279:22279 Coq.Reals.Rdefinitions <> ::R_scope:x_'>'_x not
+R22278:22278 Quan.QAssert <> p:187 var
+R22354:22357 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R22287:22302 Quan.QState StateMap.Raw map def
+R22352:22353 Quan.QAssert <> mu:188 var
+R22313:22318 Quan.QState <> qstate def
+R22320:22320 Quan.QAssert <> n:186 var
+binder 22309:22309 <> x:189
+R22325:22329 Quan.Matrix <> scale def
+R22333:22333 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R22334:22334 Quan.QAssert <> n:186 var
+R22339:22339 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R22340:22340 Quan.QAssert <> n:186 var
+R22343:22343 Quan.QAssert <> p:187 var
+R22345:22345 Quan.QAssert <> x:189 var
+R22358:22359 Coq.Lists.List ListNotations ::list_scope:'['_']' not
+prf 22505:22515 <> d_seman_app
+binder 22525:22525 <> n:190
+R22530:22542 Quan.QAssert <> State_formula ind
+binder 22528:22528 <> F:191
+R22554:22559 Quan.QState <> dstate def
+R22563:22563 Coq.Arith.PeanoNat <> ::nat_scope:x_'^'_x not
+R22564:22564 Quan.QAssert <> n:190 var
+binder 22547:22548 <> mu:192
+binder 22550:22552 <> mu':193
+R22575:22575 Coq.Reals.Rdefinitions RbaseSymbolsImpl R defax
+binder 22569:22570 <> p0:194
+binder 22572:22573 <> p1:195
+R22579:22579 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22591:22593 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22581:22583 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22586:22589 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22584:22585 Quan.QAssert <> p0:194 var
+R22584:22585 Quan.QAssert <> p0:194 var
+R22594:22594 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22606:22609 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22596:22598 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22601:22604 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22599:22600 Quan.QAssert <> p1:195 var
+R22599:22600 Quan.QAssert <> p1:195 var
+R22610:22610 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22623:22626 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22612:22613 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22619:22621 Coq.Reals.Rdefinitions <> ::R_scope:x_'<'_x_'<='_x not
+R22616:22616 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
+R22614:22615 Quan.QAssert <> p0:194 var
+R22617:22618 Quan.QAssert <> p1:195 var
+R22616:22616 Coq.Reals.Rdefinitions <> ::R_scope:x_'+'_x not
+R22614:22615 Quan.QAssert <> p0:194 var
+R22617:22618 Quan.QAssert <> p1:195 var
+R22641:22645 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22627:22635 Quan.QAssert <> sat_State ind
+R22640:22640 Quan.QAssert <> F:191 var
+R22637:22638 Quan.QAssert <> mu:192 var
+R22664:22667 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R22646:22654 Quan.QAssert <> sat_State ind
+R22663:22663 Quan.QAssert <> F:191 var
+R22658:22660 Quan.QAssert <> mu':193 var
+R22668:22676 Quan.QAssert <> sat_State ind
+R22724:22724 Quan.QAssert <> F:191 var
+R22679:22683 Quan.QState <> d_app def
+R22706:22713 Quan.QState <> d_scalar def
+R22718:22720 Quan.QAssert <> mu':193 var
+R22715:22716 Quan.QAssert <> p1:195 var
+R22686:22693 Quan.QState <> d_scalar def
+R22698:22699 Quan.QAssert <> mu:192 var
+R22695:22696 Quan.QAssert <> p0:194 var
+R22840:22844 Quan.QAssert <> sat_F constr
+R22840:22844 Quan.QAssert <> sat_F constr
+R22861:22868 Quan.QState <> WF_d_app thm
+R22861:22868 Quan.QState <> WF_d_app thm

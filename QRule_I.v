@@ -221,9 +221,7 @@ Proof. intros. simpl in *.
     rewrite (Mmult_assoc' _ v (v) †) in H0.
     apply Mmult_trans  in H0. 
     rewrite <- H0.
-    rewrite Mmult_Msum_distr_l.
-Qed.  
-
+   Admitted.
 
 
 
