@@ -171,7 +171,7 @@ Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
 Notation "U ^ i":=(exp_U U i).
 
 
-Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate (2^n))) (n_0 : nat) : list (cstate * qstate n) := 
+Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate n)) (n_0 : nat) : list (cstate * qstate n) := 
   match n_0 with
   | 0 => nil
   | S n' =>StateMap.Raw.map2 option_app (big_app f n')  (f n')
@@ -219,7 +219,7 @@ Local Open Scope com_scope.
                   -> ceval_single (QMeas i s e) ((sigma,rho)::mu)
                   (StateMap.Raw.map2 option_app 
                   (big_app (fun j:nat=> 
-                  [((c_update i j sigma), (q_update (((I (2^(s))) ⊗ ((Vec j (2^(e-s))) × (Vec j (2^(e-s)))†) ⊗ (I (2^(n-e))))) rho))] ) (2^(e-s))) mu' )                
+                  [((c_update i j sigma), (q_update (((I (2^(s))) ⊗ ((Vec j (2^(e-s))) × (Vec j (2^(e-s)))†) ⊗ (I (2^(n-e))))) rho))] ) (2^(e-s))) mu' )               
   |E_Seq sigma rho mu : forall c1 c2 (mu1 mu2:list (cstate * (qstate n))),  
                   ceval_single c1 ((sigma,rho)::mu) mu1 
                   ->ceval_single c2 mu1 mu2

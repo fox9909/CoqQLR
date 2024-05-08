@@ -449,8 +449,13 @@ Definition option_app {n:nat} (x y: option (qstate n)): option (qstate n) :=
 Definition d_app{n:nat} (mu1 mu2: dstate n): dstate n:=
            StateMap.map2 (option_app) mu1 mu2.
 
+           (* Definition d_scalar{n:nat} (p:R) (mu:dstate n): dstate n:=
+            if (p=?0) then []
+            else StateMap.map (fun (x:(qstate n)) => (p.* x)) mu. *)
+          
+
 Definition d_scalar{n:nat} (p:R) (mu:dstate n): dstate n:=
-           StateMap.map (fun (x:(qstate n)) => (p.* x)) mu.
+ StateMap.map (fun (x:(qstate n)) => (p.* x)) mu.
 
 Definition dstate_pro{n:nat} (m:state n) (mu:dstate n) :R :=
     let rho:= d_find (fst m) mu in

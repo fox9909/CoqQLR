@@ -34,56 +34,7 @@ Notation "{{ P }}  c  {{ Q }}" :=
 (hoare_triple P c Q) (at level 90, c custom com at level 99)
                : rule_scope.
 
-Lemma  sat_State_dstate_eq: forall n (D:State_formula) (mu mu': dstate n),
-dstate_eq mu mu'->
-sat_State mu D-> sat_State mu' D.
-Proof. intros.
-        inversion_clear H0.
-        apply sat_F.  apply WF_dstate_eq with mu.
-        intuition. intuition. 
-        unfold dstate_eq in H.
-        destruct mu as [mu IHmu]. 
-          destruct mu' as [mu' IHmu'].
-          simpl in H. simpl in H2. 
-         simpl. rewrite<- H.  intuition.
-Qed.
 
-Lemma  sat_Npro_dstate_eq: forall n (D:unprobabilistic_formula) (mu mu': dstate n),
-dstate_eq mu mu'->
-sat_Npro mu D-> sat_Npro mu' D.
-Proof. intros. induction D. 
-        inversion_clear H0. apply sat_NState.
-        apply sat_State_dstate_eq with mu.
-        intuition. intuition. 
-        inversion_clear H0. apply sat_NOplus.
-        destruct H1. destruct H0. destruct H0.
-        destruct H0. exists x. 
-        exists x0. exists x1. split. 
-        intuition. admit.
-Admitted.
-
-Lemma  sat_Pro_dstate_eq: forall n (D:probabilistic_formula) (mu mu': dstate n),
-dstate_eq mu mu'->
-sat_Pro mu D-> sat_Pro mu' D.
-Proof. intros. induction D. 
-        inversion_clear H0. apply sat_PState.
-        intuition. destruct H2. exists x.
-        split. admit. admit.
-        inversion_clear H0. apply sat_POplus.
-        intuition. destruct H2. destruct H0.
-        exists x. exists x0. admit.
-Admitted.
-
-Lemma  sat_Assert_dstate_eq: forall n (D:Assertion) (mu mu': dstate n),
-dstate_eq mu mu'->
-sat_Assert mu D-> sat_Assert mu' D.
-Proof. intros. induction D; 
-       inversion_clear H0; [apply sat_APro|
-       apply sat_ANpro];
-       [apply sat_Pro_dstate_eq with mu|
-       apply sat_Npro_dstate_eq with mu]; 
-       intuition; intuition.
-Qed.
 
 
 Open Scope rule_scope.
@@ -117,12 +68,11 @@ Qed.
 Theorem rule_assgn: forall (F:State_formula) (i:nat) ( a:aexp),
              {{Assn_sub i a F}} i := a {{F}}.
 Proof. unfold hoare_triple;
-       intros F X a n (mu,IHmu) (mu', IHmu');
-       intros;
-       inversion_clear H; simpl in H3;
-       inversion_clear H0; inversion_clear H;
-       inversion_clear H0; simpl in H4; 
-       apply sat_ANpro; apply sat_NState;
+       intros F X a n (mu,IHmu) (mu', IHmu').
+       intros. 
+       inversion_clear H; simpl in H3.
+       rewrite sat_Assert_to_State in *.
+       inversion_clear H0.
        apply sat_F. intuition.
        apply rule_asgn_aux with X a mu.
        intuition. intuition.
@@ -281,20 +231,15 @@ Qed.
 Lemma sat_assert_conj: forall n (mu:dstate n) (F1 F2:State_formula),
 sat_Assert mu (F1 /\ F2)<->
 sat_Assert mu F1/\ sat_Assert mu F2 .
-Proof.  split; destruct mu as [mu IHmu]; intros.
-      inversion_clear H; inversion_clear H0;
-      inversion_clear H. 
-      split; apply sat_ANpro; apply sat_NState;
-      apply sat_F; try intuition; simpl; simpl in H1;
-      assert(State_eval_dstate F1 mu/\State_eval_dstate F2 mu);
-      try apply State_eval_conj; intuition.
-      destruct H.  
-      inversion_clear H. inversion_clear H0.
-      inversion_clear H. inversion_clear H1.
-      inversion_clear H0. inversion_clear H.
-      apply sat_ANpro; apply sat_NState;
-      apply sat_F. intuition. simpl in H3. simpl in H2.
-      simpl. apply State_eval_conj. intuition.
+Proof.  split; destruct mu as [mu IHmu]; intros;
+      repeat rewrite sat_Assert_to_State in *.
+      inversion_clear H.  apply State_eval_conj in H1.
+      simpl in *. split; econstructor; intuition.
+
+      destruct H. inversion_clear H. inversion_clear H0.
+      econstructor. intuition.
+      apply State_eval_conj. split; intuition.
+      
 Qed.
 
 
@@ -313,8 +258,9 @@ Qed.
 
 Lemma seman_assert_False: forall n (mu:dstate n),
 sat_Assert mu <{ false }>-> False .
-Proof. intros n (mu,IHmu).  induction mu; intros;
-   inversion_clear H; inversion_clear H0; inversion_clear H;
+Proof. intros n (mu,IHmu).   induction mu; intros;
+      rewrite sat_Assert_to_State in *; 
+      inversion_clear H; 
     simpl in H1. destruct H1.   
     destruct a. destruct mu. destruct H1. destruct H1.
     destruct H.
@@ -326,7 +272,7 @@ Proof. intros. unfold hoare_triple.
        destruct H0. 
 Qed.
 
-Coercion APro : probabilistic_formula >-> Assertion.
+
 
 Lemma ceval_scalar{n:nat}:  forall c  (y mu: list (cstate *qstate n)) (p:R),
 ceval_single c (StateMap.Raw.map (fun x: qstate n => p .* x) y) mu ->
