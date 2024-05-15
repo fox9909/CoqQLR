@@ -102,7 +102,7 @@ PMpar_trace A  s e =big_sum (fun i : nat => big_sum
    (fun i0 : nat => ⟨ i ∣_ (s) ⊗ I (2 ^ (n - e - s))
     × (I (2 ^ (n - e)) ⊗ ⟨ i0 ∣_ (e) × A × (I (2 ^ (n - e)) ⊗ ∣ i0 ⟩_ (e)))
     × (∣ i ⟩_ (s) ⊗ I (2 ^ (n - e - s)))) 
-   (2 ^ e)) (2 ^ s).
+   (2 ^ e)) (2 ^ s). 
 Proof. unfold PMpar_trace. unfold PMlpar_trace'.
 unfold PMRpar_trace'; intros. rewrite (big_sum_eq _ 
 (fun i : nat => big_sum
@@ -144,6 +144,325 @@ n=o -> p=q ->
 Proof. intros; subst. apply Mmult_assoc. 
        
 Qed.
+
+Lemma kron_assoc': forall {m n p q r s t u v w : nat} (A : Matrix m n) (B : Matrix p q) 
+(C : Matrix r s) (_ : @WF_Matrix m n A) (_ : @WF_Matrix p q B)
+(_ : @WF_Matrix r s C), 
+t=(Init.Nat.mul p r)-> u=(Init.Nat.mul q s)->
+v=(Init.Nat.mul m p) ->w=(Init.Nat.mul n q)->
+(@kron v w r s (@kron m n p q A B) C) =
+(@kron m n t u A (@kron p q r s B C)) .
+Proof. intros. subst. apply kron_assoc; assumption.  
+Qed.
+ 
+
+
+Lemma Ptrace_l_r': forall  n (A:Square (2^n)) s e,
+PMpar_trace A  s e =big_sum (fun i : nat => big_sum
+   (fun j: nat => (⟨ i ∣_ (s) ⊗ I (2 ^ (n- e - s)) ⊗ ⟨ j ∣_ (e)) 
+                   × A ×  
+                   (∣ i ⟩_ (s) ⊗ I (2 ^ (n- e - s)) ⊗ ∣ j ⟩_ (e))) (2 ^ e)) (2 ^ s).
+Proof. intros. rewrite Ptrace_l_r. 
+       apply big_sum_eq. apply functional_extensionality.
+       intros. apply big_sum_eq. apply functional_extensionality.
+       intros.  remember (⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))).
+       remember (I (2 ^ (n - e)) ⊗ ⟨ x0 ∣_ (e) × A).
+       remember ((I (2 ^ (n - e)) ⊗ ∣ x0 ⟩_ (e))).
+       assert((2 ^ s * 2 ^ (n - e - s))=(2 ^ (n - e) * 1)). admit.
+       destruct H. 
+       rewrite <-Mmult_assoc.  rewrite Heqm0.
+       remember (I (2 ^ (n - e)) ⊗ ⟨ x0 ∣_ (e)). 
+       assert((2 ^ (n - e) * 2 ^ e)= 2^n). admit. destruct H.
+       rewrite <-(Mmult_assoc). 
+       rewrite Heqm. rewrite Heqm2. 
+       assert(⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))= ⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s)) ⊗ I 1 ).
+       rewrite kron_1_r. reflexivity. rewrite H.
+       clear H.
+       remember (⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))).
+       remember ((I (2 ^ (n - e)) )). 
+       assert(2 ^ (n - e)= (2 ^ s * 2 ^ (n - e - s))).
+       admit. destruct H.
+       remember (m3 ⊗ I 1 × (m4 ⊗ ⟨ x0 ∣_ (e))).
+       assert ((@Mmult
+       (Init.Nat.mul (S O)
+          (Nat.pow (S (S O)) (sub (sub n e) s)))
+       (Nat.pow (S (S O)) (sub n e))
+       (Init.Nat.mul (Nat.pow (S (S O)) (sub n e))
+          (Nat.pow (S (S O)) e))
+       (@kron
+          (Init.Nat.mul (S O)
+             (Nat.pow (S (S O)) (sub (sub n e) s)))
+          (Nat.pow (S (S O)) (sub n e)) 
+          (S O) (S O) m3 (I (S O)))
+       (@kron (Nat.pow (S (S O)) (sub n e))
+          (Nat.pow (S (S O)) (sub n e)) 
+          (S O) (Nat.pow (S (S O)) e) m4
+          (@adjoint (Nat.pow (S (S O)) e) 
+             (S O) (Vec (Nat.pow (S (S O)) e) x0))))=m5).
+             rewrite Heqm5. 
+          f_equal. rewrite mul_1_r. reflexivity. rewrite mul_1_r.
+          reflexivity. rewrite H. rewrite Heqm5. 
+          rewrite (kron_mixed_product m3 _ m4 _ ).
+          rewrite Heqm3. rewrite Heqm4. rewrite Mmult_1_r.
+          rewrite Mmult_1_l. repeat rewrite Mmult_assoc.   f_equal.
+          rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
+          rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
+          rewrite kron_1_r. reflexivity. 
+          f_equal. rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
+          rewrite Heqm1. rewrite Heqm4.
+          assert((∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s)))= (∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s))) ⊗ I 1 ).
+       rewrite kron_1_r. reflexivity.  rewrite H0. 
+       clear H. remember (I (2 ^ (n - e))). remember (∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s))).
+       assert(2 ^ (n - e)= (2 ^ s * 2 ^ (n - e - s))).
+       admit. destruct H.
+        remember (m6 ⊗ ∣ x0 ⟩_ (e) × (m7 ⊗ I 1)). 
+        Set Printing All.
+        assert((@Mmult
+        (Init.Nat.mul (Nat.pow (S (S O)) (sub n e))
+           (Nat.pow (S (S O)) e)) (Nat.pow (S (S O)) (sub n e))
+        (Init.Nat.mul (S O)
+           (Nat.pow (S (S O)) (sub (sub n e) s)))
+        (@kron (Nat.pow (S (S O)) (sub n e))
+           (Nat.pow (S (S O)) (sub n e)) (Nat.pow (S (S O)) e)
+           (S O) m6 (Vec (Nat.pow (S (S O)) e) x0))
+        (@kron (Nat.pow (S (S O)) (sub n e))
+           (Init.Nat.mul (S O)
+              (Nat.pow (S (S O)) (sub (sub n e) s))) 
+           (S O) (S O) m7 (I (S O))))=m8 ).   rewrite Heqm8.
+           f_equal. rewrite mul_1_r. reflexivity.
+            repeat rewrite mul_1_l. rewrite mul_1_r.  reflexivity.
+            rewrite H. rewrite Heqm8. 
+       rewrite kron_mixed_product. rewrite Heqm6.  rewrite Heqm7.   
+       rewrite Mmult_1_r. repeat rewrite Mmult_1_l. 
+          rewrite kron_1_r. reflexivity.  
+          apply WF_kron. admit. reflexivity.
+          apply WF_vec.  admit. apply WF_I.
+          apply WF_vec. admit.  apply WF_adjoint. apply WF_vec. admit.
+          apply WF_kron. reflexivity. admit. 
+          apply WF_adjoint. apply WF_vec. admit.
+       apply WF_I.
+         
+       
+       Admitted.
+
+Theorem rule_QUnit_aux:  forall  s e (n:nat) (st :state n) (st': state n),
+ceval_single (QInit s e) [st] [st'] ->
+State_eval (QExp_s s e  (Vec (2^(e-s)) 0)) st'.
+Proof.  intros. simpl in *.   rewrite Ptrace_l_r' in *. 
+         destruct st. destruct st'.
+       inversion H; subst.  inversion H1; subst. 
+       injection H6. intros. rewrite <-H0. simpl.
+       unfold QInit_fun.   Local Open Scope C_scope.
+        assert((2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat=(2 ^ n)%nat). admit.
+       destruct H3.  
+       remember ((C1 /
+       trace
+         (big_sum
+            (fun i : nat =>
+             I (2 ^ s) ⊗ (∣ 0 ⟩_ (e - s) × (∣ i ⟩_ (e - s)) †)
+             ⊗ I (2 ^ (n - e)) × q
+             × (I (2 ^ s) ⊗ (∣ 0 ⟩_ (e - s) × (∣ i ⟩_ (e - s)) †)
+                ⊗ I (2 ^ (n - e))) †) (2 ^ (e - s))))).
+                assert((e-s)%nat= (n - (n - e) - s)%nat).
+                admit. destruct H3.
+      remember (fun i : nat =>
+       @big_sum (Square (2^(e-s))) (M_is_monoid (2 ^ (e-s)) (2 ^ (e-s)))
+         (fun j : nat =>
+         c1  .* @big_sum (Square (2^(e-s))) (M_is_monoid (2 ^ (e-s)) (2 ^ (e-s)))
+                  (fun i0 : nat => 
+                  ((∣ 0 ⟩_ (e - s) × ⟨ i0 ∣_ (e - s))) ×
+                  (⟨ i ∣_ (s) ⊗ I (2^ (e-s))
+                   ⊗ ⟨ j ∣_ (n - e) × q
+                   × (⟨ i ∣_ (s)
+                      ⊗ I (2^ (e-s))
+                      ⊗ ⟨ j ∣_ (n - e) ) † )   
+                      ×
+                      ((∣ i0 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s)))) 
+                      (2 ^ (e - s))) 
+         (2 ^ (n - e))). 
+   
+       rewrite (@big_sum_eq (Square (2^(e-s))) _ _  m ((2 ^ s))).
+   rewrite Heqm. 
+   remember ((fun i : nat => 
+   ∣ 0 ⟩_ (e - s) × (
+   big_sum
+     (fun j : nat =>
+      c1
+      .* big_sum
+           (fun i0 : nat => ⟨ i0 ∣_ (e - s)
+           × 
+            (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e) × q
+               × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e)) †)  
+               
+               × ∣ i0 ⟩_ (e - s) )
+           (2 ^ (e - s))) (2 ^ (n - e))
+          ) × ⟨ 0 ∣_ (e - s))). 
+   rewrite (big_sum_eq _ m0 _).  
+  rewrite Heqm0. remember (∣ 0 ⟩_ (e - s)).
+  remember(big_sum
+  (fun i : nat =>
+   m1
+   × big_sum
+       (fun j : nat =>
+        c1
+        .* big_sum
+             (fun i0 : nat =>
+              ⟨ i0 ∣_ (e - s)
+              × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s))
+                 ⊗ ⟨ j ∣_ (n - e) × q
+                 × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s))
+                    ⊗ ⟨ j ∣_ (n - e)) †) × 
+              ∣ i0 ⟩_ (e - s)) (2 ^ (e - s))) 
+       (2 ^ (n - e)) × (m1) †) (2 ^ s) ).
+      assert (m2= m1
+      ×    big_sum
+ (fun i : nat =>
+  big_sum
+      (fun j : nat =>
+       c1
+       .* big_sum
+            (fun i0 : nat =>
+             ⟨ i0 ∣_ (e - s)
+             × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s))
+                ⊗ ⟨ j ∣_ (n - e) × q
+                × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s))
+                   ⊗ ⟨ j ∣_ (n - e)) †) × 
+             ∣ i0 ⟩_ (e - s)) (2 ^ (e - s))) 
+      (2 ^ (n - e)) ) (2 ^ s) × (m1) † ).  
+  rewrite Mmult_Msum_distr_l.  rewrite Mmult_Msum_distr_r. 
+  rewrite Heqm2.
+  reflexivity. 
+  rewrite H3.  
+  admit. 
+  
+  
+  rewrite Heqm0.   
+   apply functional_extensionality.
+  intros.   assert((2 ^ (e - s))%nat= (1 * 2 ^ (e - s) * 1)%nat).
+  admit.   destruct H3. rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
+  apply big_sum_eq.  apply functional_extensionality. 
+  intros.  rewrite Mscale_mult_dist_r.   
+  rewrite Mscale_mult_dist_l.   
+  rewrite big_sum_Mmult_l.   rewrite big_sum_Mmult_r.
+  f_equal. apply big_sum_eq. apply functional_extensionality.
+   intros.  repeat rewrite <-Mmult_assoc.  reflexivity. 
+  rewrite Heqm.  apply functional_extensionality.
+  intros. apply big_sum_eq. apply functional_extensionality.
+  intros.  
+   remember (⟨ x ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ x0 ∣_ (n - e)).
+  assert ((@kron (Init.Nat.add (Nat.pow (S (S O)) (sub e s)) O)
+  (Init.Nat.mul (Nat.pow (S (S O)) s)
+     (Nat.pow (S (S O)) (sub e s))) 
+  (S O) (Nat.pow (S (S O)) (sub n e))
+  (@kron (S O) (Nat.pow (S (S O)) s)
+     (Nat.pow (S (S O)) (sub e s))
+     (Nat.pow (S (S O)) (sub e s))
+     (@adjoint (Nat.pow (S (S O)) s) 
+        (S O) (Vec (Nat.pow (S (S O)) s) x))
+     (I (Nat.pow (S (S O)) (sub e s))))
+  (@adjoint (Nat.pow (S (S O)) (sub n e)) 
+     (S O) (Vec (Nat.pow (S (S O)) (sub n e)) x0))) = m0).
+     rewrite Heqm0.   reflexivity. rewrite H3. rewrite Heqm0.
+  rewrite Mscale_mult_dist_r. rewrite big_sum_Mmult_l. 
+   rewrite Mscale_mult_dist_l. f_equal; try rewrite mul_1_r;
+   try rewrite Nat.add_0_r; try reflexivity. 
+   rewrite big_sum_Mmult_r.  
+  apply big_sum_eq.  apply functional_extensionality.
+  intros.   rewrite<-Mmult_assoc. rewrite <-Mmult_assoc.
+  remember (⟨ x ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ x0 ∣_ (n - e)).
+   remember ((I (2 ^ s) ⊗ (∣ 0 ⟩_ (e - s) × ⟨ x1 ∣_ (e - s)) ⊗ I (2 ^ (n - e)))).
+   assert ((@Mmult (Nat.pow (S (S O)) (sub e s))
+   (Init.Nat.mul
+      (Init.Nat.mul (Nat.pow (S (S O)) s)
+         (Nat.pow (S (S O)) (Init.Nat.sub e s)))
+      (Nat.pow (S (S O)) (Init.Nat.sub n e)))
+   (Init.Nat.mul
+      (Init.Nat.mul (Nat.pow (S (S O)) s)
+         (Nat.pow (S (S O)) (Init.Nat.sub e s)))
+      (Nat.pow (S (S O)) (Init.Nat.sub n e))) m1 m2)= m1 × m2).
+      rewrite Heqm1. rewrite Heqm2. f_equal. rewrite mul_1_l.
+      rewrite mul_1_r. reflexivity. rewrite H4. rewrite Heqm1.
+      rewrite Heqm2. repeat rewrite kron_mixed_product. 
+      repeat rewrite Mmult_1_r. repeat rewrite Mmult_1_l.
+   repeat rewrite kron_adjoint.   rewrite Mmult_assoc.  rewrite Mmult_assoc.
+   repeat rewrite id_adjoint_eq. rewrite Mmult_adjoint. 
+    remember(I (2 ^ s) ⊗ ((⟨ x1 ∣_ (e - s)) † × ⟨ 0 ∣_ (e - s))
+    ⊗ I (2 ^ (n - e))).
+    assert ((@kron
+    (Init.Nat.mul (Nat.pow (S (S O)) s)
+       (Nat.pow (S (S O)) (sub e s)))
+    (Nat.pow (S (S O)) (sub e s))
+    (Nat.pow (S (S O)) (sub n e)) (S O)
+    (@kron (Nat.pow (S (S O)) s) (S O)
+       (Nat.pow (S (S O)) (sub e s))
+       (Nat.pow (S (S O)) (sub e s))
+       (Vec (Nat.pow (S (S O)) s) x)
+       (I (Nat.pow (S (S O)) (sub e s))))
+    (Vec (Nat.pow (S (S O)) (sub n e)) x0))= (∣ x ⟩_ (s) ⊗ I (2 ^ (e - s)) ⊗ ∣ x0 ⟩_ (n - e))).
+    f_equal. rewrite mul_1_l. reflexivity. rewrite H5.
+    remember ((∣ x ⟩_ (s) ⊗ I (2 ^ (e - s)) ⊗ ∣ x0 ⟩_ (n - e))).
+    remember (m3 × m4).
+    assert (@Mmult
+    (Init.Nat.mul
+       (Init.Nat.mul (Nat.pow (S (S O)) s)
+          (Nat.pow (S (S O)) (Init.Nat.sub e s)))
+       (Nat.pow (S (S O)) (Init.Nat.sub n e)))
+    (Init.Nat.mul
+       (Init.Nat.mul (Nat.pow (S (S O)) s)
+          (Nat.pow (S (S O)) (Init.Nat.sub e s)))
+       (Nat.pow (S (S O)) (Init.Nat.sub n e)))
+    (Nat.pow (S (S O)) (sub e s)) m3 m4 = m3 × m4).
+    rewrite Heqm3. remember Heqm4. f_equal. 
+    rewrite mul_1_l. rewrite mul_1_r. reflexivity.
+    rewrite H7. rewrite Heqm3. rewrite Heqm4. 
+    repeat rewrite kron_mixed_product.  
+    repeat rewrite Mmult_1_r. repeat rewrite Mmult_1_l. 
+     rewrite <-Mmult_assoc.   
+ assert((2^(e-s))%nat =(1 * 2 ^ (e - s) * 1)%nat).
+rewrite mul_1_l. rewrite mul_1_r. reflexivity. destruct H8.
+assert(∣ 0 ⟩_ (e - s) × ⟨ x1 ∣_ (e - s)=I (1)⊗ (∣ 0 ⟩_ (e - s) × ⟨ x1 ∣_ (e - s)) ⊗ I (1)).
+rewrite kron_1_l. rewrite kron_1_r. reflexivity.
+admit.   rewrite H8. 
+rewrite <-Heqm1.  remember (I 1 ⊗ (∣ 0 ⟩_ (e - s) × ⟨ x1 ∣_ (e - s)) ⊗ I 1).
+remember ( ⟨ x ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ x0 ∣_ (n - e)) as m10.
+rewrite Heqm1. 
+assert((@Mmult (Nat.pow (S (S O)) (sub e s))
+(Nat.pow (S (S O)) (sub e s))
+(Init.Nat.mul
+   (Init.Nat.mul (Nat.pow (S (S O)) s)
+      (Nat.pow (S (S O)) (sub e s)))
+   (Nat.pow (S (S O)) (sub n e))) m6 m10)=m6 × m10 ).
+   f_equal; try (rewrite mul_1_l; rewrite mul_1_r; reflexivity).
+   repeat rewrite <-Mmult_assoc. 
+   rewrite H9. rewrite Heqm6. rewrite Heqm10. 
+repeat rewrite kron_mixed_product. 
+repeat rewrite Mmult_1_l. 
+rewrite Mmult_1_r at 1.  rewrite kron_1_l at 1.
+ rewrite kron_1_r. repeat  rewrite Mmult_assoc.
+ f_equal. f_equal. 
+ assert(∣ x1 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s)=I (1)⊗ (∣ x1 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s)) ⊗ I (1)).
+ rewrite kron_1_l. rewrite kron_1_r. reflexivity. admit.
+ rewrite H10.  
+ remember ((⟨ x ∣_ (s)) † ⊗ I (2 ^ (e - s)) ⊗ (⟨ x0 ∣_ (n - e)) †).
+ remember ((I 1 ⊗ (∣ x1 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s)) ⊗ I 1)).
+ assert((@Mmult
+ (Init.Nat.mul
+    (Init.Nat.mul (Nat.pow (S (S O)) s)
+       (Nat.pow (S (S O)) (sub e s)))
+    (Nat.pow (S (S O)) (sub n e)))
+ (Nat.pow (S (S O)) (sub e s))
+ (Nat.pow (S (S O)) (sub e s)) m7 m8)=m7 × m8).
+ f_equal; try (rewrite mul_1_l; rewrite mul_1_r; reflexivity).  
+rewrite H11. rewrite Heqm7. rewrite Heqm8. 
+ repeat rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
+ rewrite Mmult_1_l.  f_equal. f_equal. admit. f_equal. admit. admit.
+
+ Admitted.
+
+
+
+
+
 
 
 
@@ -800,52 +1119,106 @@ Theorem rule_while: forall F0 F1 (b:bexp) (c:com),
 Proof. 
        unfold hoare_triple. intros F0 F1 b c. intros H. 
       intros n (mu,IHmu) (mu', IHmu'). intros.
-
-      inversion_clear H0. simpl in *. 
-
+      inversion_clear H0. simpl in *.
+      
       remember <{while b do c end}> as original_command eqn:Horig. 
       induction H4;  try inversion Horig; subst.
-      intros. admit.  
 
-  inversion_clear H1. inversion_clear H5.
-  rewrite sat_Assert_to_State.
-
-  assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
-   mu'). admit.
-   assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
-   mu''). admit.
-
-   assert(sat_State (d_app (StateMap.Build_slist H5) (StateMap.Build_slist H8)) (F1 /\ ~ b)).
-  apply (d_seman_app'' _ _ (StateMap.Build_slist H5) (StateMap.Build_slist H8)). 
-  assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
-  mu1). admit. 
-  rewrite<- sat_Assert_to_State.
-  apply IHceval_single3 with H9.
-  assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
-  [(sigma, rho)]). admit.
-
-  apply H with (StateMap.Build_slist H10).
-  econstructor. admit. admit. 
-  simpl. assumption.
- admit. 
-
- admit. admit.  reflexivity. 
-inversion_clear IHmu. 
-rewrite<- sat_Assert_to_State.
-apply IHceval_single1 with (H9).
-assumption.
-
-     assert(sat_State
-     {| StateMap.this := mu''; StateMap.sorted := H4|}
-     (F1 /\ ~ b)).
-     inversion_clear IHmu. 
-      apply IHceval_single1 with H5.
-    admit. admit. admit.  reflexivity.
-inversion_clear H5. assumption.
+      *intros. admit.
       
-      admit. admit.
+      * assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+      [(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+      assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+      mu1). apply ceval_sorted with (c) [(sigma, rho)] . 
+      assumption.  assumption.
+      assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+      mu'). apply ceval_sorted with (<{ while b do c end }>) mu1 .
+      assumption. assumption. 
+      assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+      mu''). apply ceval_sorted with (<{ while b do c end }>) mu. 
+      inversion_clear IHmu. assumption. assumption. 
+      assert(WF_dstate_aux [(sigma, rho)]).
+      inversion_clear H2. apply WF_cons. assumption.
+      apply WF_nil. admit.   
+      rewrite sat_Assert_to_State.
+     assert(sat_State (d_app (StateMap.Build_slist H6) (StateMap.Build_slist H7)) (F1 /\ ~ b)).
+     apply (d_seman_app'' _ _ (StateMap.Build_slist H6) (StateMap.Build_slist H7)). 
+     rewrite <-sat_Assert_to_State.
+     apply IHceval_single3 with H5. 
+     apply H with (StateMap.Build_slist H4).
+      econstructor. intuition. apply WF_ceval with c [(sigma, rho)].
+      assumption. intuition. assumption. 
+      admit.   
+      apply WF_ceval with c [(sigma, rho)].
+      assumption. intuition. 
+      apply WF_ceval with (<{ while b do c end }>) mu1.
+      apply WF_ceval with c [(sigma, rho)].
+      assumption. intuition.  assumption.  intuition.
+  
+
+      inversion_clear IHmu. 
+      assert((sat_Assert (StateMap.Build_slist H9) (F1 /\ ~ b))
+              \/ (sat_Assert (StateMap.Build_slist H9) (ANpro [F0 /\ b; F1 /\ ~ b]))).
+      admit. destruct H11. admit. 
+
+      rewrite<- sat_Assert_to_State.
+      apply IHceval_single1 with (H9).
+     assumption.  inversion_clear H2. assumption.
+     apply WF_ceval with (<{ while b do c end }>) mu.
+     inversion_clear H2. assumption. assumption. reflexivity.
+    
+     apply WF_ceval with (<{ while b do c end }>) ((sigma, rho) :: mu).
+     intuition. simpl. apply E_While_true with mu1.
+     assumption. assumption. assumption. assumption.
+     unfold d_app in H9. unfold StateMap.map2 in H9. simpl in H9.
+     inversion_clear H9. 
+     econstructor.  intuition. apply H11. 
+     
+     *assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+     [(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+     assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+      mu'). apply ceval_sorted with (<{ while b do c end }>) mu. 
+      inversion_clear IHmu. assumption. assumption. 
+
+     rewrite sat_Assert_to_State. 
+     assert(sat_State (d_app (StateMap.Build_slist H5) (StateMap.Build_slist H6)) (F1 /\ ~ b)).
+     apply (d_seman_app'' _ _ (StateMap.Build_slist H5) (StateMap.Build_slist H6)). 
+     admit.  
+    
+     inversion_clear IHmu.
+     assert((sat_Assert (StateMap.Build_slist H7) (F1 /\ ~ b))
+     \/ (sat_Assert (StateMap.Build_slist H7) (ANpro [F0 /\ b; F1 /\ ~ b]))).
+     admit. destruct H9.
+     admit. rewrite <-sat_Assert_to_State. 
+     apply IHceval_single with H7. 
+     assumption. inversion_clear H2. intuition. 
+     apply WF_ceval with (<{ while b do c end }>) mu.
+     inversion_clear H2. assumption. intuition. reflexivity.
+     apply WF_ceval with (<{ while b do c end }>) ((sigma, rho) :: mu).
+     intuition. apply E_While_false. assumption. intuition.
+     inversion_clear H7. econstructor. intuition. intuition.
+
 
 Admitted.
+
+Lemma while_seq: forall (b:bexp) c F0  F1, 
+{{F0 /\ b}} c; while b do c end {{F1 /\ ~ b}} ->
+{{F0 /\ b}} while b do c end {{F1 /\ ~ b}} .
+Proof. unfold hoare_triple. intros. 
+        inversion_clear H0. inversion H4; subst.
+        admit. 
+Admitted.
+
+
+
+Theorem rule_while': forall F0 F1 (b:bexp) (c:com),
+         {{F0 /\ b}} c {{ ANpro [(F0 /\ b) ; (F1 /\ ~b)] }}
+      -> {{(F0 /\ b)}}
+         while b do c end
+         {{ (F1 /\ ~b) }}.
+Proof. intros. apply while_seq. apply rule_seq with (ANpro[F0 /\ b; F1 /\ ~ b]).
+         apply rule_while. assumption. assumption.
+Qed.
 
 Require Import
   Coq.FSets.FMapList

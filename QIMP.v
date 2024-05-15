@@ -189,6 +189,12 @@ Local Open Scope state_scope.
 
 
 Local Open Scope com_scope.
+
+
+Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
+  big_sum (fun i:nat=>  (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i )†) ⊗ (I (2^(n-e))))) × rho
+                         × (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i)†) ⊗ (I (2^(n-e))))† )) (2^(e-s)) .
+
   Inductive ceval_single{n:nat}: com-> list (cstate * (qstate n)) -> list (cstate * (qstate n)) -> Prop:=
   |E_nil:  forall  c, ceval_single c nil nil
   |E_Skip sigma rho mu:  ceval_single <{skip}> ((sigma,rho)::mu) ((sigma,rho)::mu)
@@ -199,6 +205,10 @@ Local Open Scope com_scope.
                     (StateMap.Raw.map2 option_app 
                     [((c_update x (aeval (sigma, rho) a) sigma), rho)] 
                     mu')
+  |E_Qinit sigma rho mu: forall mu'(s e:nat),
+                   ceval_single (QInit s e) mu mu'
+                   -> ceval_single (QInit s e) ((sigma,rho)::mu) 
+                   (StateMap.Raw.map2 option_app [(sigma, (QInit_fun s e rho))] mu')
   |E_Qunit_One sigma rho mu: forall mu' (s e:nat) (U: Square (2^(e-s))), 
                    (0<=s/\e<=n)
                  ->(WF_Unitary U)
