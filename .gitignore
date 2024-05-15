@@ -1,6 +1,7 @@
 *.vo*
 *.glob
 .*.aux
+.lia.cache
 
 Makefile
 .Makefile.d
