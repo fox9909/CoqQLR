@@ -3,7 +3,6 @@
 .*.aux
 .lia.cache
 
-Makefile
-.Makefile.d
-Makefile.conf
+CoqMakefile
+.CoqMakefile.d
 CoqMakefile.conf
