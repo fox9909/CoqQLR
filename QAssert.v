@@ -364,8 +364,7 @@ Proof. induction n_0. intros. destruct g.  simpl. reflexivity.
      simpl. reflexivity. intros. lia. 
 Qed.
 
-Lemma 
-ssoc': 
+Lemma d_app_assoc': 
 forall {n : nat} (mu1 mu2 mu3 : dstate n),
 dstate_eq (d_app (d_app mu1 mu2) mu3) (d_app mu1 (d_app mu2 mu3)).
 Proof. Admitted.
@@ -401,14 +400,12 @@ Proof. induction g. intros.
         apply dstate_eq_trans with 
         ((d_app (d_app (d_scalar a a0)  (d_scalar r d)) (big_dapp g f n_0))).
         apply dstate_eq_sym.
-        apply 
-        ssoc'.  
+        apply d_app_assoc'.  
         apply dstate_eq_trans with 
         ((d_app (d_app  (d_scalar r d) (d_scalar a a0)) (big_dapp g f n_0))).
         apply d_app_eq. apply d_app_comm.
         unfold dstate_eq. reflexivity.
-        apply 
-        ssoc'. 
+        apply d_app_assoc'.
         intros. 
        simpl. destruct g; destruct f. 
        simpl. destruct n_0. unfold dstate_eq. reflexivity.
@@ -836,10 +833,23 @@ sat_State mu F  -> sat_State  (mu') F
 Proof. intros n F (mu, IHmu) (mu', IHmu'); intros.
        inversion H2; subst. inversion H3; subst.
        apply sat_F. 
-       apply WF_d_app. intuition. intuition.
-       intuition. intuition.
-       simpl. 
+       apply WF_d_app. 
 Admitted.
+
+
+Lemma WF_dstate_eq{n}: forall (mu mu': dstate n),
+dstate_eq mu mu'-> WF_dstate mu -> WF_dstate mu'.
+Proof. unfold WF_dstate. unfold dstate_eq. 
+      intros (mu,IHmu) (mu', IHmu').
+      simpl. intros. rewrite <- H. 
+     assumption.
+Qed.
+
+
+Lemma d_trace_app'{n:nat}: forall (mu mu':dstate n),
+WF_dstate mu -> WF_dstate mu'->
+d_trace (d_app  mu mu') = (d_trace mu) + (d_trace mu').
+Proof. Admitted.
 
 Theorem rule_OMerg:forall (p0 p1 p2:R) (F:State_formula) (pF:pro_formula),
 0< p0<1/\ 0< p1 <1->
@@ -880,10 +890,19 @@ inversion_clear H4.
     apply dstate_eq_sym.  apply d_scalar_assoc'.
    unfold dstate_eq ;  reflexivity.
   lra.  apply dstate_eq_sym.  apply d_scalar_assoc'.
-  apply d_scalar_app_distr. apply WF_d_app. admit. admit.
-  apply WF_d_scalar. admit. destruct H6. inversion_clear H4. intuition.
-  apply WF_d_scalar. admit. destruct H6. destruct H6. inversion_clear H6. intuition.
-  apply WF_d_scalar. admit. apply WF_d_app. admit. admit. admit. admit.
+  apply d_scalar_app_distr. apply WF_d_app.  
+  apply WF_dstate_eq with (d_scalar ((p0 + p1) * ((p0 / (p0 + p1)))) d).
+  apply dstate_eq_sym. apply d_scalar_assoc. 
+  apply WF_d_scalar. admit.  destruct H6. inversion_clear H4. intuition.
+  apply WF_dstate_eq with (d_scalar ((p0 + p1) * ((p1 / (p0 + p1)))) d0).
+  apply dstate_eq_sym. apply d_scalar_assoc. 
+  apply WF_d_scalar. admit.  destruct H6. destruct H6. inversion_clear H6. intuition.
+ rewrite d_trace_app'. repeat rewrite d_trace_scalar. repeat rewrite <-Rmult_assoc.
+ repeat rewrite Rdiv_unfold. rewrite (Rmult_comm p0 _). rewrite (Rmult_comm p1 _).
+ repeat rewrite <-(Rmult_assoc _ (/ (p0 + p1)) _).  rewrite Rinv_r. 
+ repeat rewrite Rmult_1_l.   admit. admit. admit. admit. admit. admit. admit. admit. 
+
+  apply WF_d_scalar. admit. apply WF_d_app. admit. admit. admit. 
   unfold dstate_eq ;  reflexivity. 
   simpl.  split.  apply d_seman_app. 
   split. rewrite Rdiv_unfold.
@@ -912,13 +931,6 @@ Proof. intros.
       split. discriminate. intuition. 
 Qed.
 
-Lemma WF_dstate_eq{n}: forall (mu mu': dstate n),
-dstate_eq mu mu'-> WF_dstate mu -> WF_dstate mu'.
-Proof. unfold WF_dstate. unfold dstate_eq. 
-      intros (mu,IHmu) (mu', IHmu').
-      simpl. intros. rewrite <- H. 
-     assumption.
-Qed.
 
 
 

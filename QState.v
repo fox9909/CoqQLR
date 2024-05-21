@@ -942,10 +942,6 @@ Proof. intros (mu, IHmu) p. destruct mu. intuition.
        simpl. discriminate.
 Qed.
 
-Local Open Scope C_scope.
-Lemma  Rplus_le_1:forall (r1 r2:R), r1>0->r1+r2<=1 ->r2<=1 .
-Proof. intros. lra.
-Qed.
 
 Lemma nil_d_app{n:nat}: forall (mu mu': dstate n), 
  this mu = [] -> this mu'=[]  ->  this (d_app mu mu') = [] .
