@@ -19,116 +19,7 @@ From Quan Require Import QAssert.
 
 Local Open Scope nat_scope.
 
-Lemma seman_find_state_aux{n:nat}:forall  (st: (cstate * qstate n)) (F: State_formula),
-( WF_dstate_aux [st]) -> (State_eval_dstate F [st] <->
-(forall x:cstate, (option_qstate (StateMap.Raw.find x [st]) <> Zero) -> (State_eval F 
-(x, (option_qstate (StateMap.Raw.find x [st])))))).
-Proof. intros. 
-      split; intros.
-      destruct st. simpl in *.
-      destruct (Cstate_as_OT.compare x c).
-      simpl in *. destruct H1. reflexivity.
-      simpl. unfold Cstate_as_OT.eq in e. rewrite e. assumption.
-      destruct H1. reflexivity.
-      destruct st.
-      assert( option_qstate (StateMap.Raw.find (elt:=qstate n) c [(c, q)]) <>
-     Zero ->
-     State_eval F
-       (c,
-        option_qstate
-          (StateMap.Raw.find (elt:=qstate n) c [(c, q)]))).
-      apply H0. clear H0.
-      simpl in *.  
-      destruct (Cstate_as_OT.compare c c).
-      apply Cstate_as_OT.lt_not_eq in l. intuition.
-      simpl in *. inversion_clear H.
-      assert(q<>Zero).  apply (WF_state_not_Zero _ H0).
-      apply H1 in H. assumption.
-      apply Cstate_as_OT.lt_not_eq in l. intuition.
-Qed.
-      
-      
-      
-Lemma seman_find_aux{n}:forall  (mu:list (cstate * qstate n)) (F: State_formula),
-Sorted.Sorted
-  (StateMap.Raw.PX.ltk (elt:=qstate n)) mu->
-(mu<> nil /\ WF_dstate_aux mu) -> 
-(State_eval_dstate F mu <->
-(forall x:cstate, (option_qstate (StateMap.Raw.find x mu) <> Zero) -> (State_eval F 
-(x, (option_qstate (StateMap.Raw.find x mu)))))). 
-Proof. induction mu; intros.
-      -simpl. destruct H0. destruct H0. reflexivity.
-      -destruct mu. apply seman_find_state_aux. 
-        apply H0. 
-        split. destruct a. destruct p. 
-        intros.  simpl.
-        simpl in H2.
-        destruct  (Cstate_as_OT.compare x c ).
-        simpl in H2. destruct H2. reflexivity.
-        unfold Cstate_as_OT.eq in e.
-        rewrite e. 
-        simpl. simpl in H1. apply H1.
-        apply IHmu. inversion_clear H.
-        assumption. split. discriminate.
-        destruct H0. inversion_clear H3.
-        assumption. simpl in H1. apply H1.
-        apply H2.
 
-        destruct a. destruct p. intros.
-        simpl. split. 
-        assert(State_eval F
-        (c,
-         option_qstate
-           (StateMap.Raw.find (elt:=qstate n) c ((c, q) :: (c0, q0) :: mu)))).
-
-       apply H1.
-       simpl. destruct (Cstate_as_OT.compare c c).
-       apply Cstate_as_OT.lt_not_eq in l. intuition.
-       simpl. destruct H0. inversion_clear H2.  apply (WF_state_not_Zero _ H3).
-       apply Cstate_as_OT.lt_not_eq in l. intuition.
-       simpl in H2. 
-       destruct (Cstate_as_OT.compare c c).
-       apply Cstate_as_OT.lt_not_eq in l. intuition.
-       simpl. simpl in H2. assumption.
-       apply Cstate_as_OT.lt_not_eq in l. intuition.
-     
-       apply IHmu. inversion_clear H. assumption.
-       split. discriminate. destruct H0. inversion_clear H2.
-       assumption. 
-       intros. assert(Cstate_as_OT.lt c x).
-       apply dstate_1 with ((c0, q0) :: mu) q.
-       assumption. assumption. 
-       assert(State_eval F
-       (x, option_qstate
-          (StateMap.Raw.find (elt:=qstate n) x ((c, q) :: (c0, q0) :: mu)))).
-      apply H1.  simpl. 
-      destruct (Cstate_as_OT.compare x c);
-      try rewrite l in H3; try apply Cstate_as_OT.lt_not_eq in H3; try intuition.
-      simpl in H4.    
-      destruct (Cstate_as_OT.compare x c);
-      try rewrite l in H3; try apply Cstate_as_OT.lt_not_eq in H3; try intuition.
-Qed.
-
-
-Lemma seman_find{n}:forall  (mu:dstate n) (F: State_formula),
-sat_State mu F <->
-(WF_dstate mu /\ StateMap.this mu <> [] /\ (forall x:cstate, d_find x mu <>Zero -> (State_eval F 
-(x, (d_find x mu))))).
-Proof. intros. destruct mu as [mu IHmu]. simpl.
-split. intros. split.  
-inversion_clear H. assumption. split.
-apply (WF_sat_State _ _ H). inversion_clear H.
-unfold d_find. unfold StateMap.find. simpl in *.
-apply  seman_find_aux. assumption. split.
-unfold not. 
-intros. rewrite H in H1. simpl in H1. destruct H1. apply H0.
-assumption.
-intros.  destruct H.
-econstructor. assumption.
-apply seman_find_aux;
-simpl in *. assumption.
-intuition. apply H0.  
-Qed.
 
 Lemma dstate_eq_trans: forall n (mu mu1 mu2: dstate n),
   dstate_eq mu mu1 -> dstate_eq mu1 mu2
@@ -172,11 +63,6 @@ Local Hint Unfold s_scalar : auto.
 Local Hint Resolve s_seman_scalar : auto.
 
 
-Theorem rule_OdotE: forall F:State_formula,
-  (F ⊙ BTrue ->> F ) /\ (F ->>F ⊙ BTrue).
-Proof. intros. unfold assert_implies; apply conj;
-      intros; rule_solve; simpl;  intuition.      
-Admitted.
 
 
 Lemma inter_comm:forall x y,
@@ -252,6 +138,14 @@ Proof. unfold NSet.Equal; intros. split; intros.
      apply H. apply H0. assumption. 
 Qed.
 
+
+
+Theorem rule_OdotE: forall F:State_formula,
+  (F ⊙ BTrue ->> F ) /\ (F ->>F ⊙ BTrue).
+Proof. intros. unfold assert_implies; apply conj;
+      intros; rule_solve; simpl;  intuition.
+      apply inter_empty. right. reflexivity.      
+Qed.
 
  Theorem rule_OdotC: forall F1 F2:State_formula,
 ((F1 ⊙ F2) ->> (F2 ⊙ F1))/\
