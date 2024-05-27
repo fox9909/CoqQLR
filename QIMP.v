@@ -2292,7 +2292,7 @@ Proof.
 Admitted.
 
 
-Lemma ceval_trace_QUnit_ctrl: forall n (mu mu':list (cstate * qstate (2^n))) s0 e0  s1 e1 (U: Square (2 ^ (e1 - s1))),
+Lemma ceval_trace_QUnit_ctrl: forall n (mu mu':list (cstate * qstate n)) s0 e0  s1 e1 (U: Square (2 ^ (e1 - s1))),
 WF_dstate_aux' mu->
 ceval_single <{ QUnit_Ctrl s0 e0 s1 e1 U }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 
@@ -2313,7 +2313,7 @@ Proof.
 Admitted.
 
 
-Lemma ceval_trace_QMeas: forall n (mu mu':list (cstate * qstate (2^n))) s e i,
+Lemma ceval_trace_QMeas: forall n (mu mu':list (cstate * qstate n)) s e i,
 WF_dstate_aux' mu->
 ceval_single <{ i :=M [[s e]] }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 
@@ -2332,7 +2332,7 @@ Proof.
 Admitted.
 
 
-Lemma ceval_trace_le: forall c n  (mu mu':list (cstate * qstate (2^n))),
+Lemma ceval_trace_le: forall c n  (mu mu':list (cstate * qstate n)),
 WF_dstate_aux' mu->
 ceval_single c mu mu'-> ((d_trace_aux mu' <= d_trace_aux mu)%R).
 Proof. induction c. 
@@ -2391,7 +2391,7 @@ apply WF_ceval' with c ([(sigma, rho)]).  apply WF_cons'. assumption.
 Qed.
 
 
-Lemma WF_ceval{n:nat} : forall c (mu mu':list (cstate *qstate (2^n))), 
+Lemma WF_ceval{n:nat} : forall c (mu mu':list (cstate *qstate n)), 
 WF_dstate_aux mu->
 ceval_single c mu mu'->
 WF_dstate_aux mu'. 

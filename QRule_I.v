@@ -46,23 +46,48 @@ Proof. unfold hoare_triple. intros.
        intuition. 
 Qed.
 
-Lemma d_seman_app: forall n (F:State_formula)  (mu mu':list (cstate * qstate n)),
+(* Lemma d_seman_app: forall n (F:State_formula)  (mu mu':list (cstate * qstate n)),
 State_eval_dstate F mu-> State_eval_dstate  F (mu')
 -> State_eval_dstate  F (StateMap.Raw.map2 option_app mu mu').
-Proof. Admitted.
+Proof. Admitted. *)
+Require Import ParDensityO.
+Lemma WF_state_dstate_aux{n:nat}: forall (st:state n), 
+WF_state st <-> WF_dstate_aux [st] .
+Proof. split; unfold WF_dstate;
+       destruct st; simpl; intros. 
+    
+       apply WF_cons. intuition. apply WF_nil. 
+       unfold WF_state in H.  unfold WF_qstate in H. simpl in H.
+       unfold d_trace_aux. unfold s_trace. simpl. rewrite Rplus_0_r.
+       apply mixed_state_Cmod_1. intuition.
+
+       inversion_clear H. intuition. 
+Qed.
+
 
 Open Scope assert_scope.
 Theorem rule_asgn_aux :  forall (F:State_formula) (i:nat) ( a:aexp) 
 (n:nat) (mu : list (cstate * qstate n)) (mu': list (cstate * qstate n)),
+WF_dstate_aux mu->
 ceval_single (<{i := a}>) mu mu' ->
 State_eval_dstate (Assn_sub i a F) mu->
 State_eval_dstate F mu'.
 Proof. intros F i a n mu. induction mu; intros; inversion H; subst.
-  --simpl in H0. destruct H0. 
-  -- destruct mu. simpl in H0. inversion H6; subst. simpl.
-     intuition. 
-     apply d_seman_app. simpl in H0. simpl. apply H0.
-     apply IHmu. intuition. apply H0.
+  --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
+  -- destruct mu. inversion H0; subst. inversion_clear H10; subst.
+     simpl. econstructor.  simpl in H1. inversion_clear H1.
+     assumption. apply Forall_nil.
+     destruct a0. inversion_clear H0. 
+     apply d_seman_app_aux.
+     apply WF_state_dstate_aux.  
+     apply WF_state_eq with (c,q). reflexivity.
+     assumption. apply WF_ceval with (<{ i := a }>)
+      ((p :: mu)). assumption. assumption.
+    inversion_clear H1. simpl in H0. simpl.
+    econstructor. assumption. apply Forall_nil.
+     apply IHmu. intuition. assumption. 
+     inversion_clear H1. apply State_eval_dstate_Forall.
+     discriminate.  assumption.
 Qed.    
 
 Theorem rule_assgn: forall (F:State_formula) (i:nat) ( a:aexp),
@@ -75,7 +100,7 @@ Proof. unfold hoare_triple;
        inversion_clear H0.
        apply sat_F. intuition.
        apply rule_asgn_aux with X a mu.
-       intuition. intuition.
+       intuition. intuition. assumption. 
 Qed. 
 
 
@@ -949,12 +974,14 @@ State_eval_dstate   F1 mu/\ State_eval_dstate F2 mu .
 Proof. intros. split; intros; 
        induction mu; 
        simpl in H. destruct H.
-       -destruct mu; destruct a;  simpl in H; simpl. intuition.
-        split. split. apply H. apply IHmu. apply H.
-        split. apply H. apply IHmu. apply H.
-      -destruct H. destruct H.
-      -destruct a. destruct mu. simpl. intuition.
-       simpl. split. intuition. apply IHmu. intuition.
+       -destruct mu; destruct a; inversion_clear H; simpl;
+        intuition. 
+      -destruct H. destruct H. 
+      -destruct a. destruct mu. simpl. econstructor. 
+       destruct H. inversion_clear H. inversion_clear H0.
+      split; intuition. apply Forall_nil.
+      simpl.  destruct H. inversion_clear H.
+      inversion_clear H0. intuition. 
 Qed.
        
       
@@ -1214,8 +1241,8 @@ Proof. intros n (mu,IHmu).   induction mu; intros;
       rewrite sat_Assert_to_State in *; 
       inversion_clear H; 
     simpl in H1. destruct H1.   
-    destruct a. destruct mu. destruct H1. destruct H1.
-    destruct H.
+    destruct a. destruct mu. inversion_clear H1.
+    destruct H. inversion_clear H1. destruct H.
 Qed.
 
 Theorem rule_Absurd: forall D c,  {{BFalse}} c {{D}} .
@@ -1460,7 +1487,8 @@ inversion_clear H2. inversion_clear H5.
  rewrite <-(big_hoare_length nF1 _  c).
  assumption. assumption.
  rewrite <-(big_hoare_length nF1 _  c).
- assumption. assumption.
+ assumption. assumption. 
+
  Admitted.
 
 
@@ -1500,7 +1528,7 @@ Proof. unfold hoare_triple.  intros F F' b c1 c2.
         assert(WF_dstate_aux ([(sigma, rho)])).
        unfold WF_dstate in *. simpl in *.
        inversion_clear H2. apply WF_cons.
-       apply H6. apply WF_nil. admit.
+       apply H6. apply WF_nil. assumption.
        assert(sat_Assert (StateMap.Build_slist H0) F').
        apply H with (StateMap.Build_slist H5).
        apply E_com. intuition.
@@ -1514,7 +1542,20 @@ Proof. unfold hoare_triple.  intros F F' b c1 c2.
        inversion_clear H7. assumption. 
        
 
-       apply d_seman_app. 
+      
+       assert(WF_dstate_aux ([(sigma, rho)])).
+       unfold WF_dstate in *. simpl in *.
+       inversion_clear H2. apply WF_cons.
+       apply H0. apply WF_nil.
+       apply WF_dstate_gt_0_aux in H5.
+       simpl in *. rewrite Rplus_0_r. 
+       apply Rplus_le_reg_pos_r  with ((s_trace p + d_trace_aux mu)%R) .
+       intuition. intuition. 
+       apply d_seman_app_aux. 
+       apply WF_ceval with c1 ([(sigma, rho)]).
+       intuition.  intuition. 
+       apply WF_ceval with (<{ if b then c1 else c2 end }>) ((p :: mu)).
+       inversion_clear H2. assumption.  assumption.
        assert(Sorted.Sorted
        (StateMap.Raw.PX.ltk (elt:=qstate n))
        (mu'0)). apply ceval_sorted with c1 ([(sigma, rho)]).
@@ -1525,43 +1566,46 @@ Proof. unfold hoare_triple.  intros F F' b c1 c2.
        ([(sigma, rho)])). 
        apply Sorted_cons. apply Sorted_nil.
        apply HdRel_nil.
-        assert(WF_dstate_aux ([(sigma, rho)])).
-       unfold WF_dstate in *. simpl in *.
-       inversion_clear H2. apply WF_cons.
-       apply H6. apply WF_nil. admit.
-       assert(sat_Assert (StateMap.Build_slist H0) F').
-       apply H with (StateMap.Build_slist H5).
-       apply E_com. intuition.
+       
+       assert(sat_Assert (StateMap.Build_slist H5) F').
+       apply H with (StateMap.Build_slist H6).
+       apply E_com. intuition. 
        apply WF_ceval with c1 ([(sigma, rho)]).
        intuition. simpl. intuition.
        simpl. intuition. rewrite sat_Assert_to_State.
        inversion_clear H1. 
        constructor. intuition.
-       simpl in *. 
-       intuition. rewrite sat_Assert_to_State in H7.
-       inversion_clear H7. assumption. 
+       simpl in *. inversion_clear H8. 
+       econstructor. assumption. apply Forall_nil.
+       rewrite sat_Assert_to_State in H7. 
+       inversion_clear H7. simpl in H9. assumption. 
+      
 
        inversion_clear IHmu. 
        assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
        mu''). apply ceval_sorted with (<{ if b then c1 else c2 end }>)
        ((p::mu)). intuition. intuition.
        assert(WF_dstate_aux ((p:: mu))).
-       unfold WF_dstate in H2. simpl in H2.
-       inversion_clear H2. 
-       intuition.  
-       assert(sat_Assert (StateMap.Build_slist H6) F').
-       apply IHmu0 with H0. 
+       inversion_clear H2.   intuition.
+       assert(sat_Assert (StateMap.Build_slist H7) F').
+       apply IHmu0 with H5. 
        apply E_com. unfold WF_dstate. simpl. intuition.  unfold WF_dstate.
-        simpl. intuition.
        apply WF_ceval with (<{ if b then c1 else c2 end }>)
        (p::mu). intuition. intuition. 
        simpl. intuition.  rewrite sat_Assert_to_State.
        constructor.
        unfold WF_dstate. simpl. intuition.
-       inversion_clear H1. destruct p. simpl in *.
-       intuition.  rewrite sat_Assert_to_State in *.
-       inversion_clear H8. intuition.
-Admitted.
+       inversion_clear H1. destruct p. 
+       inversion_clear H13. simpl. assumption.
+       rewrite sat_Assert_to_State in *.  
+       inversion_clear H9.    
+       assumption.   
+      
+
+       inversion_clear H1.  simpl in *.
+       inversion_clear H5. 
+       rewrite H10 in H1. destruct H1. destruct H5.
+Qed.
 
 Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
 {{F/\ ~b}} c2 {{F'}}->
@@ -1579,7 +1623,9 @@ Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
        -inversion_clear H0.
        simpl in *. inversion H4; subst.
 
-       --(*b=true*) admit.
+       --(*b=true*)  inversion_clear H1.  simpl in *.
+       inversion_clear H5. 
+       rewrite H10 in H1. destruct H1. destruct H5. intuition.
        --(*b=false*)
        econstructor. intuition.
        destruct mu. inversion H11; subst.
@@ -1598,7 +1644,7 @@ Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
        assert(WF_dstate_aux ([(sigma, rho)])).
        unfold WF_dstate in *. simpl in *.
        inversion_clear H2. apply WF_cons.
-       apply H6. apply WF_nil. admit.
+       apply H6. apply WF_nil. assumption. 
        assert(sat_Assert (StateMap.Build_slist H0) F').
        apply H with (StateMap.Build_slist H5).
        apply E_com. intuition.
@@ -1609,10 +1655,24 @@ Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
        constructor. intuition.
        simpl in *. 
        intuition. rewrite sat_Assert_to_State in H7.
-       inversion_clear H7. assumption. 
+       inversion_clear H7. assumption.
+       
+       
+       
 
-
-       apply d_seman_app. 
+       assert(WF_dstate_aux ([(sigma, rho)])).
+       unfold WF_dstate in *. simpl in *.
+       inversion_clear H2. apply WF_cons.
+       apply H0. apply WF_nil. 
+       apply WF_dstate_gt_0_aux in H5.
+       simpl in *. rewrite Rplus_0_r. 
+       apply Rplus_le_reg_pos_r  with ((s_trace p + d_trace_aux mu)%R) .
+       intuition. intuition. 
+       apply d_seman_app_aux.
+       apply WF_ceval with c2 ([(sigma, rho)]).
+       intuition.  intuition. 
+       apply WF_ceval with (<{ if b then c1 else c2 end }>) ((p :: mu)).
+       inversion_clear H2. assumption.  assumption.
        assert(Sorted.Sorted
        (StateMap.Raw.PX.ltk (elt:=qstate n))
        (mu'0)). apply ceval_sorted with c2 ([(sigma, rho)]).
@@ -1623,20 +1683,17 @@ Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
        ([(sigma, rho)])). 
        apply Sorted_cons. apply Sorted_nil.
        apply HdRel_nil.
-       assert(WF_dstate_aux ([(sigma, rho)])).
-       unfold WF_dstate in *. simpl in *.
-       inversion_clear H2. apply WF_cons.
-       apply H6. apply WF_nil. admit.
-       assert(sat_Assert (StateMap.Build_slist H0) F').
-       apply H with (StateMap.Build_slist H5).
+       assert(sat_Assert (StateMap.Build_slist H5) F').
+       apply H with (StateMap.Build_slist H6).
        apply E_com. intuition.
        apply WF_ceval with c2 ([(sigma, rho)]).
        intuition. simpl. intuition.
        simpl. intuition. rewrite sat_Assert_to_State.
        inversion_clear H1. 
-       constructor. intuition.
-       simpl in *. 
-       intuition. rewrite sat_Assert_to_State in H7.
+       constructor. intuition. 
+       inversion_clear H8.  simpl. econstructor.
+       assumption. apply Forall_nil. 
+       rewrite sat_Assert_to_State in H7.
        inversion_clear H7. assumption. 
 
        inversion_clear IHmu. 
@@ -1647,19 +1704,20 @@ Lemma rule_cond_aux_2: forall (F F':State_formula) (b:bexp) c1 c2,
        unfold WF_dstate in H2. simpl in H2.
        inversion_clear H2. 
        intuition.  
-       assert(sat_Assert (StateMap.Build_slist H6) F').
-       apply IHmu0 with H0. 
+       assert(sat_Assert (StateMap.Build_slist H7) F').
+       apply IHmu0 with H5. 
        apply E_com. unfold WF_dstate. simpl. intuition.  unfold WF_dstate.
        simpl. intuition.
        apply WF_ceval with (<{ if b then c1 else c2 end }>)
        (p::mu). intuition. intuition. 
        simpl. intuition.  rewrite sat_Assert_to_State.
        constructor.
-       unfold WF_dstate. simpl. intuition.
-       inversion_clear H1. destruct p. simpl in *.
-       intuition.  rewrite sat_Assert_to_State in *.
-       inversion_clear H8. intuition.
-Admitted.
+       unfold WF_dstate. simpl. intuition. 
+       inversion_clear H1.  destruct p. simpl in *.
+       inversion_clear H13. intuition.
+       rewrite sat_Assert_to_State in *.
+       inversion_clear H9. intuition.
+Qed.
 
 Check ([1;2]).
 
@@ -1678,7 +1736,8 @@ Proof. intros. assert ([(p, F1 /\ b); (1 - p, F2 /\ ~ b)]=
        reflexivity. rewrite H1.
        apply rule_sum. simpl. reflexivity.
        simpl. 
-       split. 
+       split. apply rule_cond_aux. intuition. 
+       split. apply rule_cond_aux_2. intuition.   
        
        (* [apply rule_cond_aux | apply rule_cond_aux_2]; apply H. *)
 Admitted.
@@ -1736,28 +1795,375 @@ Proof. unfold hoare_triple.
     eauto.  simpl.
 Qed. *)
 
-Local Open Scope R_scope.
+Local Open Scope R_scope. 
 Lemma d_seman_app'': forall n (F:State_formula)  (mu mu':dstate n),
 sat_State mu F  -> sat_State  (mu') F ->
 (WF_dstate (d_app mu mu'))
 -> sat_State (d_app mu mu') F.
-Proof. 
+Proof. intros  n F (mu,IHmu) (mu',IHmu'). unfold WF_dstate.
+        unfold d_app. unfold StateMap.map2 . simpl. 
+        intros. inversion_clear H. 
+        inversion_clear H0. 
+        econstructor. assumption.
+        apply d_seman_app_aux. 
+        assumption. assumption. 
+        assumption. assumption.
+Qed.
+
+
+Lemma while_seq: forall (b:bexp) c F0  F1, 
+{{F0 /\ b}} c; while b do c end {{F1 /\ ~ b}} ->
+{{F0 /\ b}} while b do c end {{F1 /\ ~ b}} .
+Proof. unfold hoare_triple. intros b c F0 F1 H.  
+        intros n  (mu, IHmu); induction mu; intros;
+        destruct mu' as  [mu' IHmu']; 
+        inversion_clear H0; inversion H4; subst;
+        rewrite sat_Assert_to_State in *; simpl in *.
+        apply WF_sat_State in H1.
+        destruct H1. destruct H0. reflexivity.
+
+
+       econstructor. intuition.
+       destruct mu. inversion H9; subst.
+       simpl.
+       rewrite map2_nil. rewrite map2_l_refl.  
+       assert(Sorted.Sorted
+       (StateMap.Raw.PX.ltk (elt:=qstate n))
+       (mu'0)). apply ceval_sorted with <{ while b do c end }> mu1.
+       apply ceval_sorted with c ([(sigma, rho)]).
+       apply Sorted_cons. apply Sorted_nil.
+       apply HdRel_nil. intuition. intuition. 
+       assert(Sorted.Sorted
+       (StateMap.Raw.PX.ltk (elt:=qstate n))
+       ([(sigma, rho)])). 
+       apply Sorted_cons. apply Sorted_nil.
+       apply HdRel_nil.
+        assert(WF_dstate_aux ([(sigma, rho)])).
+       unfold WF_dstate in *. simpl in *.
+       inversion_clear H2. apply WF_cons.
+       apply H6. apply WF_nil. assumption.
+       assert(sat_Assert (StateMap.Build_slist H0) ((F1 /\ ~ b))).
+       apply H with (StateMap.Build_slist H5).
+       apply E_com. intuition. 
+       apply WF_ceval with <{ while b do c end }> mu1.
+       apply WF_ceval with c ([(sigma, rho)]).
+       intuition. simpl. intuition. assumption.
+       simpl. apply E_Seq with mu1.  intuition.
+       assumption.
+       rewrite sat_Assert_to_State.
+       inversion_clear H1. 
+       constructor. intuition.
+       simpl in *. 
+       intuition. rewrite sat_Assert_to_State in H7.
+       inversion_clear H7. assumption. 
+
+        rewrite <-H10.
+        assert(WF_dstate_aux ([(sigma, rho)])).
+       unfold WF_dstate in *. simpl in *.
+       inversion_clear H2. apply WF_cons.
+       apply H0. apply WF_nil.
+       apply WF_dstate_gt_0_aux in H5.
+       simpl in *. rewrite Rplus_0_r. 
+       apply Rplus_le_reg_pos_r  with (s_trace p + d_trace_aux mu) .
+       intuition. intuition.  
+      
+       apply d_seman_app_aux. 
+       apply WF_ceval with (<{ while b do c end }>) (mu1).
+       apply WF_ceval with c ([(sigma, rho)]).
+       intuition.  intuition. assumption.  
+       apply WF_ceval with (<{ while b do c end }>) ((p :: mu)).
+       inversion_clear H2. assumption.  assumption.
+       assert(Sorted.Sorted
+       (StateMap.Raw.PX.ltk (elt:=qstate n))
+       (mu'0)).
+       apply ceval_sorted with <{ while b do c end }> mu1.
+       apply ceval_sorted with c ([(sigma, rho)]).
+       apply Sorted_cons. apply Sorted_nil.
+       apply HdRel_nil. intuition. intuition. 
+       assert(Sorted.Sorted
+       (StateMap.Raw.PX.ltk (elt:=qstate n))
+       ([(sigma, rho)])). 
+       apply Sorted_cons. apply Sorted_nil.
+       apply HdRel_nil.
+       
+       assert(sat_Assert (StateMap.Build_slist H5) ((F1 /\ ~ b))).
+       apply H with (StateMap.Build_slist H6).
+       apply E_com. intuition.
+       apply WF_ceval with (<{ while b do c end }>) (mu1).
+       apply WF_ceval with c ([(sigma, rho)]).
+       intuition. simpl. intuition. 
+       simpl. intuition. simpl.
+       apply E_Seq with mu1.  intuition.
+       assumption. rewrite sat_Assert_to_State.
+       inversion_clear H1. 
+       constructor. intuition.
+       simpl in *. inversion_clear H13. 
+       econstructor. assumption. apply Forall_nil.
+       rewrite sat_Assert_to_State in H7. 
+       inversion_clear H7. simpl in H14. assumption. 
+      
+
+       inversion_clear IHmu. 
+       assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
+       mu''). apply ceval_sorted with (<{ while b do c end }>)
+       ((p::mu)). intuition. intuition.
+       assert(WF_dstate_aux ((p:: mu))).
+       inversion_clear H2.   intuition.
+       assert(sat_Assert (StateMap.Build_slist H7) (F1 /\ ~ b)).
+       apply IHmu0 with H5. 
+       apply E_com. unfold WF_dstate. simpl. intuition.  unfold WF_dstate.
+       apply WF_ceval with (<{ while b do c end }>)
+       (p::mu). intuition. intuition. 
+       simpl. intuition.  rewrite sat_Assert_to_State.
+       constructor.
+       unfold WF_dstate. simpl. intuition.
+       inversion_clear H1. destruct p. 
+       inversion_clear H15. simpl. assumption.
+       rewrite sat_Assert_to_State in *.   
+       inversion_clear H14.    
+       assumption. 
+       
+       
+       inversion_clear H1. simpl in H5.
+       inversion_clear H5. 
+       rewrite H9 in H1. destruct H1. destruct H5.
+Qed.
+
+Lemma rule_OMerg_npro:forall F1 b,
+(ANpro [F1 /\ ~b; F1 /\ ~ b]) ->>(F1 /\ ~ b) .
+Proof.
+
+unfold assert_implies. intros.
+inversion_clear H.  inversion_clear H1.
+destruct p_n. inversion_clear H2. 
+rewrite sum_over_list_nil_formula in H4. intuition.
+destruct p_n.  
+econstructor. discriminate.
+econstructor. assumption.
+assert(distribution_formula
+(npro_to_pro_formula (F1 /\ ~ b) [r])).
+apply H2. apply H1.  simpl npro_to_pro_formula.
+apply H3. 
+
+assert( APro([(r, F1 /\ ~ b); (r0, F1 /\ ~ b)]) ->> APro [(r + r0, F1 /\ ~ b)]).
+apply rule_OMerg. admit. unfold assert_implies in H1. 
+econstructor.  discriminate. 
+assert(sat_Assert mu
+(npro_to_pro_formula (F1 /\ ~ b) [r+r0])).
+simpl npro_to_pro_formula. 
+apply H1. econstructor; assumption. 
+apply H4.  
 Admitted.
 
+Lemma rule1: forall n (mu:list (state n)) (sigma:cstate) (rho:qstate n) IHmu H
+F0 F1 (b:bexp), 
+sat_Assert
+       {|
+         StateMap.this := (sigma, rho) :: mu;
+         StateMap.sorted := IHmu
+       |} (ANpro ([F0 /\ b; F1 /\ ~ b])) ->
+       beval (sigma, rho) b = true->
+       sat_Assert
+       {|
+         StateMap.this := [(sigma, rho)];
+         StateMap.sorted := H
+       |} (F0 /\ b)    
+        .
+Proof. intros. inversion_clear H0.   
+  inversion_clear H3. destruct p_n. 
+  inversion_clear H4. rewrite sum_over_list_nil_formula in H6.
+  intuition.  destruct p_n. 
+  rewrite sat_Assert_to_State.  
+  econstructor. inversion_clear H0. 
+   apply WF_state_dstate_aux. assumption.
+   inversion_clear H4.
+  rewrite sum_over_list_cons_formula in H6.
+  simpl in H6. rewrite sum_over_list_nil_formula in H6.
+  rewrite Rplus_0_r in H6. rewrite H6 in H5.
+  inversion_clear H5. simpl in H7. destruct mu_n.
+  simpl in H4. intuition.
+  simpl. econstructor. 
+  assert(dstate_eq (d_app (d_scalar 1 d) (d_empty n))  d).
+  apply dstate_eq_trans with ((d_scalar 1 d)).
+  apply dstate_eq_trans with ((d_app  (d_empty n) (d_scalar 1 d))).
+  apply d_app_comm. 
+  apply d_app_nil_mu. apply d_scalar_1_l.
+  assert( dstate_eq
+  {|
+    StateMap.this := (sigma, rho) :: mu;
+    StateMap.sorted := IHmu
+  |} d). apply dstate_eq_trans with ((d_app (d_scalar 1 d) (d_empty n))).
+  assumption. assumption.
+  simpl in H8. destruct H8. 
+ assert(sat_State {|
+   StateMap.this := (sigma, rho) :: mu;
+   StateMap.sorted := IHmu
+ |} (F0/\b)). apply sat_State_dstate_eq with d.
+ apply dstate_eq_sym. 
+ assumption. assumption. 
+ inversion_clear H12. simpl in H14. 
+ inversion_clear H14.  assumption. apply Forall_nil.
+
+
+
+rewrite sat_Assert_to_State. 
+inversion_clear H5. simpl in *.
+destruct mu_n. intuition.
+destruct mu_n. simpl in H3. intuition.
+econstructor. inversion_clear H0.
+apply WF_state_dstate_aux. assumption.
+simpl.  
+destruct d as [d Ihd]. 
+destruct d0 as [d0 IHd0].
+unfold d_app in *. unfold d_scalar in *.
+ unfold StateMap.map2 in *. 
+ unfold StateMap.map in *.  unfold dstate_eq in *.
+ simpl in *.  destruct d. simpl in *.
+ destruct H7. apply WF_sat_State in H5.
+ simpl in *. intuition. 
+ destruct d0. destruct H7. destruct H7. simpl in *.
+  apply WF_sat_State in H7.
+ simpl in *. intuition.
+ destruct p. destruct p0. 
+simpl in *.
+destruct (Cstate_as_OT.compare c c0).
+injection H6. intros.
+rewrite H9. rewrite H10.
+destruct H7. inversion_clear H7.
+simpl in H13. inversion_clear H13.
+ econstructor.  split.
+ assert((@pair cstate (qstate n) c (r .* q)) = s_scalar r (c,q)).
+ reflexivity. rewrite H13.
+ apply s_seman_scalar. admit. 
+ inversion_clear H12. assumption.
+ intuition. rewrite (state_eq_bexp (c, r .* q) 
+  (c,q) _). intuition. reflexivity.
+  apply Forall_nil.
+
+  injection H6. intros.
+  destruct H7. inversion_clear H11.
+  inversion_clear H12.  simpl in *.
+  inversion_clear H14. destruct H12.
+  unfold Cstate_as_OT.eq in e. 
+  rewrite <-e in H14. 
+  rewrite <-H10 in H14. 
+  rewrite <-(state_eq_bexp (sigma, rho) 
+  (sigma ,q0) _) in H14. 
+  rewrite H1 in H14. destruct H14. intuition.
+  reflexivity. 
+
+
+  injection H6. intros.
+  destruct H7. inversion_clear H11.
+  inversion_clear H12.  simpl in *.
+  inversion_clear H14. destruct H12.
+  rewrite <-H10 in H14. 
+  rewrite <-(state_eq_bexp (sigma, rho) 
+  (sigma ,q0) _) in H14. 
+  rewrite H1 in H14. destruct H14. intuition.
+  reflexivity. 
+Admitted.
+
+
+Lemma rule2: forall n (mu:list (state n)) (sigma:cstate) (rho:qstate n) H1 H2
+F0 F1 (b:bexp),
+sat_Assert
+       {|
+         StateMap.this := (sigma, rho) :: mu;
+         StateMap.sorted := H1
+       |} (ANpro ([F0 /\ b; F1 /\ ~ b]))->
+       beval (sigma, rho) b = true->
+       sat_Assert {| StateMap.this := mu; StateMap.sorted := H2 |}
+       (F1 /\ ~ b) \/
+     sat_Assert {| StateMap.this := mu; StateMap.sorted := H2 |}
+       (ANpro ([F0 /\ b; F1 /\ ~ b] )).
+Proof. intros. inversion_clear H.   
+inversion_clear H4. destruct p_n. 
+inversion_clear H5. rewrite sum_over_list_nil_formula in H7.
+intuition.  destruct p_n. admit. 
+
+inversion_clear H6. simpl in H7. 
+destruct mu_n. simpl in *. intuition.
+destruct mu_n. simpl in *. intuition.
+
+destruct d as [d Ihd]. 
+destruct d0 as [d0 IHd0].
+unfold d_app in *. unfold d_scalar in *.
+ unfold StateMap.map2 in *. 
+ unfold StateMap.map in *.  unfold dstate_eq in *.
+ simpl in *.  destruct d. simpl in *.
+ destruct H8. apply WF_sat_State in H6.
+ simpl in *. intuition. 
+ destruct d0. destruct H8. destruct H8. simpl in *.
+  apply WF_sat_State in H8.
+ simpl in *. intuition.
+ destruct p. destruct p0. 
+simpl in *.
+destruct (Cstate_as_OT.compare c c0). 
+injection H7. intros.
+destruct d. simpl in *. rewrite map2_l_refl in H6.
+rewrite map2_r_refl in H6. 
+left. rewrite sat_Assert_to_State.
+destruct H8. destruct H12.
+inversion_clear  H12. 
+simpl in *. 
+econstructor. inversion_clear H. assumption.
+simpl.  rewrite H6.  admit.
+
+right. econstructor. discriminate.
+assert(sat_Assert
+{|
+  StateMap.this := mu; StateMap.sorted := H2
+|}
+(npro_to_pro_formula [F0 /\ b; F1 /\ ~ b]
+   [r; r0])). 
+simpl  npro_to_pro_formula. econstructor.
+inversion_clear H. assumption.
+assumption. inversion_clear Ihd. 
+ econstructor.  rewrite map2_l_refl in H6.
+simpl. 
+assert(length ([StateMap.Build_slist H12; StateMap.Build_slist IHd0]) = 2%nat).
+     simpl. reflexivity.
+apply H14.  simpl. unfold d_app. unfold d_scalar. 
+unfold StateMap.map2. unfold dstate_eq. simpl. 
+rewrite map2_l_refl in *. rewrite H6.  reflexivity.
+simpl.  split. destruct H8. inversion_clear  H8.
+inversion_clear H16. econstructor. inversion_clear H15.
+assumption. assumption. intuition.
+inversion_clear H9. econstructor. 
+Admitted.
+
+
+
+(* Inductive d_scalar'{n:nat}: R-> (dstate n)-> Prop :=
+|d_scalar_0 mu : d_scalar' 0  mu
+|d_scalar_r r mu: r>0 -> d_scalar' r mu . *)
+
+(* Definition d_scalar'' {n:nat} (r:R) (mu:dstate n) : dstate n :=
+
+   match d with 
+   |d_scalar_0 mu => d_empty n
+   |d_scalar_r r mu H=> d_scalar r mu
+   end.
+     *)
+
+
+Local Open Scope assert_scope.
 Theorem rule_while: forall F0 F1 (b:bexp) (c:com),
          {{F0 /\ b}} c {{ ANpro [(F0 /\ b) ; (F1 /\ ~b)] }}
       -> {{ANpro[(F0 /\ b); (F1/\ ~b)]}}
          while b do c end
          {{ (F1 /\ ~b) }}.
-Proof. 
-       unfold hoare_triple. intros F0 F1 b c. intros H. 
+Proof.
+       unfold hoare_triple.
+        intros F0 F1 b c. intros H. 
       intros n (mu,IHmu) (mu', IHmu'). intros.
       inversion_clear H0. simpl in *.
       
       remember <{while b do c end}> as original_command eqn:Horig. 
       induction H4;  try inversion Horig; subst.
 
-      *intros. admit.
+      *intros. apply WF_sat_Assert in H1. intuition.
       
       * assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
       [(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
@@ -1772,8 +2178,11 @@ Proof.
       inversion_clear IHmu. assumption. assumption. 
       assert(WF_dstate_aux [(sigma, rho)]).
       inversion_clear H2. apply WF_cons. assumption.
-      apply WF_nil. admit.   
-      rewrite sat_Assert_to_State.
+      apply WF_nil.  apply WF_dstate_gt_0_aux in H9.
+      simpl in *. rewrite Rplus_0_r. 
+      apply Rplus_le_reg_pos_r  with ( d_trace_aux mu)%R .
+      intuition. intuition. 
+      
      assert(sat_State (d_app (StateMap.Build_slist H6) (StateMap.Build_slist H7)) (F1 /\ ~ b)).
      apply (d_seman_app'' _ _ (StateMap.Build_slist H6) (StateMap.Build_slist H7)). 
      rewrite <-sat_Assert_to_State.
@@ -1781,7 +2190,8 @@ Proof.
      apply H with (StateMap.Build_slist H4).
       econstructor. intuition. apply WF_ceval with c [(sigma, rho)].
       assumption. intuition. assumption. 
-      admit.   
+      apply rule1 with mu IHmu F1. assumption.
+      assumption.   
       apply WF_ceval with c [(sigma, rho)].
       assumption. intuition. 
       apply WF_ceval with (<{ while b do c end }>) mu1.
@@ -1792,7 +2202,9 @@ Proof.
       inversion_clear IHmu. 
       assert((sat_Assert (StateMap.Build_slist H9) (F1 /\ ~ b))
               \/ (sat_Assert (StateMap.Build_slist H9) (ANpro [F0 /\ b; F1 /\ ~ b]))).
-      admit. destruct H11. admit. 
+      apply rule2 with sigma rho IHmu. assumption.
+      assumption. 
+      destruct H11. admit. 
 
       rewrite<- sat_Assert_to_State.
       apply IHceval_single1 with (H9).
@@ -1804,8 +2216,9 @@ Proof.
      intuition. simpl. apply E_While_true with mu1.
      assumption. assumption. assumption. assumption.
      unfold d_app in H9. unfold StateMap.map2 in H9. simpl in H9.
-     inversion_clear H9. 
-     econstructor.  intuition. apply H11. 
+     inversion_clear H9. rewrite sat_Assert_to_State. 
+     econstructor.   intuition.
+      apply H11. 
      
      *assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))
      [(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
@@ -1819,9 +2232,9 @@ Proof.
      admit.  
     
      inversion_clear IHmu.
-     assert((sat_Assert (StateMap.Build_slist H7) (F1 /\ ~ b))
+     assert((sat_Assert (StateMap.Build_slist H7) (F0 /\  b))
      \/ (sat_Assert (StateMap.Build_slist H7) (ANpro [F0 /\ b; F1 /\ ~ b]))).
-     admit. destruct H9.
+     admit.  destruct H9.
      admit. rewrite <-sat_Assert_to_State. 
      apply IHceval_single with H7. 
      assumption. inversion_clear H2. intuition. 
@@ -1834,13 +2247,7 @@ Proof.
 
 Admitted.
 
-Lemma while_seq: forall (b:bexp) c F0  F1, 
-{{F0 /\ b}} c; while b do c end {{F1 /\ ~ b}} ->
-{{F0 /\ b}} while b do c end {{F1 /\ ~ b}} .
-Proof. unfold hoare_triple. intros. 
-        inversion_clear H0. inversion H4; subst.
-        admit. 
-Admitted.
+
 
 
 
