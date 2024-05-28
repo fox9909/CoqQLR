@@ -457,10 +457,24 @@ Definition d_app{n:nat} (mu1 mu2: dstate n): dstate n:=
 Definition d_scalar{n:nat} (p:R) (mu:dstate n): dstate n:=
  StateMap.map (fun (x:(qstate n)) => (p.* x)) mu.
 
+
+Inductive d_scalar'{n:nat}: (R) -> (dstate n) -> (dstate n) ->Prop :=
+|d_scalar_0 mu : d_scalar' 0 mu (d_empty n)
+|d_scalar_r r mu: r<>0-> d_scalar' r mu (d_scalar r mu).
+
+Require Import Classical_Prop.
+Lemma d_scalar_exsits{n:nat}: forall r (mu:dstate n),
+exists (mu':dstate n), d_scalar' r mu mu' .
+Proof. intros. assert(r=0 \/ r<>0). apply classic. 
+   destruct H. exists (d_empty n). rewrite H. apply d_scalar_0.
+   exists (d_scalar  r mu). apply d_scalar_r. assumption.
+  
+Qed.
+
+
 Definition dstate_pro{n:nat} (m:state n) (mu:dstate n) :R :=
     let rho:= d_find (fst m) mu in
    Cmod(@trace (2^(n)) rho).
-
 
 Lemma trace_state_dstate{n:nat}: forall  (st:state n), 
 d_trace st= s_trace st .
@@ -492,6 +506,7 @@ rewrite Cmod_mult. rewrite Cmod_R.
 rewrite Rabs_right. reflexivity. intuition.
 Qed.
 
+
 Lemma d_trace_scalar{n:nat}:forall (mu: dstate n) (p:R), 
 (0<p<=1)-> d_trace (d_scalar p mu)= p * (d_trace mu) .
 Proof.  intros (mu, IHmu) p Hp.
@@ -502,6 +517,15 @@ Proof.  intros (mu, IHmu) p Hp.
         reflexivity. 
         assumption.
 Qed.
+
+Lemma d_trace_scalar'{n:nat}:forall (mu mu': dstate n) (p:R), 
+(0<=p<=1)->d_scalar' p mu mu'-> d_trace (mu')= p * (d_trace mu).
+Proof. intros. inversion_clear H0. 
+-unfold d_trace. unfold d_empty.  simpl. rewrite Rmult_0_l. reflexivity.
+-apply d_trace_scalar. lra.
+  
+Qed.
+
 
 Lemma WF_state_dstate{n:nat}: forall (st:state n), 
 WF_state st <-> WF_dstate st .
@@ -571,6 +595,23 @@ Proof. unfold WF_dstate.
         apply WF_d_scalar_aux. intuition.
         intuition.
 Qed.
+
+Lemma WF_dstate_empty: forall n, WF_dstate (d_empty n) .
+Proof. intros. unfold d_empty.  unfold WF_dstate. simpl. unfold Raw.empty.
+apply WF_nil. 
+  
+Qed.
+
+
+Lemma WF_d_scalar'{n:nat}: forall (mu mu':dstate n) p,
+(0<=p<=1)->
+d_scalar' p mu mu'
+->WF_dstate mu 
+->WF_dstate(mu').
+Proof. intros. inversion_clear H0. apply WF_dstate_empty.
+       apply WF_d_scalar. lra. assumption.
+Qed.
+
 
 
 Lemma WF_s_plus{n}:forall (c c0:cstate) (q q0:qstate n ) (p1 p2:R),
@@ -881,6 +922,26 @@ unfold d_scalar.
        simpl. intros. rewrite H. intuition.
 Qed.
 
+Lemma dstate_eq_refl{n:nat}:forall (mu:dstate n),
+ dstate_eq mu mu .
+Proof. unfold dstate_eq. intuition.
+  
+Qed.
+
+
+Lemma d_scalar_eq'{n:nat}: forall (mu mu' mu1 mu'1: dstate n) (p:R),
+dstate_eq mu mu'->
+d_scalar' p mu mu1->
+d_scalar' p mu' mu'1->
+dstate_eq mu1 mu'1.
+Proof. intros. inversion H0; subst; inversion H1; subst.
+-apply dstate_eq_refl.
+-lra. 
+-lra.
+-apply d_scalar_eq. assumption.
+Qed.
+       
+
 Lemma  d_find_scalar{n:nat}: forall (mu:dstate n) p x, 
 d_find x (d_scalar p mu)= p .* (d_find x mu) .
 Proof. intros (mu, IHmu) p x.
@@ -897,6 +958,22 @@ Proof. intros (mu, IHmu) p x.
          apply (IHmu0 H).
 Qed.
 
+(* Lemma d_scalar_0_mu{n:nat}: forall (mu:dstate n),
+d_scalar 0 mu = d_empty n.
+Proof. intros.  apply d_scalar_0.
+  
+Qed. *)
+
+
+Lemma d_find_scalar'{n:nat}: forall (mu mu':dstate n) p x, 
+d_scalar' p mu mu'->
+d_find x mu'= p .* (d_find x mu) .
+Proof. intros. inversion H;subst.
+-rewrite d_find_nil. rewrite Mscale_0_l. reflexivity.
+-apply d_find_scalar.
+Qed.
+
+
 Lemma d_scalar_1_l{n:nat}: forall (mu:dstate n), 
 dstate_eq (d_scalar 1 mu)  mu.
 Proof. intros (mu, IHmu). unfold dstate_eq. 
@@ -906,6 +983,14 @@ Proof. intros (mu, IHmu). unfold dstate_eq.
         apply IHmu0 in H.
         simpl. rewrite Mscale_1_l.
         rewrite H.  reflexivity. 
+Qed.
+
+
+Lemma d_scalar_1_l'{n:nat}: forall (mu mu':dstate n), 
+d_scalar' 1 mu mu'->
+dstate_eq (mu')  mu.
+Proof. intros. inversion H;subst. lra.
+apply d_scalar_1_l.
 Qed.
 
 Lemma d_scalar_assoc{n:nat}: forall (p1 p2:R) (mu:dstate n), 
@@ -934,12 +1019,45 @@ Lemma d_scalar_assoc{n:nat}: forall (p1 p2:R) (mu:dstate n),
           reflexivity.
   Qed.
 
+  Lemma d_scalar_empty{n:nat}: forall p, 
+   dstate_eq (d_scalar p (d_empty n)) (d_empty n).
+  Proof. intros . unfold d_empty. unfold dstate_eq.
+     unfold d_scalar. simpl. unfold Raw.empty. reflexivity.
+  Qed.
+
+(* Lemma Rmult_out_0:forall p1 p2, p1*p2=0->p1=0 \/p2=0 .
+Proof. intros. assert(p1=0\/p1<>0).   apply classic.
+assert(p2=0\/p2<>0). apply classic. 
+       destruct H0. left. assumption. destruct H1.
+        right. assumption. Search( ?r1 *?r2 =0). 
+  
+Qed. *)
+
+
+
+  Lemma d_scalar_assoc'{n:nat}: forall (p1 p2:R) (mu mu' mu'' mu''':dstate n), 
+  d_scalar' p2 mu mu'->
+  d_scalar' p1 mu' mu''->
+  d_scalar' (Rmult p1 p2) mu mu'''->
+  dstate_eq mu'' mu'''.
+  Proof. intros. inversion H;subst; inversion H0; subst; inversion H1;subst;
+  try reflexivity; try lra.
+  -symmetry in H5. apply Rmult_integral in H5. lra. 
+  - apply d_scalar_assoc.
+Qed.
+
 
 Lemma d_scalar_nil{n:nat}: forall (mu:dstate n) p, 
 this (d_scalar p mu) = nil -> this mu = [].
 Proof. intros (mu, IHmu) p. destruct mu. intuition.
        destruct p0.
        simpl. discriminate.
+Qed.
+
+Lemma d_scalar_integral{n:nat}: forall (mu mu':dstate n) p, 
+ (d_scalar' p mu mu') ->this mu'=[]-> p=0 \/ this mu =[].
+Proof. intros.  inversion H;subst. left. reflexivity.
+   right.  apply d_scalar_nil with p. assumption.
 Qed.
 
 
@@ -960,6 +1078,16 @@ Proof. intros  (mu ,IHmu).
        induction mu. simpl. reflexivity.
        simpl in H. discriminate.
 Qed.
+
+Lemma empty_d_scalar{n:nat}: forall (mu mu': dstate n) (p : R),
+d_scalar' p mu mu'->
+this mu = []  ->  this mu' = [].
+Proof. intros. inversion H;subst. 
+       unfold d_empty. simpl. unfold Raw.empty. reflexivity.
+       apply nil_d_scalar. assumption.
+  
+Qed.
+
 
 Lemma d_scalar_not_nil{n:nat}: forall (mu:dstate n) p, 
 (0<p<=1) -> this mu<>nil <-> this (d_scalar p mu) <> nil.
