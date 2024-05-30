@@ -39,7 +39,8 @@ Lemma pure0 : Pure_State ∣0⟩⟨0∣.
 Proof. exists ∣0⟩. intuition. split. auto with wf_db. solve_matrix. Qed.
 
 Lemma pure1 : Pure_State ∣1⟩⟨1∣. 
-Proof. exists ∣1⟩. intuition. split. auto with wf_db. solve_matrix. Qed.
+Proof. exists ∣1⟩. intuition. split. auto with wf_db.
+solve_matrix. Qed.
 
 Lemma pure_id1 : Pure_State (I  1).
 Proof. exists (I  1). split. split. auto with wf_db. solve_matrix. solve_matrix. Qed.

@@ -397,13 +397,6 @@ Proof. induction n_0. intros. destruct g.  simpl. reflexivity.
      simpl. reflexivity. intros. lia. 
 Qed.
 
-Lemma d_app_assoc': 
-forall {n : nat} (mu1 mu2 mu3 : dstate n),
-dstate_eq (d_app (d_app mu1 mu2) mu3) (d_app mu1 (d_app mu2 mu3)).
-Proof.   unfold dstate_eq. unfold d_app. unfold StateMap.map2.
-     simpl. intros n (mu1, IHmu1) (mu2, IHmu2) (mu3, IHmu3).
-     simpl.  rewrite map_assoc. reflexivity.
-Qed.
 
 Lemma swap_app{n:nat} :forall (g:list R)  (f:(list (dstate n))) (n_0 i:nat),
 length g =length f->n_0=length g->
@@ -1725,63 +1718,9 @@ Qed.
 
 
 
-Lemma d_trace_app'{n:nat}: forall (mu mu':dstate n),
-WF_dstate mu -> WF_dstate mu'->
-d_trace (d_app  mu mu') = (d_trace mu) + (d_trace mu').
-Proof.  intros  (mu,IHmu) (mu',IHmu'). unfold WF_dstate. unfold d_trace.
-    unfold d_app. unfold StateMap.map2. simpl. intros.
-     rewrite <-WF_dstate_aux'_to_WF_dstate_aux in *.
-     apply d_trace_app. intuition. intuition. 
-Qed.
 
 
-Lemma  d_scalar_app_distr_aux:forall {n : nat} (mu mu' : list( state n)) (p : R),
- ( StateMap.Raw.map2 (@option_app  n)
- (StateMap.Raw.map (fun x => p .* x) mu)  (StateMap.Raw.map (fun x => p .* x) mu'))=
-  (StateMap.Raw.map (fun x => p .* x) ( StateMap.Raw.map2 option_app mu  mu')) .
-Proof. induction mu. simpl; intros. repeat rewrite map2_r_refl.
-       reflexivity. 
-       intros. destruct a. induction mu'.  
-       simpl. repeat rewrite map2_l_refl. reflexivity.
-       destruct a. simpl.
-       destruct (Cstate_as_OT.compare c c0).
-       simpl. f_equal. 
-       assert((c0, p .* q0)
-       :: StateMap.Raw.map
-            (fun x : Square (2 ^ n) => p .* x) mu'=
-            StateMap.Raw.map
-            (fun x : Square (2 ^ n) => p .* x) ((c0, q0)::mu')     ).
-      simpl. reflexivity. rewrite H. 
-       apply IHmu.  simpl. f_equal. 
-       rewrite Mscale_plus_distr_r. reflexivity.
-       apply IHmu.  
-       simpl. f_equal. apply IHmu'. 
-Qed.
 
-Lemma  d_scalar_app_distr':forall {n : nat} (mu mu' mu1 mu2 mu3: dstate n) (p : R),
-d_scalar' p mu mu1->
-d_scalar' p mu' mu2->
-d_scalar' p (d_app mu mu') mu3->
-dstate_eq (d_app mu1 mu2) mu3 .
-Proof. intros. assert(p=0\/p<>0). apply Classical_Prop.classic.
-   destruct H2. subst. inversion H0; subst.  inversion_clear H.
-   inversion_clear H1. apply d_app_nil_mu. lra. lra. lra. 
-   inversion H0; subst. lra. inversion H; subst. lra.
-   inversion H1; subst. lra.  
-    unfold dstate_eq. unfold d_app. unfold StateMap.map2.
-    unfold d_scalar. unfold StateMap.map.  destruct mu as [mu IHmu].
-    destruct mu' as [mu' IHmu']. 
-    simpl. apply d_scalar_app_distr_aux.  
-Qed.
-
-Lemma  d_scalar_app_distr'':forall {n : nat} (mu mu': dstate n) (p : R),
-dstate_eq (d_app (d_scalar p mu) (d_scalar p mu')) (d_scalar p (d_app mu mu')) .
-Proof. intros. 
-    unfold dstate_eq. unfold d_app. unfold StateMap.map2.
-    unfold d_scalar. unfold StateMap.map.  destruct mu as [mu IHmu].
-    destruct mu' as [mu' IHmu']. 
-    simpl. apply d_scalar_app_distr_aux.  
-Qed.
 
 
 Lemma Rdiv_in01: forall p1 p2,

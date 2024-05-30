@@ -11,3 +11,6 @@ ParDensityO.v
 QState.v
 QIMP.v
 QAssert.v
+QRule_E.v 
+QRule_Q.v 
+QRule_I.v
