@@ -105,23 +105,6 @@ Proof. unfold hoare_triple;
 Qed. 
 
 
-Fixpoint big_Sand (g: nat->  (State_formula )) (n : nat) : State_formula := 
-  match n with
-  | 0 => BTrue
-  | S n' => g n' /\ big_Sand g n'
-  end. 
-
-  Fixpoint big_pOplus (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) : pro_formula := 
-   match n_0 with
-  | 0 => []
-  | S n' =>(big_pOplus f g n')  ++ [(f n', g n')]
-  end.   
-  
-  Fixpoint big_Oplus  (g : nat -> State_formula) (n_0 : nat) : npro_formula := 
-   match n_0 with
-  | 0 => []
-  | S n' =>(big_Oplus g n') ++ [(g n')]  
-  end.
 
 
   Lemma State_eval_conj: forall n (mu:list (cstate * qstate n)) (F1 F2:State_formula),
@@ -284,13 +267,7 @@ big_and (fun_to_list f n_0) (fun_to_list g n_0)  .
    
   Qed.
   
-  Fixpoint big_dapp{n:nat} (g:list R) (f:list (dstate n))  : dstate n := 
-   match g ,f with 
-   |[], [] => d_empty n
-            |[], _ => d_empty n
-            | _ ,[]=>  d_empty n 
-            | hg::tg, hf:: tf =>d_app (d_scalar hg hf) (big_dapp tg tf)
-             end.
+  
 
              Lemma big_dapp_this'{n:nat}:
              forall  (p_n:list R)  (mu_n:list (dstate n)),

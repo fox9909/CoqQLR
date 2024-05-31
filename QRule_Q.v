@@ -41,30 +41,7 @@ Proof. intros. induction n'.
 Qed.
 
 Local Open Scope nat_scope.
-Lemma Ptrace_l_r: forall  n (A:Square (2^n)) s e,
-PMpar_trace A  s e =big_sum (fun i : nat => big_sum
-   (fun i0 : nat => ⟨ i ∣_ (s) ⊗ I (2 ^ (n - e - s))
-    × (I (2 ^ (n - e)) ⊗ ⟨ i0 ∣_ (e) × A × (I (2 ^ (n - e)) ⊗ ∣ i0 ⟩_ (e)))
-    × (∣ i ⟩_ (s) ⊗ I (2 ^ (n - e - s)))) 
-   (2 ^ e)) (2 ^ s). 
-Proof. unfold PMpar_trace. unfold PMlpar_trace'.
-unfold PMRpar_trace'; intros. rewrite (big_sum_eq _ 
-(fun i : nat => big_sum
-    (fun i0 : nat =>
-    (⟨ i ∣_ (s) ⊗ I (2 ^ (n - e - s)))
-× (I (2 ^ (n - e)) ⊗ ⟨ i0 ∣_ (e) × A
-× (I (2 ^ (n - e)) ⊗ ∣ i0 ⟩_ (e))) × 
-(∣ i ⟩_ (s) ⊗ I (2 ^ (n - e - s))))
-(2 ^ e))). reflexivity. apply functional_extensionality.
-intros. 
-remember (⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))).
-assert(2^(n-e)*1 = 2 ^ s * 2 ^ (n - e - s)).
-rewrite <-pow_add_r. rewrite mul_1_r. f_equal.
-rewrite add_comm. rewrite sub_add. reflexivity.
-admit. destruct H. 
-rewrite  Mmult_Msum_distr_l. rewrite Mmult_Msum_distr_r.
-reflexivity.
-Admitted.
+
 
 Definition U_v {s' e' s e:nat} (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))): Vector (2^(e-s)) := 
    @Mmult ((2^(e-s)))  (2^(e-s)) 1  (I (2^(s'-s)) ⊗ U ⊗ (I (2^(e-e'))))  v.
@@ -75,8 +52,7 @@ Definition U_v {s' e' s e:nat} (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))): Ve
 Lemma Mmult_inject{m n o:nat}: forall (A C:Matrix m n)
 (B:Matrix n o), 
 A × B = C × B -> A= C.
-Proof. intros.  unfold Mmult in *. 
-      
+Proof. intros.  unfold Mmult in *.
       prep_matrix_equality.
       revert x. revert y. 
       assert( ~(exists y x :nat , A x y <> C x y) -> 
@@ -113,7 +89,6 @@ Lemma Mmult_assoc': forall {m n o p q r: nat} (A : Matrix m n) (B : Matrix o p) 
 n=o -> p=q ->
 @Mmult m p r (@Mmult m n p A B) C =@Mmult m n r A (@Mmult o p r B C).
 Proof. intros; subst. apply Mmult_assoc. 
-       
 Qed.
 
 Lemma kron_assoc': forall {m n p q r s t u v w : nat} (A : Matrix m n) (B : Matrix p q) 
@@ -126,157 +101,41 @@ v=(Init.Nat.mul m p) ->w=(Init.Nat.mul n q)->
 Proof. intros. subst. apply kron_assoc; assumption.  
 Qed.
  
-
-
-Lemma Ptrace_l_r': forall  n (A:Square (2^n)) s e,
-PMpar_trace A  s e =big_sum (fun i : nat => big_sum
-   (fun j: nat => (⟨ i ∣_ (s) ⊗ I (2 ^ (n- e - s)) ⊗ ⟨ j ∣_ (e)) 
-                   × A ×  
-                   (∣ i ⟩_ (s) ⊗ I (2 ^ (n- e - s)) ⊗ ∣ j ⟩_ (e))) (2 ^ e)) (2 ^ s).
-Proof. intros. rewrite Ptrace_l_r. 
-       apply big_sum_eq_bounded. intros. 
-       apply big_sum_eq_bounded. intros. 
-       remember (⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))).
-       remember (I (2 ^ (n - e)) ⊗ ⟨ x0 ∣_ (e) × A).
-       remember ((I (2 ^ (n - e)) ⊗ ∣ x0 ⟩_ (e))).
-       assert((2 ^ s * 2 ^ (n - e - s))=(2 ^ (n - e) * 1)).
-       
-       rewrite <-pow_add_r. rewrite mul_1_r. f_equal.
-       rewrite add_comm. rewrite sub_add. reflexivity. admit.
-       destruct H1. 
-       rewrite <-Mmult_assoc.  rewrite Heqm0.
-       remember (I (2 ^ (n - e)) ⊗ ⟨ x0 ∣_ (e)). 
-       assert((2 ^ (n - e) * 2 ^ e)= 2^n).
-       rewrite <-pow_add_r.  f_equal.
-       rewrite sub_add. reflexivity.
-       admit. destruct H1.
-       rewrite <-(Mmult_assoc). 
-       rewrite Heqm. rewrite Heqm2. 
-       assert(⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))= ⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s)) ⊗ I 1 ).
-       rewrite kron_1_r. reflexivity. rewrite H1.
-       clear H1.
-       remember (⟨ x ∣_ (s) ⊗ I (2 ^ (n - e - s))).
-       remember ((I (2 ^ (n - e)) )). 
-       assert(2 ^ (n - e)= (2 ^ s * 2 ^ (n - e - s))).
-       rewrite <-pow_add_r.  f_equal.
-       rewrite add_comm. rewrite sub_add. reflexivity.
-       admit. destruct H1.
-       remember (m3 ⊗ I 1 × (m4 ⊗ ⟨ x0 ∣_ (e))).
-       assert ((@Mmult
-       (Init.Nat.mul (S O)
-          (Nat.pow (S (S O)) (sub (sub n e) s)))
-       (Nat.pow (S (S O)) (sub n e))
-       (Init.Nat.mul (Nat.pow (S (S O)) (sub n e))
-          (Nat.pow (S (S O)) e))
-       (@kron
-          (Init.Nat.mul (S O)
-             (Nat.pow (S (S O)) (sub (sub n e) s)))
-          (Nat.pow (S (S O)) (sub n e)) 
-          (S O) (S O) m3 (I (S O)))
-       (@kron (Nat.pow (S (S O)) (sub n e))
-          (Nat.pow (S (S O)) (sub n e)) 
-          (S O) (Nat.pow (S (S O)) e) m4
-          (@adjoint (Nat.pow (S (S O)) e) 
-             (S O) (Vec (Nat.pow (S (S O)) e) x0))))=m5).
-             rewrite Heqm5. 
-          f_equal. rewrite mul_1_r. reflexivity. rewrite mul_1_r.
-          reflexivity. rewrite H1. rewrite Heqm5. 
-          rewrite (kron_mixed_product m3 _ m4 _ ).
-          rewrite Heqm3. rewrite Heqm4. rewrite Mmult_1_r.
-          rewrite Mmult_1_l. repeat rewrite Mmult_assoc.   f_equal.
-          rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
-          rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
-          rewrite kron_1_r. reflexivity. 
-          f_equal. rewrite mul_1_r. repeat rewrite mul_1_l. reflexivity.
-          rewrite Heqm1. rewrite Heqm4.
-          assert((∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s)))= (∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s))) ⊗ I 1 ).
-       rewrite kron_1_r. reflexivity.  rewrite H2. 
-       clear H2. remember (I (2 ^ (n - e))). remember (∣ x ⟩_ (s) ⊗ I (2 ^ (n - e - s))).
-       assert(2 ^ (n - e)= (2 ^ s * 2 ^ (n - e - s))).
-       rewrite <-pow_add_r.  f_equal.
-rewrite add_comm. rewrite sub_add. reflexivity.
-       admit. destruct H2.
-        remember (m6 ⊗ ∣ x0 ⟩_ (e) × (m7 ⊗ I 1)). 
-        Set Printing All.
-        assert((@Mmult
-        (Init.Nat.mul (Nat.pow (S (S O)) (sub n e))
-           (Nat.pow (S (S O)) e)) (Nat.pow (S (S O)) (sub n e))
-        (Init.Nat.mul (S O)
-           (Nat.pow (S (S O)) (sub (sub n e) s)))
-        (@kron (Nat.pow (S (S O)) (sub n e))
-           (Nat.pow (S (S O)) (sub n e)) (Nat.pow (S (S O)) e)
-           (S O) m6 (Vec (Nat.pow (S (S O)) e) x0))
-        (@kron (Nat.pow (S (S O)) (sub n e))
-           (Init.Nat.mul (S O)
-              (Nat.pow (S (S O)) (sub (sub n e) s))) 
-           (S O) (S O) m7 (I (S O))))=m8 ).   rewrite Heqm8.
-           f_equal. rewrite mul_1_r. reflexivity.
-            repeat rewrite mul_1_l. rewrite mul_1_r.  reflexivity.
-            rewrite H2. rewrite Heqm8. 
-       rewrite kron_mixed_product. rewrite Heqm6.  rewrite Heqm7.   
-       rewrite Mmult_1_r. repeat rewrite Mmult_1_l. 
-          rewrite kron_1_r. reflexivity.  
-          apply WF_kron. rewrite <-pow_add_r.
-            f_equal.
-          rewrite add_comm. rewrite sub_add. reflexivity.
-          admit. reflexivity.
-          apply WF_vec.  assumption. apply WF_I.
-          apply WF_vec. assumption.  apply WF_adjoint. apply WF_vec.
-           assumption.
-          apply WF_kron. reflexivity. 
-          rewrite <-pow_add_r.
-            f_equal.
-          rewrite add_comm. rewrite sub_add. reflexivity.
-          admit. 
-          apply WF_adjoint. apply WF_vec. assumption.
-       apply WF_I.
-       Admitted.
-
-
-
-Lemma  trace_base:forall (n:nat) (M:Square n),
-WF_Matrix M->
-big_sum (fun i:nat => (Vec n i)† × M × (Vec n i)) n  = (trace M) .* I 1.
-       Proof. intros. remember ((fun i : nat => (M i i) .* I 1)).
-       rewrite (big_sum_eq_bounded _ m _). 
-       rewrite Heqm. unfold trace. 
-       rewrite big_sum_Mscale_r.  reflexivity. 
-       intros. rewrite inner'. rewrite Heqm. reflexivity. 
-       apply H. assumption.
-
-       Qed.
-
-
-Lemma  big_sum_trace: forall n (f:nat-> Square n) n0, 
-trace (big_sum  f  n0)= big_sum (fun i:nat => trace (f i)) n0.
-Proof. intros. induction n0. simpl. apply Zero_trace. 
-     simpl. rewrite trace_plus_dist. f_equal. assumption. Qed.
-       
 #[export]Hint Resolve WF_vec: wf_db.
 #[export]Hint Resolve WF_mult: wf_db.
 #[export] Hint Extern 1 (pow_gt_0) => lia : wf_db.
 
-Theorem rule_Qinit_aux:  forall  s e (n:nat) (st :state n) (st': state n),
+Ltac type_sovle':=
+   try repeat rewrite Nat.add_0_r;
+   try rewrite Nat.mul_1_l ; try rewrite Nat.mul_1_r;
+   try rewrite Nat.add_comm; try rewrite Nat.sub_add;
+   try rewrite Nat.add_0_r;
+   try symmetry;
+   try f_equal. 
+
+Local Open Scope nat_scope.
+ Theorem rule_Qinit_aux:  forall  s e (n:nat) (st :state n) (st': state n),
 WF_state st->
 ceval_single (QInit s e) [st] [st'] ->
 State_eval (QExp_s s e  (Vec (2^(e-s)) 0)) st'.
-Proof.  intros s e n st st' H'. intros. simpl in *.  rewrite Ptrace_l_r' in *. 
+Proof.  intros s e n st st' H'. intros. simpl in *. rewrite Ptrace_l_r' in *. 
         destruct st. destruct st'.
         inversion H; subst.  inversion H1; subst. 
         injection H6. intros. rewrite <-H0. simpl. unfold QInit_fun. 
         assert((e-s)%nat= (n - (n - e) - s)%nat).
-        f_equal.  symmetry. apply add_sub_eq_l. 
-        apply sub_add. admit. destruct H3. 
+        type_sovle'. apply add_sub_eq_l. apply sub_add. 
+         admit. destruct H3.  
         assert((2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat=(2 ^ n)%nat). 
         rewrite <-pow_add_r. rewrite <-pow_add_r. f_equal.
-        repeat rewrite <-le_plus_minus'. reflexivity.  
+        repeat rewrite <-le_plus_minus'. reflexivity.   
         admit. admit. destruct H3.
-        Local Open Scope C_scope.   
+        Local Open Scope C_scope.     
        remember ((C1 / trace (big_sum  (fun i : nat =>
              I (2 ^ s) ⊗ (∣ 0 ⟩_ (e - s) × (∣ i ⟩_ (e - s)) †)
              ⊗ I (2 ^ (n - e)) × q
              × (I (2 ^ s) ⊗ (∣ 0 ⟩_ (e - s) × (∣ i ⟩_ (e - s)) †)
              ⊗ I (2 ^ (n - e))) †) (2 ^ (e - s))))).
+      split. admit. split. admit.
       remember (fun i : nat =>
        @big_sum (Square (2^(e-s))) (M_is_monoid (2 ^ (e-s)) (2 ^ (e-s)))
          (fun j : nat =>
@@ -286,36 +145,36 @@ Proof.  intros s e n st st' H'. intros. simpl in *.  rewrite Ptrace_l_r' in *.
          (⟨ i ∣_ (s) ⊗ I (2^ (e-s))  ⊗ ⟨ j ∣_ (n - e) ) † )  ×
          ((∣ i0 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s)))) (2 ^ (e - s))) (2 ^ (n - e))). 
       rewrite (@big_sum_eq_bounded (Square (2^(e-s))) _ _  m ((2 ^ s))).
-   rewrite Heqm. 
+   rewrite Heqm.   
    remember ((fun i : nat => ∣ 0 ⟩_ (e - s) × ( big_sum (fun j : nat =>
       c1  .* big_sum (fun i0 : nat => ⟨ i0 ∣_ (e - s) × 
             (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e) × q
                × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e)) †)  
                × ∣ i0 ⟩_ (e - s) ) (2 ^ (e - s))) (2 ^ (n - e)) ) × ⟨ 0 ∣_ (e - s))). 
-   rewrite (big_sum_eq_bounded _ m0 _). rewrite Heqm0. 
+   rewrite (big_sum_eq_bounded _ m0 _).  rewrite Heqm0. 
    rewrite <-(Mmult_Msum_distr_r _ _ (∣ 0 ⟩_ (e - s)) †).
    rewrite <-Mmult_Msum_distr_l.  unfold outer_product. 
    assert(∣ 0 ⟩_ (e - s) × ⟨ 0 ∣_ (e - s) = ∣ 0 ⟩_ (e - s) × I 1 × ⟨ 0 ∣_ (e - s)). 
    rewrite Mmult_1_r. reflexivity.  apply WF_vec. 
-   apply pow_gt_0. 
+   apply pow_gt_0.   
    rewrite H3 . f_equal. f_equal. 
    remember ((fun i : nat => c1.* (trace (big_sum (fun j : nat => 
    ((⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e) × q
    × (⟨ i ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ j ∣_ (n - e)) †)) )
     (2 ^ (n - e)))  .* I 1))). 
   rewrite (big_sum_eq_bounded _ m1 _ ). rewrite Heqm1.
-  rewrite <-big_sum_Mscale_l. rewrite<- big_sum_Mscale_r.
+  rewrite Mscale_Msum_distr_r. rewrite<- big_sum_Mscale_r.
   rewrite<-big_sum_trace. rewrite Mscale_assoc.   admit. 
   
-  rewrite Heqm1.  
+  rewrite Heqm1.   
   intros. rewrite big_sum_trace. rewrite big_sum_Mscale_r.  
- rewrite big_sum_Mscale_l.  apply big_sum_eq_bounded. 
+ rewrite<- Mscale_Msum_distr_r.  apply big_sum_eq_bounded. 
   intros. f_equal. assert((2 ^ (e - s))%nat=(1 * 2 ^ (e - s) * 1)%nat).
-  rewrite mul_1_l. rewrite mul_1_r. reflexivity. destruct H7.
-  apply trace_base.  apply WF_mult. apply WF_mult. auto_wf. 
+  type_sovle. destruct H7. 
+  apply trace_base.   apply WF_mult. apply WF_mult. auto_wf. 
   unfold WF_state in H'. simpl in H'. unfold WF_qstate in H'.
   apply WF_Mixed in H'.
-  assert((2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat=(2 ^ n)%nat). 
+  assert((2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat=(2 ^ n)%nat).
   rewrite <-pow_add_r. rewrite <-pow_add_r. f_equal.
   repeat rewrite <-le_plus_minus'. reflexivity.  
   admit. admit. destruct H7. assumption.
@@ -324,14 +183,28 @@ Proof.  intros s e n st st' H'. intros. simpl in *.  rewrite Ptrace_l_r' in *.
 
   rewrite Heqm0.  intros.
    assert((2 ^ (e - s))%nat= (1 * 2 ^ (e - s) * 1)%nat).
-   rewrite mul_1_l. rewrite mul_1_r. reflexivity.  destruct H4.
+   type_sovle. destruct H4.
   rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
-  apply big_sum_eq_bounded.  intros.  rewrite Mscale_mult_dist_r.   rewrite Mscale_mult_dist_l.   
+  apply big_sum_eq_bounded.  intros.  rewrite Mscale_mult_dist_r.  
+   rewrite Mscale_mult_dist_l.   
   rewrite big_sum_Mmult_l.   rewrite big_sum_Mmult_r.
   f_equal. apply big_sum_eq_bounded. 
    intros.  repeat rewrite <-Mmult_assoc.  reflexivity.
  
   rewrite Heqm.  intros. apply big_sum_eq_bounded.  intros. 
+  remember (⟨ x ∣_ (s) ⊗ I (2 ^ (e - s))).
+  remember (⟨ x0 ∣_ (n - e)).
+  assert((1 * 2 ^ (e - s) * 1)%nat=(Init.Nat.mul (Init.Nat.add (Nat.pow (S (S O)) (sub e s)) O) (S O))%nat).
+  type_sovle'. destruct H5.  
+  remember (m0 ⊗ m1). 
+  remember ((@kron (Init.Nat.add (Nat.pow (S (S O)) (sub e s)) O)
+  (Init.Nat.mul (Nat.pow (S (S O)) s)
+     (Nat.pow (S (S O)) (sub e s))) 
+  (S O) (Nat.pow (S (S O)) (sub n e)) m0 m1)).
+  assert(m2=m3). rewrite Heqm2. rewrite Heqm3.
+  Set Printing All.
+ 
+  remember (m0 ⊗ m1).
    remember (⟨ x ∣_ (s) ⊗ I (2 ^ (e - s)) ⊗ ⟨ x0 ∣_ (n - e)).
   assert ((@kron (Init.Nat.add (Nat.pow (S (S O)) (sub e s)) O)
   (Init.Nat.mul (Nat.pow (S (S O)) s)
@@ -455,7 +328,7 @@ auto_wf. auto_wf. apply WF_mult. auto_wf. apply WF_adjoint. apply WF_vec.
 apply pow_gt_0. apply WF_mult.  apply WF_vec.
 apply pow_gt_0. auto_wf. auto_wf. auto_wf.
 
- Admitted.
+ Admitted. *)
 
 
 
@@ -501,7 +374,7 @@ Qed.
 
 Local Open Scope assert_scope.
 Local Open Scope nat_scope.
-Theorem rule_QUnit_aux:  forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s)))
+(* Theorem rule_QUnit_aux:  forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s)))
 (n:nat) (st :state n) (st': state n),
 WF_state st->WF_Matrix v->
 ceval_single (QUnit_One s' e' U) [st] [st'] ->
@@ -524,14 +397,16 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
     injection H7. intros.
     rewrite<- H1. simpl in *.
     rewrite (Mmult_assoc _ v (v) †) in H0.
-    apply Mmult_trans'  in H0. 
-    rewrite <- H0.  
+    destruct H0. destruct H2. split. intuition.
+    split. intuition.
+    apply Mmult_trans'  in H3. 
+    rewrite <- H3.  
   remember ((C1 / trace (q_update (I (2 ^ s') ⊗ U ⊗ I (2 ^ (n - e'))) rho))%C).
   remember ((C1 / trace rho)%C).
   assert(2 ^ (e - s)= 2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e')).
-  admit. destruct H2. 
+  admit. destruct H4. 
   assert(2 ^ (e - s)= (2 ^ (e - s) + 0) * 1). rewrite mul_1_r.
-  rewrite Nat.add_0_r. reflexivity. destruct H2.
+  rewrite Nat.add_0_r. reflexivity. destruct H4.
   rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
   apply big_sum_eq_bounded. 
   intros.  rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
@@ -544,22 +419,22 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
   assert((@adjoint (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) n) 
   ((I (2 ^ s') ⊗ U ⊗ I (2 ^ (n - e')))))=
   (((I (2 ^ s') ⊗ U ⊗ I (2 ^ (n - e'))))) † ). f_equal. admit. admit. 
-  rewrite H4.  repeat rewrite kron_adjoint. 
+  rewrite H9.  repeat rewrite kron_adjoint. 
   repeat rewrite id_adjoint_eq. repeat rewrite adjoint_involutive.
   assert( 2 ^ (s) * 2 ^ (e - s) * 2 ^ (n - e)= 2 ^ (n)).
-  admit. destruct H6. 
+  admit. destruct H10. 
   assert( 2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e')= 2 ^ (e - s)).
-  admit. destruct H6.   
+  admit. destruct H10.   
   assert(I (2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e'))= I (2 ^ (s' - s))
   ⊗ I (2 ^ (e' - s')) ⊗ I (2 ^ (e - e'))). rewrite id_kron. rewrite id_kron.
-  reflexivity. rewrite H6. repeat rewrite kron_adjoint.
+  reflexivity. rewrite H10. repeat rewrite kron_adjoint.
   repeat rewrite id_adjoint_eq. repeat rewrite adjoint_involutive.
   assert(I (2 ^ (s' - s)) ⊗ U ⊗ I (2 ^ (e - e'))=
  I 1 ⊗ (I (2 ^ (s' - s)) ⊗ U ⊗ I (2 ^ (e - e'))) ⊗ I 1).
  rewrite kron_1_l. rewrite kron_1_r. reflexivity. apply WF_kron.
  reflexivity. reflexivity. apply WF_kron. reflexivity. reflexivity.
  apply WF_I. apply H8. apply WF_I.  
- rewrite H9.  
+ rewrite H11.  
  remember ((I (2 ^ (s' - s)) ⊗ I (2 ^ (e' - s')) ⊗ I (2 ^ (e - e')))).
  remember (⟨ x ∣_ (s)). remember (⟨ x0 ∣_ (n - e)). 
  assert ((@kron 
@@ -570,7 +445,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
     (mul (mul (Nat.pow (S (S O)) (sub s' s)) (Nat.pow (S (S O)) (sub e' s')))
        (Nat.pow (S (S O)) (sub e e')))) (S O) (Nat.pow (S (S O)) (sub n e))
  (m0 ⊗ m) m1)= m0 ⊗ m ⊗ m1). 
-   reflexivity. rewrite H10.
+   reflexivity. rewrite H12.
   repeat rewrite <- Mmult_assoc.
    remember (I 1 ⊗ (I (2 ^ (s' - s)) ⊗ U ⊗ I (2 ^ (e - e'))) ⊗ I 1 ).
    assert ((@Mmult
@@ -584,7 +459,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
             (Nat.pow (S (S O)) (sub e e')))) (Nat.pow (S (S O)) (sub n e))) m2
             (m0 ⊗ m ⊗ m1))= m2 × (m0 ⊗ m ⊗ m1)).
             f_equal; try rewrite mul_1_l; try rewrite mul_1_r; try  reflexivity.
-  rewrite H11.
+  rewrite H13.
    rewrite Heqm2. 
    repeat rewrite kron_mixed_product. rewrite Heqm.
    repeat rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
@@ -596,7 +471,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
  rewrite kron_1_l. rewrite kron_1_r. reflexivity. apply WF_kron.
  reflexivity. reflexivity. apply WF_kron. reflexivity. reflexivity.
  apply WF_I. apply WF_adjoint. apply H8. apply WF_I.  
- rewrite H12.  
+ rewrite H14.  
  remember ((I (2 ^ (s' - s)) ⊗ I (2 ^ (e' - s')) ⊗ I (2 ^ (e - e')))).
  remember (∣ x ⟩_ (s)). remember (∣ x0 ⟩_ (n - e)).
   remember (m4 ⊗ m3 ⊗ m5). 
@@ -609,7 +484,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
        (Nat.pow (S (S O)) (sub e e'))) O)
  (Nat.pow (S (S O)) (sub n e))  (S O)
  (m4 ⊗ m3) m5)= m4 ⊗ m3 ⊗ m5). 
-   reflexivity. rewrite H13. 
+   reflexivity. rewrite H15. 
    remember (I 1 ⊗ (I (2 ^ (s' - s)) ⊗ (U) † ⊗ I (2 ^ (e - e'))) ⊗ I 1 ).
    assert ((@Mmult (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) s)
          (mul (mul (Nat.pow (S (S O)) (sub s' s)) (Nat.pow (S (S O)) (sub e' s')))
@@ -623,7 +498,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
       (Nat.pow (S (S O)) (sub e e')))
             (m4 ⊗ m3 ⊗ m5) m7 )=  (m4 ⊗ m3 ⊗ m5) × m7).
             f_equal; try rewrite mul_1_l; try rewrite mul_1_r; try  reflexivity.
-  rewrite H14.
+  rewrite H16.
    rewrite Heqm7. 
    repeat rewrite kron_mixed_product. rewrite Heqm3.
    repeat rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
@@ -637,11 +512,11 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
    ( I (2^(s)) ⊗ (I (2 ^ (s' -s) ) ⊗ U † ⊗ I (2 ^ (e - e')) )  ⊗ I (2^(n-e)))).
    repeat rewrite <-kron_assoc. rewrite id_kron.
    assert(2 ^ s * 2 ^ (s' - s)=2^s'). 
-   rewrite <-pow_add_r. f_equal. admit. rewrite H15. clear H14.
+   rewrite <-pow_add_r. f_equal. admit. rewrite H17. clear H17.
    admit. auto_wf. auto_wf. apply WF_adjoint. 
    apply H8.  auto_wf. apply WF_kron. reflexivity. reflexivity.
     auto_wf. apply WF_adjoint. apply H8. auto_wf.
-   rewrite H15.
+   rewrite H17.
    remember ((I (2 ^ s)
    ⊗ (I (2 ^ (s' - s)) ⊗ (U) † ⊗ I (2 ^ (e - e')))
    ⊗ I (2 ^ (n - e)))).
@@ -668,7 +543,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
         (Nat.pow (S (S O)) (sub e' s')))
      (Nat.pow (S (S O)) (sub e e'))) m9 m10)= m9 × m10).
      f_equal. rewrite mul_1_l. rewrite mul_1_r. reflexivity.
-     rewrite H16. rewrite Heqm9. rewrite Heqm10. 
+     rewrite H18. rewrite Heqm9. rewrite Heqm10. 
    repeat   rewrite kron_mixed_product.  rewrite Heqm8.
    repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r.
    repeat rewrite Mmult_1_l.
@@ -677,7 +552,7 @@ Proof. intros s' e' s e U v n st st' H' Hv. intros. simpl in *.
 
    assert((I (2 ^ s') ⊗ U  ⊗ I (2 ^ (n - e')))=
    ( I (2^(s)) ⊗ (I (2 ^ (s' -s) ) ⊗ U  ⊗ I (2 ^ (e - e')) )  ⊗ I (2^(n-e)))).
-  admit.  rewrite H17. 
+  admit.  rewrite H19. 
   remember ((I (2 ^ s) ⊗ (I (2 ^ (s' - s)) ⊗ U ⊗ I (2 ^ (e - e')))
   ⊗ I (2 ^ (n - e)))). 
   remember ((I (2 ^ (s' - s)) ⊗ I (2 ^ (e' - s')) ⊗ I (2 ^ (e - e')))).
@@ -703,7 +578,7 @@ assert((@Mmult
          (Nat.pow (S (S O)) (sub e e'))))
    (Nat.pow (S (S O)) (sub n e))) m14 m12)= m14 × m12). 
    f_equal. rewrite mul_1_l. rewrite mul_1_r. reflexivity.
-   rewrite H18.
+   rewrite H20.
    rewrite Heqm14. rewrite Heqm12. 
    repeat   rewrite kron_mixed_product.  rewrite Heqm13.
    repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r.
@@ -712,12 +587,12 @@ assert((@Mmult
    rewrite Heqc0.  repeat rewrite Cdiv_unfold.
    assert(2^n =(2 ^ s *
    (2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e')) *
-   2 ^ (n - e))). admit . destruct H19.
+   2 ^ (n - e))). admit . destruct H21.
    assert((2^n)=(2 ^ s' * 2 ^ (e' - s') * 2 ^ (n - e'))).
-   admit. destruct H19.  rewrite <-trace_mult_Unitary. 
+   admit. destruct H21.  rewrite <-trace_mult_Unitary. 
    reflexivity. 
    assert((2 ^ s' * 2 ^ (e' - s') * 2 ^ (n - e'))= 2 ^(n)).
-   admit. destruct H19. 
+   admit. destruct H21. 
    apply kron_unitary.  apply kron_unitary.
    apply id_unitary . apply H8. apply id_unitary.
 
@@ -734,18 +609,18 @@ assert((@Mmult
    auto_wf. auto_wf. apply H8.
    auto_wf. auto_wf. 
    assert((2 ^ (s'- s) * 2 ^ (e' - s') * 2 ^ (e- e'))= 2 ^(e-s)).
-   admit. destruct H2. 
+   admit. destruct H4. 
    apply kron_unitary.  apply kron_unitary.
    apply id_unitary . apply transpose_unitary. apply H8. apply id_unitary.
 
    apply transpose_unitary.
    assert((2 ^ (s'- s) * 2 ^ (e' - s') * 2 ^ (e- e'))= 2 ^(e-s)).
-   admit. destruct H2. 
+   admit. destruct H4. 
    apply kron_unitary.  apply kron_unitary.
    apply id_unitary . apply transpose_unitary. apply H8.
     apply id_unitary.
     apply Nat.eq_dec. apply Nat.eq_dec.
-   Admitted.
+   Admitted. *)
 
    Local Open Scope C_scope.
 Theorem rule_Meas_aux:  forall s' e' s e (v: Vector (2^(e-s))) z x
@@ -767,6 +642,7 @@ unfold U_v in *.
 rewrite Mmult_adjoint. 
 rewrite <-Mmult_assoc.
 rewrite (Mmult_assoc _ v _).
+destruct H0 as [Hs H0]. destruct H0 as [He H0].
 rewrite <-H0.
 repeat rewrite Ptrace_l_r'. 
 assert((e-s)%nat= (n - (n - e) - s)%nat). admit. destruct H1.
@@ -784,7 +660,8 @@ admit. destruct H3.
 assert((2 ^ (e - s))%nat= ((2 ^ (e - s) + 0) * 1)%nat). rewrite mul_1_r.
 rewrite Nat.add_0_r. reflexivity. destruct H3.
 rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
-rewrite big_sum_Mscale_l. 
+rewrite big_sum_Mscale_l.
+split. assumption. split. assumption. 
 apply big_sum_eq_bounded. 
 intros.  rewrite big_sum_Mmult_l. rewrite big_sum_Mmult_r.
 rewrite big_sum_Mscale_l. 

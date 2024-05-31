@@ -16,6 +16,7 @@ From Quan Require Import QVector.
 From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import ParDensityO.
+From Quan Require Import Basic_Supplement.
 
 (*-----------------------------------Classic State----------------------------------------*)
 
@@ -215,25 +216,10 @@ Fixpoint Qsys_to_Set_aux (n m :nat)(l: QSet): QSet:=
   end) 
   else l .
 
-Lemma big_sum_0_R : forall n,
-(Σ (fun _ :nat =>0%R ) n)= 0%R. 
-Proof. 
-intros.
-  induction n.
-  - reflexivity.
-  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
-  rewrite IHn.   
-  rewrite Cplus_0_r. easy.
-Qed.
-
 Definition Qsys_to_Set (n m :nat): QSet:= Qsys_to_Set_aux n m (NSet.empty) .
 
 
 Local Open Scope R_scope.
-Lemma  Zero_trace: forall n, @trace n Zero=C0.
-Proof. intros. unfold Zero.  unfold trace.
- apply (big_sum_0_R n). 
-Qed.
 
 Definition state(n: nat) := (cstate * (qstate n))%type.
 
@@ -378,6 +364,9 @@ Inductive WWF_dstate_aux{n:nat}: list(cstate * (qstate n)) -> Prop:=
 Definition WF_dstate{n:nat} (mu: dstate n):Prop:=
     WF_dstate_aux (this mu).
 
+Definition WWF_dstate{n:nat} (mu: dstate n):Prop:=
+  WWF_dstate_aux (StateMap.this mu).
+
 Definition option_qstate{n:nat} (q: option (qstate n)): (qstate n) :=
     match q with 
     |None => Zero
@@ -427,6 +416,16 @@ Proof. intros. assert(r=0 \/ r<>0). apply classic.
    exists (d_scale_not_0  r mu). apply d_scalar_r. assumption.
 Qed.
 
+
+Lemma d_trace_eq{n:nat}: forall (mu mu':dstate n),
+dstate_eq mu mu' ->
+d_trace mu = d_trace mu'.
+Proof. unfold d_trace; unfold dstate_eq. intros.
+        rewrite H. reflexivity.
+        
+Qed.
+
+
 Lemma trace_state_dstate{n:nat}: forall  (st:state n), 
 d_trace st= s_trace st .
 Proof. intros. unfold d_trace. simpl. unfold s_trace. rewrite Rplus_0_r.
@@ -435,6 +434,16 @@ Qed.
 
 
 Require Import ParDensityO.
+
+Lemma WF_dstate_eq{n}: forall (mu mu': dstate n),
+dstate_eq mu mu'-> WF_dstate mu -> WF_dstate mu'.
+Proof. unfold WF_dstate. unfold dstate_eq. 
+      intros (mu,IHmu) (mu', IHmu').
+      simpl. intros. rewrite <- H. 
+     assumption.
+Qed.
+
+
 Lemma WF_state_dstate_aux{n:nat}: forall (st:state (2^n)), 
 WF_state st <-> WF_dstate_aux [st] .
 Proof. split; unfold WF_dstate;
@@ -730,11 +739,10 @@ Qed.
 
 
 Lemma d_trace_app{n:nat}: forall (mu mu':dstate n),
-WF_dstate mu -> WF_dstate mu'->
+WWF_dstate mu -> WWF_dstate mu'->
 d_trace (d_app  mu mu') = (d_trace mu) + (d_trace mu').
 Proof.  intros  (mu,IHmu) (mu',IHmu'). unfold WF_dstate. unfold d_trace.
     unfold d_app. unfold StateMap.map2. simpl. intros.
-     rewrite <-WWF_dstate_aux_to_WF_dstate_aux in *.
      apply d_trace_app_aux. intuition. intuition. 
 Qed.
 
@@ -965,6 +973,19 @@ Lemma dstate_eq_refl{n:nat}:forall (mu:dstate n),
 Proof. unfold dstate_eq. intuition.
 Qed.
 
+Lemma dstate_eq_sym{n:nat}:forall (mu1 mu2: dstate n),
+dstate_eq mu1 mu2-> dstate_eq mu2 mu1 .
+Proof. intros  (mu1,IHmu1) (mu2,IHmu2).
+unfold dstate_eq. simpl. intuition.
+Qed.
+
+Lemma dstate_eq_trans: forall n (mu mu1 mu2: dstate n),
+dstate_eq mu mu1 -> dstate_eq mu1 mu2
+-> dstate_eq mu mu2.
+Proof. intros n (mu, IHmu) (mu1,IHmu1) (mu2,IHmu2).
+  unfold dstate_eq. simpl.
+  intros. rewrite H. assumption.
+  Qed.
 
 Lemma d_app_eq{n:nat}: forall (mu mu' mu1 mu1': dstate n),
 dstate_eq mu mu'->
@@ -1039,14 +1060,11 @@ Proof. intros (mu, IHmu) p Hp.
        intuition.
 Qed.
 
-Lemma d_scale_empty{n:nat}: forall p, 
+Lemma d_scale_empty'{n:nat}: forall p, 
    dstate_eq (d_scale_not_0 p (d_empty n)) (d_empty n).
   Proof. intros . unfold d_empty. unfold dstate_eq.
      unfold d_scale_not_0. simpl. unfold Raw.empty. reflexivity.
   Qed.
-
-
-
 
 
 Lemma d_scale_not_0_1_l{n:nat}: forall (mu:dstate n), 

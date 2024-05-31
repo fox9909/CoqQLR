@@ -159,9 +159,6 @@ Fixpoint beval{n: nat} (st : state n)
   | <{b1 && b2}>  => andb (beval st b1) (beval st b2)
   end.
 
-Notation "∣ i ⟩_ n " := (Vec (2^n) i) (at level 0) :matrix_scope.
-Notation "⟨ i ∣_ n " := (adjoint (Vec (2^n) i)) (at level 0) :matrix_scope.
-Check ∣ 2 ⟩_ 4.
 
 Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
     match i with
@@ -195,6 +192,16 @@ Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
   big_sum (fun i:nat=>  (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i )†) ⊗ (I (2^(n-e))))) × rho
                          × (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i)†) ⊗ (I (2^(n-e))))† )) (2^(e-s)) .
 
+Definition QUnit_One_fun{n:nat} (s e:nat)(U: Square (2^(e-s)))  (rho:qstate n):= q_update ((I (2^(s)) ⊗ U ⊗ (I (2^(n-e))))) rho .
+
+Definition QUnit_Ctrl_fun{n:nat} (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))) (rho:qstate n) :=
+  q_update  ((big_sum (fun i:nat =>@Mmult (2^(n)) (2^(n)) (2^(n))
+                (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
+                 (I (2^(s1)) ⊗ (U ^ i) ⊗ (I (2^(n-e1))))) (2^(n)))) rho.
+
+Definition  QMeas_fun{n:nat} (s e j:nat) (rho: qstate n):= 
+(q_update (((I (2^(s))) ⊗ ((Vec (2^(e-s)) j) × (Vec (2^(e-s)) j )†) ⊗ (I (2^(n-e))))) rho).
+
   Inductive ceval_single{n:nat}: com-> list (cstate * (qstate n)) -> list (cstate * (qstate n)) -> Prop:=
   |E_nil:  forall  c, ceval_single c nil nil
   |E_Skip sigma rho mu:  ceval_single <{skip}> ((sigma,rho)::mu) ((sigma,rho)::mu)
@@ -214,23 +221,19 @@ Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
                  ->(WF_Unitary U)
                  -> ceval_single (QUnit_One s e U) mu mu'
                 -> ceval_single (QUnit_One s e U) ((sigma,rho)::mu) 
-                (StateMap.Raw.map2 option_app [(sigma, q_update ((I (2^(s)) ⊗ U ⊗ (I (2^(n-e))))) rho )] mu')
+                (StateMap.Raw.map2 option_app [(sigma, QUnit_One_fun s e U rho)] mu')
   |E_QUnit_Ctrl sigma rho mu: forall mu' (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))), 
                     (0<=s0)/\ (e0<=s1) /\ (e1<n)
                    ->(WF_Unitary U)
                    -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'
                    -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) ((sigma,rho)::mu) 
-                (StateMap.Raw.map2 option_app [(sigma, q_update 
-                ((big_sum (fun i:nat =>@Mmult (2^(n)) (2^(n)) (2^(n))
-                (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
-                 (I (2^(s1)) ⊗ (U ^ i) ⊗ (I (2^(n-e1))))) (2^(n)))) rho )] mu')
+                (StateMap.Raw.map2 option_app [(sigma, (QUnit_Ctrl_fun s0 e0 s1 e1 U rho))] mu')
   |E_Meas sigma rho mu: forall mu' (i:nat) (s e:nat),
                   ceval_single (QMeas i s e) mu mu'
                   -> ceval_single (QMeas i s e) ((sigma,rho)::mu)
                   (StateMap.Raw.map2 option_app 
                   (big_app (fun j:nat=> 
-                  [((c_update i j sigma), 
-                  (q_update (((I (2^(s))) ⊗ ((Vec (2^(e-s)) j ) × (Vec (2^(e-s)) j )†) ⊗ (I (2^(n-e))))) rho))]) 
+                  [((c_update i j sigma), (QMeas_fun s e j rho)) ]) 
                   (2^(e-s))) mu' )               
   |E_Seq sigma rho mu : forall c1 c2 (mu1 mu2:list (cstate * (qstate n))),  
                   ceval_single c1 ((sigma,rho)::mu) mu1 
@@ -437,7 +440,7 @@ Import Sorted.
        inversion H3.  rewrite <-H5. rewrite <-H6.
        rewrite <-H7. apply E_While_true with mu1.
        assumption. assumption. assumption. assumption.
-      rewrite map2_nil_l.  reflexivity.
+       rewrite map2_nil_l.  reflexivity.
 
        destruct p.
        simpl in H3. 
@@ -887,7 +890,7 @@ induction x; induction y; intros.
  inversion H;subst. apply inj_pair2_eq_dec in H2. 
  apply inj_pair2_eq_dec in H2. destruct H2.
  exists nil. exists ((StateMap.Raw.map2 option_app
- [(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)] mu')).
+ [(c, QUnit_One_fun s e U1 q)] mu')).
  split. apply E_nil. split. intuition.
  rewrite map2_nil_l.  reflexivity.
  apply Nat.eq_dec. apply Nat.eq_dec.
@@ -895,7 +898,7 @@ induction x; induction y; intros.
  inversion H;subst.  apply inj_pair2_eq_dec in H2. 
  apply inj_pair2_eq_dec in H2. destruct H2.
  exists ((StateMap.Raw.map2 option_app
- [(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)] mu')).
+ [(c, QUnit_One_fun s e U1 q)] mu')).
  exists nil. 
  split.  intuition. split.  apply E_nil.
  rewrite map2_nil_r.  reflexivity.
@@ -908,7 +911,7 @@ induction x; induction y; intros.
 apply IHx in H9. destruct H9. destruct H0.
 destruct H0. destruct H1. 
 remember (StateMap.Raw.map2 option_app
-[(c0, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q0)] x0).
+[(c0, QUnit_One_fun s e U1 q0)] x0).
 exists t. exists x1.
 split. rewrite Heqt. apply E_Qunit_One.
 intuition. intuition.  intuition. split. intuition. 
@@ -920,9 +923,9 @@ apply inj_pair2_eq_dec in H2. destruct H2.
 apply IHx in H9. destruct H9. destruct H0.
 destruct H0. destruct H1.
 remember (StateMap.Raw.map2 option_app
-[(c0, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) (q0 ))] x0).
+[(c0, QUnit_One_fun s e U1 (q0))] x0).
 remember (StateMap.Raw.map2 option_app
-[(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) ( q))] x1).
+[(c, QUnit_One_fun s e U1 (q))] x1).
 exists t. exists t0.
 split. rewrite Heqt. 
 apply E_Qunit_One. intuition. intuition. intuition. 
@@ -937,11 +940,11 @@ apply IHy in H9.
 destruct H9. destruct H0.
 destruct H0. destruct H1.
 exists x0. 
-remember (StateMap.Raw.map2 option_app [(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)] x1).
+remember (StateMap.Raw.map2 option_app [(c, QUnit_One_fun s e U1 ( q))] x1).
 exists t. 
 rewrite Heqt. split. intuition.
 split. apply E_Qunit_One. intuition. intuition. intuition.
-rewrite H2. rewrite (map2_comm ([(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)]) x1).
+rewrite H2. rewrite (map2_comm ([(c, QUnit_One_fun s e U1 (q))]) x1).
 rewrite (map_assoc _ x0). apply map2_comm. 
 apply Nat.eq_dec. apply Nat.eq_dec.
 
@@ -954,24 +957,17 @@ induction x; induction y; intros.
  simpl. simpl in H. inversion_clear H. reflexivity. 
  destruct a. simpl in H. rewrite map2_r_refl in H.
  inversion H;subst. 
- exists nil. exists ((StateMap.Raw.map2 option_app
- (big_app
-     (fun j : nat =>
-      [(c_update i j c,
-        q_update
-          (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-          q)]) (2 ^ (e - s))) mu')).
+ exists nil. exists ((
+ (big_app  (fun j : nat =>
+      [(c_update i j c, QMeas_fun s e j q)])
+     (2 ^ (e - s))) +l mu')).
  split. apply E_nil. split. intuition.
  rewrite map2_nil_l.  reflexivity.
  destruct a. simpl in H. rewrite map2_l_refl in H.
  inversion H;subst.  
- exists ((StateMap.Raw.map2 option_app
- (big_app
-     (fun j : nat =>
-      [(c_update i j c,
-        q_update
-          (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-          q)]) (2 ^ (e - s))) mu')).
+ exists ((big_app  (fun j : nat =>
+ [(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s))) +l mu').
  exists nil.
  split.  intuition. split.  apply E_nil.
  rewrite map2_nil_r.  reflexivity.
@@ -980,13 +976,9 @@ induction x; induction y; intros.
  inversion H;subst. 
 apply IHx in H7. destruct H7. destruct H0.
 destruct H0. destruct H1. 
-remember (StateMap.Raw.map2 option_app
- (big_app
- (fun j : nat =>
-  [(c_update i j c0,
-    q_update
-      (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-      q0)]) (2 ^ (e - s)) ) x0).
+remember ((big_app  (fun j : nat =>
+[(c_update i j c0, QMeas_fun s e j q0)])
+(2 ^ (e - s))) +l x0).
 exists t. exists x1.
 split. rewrite Heqt. apply E_Meas.
 intuition. split. intuition. 
@@ -994,20 +986,12 @@ rewrite H2. rewrite Heqt. apply map_assoc.
 inversion H;subst.
 apply IHx in H7. destruct H7. destruct H0.
 destruct H0. destruct H1.
-remember (StateMap.Raw.map2 option_app
-(big_app
-     (fun j : nat =>
-      [(c_update i j c0,
-        q_update
-          (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-          q0)]) (2 ^ (e - s))) x0).
-remember (StateMap.Raw.map2 option_app
-(big_app
-(fun j : nat =>
- [(c_update i j c,
-   q_update
-     (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-     q)]) (2 ^ (e - s))) x1).
+remember ((big_app  (fun j : nat =>
+[(c_update i j c0, QMeas_fun s e j q0)])
+(2 ^ (e - s))) +l x0).
+remember ((big_app  (fun j : nat =>
+[(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s))) +l x1).
 exists t. exists t0.
 split. rewrite Heqt. 
 apply E_Meas. intuition. 
@@ -1021,21 +1005,16 @@ apply IHy in H7.
 destruct H7. destruct H0.
 destruct H0. destruct H1.
 exists x0. 
-remember (StateMap.Raw.map2 option_app (big_app
-(fun j : nat =>
- [(c_update i j c,
-   q_update
-     (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-     q)]) (2 ^ (e - s))) x1).
+remember ((big_app  (fun j : nat =>
+[(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s))) +l x1).
 exists t. 
 rewrite Heqt. split. intuition.
 split. apply E_Meas. intuition.
 rewrite H2. rewrite (map2_comm (big_app
 (fun j : nat =>
- [(c_update i j c,
-   q_update
-     (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e)))
-     q)]) (2 ^ (e - s))) x1).
+ [(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s)))  x1).
 rewrite (map_assoc _ x0). apply map2_comm.
 
  Admitted.
@@ -1174,13 +1153,13 @@ destruct H2.
  StateMap.Raw.map (fun x : qstate n => p .* x)
    y'). apply IHy. assumption.
  destruct H0. destruct H0.
-exists  ([(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)] +l x).
+exists  ([(c, QUnit_One_fun s e U1 ( q))] +l x).
 split.  apply E_Qunit_One. intuition.
 assumption. assumption. 
 rewrite H1.  
-assert ([(c, @q_update n (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) (p .* q))]=  
+assert ([(c, @QUnit_One_fun n s e U1 (p .* q))]=  
 StateMap.Raw.map (fun x0 : qstate n => p .* x0) 
-[(c, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) q)]).
+[(c, QUnit_One_fun s e U1 ( q))]).
 admit. rewrite H2. apply d_scalar_app_distr_aux.
 apply Nat.eq_dec. apply Nat.eq_dec.
 
@@ -1208,10 +1187,8 @@ inversion_clear H. reflexivity. destruct a. inversion H; subst.
 exists  ((big_app
 (fun j : nat =>
  [(c_update i j c,
-   q_update
-     (I (2 ^ s) ⊗ (∣ j ⟩_ (e - s) × ⟨ j ∣_ (e - s))
-      ⊗ I (2 ^ (n - e))) q)]) 
-(2 ^ (e - s))) +l x).
+   QMeas_fun s e j  q)])
+(2 ^ (e - s)) +l x)).
 split.  apply E_Meas. intuition.
 rewrite H1. admit.  
 Admitted.
@@ -1638,10 +1615,7 @@ apply WF_cons'.
 unfold WWF_state. simpl.  unfold q_update.
 unfold super. 
 assert( (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat = (Nat.pow (S (S O)) n) ) .
-admit. destruct H2.
-apply (WF_dstate_init s e i0 i0 n rho). 
-inversion_clear H.
-unfold WWF_state in H1. simpl in *. assumption.
+admit. destruct H2.  admit.
 apply WF_nil'. 
 apply IHmu.  inversion_clear H. assumption.
 intuition.  
@@ -1701,7 +1675,7 @@ Proof.
        assumption. apply Nat.eq_dec. apply Nat.eq_dec. 
        apply WF_ceval' with (QUnit_One s e U1) [(sigma, rho)].
        apply WF_cons'. inversion_clear H. assumption. apply WF_nil'.
-       remember ((sigma, q_update (I (2 ^ s) ⊗ U1 ⊗ I (2 ^ (n - e))) rho)).
+       remember ((sigma, QUnit_One_fun s e U1 rho)).
        assert(([p]) =  (([p]) +l ([]))). 
        symmetry. rewrite map2_nil_r. reflexivity.  
        rewrite H1. rewrite Heqp. apply E_Qunit_One. assumption. assumption.
