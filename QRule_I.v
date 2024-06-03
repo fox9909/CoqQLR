@@ -177,121 +177,7 @@ Qed.
          simpl. intuition.
   Qed. 
 
-  Fixpoint big_map2{n:nat} (p_n :list R) (mu_n: list (list (cstate *qstate n))) : list (cstate *qstate n) :=
-           match p_n ,mu_n with 
-            |[], [] => []
-            |[], _ => []
-            | _ ,[]=> []
-            | hg::tg, hf:: tf =>StateMap.Raw.map2 (option_app) 
-                                (StateMap.Raw.map (fun i => hg.* i) hf) (big_map2 tg tf)
-             end.
-
-
-   Fixpoint dstate_to_list{n:nat}  (mu_n: list (dstate n)) : (list (list (cstate *qstate n))):=
-     match mu_n with 
-     |nil => nil 
-     |muh::mut=> (StateMap.this muh) :: (dstate_to_list mut)
-     end.
-
   
-  Lemma big_dapp_this{n:nat}:
-  forall  (p_n:list R)  (mu_n:list (dstate n)) (mu':dstate n),
-  (Forall (fun x=> x<>0%R) p_n)->
-  big_dapp' p_n mu_n mu'->
-  StateMap.this (mu') =
-   big_map2 p_n (dstate_to_list mu_n).
-  Proof.  induction p_n; destruct mu_n; intros; inversion H0;subst.
-    simpl; try reflexivity
-    f_equal. intuition. 
-    inversion_clear H.  inversion H6;subst. lra.
-    simpl. f_equal. apply IHp_n. assumption. assumption.   
-  Qed.
-
-  
-
-  Lemma dstate_to_list_length{n:nat}: forall (mu1 mu2: list (dstate n)),
-  dstate_to_list (mu1++ mu2) = dstate_to_list mu1 ++ (dstate_to_list mu2) .
-  Proof. induction mu1; simpl. intuition.
-         intros. f_equal. intuition.
-           
-   
-  Qed.
-  
-  
-  Lemma fun_dstate_to_list {n:nat}: forall n_0 (f: nat-> dstate n),
-  dstate_to_list (fun_to_list f  n_0)=
-  fun_to_list (fun i:nat => StateMap.this (f i)) n_0  .
-  Proof. induction n_0. intros. simpl. reflexivity.
-         intros. simpl.  rewrite dstate_to_list_length. 
-         rewrite IHn_0. simpl.  reflexivity.
-   
-  Qed.
-
-  Lemma  pro_to_npro_formula_app: forall (pF1 pF2:pro_formula),
-  pro_to_npro_formula (pF1 ++pF2)= pro_to_npro_formula pF1 ++ pro_to_npro_formula pF2.
-Proof. induction pF1. simpl. intuition.
-destruct a.
-     simpl. intros. f_equal. intuition. 
-   
-Qed.
-
-  Lemma big_pOplus_get_npro: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat),
-  pro_to_npro_formula (big_pOplus f g n_0) = fun_to_list g n_0.
-  Proof. induction n_0. simpl. reflexivity.
-         simpl. rewrite pro_to_npro_formula_app.  rewrite IHn_0. 
-         simpl. intuition.
-  Qed. 
-
-
-  Lemma big_and_app{n:nat}:forall  (f1: list (dstate n)) (g1: list State_formula )  (f2: list (dstate n)) 
-  (g2: list State_formula) ,
-  big_and f1 g1->
-  big_and f2 g2->
-  big_and (f1++f2) (g1++g2).
-  Proof.  induction f1; destruct g1; simpl; intros.
-          assumption.
-          destruct H. destruct H.
-          split. intuition. 
-          apply IHf1. intuition. intuition.
-Qed.
-  
-
-Local Open Scope nat_scope.
-  Lemma big_and_sat{n:nat}:forall  n_0 (f:nat->dstate n) (g:nat-> State_formula),
-  (forall j,  sat_State (f j) (g j)) ->
-big_and (fun_to_list f n_0) (fun_to_list g n_0)  .
-  Proof. induction n_0. intros. simpl. intuition.
-          intros. simpl. assert((S n_0)= n_0+1). rewrite add_comm.
-           reflexivity.   apply big_and_app.
-           apply IHn_0. assumption. simpl. split. apply H. intuition.   
-   
-  Qed.
-  
-  
-
-             Lemma big_dapp_this'{n:nat}:
-             forall  (p_n:list R)  (mu_n:list (dstate n)),
-             StateMap.this (big_dapp p_n mu_n) =
-              big_map2 p_n (dstate_to_list mu_n).
-             Proof.  induction p_n; destruct mu_n; simpl;
-             unfold StateMap.Raw.empty; try reflexivity.
-             f_equal. apply IHp_n. 
-             Qed.
-
-Lemma big_dapp'_to_app{n:nat}: forall (p_n:list R) (mu_n:list (dstate n)) ,  
-length p_n= length mu_n->
-(Forall (fun x => x<>0%R) p_n)->
-big_dapp' p_n mu_n (big_dapp p_n mu_n).
-Proof.  induction p_n; intros. inversion H0; subst. destruct mu_n.
- simpl. apply big_app_nil. discriminate H.
- destruct mu_n. discriminate H. 
-  simpl.  apply big_app_cons. 
-  apply d_scalar_r. inversion H0.
-  assumption. apply IHp_n. injection H. intuition.
-  inversion_clear H0.
-assumption.
-Qed.
-   
 
 
 
@@ -638,6 +524,18 @@ Proof. induction p_n; intros; destruct mu_n. reflexivity.
    
 Qed.
 
+Lemma ceval_trace_eq': forall c n  (mu mu':dstate n),
+WWF_dstate mu->
+ceval c mu mu'-> ((d_trace mu' = d_trace mu)%R).
+Proof. intros  c n (mu,IHmu) (mu', IHmu').
+ unfold WWF_dstate.  simpl. intros. inversion_clear H0. 
+ unfold d_trace. 
+   simpl in *.  apply ceval_trace_eq with c. assumption.
+   assumption.
+Qed.
+
+
+
 
 Theorem rule_sum: forall (nF1 nF2: npro_formula ) c  (p_n:list R),
             (Forall (fun x=> x<>0%R) p_n)->
@@ -676,8 +574,10 @@ inversion_clear H2. inversion_clear H5.
  assumption. assumption.
  assumption. assumption. 
  rewrite <-(big_hoare_length nF1 _  c).
- assumption. assumption. 
- admit.
+ assumption. assumption.  
+ rewrite (ceval_trace_eq' c _  mu mu').
+ admit. apply WWF_dstate_aux_to_WF_dstate_aux. assumption.
+ assumption.
 
  assumption. assumption. 
 

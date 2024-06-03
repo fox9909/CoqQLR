@@ -169,7 +169,7 @@ Fixpoint Pure_eval{n:nat} (pf:Pure_formula) (st:state n): Prop :=
 
 Fixpoint QExp_eval{n:nat} (qs: QExp) (st: state n){struct qs} :Prop:=
   match qs with 
-  |QExp_s s e v=>s<=e/\ e<=n /\ (PMpar_trace ( @scale (2^(n)) (2^(n)) (C1 / (@trace (2^(n)) (snd st)))  (snd st)) s (n-e)= outer_product v v)
+  |QExp_s s e v=>s<=e/\ e<=n /\ (PMpar_trace ( @scale (2^(n)) (2^(n)) (R1 / (Cmod (@trace (2^(n)) (snd st))))%R  (snd st)) s (n-e)= outer_product v v)
   |QExp_t qs1 qs2=> NSet.Equal (NSet.inter (Free_Qexp qs1) (Free_Qexp qs2)) (NSet.empty)  /\
                                QExp_eval qs1 st /\ QExp_eval qs2 st                 
 end.
@@ -594,27 +594,21 @@ Proof.
       simpl in H1.
       simpl.
       rewrite trace_mult_dist.
-      rewrite Cdiv_unfold.
+      rewrite Rdiv_unfold.
       rewrite Mscale_assoc.
-      rewrite <-Cmult_assoc.
-      rewrite Cinv_mult_distr.
-      rewrite <- Cmult_assoc.
+      rewrite Cmod_mult.
+      rewrite Rinv_mult.
+      rewrite Rmult_1_l.
+      rewrite Cmod_R. rewrite Rabs_right.   
       rewrite Cmult_comm with (y:=(RtoC p)).
-      rewrite Cmult_assoc with (y:=(RtoC p)).
-      rewrite Cinv_l.
-      rewrite Cmult_assoc.
-      rewrite Cmult_1_l.
-      assumption.
-      apply RtoC_neq.
-      intuition. rewrite H2 in H3. lra.
-      apply RtoC_neq.
-      intuition. rewrite H2 in H3. lra.
+      rewrite RtoC_mult. 
+      rewrite <-Rmult_assoc. 
+      rewrite Rinv_r. intuition.
+      lra. lra. 
+     
       apply WF_state_gt_0 in H0.
       simpl in H0. unfold not. 
       intros. unfold s_trace in *. simpl in *.
-      rewrite H2 in H0.
-      rewrite Cmod_0 in H0. 
-      lra.
       simpl in H1.
       destruct H1. destruct H2.
       simpl.  split. assumption.
@@ -623,28 +617,19 @@ Proof.
       split. assumption. assumption.
       destruct st.
       induction qs.  
-      simpl.  
+      simpl; 
       rewrite trace_mult_dist.
-      rewrite Cdiv_unfold.
+      rewrite Rdiv_unfold.
       rewrite Mscale_assoc.
-      rewrite <-Cmult_assoc.
-      rewrite Cinv_mult_distr.
-      rewrite <- Cmult_assoc.
+      rewrite Cmod_mult.
+      rewrite Rinv_mult.
+      rewrite Rmult_1_l.
+      rewrite Cmod_R. rewrite Rabs_right.   
       rewrite Cmult_comm with (y:=(RtoC p)).
-      rewrite Cmult_assoc with (y:=(RtoC p)).
-      rewrite Cinv_l.
-      rewrite Cmult_assoc.
-      rewrite Cmult_1_l.
-      intuition.
-      apply RtoC_neq.
-      intuition. rewrite H1 in H2. lra.
-      apply RtoC_neq.
-      intuition. rewrite H1 in H2. lra.
-      apply WF_state_gt_0 in H0.
-      simpl in H0. unfold not. 
-      intros. unfold s_trace in *. simpl in *. rewrite H1 in H0. 
-      rewrite Cmod_0 in H0.
-      lra. 
+      rewrite RtoC_mult. 
+      rewrite <-Rmult_assoc. 
+      rewrite Rinv_r. intuition.
+     lra. lra.
       intros.
       simpl in H1.
       destruct H1. destruct H2.
@@ -897,7 +882,6 @@ unfold WF_qstate.  intros.
 apply mixed_state_Cmod_1. intuition. 
 Qed.
 
-
 Lemma  State_eval_plus{n:nat}: forall F c (q q0: qstate n),
 WF_qstate q ->
 WF_qstate q0->
@@ -909,54 +893,59 @@ Proof.
       -apply state_eq_Pure with  (c, q0). 
        reflexivity. intuition.   
       -induction qs. simpl in *.
-        rewrite Cdiv_unfold in *.
+        rewrite Rdiv_unfold in *.
         rewrite trace_plus_dist.
         rewrite <-PMtrace_scale.
-        assert(q= (@trace (2^n) q) .* (((C1 /  (@trace  (2^n) q))%C) .* q) ).
+        assert(q= (Cmod (@trace (2^n) q))%R .* (((R1 /  (Cmod (@trace  (2^n) q))))%R .* q) ).
         rewrite Mscale_assoc. 
-         rewrite Cdiv_unfold. 
-       rewrite Cmult_assoc . 
-       rewrite Cmult_comm.  
-         rewrite Cmult_assoc . 
-         rewrite Cinv_l.  
-         rewrite Cmult_1_r . 
+         rewrite Rdiv_unfold.
+         rewrite RtoC_mult. 
+       rewrite <-Rmult_assoc . 
+       rewrite Rmult_comm.  
+         rewrite <-Rmult_assoc . 
+         rewrite Rinv_l.   
+         rewrite Rmult_1_r . 
          rewrite Mscale_1_l. reflexivity.
         unfold not. intros. apply WF_qstate_gt_0 in H.
-        rewrite H3 in H. rewrite Cmod_0 in H. lra.
-         assert(q0= (@trace (2^n) q0) .* (((C1 /  (@trace  (2^n) q0))%C) .* q0) ).
+        rewrite H3 in H. lra. 
+        assert(q0= (Cmod (@trace (2^n) q0))%R .* (((R1 /  (Cmod (@trace  (2^n) q0))))%R .* q0) ).
         rewrite Mscale_assoc. 
-         rewrite Cdiv_unfold. 
-       rewrite Cmult_assoc . 
-       rewrite Cmult_comm.  
-         rewrite Cmult_assoc . 
-         rewrite Cinv_l.  
-         rewrite Cmult_1_r . 
-         rewrite Mscale_1_l. reflexivity. 
-         unfold not. intros. apply WF_qstate_gt_0 in H0.
-         rewrite H4 in H0. rewrite Cmod_0 in H0. lra.
+         rewrite Rdiv_unfold.
+         rewrite RtoC_mult. 
+       rewrite <-Rmult_assoc . 
+       rewrite Rmult_comm.  
+         rewrite <-Rmult_assoc . 
+         rewrite Rinv_l.   
+         rewrite Rmult_1_r . 
+         rewrite Mscale_1_l. reflexivity.
+        unfold not. intros. apply WF_qstate_gt_0 in H0.
+        rewrite H4 in H0. lra. 
          rewrite H3. rewrite H4.
           rewrite PMtrace_plus. 
           rewrite <-PMtrace_scale. 
-          rewrite Cdiv_unfold in *.
+          rewrite Rdiv_unfold in *.
           destruct H1. destruct H5. destruct H2.
           destruct H7.
           split. intuition. split. intuition.
           rewrite H6.
           rewrite <-PMtrace_scale. 
-          rewrite Cdiv_unfold. rewrite H8.
+          rewrite Rdiv_unfold. rewrite H8.
         rewrite <-Mscale_plus_distr_l.
         rewrite Mscale_assoc. 
-        rewrite<-H4. rewrite <-H3. 
-         rewrite <-Cmult_assoc. rewrite Cinv_l.
-         rewrite Cmult_1_l. rewrite Mscale_1_l. reflexivity.
-         assert(Cmod (@trace (2^n)  (q .+ q0))%C <> 0%R).
-         rewrite mixed_state_Cmod_plus. 
+        rewrite<-H4. rewrite <-H3.
+        rewrite <-RtoC_plus.
+       rewrite RtoC_mult.
+         rewrite Rmult_assoc.
+         rewrite <-trace_plus_dist.
+         rewrite mixed_state_Cmod_plus.
+         rewrite Rinv_l. rewrite Rmult_1_l.
+         rewrite Mscale_1_l. reflexivity.
+         assert((Cmod (@trace (2^n) q) + Cmod (@trace  (2^n) q0) )%R<> 0%R).
          apply tech_Rplus. assert(Cmod(@trace (2^n) q)%R>0%R)%R.
          apply mixed_state_Cmod_1. apply H.
          intuition.  apply mixed_state_Cmod_1. apply H0.
-         apply H. apply H0. rewrite trace_plus_dist in H9. 
-         unfold not. intros. rewrite H10 in H9.
-         rewrite Cmod_0 in H9. lra.
+         assumption.
+         apply H. apply H0. 
          lia. lia. 
         simpl in *. split. intuition.
         destruct H2. destruct H3. 
