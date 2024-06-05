@@ -444,18 +444,6 @@ Proof. unfold WF_dstate. unfold dstate_eq.
 Qed.
 
 
-Lemma WF_state_dstate_aux{n:nat}: forall (st:state (2^n)), 
-WF_state st <-> WF_dstate_aux [st] .
-Proof. split; unfold WF_dstate;
-       destruct st; simpl; intros. 
-    
-       apply WF_cons. intuition. apply WF_nil. 
-       unfold WF_state in H.  unfold WF_qstate in H. simpl in H.
-       unfold d_trace_aux. unfold s_trace. simpl. rewrite Rplus_0_r.
-       apply mixed_state_Cmod_1. intuition.
-
-       inversion_clear H. intuition. 
-Qed.
 
 Lemma WF_state_dstate{n:nat}: forall (st:state n), 
 WF_state st <-> WF_dstate st .

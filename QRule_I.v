@@ -182,8 +182,8 @@ Qed.
 
 
 Theorem rule_seq : forall (P Q R:Assertion) c1 c2,
-              {{Q}} c2 {{R}} ->
               {{P}} c1 {{Q}} ->
+              {{Q}} c2 {{R}} ->
               {{P}} c1; c2 {{R}}.
 Proof.   unfold hoare_triple.  
          intros P Q R2 c1 c2 H1 H2 n (mu,IHmu) (mu',IHmu').
@@ -196,12 +196,13 @@ Proof.   unfold hoare_triple.
          apply (WF_ceval _ _ _ H3 H8).
          assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate n)) mu1).
          apply (ceval_sorted _ _ _ IHmu H8).
-         apply H1 with (StateMap.Build_slist H7).
-         apply E_com.  intuition. intuition. 
-         simpl. intuition.
-         apply H2 with (StateMap.Build_slist IHmu).
+         apply H2 with (StateMap.Build_slist H7).
          apply E_com. intuition. intuition.
+         simpl. intuition. intuition.
+         apply H1 with (StateMap.Build_slist IHmu).
+         apply E_com.  intuition. intuition. 
          simpl. intuition. intuition. 
+         
 Qed.
 
 Theorem rule_conseq : forall (P P' Q Q': Assertion) c,
@@ -215,9 +216,25 @@ Proof.  unfold hoare_triple. intros.
        intuition. apply H0. intuition.
 Qed.
 
+Lemma implies_refl: forall (D:Assertion), D->> D.
+Proof. unfold assert_implies. intros. assumption. Qed.
 
 
+Theorem rule_conseq_l : forall (P P' Q : Assertion) c,
+           (P ->> P') ->
+           {{P'}} c {{Q}} ->
+           {{P}} c {{Q}}.
+Proof. intros. eapply rule_conseq. apply H0. assumption.
+apply implies_refl.
+     Qed.
 
+
+    Theorem rule_conseq_r : forall (P Q Q' : Assertion) c,
+    (Q'->> Q) ->
+           {{P}} c {{Q'}} ->
+           {{P}} c {{Q}}.
+           Proof. intros. eapply rule_conseq. apply H0. 
+           apply implies_refl. assumption. Qed.        
 
 Theorem rule_conj: forall (F1 F1' F2 F2': State_formula) c,
              {{F1}} c {{F1'}} 
@@ -1461,7 +1478,7 @@ Theorem rule_while': forall F0 F1 (b:bexp) (c:com),
          while b do c end
          {{ (F1 /\ (BNot b)) }}.
 Proof. intros. apply while_seq. apply rule_seq with (ANpro[F0 /\ b; F1 /\ (BNot b)]).
-         apply rule_while. assumption. assumption.
+          assumption. apply rule_while. assumption.
 Qed.
 
 

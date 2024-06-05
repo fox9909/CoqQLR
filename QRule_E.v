@@ -779,6 +779,47 @@ sat_State mu F1->
 
 
 
+Lemma WWF_dstate_not_0{n:nat}:forall (mu: list (cstate *qstate n)),
+mu<>[]->
+WWF_dstate_aux mu -> d_trace_aux mu <> 0 .
+Proof. intros. destruct mu. intuition. simpl.
+       assert(s_trace p + d_trace_aux mu>0).
+       rewrite Rplus_comm.
+       apply Rplus_le_lt_0_compat. 
+       apply WWF_dstate_gt_0_aux. inversion_clear H0.
+       assumption. 
+       apply WWF_state_gt_0.
+       inversion_clear H0. assumption.
+      lra.
+  
+Qed.
+
+Lemma WF_dstate_in01'{n:nat}:forall (mu: list (cstate *qstate n)),
+mu<>[]->
+WF_dstate_aux mu ->0< d_trace_aux mu <=1.
+Proof.  intros. destruct mu. intuition. simpl.
+rewrite Rplus_comm. split.
+apply Rplus_le_lt_0_compat. 
+apply WWF_dstate_gt_0_aux. inversion_clear H0.
+apply WWF_dstate_aux_to_WF_dstate_aux.
+assumption.  
+apply WF_state_gt_0.
+inversion_clear H0.  assumption.
+assert(d_trace_aux mu + s_trace p= d_trace_aux ((p :: mu))).
+simpl. rewrite Rplus_comm.
+reflexivity. rewrite H1.
+apply WF_dstate_in01_aux. assumption.
+Qed.
+
+Require Import ParDensityO.
+Lemma WF_state_in01{n:nat}: forall (st:state n), 
+WF_state st -> 0<s_trace st <=1.
+Proof. unfold WF_state. unfold WF_qstate. unfold s_trace. intros.
+       apply mixed_state_Cmod_1. intuition. 
+Qed.
+
+
+Local Open Scope R_scope.
 Lemma  rule2: forall n (mu:list (state n)) (sigma:cstate) (rho:qstate n) H1 H2
 F0 F1 ,
 sat_Assert {| StateMap.this := (sigma, rho) :: mu;
@@ -821,8 +862,17 @@ simpl. split. rewrite d_trace_scale_not_0.
 destruct H6. 
 rewrite H6. unfold d_trace. simpl. rewrite Rdiv_unfold.
 rewrite Rmult_assoc. rewrite Rinv_l.
- rewrite Rmult_1_r. reflexivity. admit.
- admit. apply d_seman_scalar . admit.
+ rewrite Rmult_1_r. reflexivity.
+ assert(s_trace (sigma, rho) + d_trace_aux mu= d_trace_aux ((sigma, rho)::mu)).
+ reflexivity. rewrite H9.
+  apply WWF_dstate_not_0. discriminate. apply WWF_dstate_aux_to_WF_dstate_aux. intuition.
+  rewrite Rplus_comm.
+ apply Rdiv_in01. apply WF_dstate_in01'. assumption.  inversion_clear H. assumption. 
+ apply WF_state_in01. inversion_clear H. assumption.
+ apply d_seman_scalar .
+ rewrite Rplus_comm.
+ apply Rdiv_in01. apply WF_dstate_in01'. assumption.  inversion_clear H. assumption. 
+ apply WF_state_in01. inversion_clear H. assumption.
  intuition. inversion_clear H7. assumption.
 
 assert(r0=0\/ r0<>0). 
@@ -862,8 +912,17 @@ simpl. split. rewrite d_trace_scale_not_0.
 destruct H10. 
 rewrite H10. unfold d_trace. simpl. rewrite Rdiv_unfold.
 rewrite Rmult_assoc. rewrite Rinv_l.
- rewrite Rmult_1_r. reflexivity. admit.
- admit. apply d_seman_scalar . admit.
+ rewrite Rmult_1_r. reflexivity. 
+ assert(s_trace (sigma, rho) + d_trace_aux mu= d_trace_aux ((sigma, rho)::mu)).
+ reflexivity. rewrite H12.
+  apply WWF_dstate_not_0. discriminate. apply WWF_dstate_aux_to_WF_dstate_aux. intuition.
+  rewrite Rplus_comm.
+ apply Rdiv_in01. apply WF_dstate_in01'. assumption.  inversion_clear H5. assumption. 
+ apply WF_state_in01. inversion_clear H5. assumption.
+ apply d_seman_scalar .
+ rewrite Rplus_comm.
+ apply Rdiv_in01. apply WF_dstate_in01'. assumption.  inversion_clear H5. assumption. 
+ apply WF_state_in01. inversion_clear H5. assumption.
  intuition. 
 
 simpl in *. inversion_clear H4. inversion_clear H8.
@@ -896,7 +955,40 @@ injection H9. intros.
 econstructor.  assert(length ([((r/ d_trace_aux mu) * d_trace_aux d); ((r0/ d_trace_aux mu) * d_trace_aux ((c,q)::d0))]) = length [F0; F1]).
 reflexivity. apply H19. 
 econstructor. inversion_clear H6. assumption.
-simpl.  admit. simpl.
+simpl. inversion_clear H7.
+econstructor. econstructor. simpl.
+apply Rmult_le_pos. 
+apply Rcomplements.Rdiv_le_0_compat.
+inversion_clear H19. simpl in H7. assumption.
+apply WF_dstate_in01'. rewrite H13. rewrite map2_comm.
+ apply map2_app_not_nil_l. discriminate. inversion_clear H6. assumption.
+ apply WF_dstate_in01_aux.  destruct H10. apply WF_sat_State in H7. 
+ destruct H7. inversion_clear H21. assumption.
+ econstructor. simpl.
+apply Rmult_le_pos. 
+apply Rcomplements.Rdiv_le_0_compat.
+inversion_clear H19. inversion_clear H21. simpl in H19. assumption.
+apply WF_dstate_in01'. rewrite H13. rewrite map2_comm.
+ apply map2_app_not_nil_l. discriminate. inversion_clear H6. assumption.
+ assert(s_trace (c, q) + d_trace_aux d0=d_trace_aux ((c,q)::d0)).
+ reflexivity. rewrite H7.
+ apply WF_dstate_in01_aux.  destruct H10. destruct H21. apply WF_sat_State in H21.
+ intuition. apply Forall_nil.
+ repeat rewrite sum_over_list_cons_formula. rewrite sum_over_list_nil_formula.
+ rewrite Rplus_0_r.  simpl. repeat rewrite Rdiv_unfold. 
+ rewrite (Rmult_comm r).   rewrite (Rmult_comm r0).
+ repeat rewrite Rmult_assoc. rewrite <-Rmult_plus_distr_l.
+  assert(r * d_trace_aux d + r0 * (s_trace (c, q) + d_trace_aux d0)= d_trace_aux mu).
+  rewrite H13. rewrite d_trace_app_aux. simpl. repeat rewrite d_trace_scale_aux.
+  rewrite s_trace_scale. rewrite Rmult_plus_distr_l. reflexivity. 
+ admit. admit. admit. 
+ apply WWF_dstate_aux_to_WF_dstate_aux. apply WF_d_scale_aux.
+ admit. destruct H10. apply WF_sat_State in H7. 
+ destruct H7. inversion_clear H21. assumption.
+ econstructor. admit. admit.
+ rewrite <-H7. apply Rinv_l.  rewrite H7. 
+ apply WWF_dstate_not_0. assumption. 
+admit. simpl.
 inversion_clear H1.  inversion_clear IHd.
 
 econstructor. 

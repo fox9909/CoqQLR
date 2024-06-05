@@ -193,6 +193,9 @@ Definition  State_eval_dstate{n:nat} (F:State_formula) (mu:list (cstate *(qstate
   Forall (fun x=> State_eval F x) mu
   end.
 
+
+
+
 Local Open Scope R_scope.
 Inductive sat_State {n:nat}:(dstate n) -> (State_formula)-> Prop:=
   |sat_F: forall (mu:dstate n) F, WF_dstate mu -> 
@@ -243,9 +246,20 @@ Fixpoint get_pro_formula (pF:pro_formula): list R:=
 
 Fixpoint pro_to_npro_formula (pF:pro_formula ): npro_formula:=
   match pF with 
-  |[] => []
+  |[] => [] 
   |(p, F) :: pF'=> F:: (pro_to_npro_formula pF')
-  end. 
+  end.
+
+
+(* Inductive Pro_eval{n:nat}:(list (cstate * qstate n)) -> pro_formula -> Prop:=
+|pro_eval: forall (mu mu':list (cstate * qstate n) n) pF (mu_n: list (list (cstate * qstate n))),
+big_dapp' (get_pro_formula pF) mu_n mu'
+->dstate_eq mu mu'
+-> (big_and mu_n (pro_to_npro_formula pF)) 
+-> Forall (fun mu_i => d_trace  mu_i =d_trace mu) mu_n
+-> sat_Pro mu pF.
+       *)
+
 
 Inductive sat_Pro {n:nat}: (dstate n)-> (pro_formula)-> Prop:=
 |sat_pro: forall (mu mu':dstate n) pF (mu_n: list (dstate n)),
