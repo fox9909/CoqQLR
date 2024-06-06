@@ -42,7 +42,7 @@ Qed. *)
 Local Open Scope nat_scope.
 
 
-Definition U_v {s' e' s e:nat} (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))):
+Definition U_v {m n:nat}(s' e' s e:nat) (U: Square (2^m)) (v: Vector (2^n)):
 Vector (2^(e-s)) := 
 @Mmult ((2^(e-s)))  (2^(e-s)) 1  (I (2^(s'-s)) ⊗ U ⊗ (I (2^(e-e'))))  v.
 
@@ -517,7 +517,7 @@ Theorem rule_QUnit_aux:  forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^
 s<=s' /\ e' <=e ->
 WF_state st->WF_Matrix v->
 ceval_single (QUnit_One s' e' U) [st] [st'] ->
-State_eval (QExp_s s  e  (U_v U† v) ) st->
+State_eval (QExp_s s  e  (U_v s' e' s e U† v) ) st->
 State_eval (QExp_s s  e  v ) st'.
 Proof. 
       intros s' e' s e U v n st st' He H' Hv. 
@@ -632,7 +632,7 @@ Theorem rule_QUnit_One_aux' : forall s' e' s e (U: Square (2^(e'-s'))) (v: Vecto
 s<=s' /\ e' <=e ->
 WF_dstate_aux mu->WF_Matrix v->
 ceval_single (QUnit_One s' e' U) mu mu' ->
-State_eval_dstate (QExp_s s  e  (U_v U† v) ) mu->
+State_eval_dstate (QExp_s s  e  (U_v s' e' s e U† v) ) mu->
 State_eval_dstate (QExp_s s  e  v ) mu'.
 Proof. intros s' e' s e U v n mu. induction mu; intros. inversion H2; subst.
   -- simpl in H3. destruct H3.
@@ -671,7 +671,7 @@ Qed.
 
 Theorem rule_QUnit_One : forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))),
 s<=s' /\ e' <=e ->WF_Matrix v->
-{{ QExp_s s  e  (U_v U† v) }} QUnit_One s' e' U {{ QExp_s s  e  v }}.
+{{ QExp_s s  e  (U_v s' e' s e U† v) }} QUnit_One s' e' U {{ QExp_s s  e  v }}.
 Proof. unfold hoare_triple;
 intros s' e' s e U v Hs Hv n (mu,IHmu) (mu', IHmu').
 intros. 
@@ -762,11 +762,11 @@ s<=s'/\ s' <= e'/\ e'<=e-> (norm v = 1)%R->
 WF_state st->WF_Matrix v-> (z< 2^(e'-s'))->
 st'= s_update x z (((I (2^(s'))) ⊗ ((Vec (2^(e'-s')) z ) × (Vec (2^(e'-s')) z )†) ⊗ (I (2^(n-e'))))) st->
 State_eval (QExp_s  s  e  v ) st->
-State_eval (QExp_s  s  e  ((R1 / (@norm (2^(e-s)) ((U_v  (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))))%R .* 
-                          (U_v  (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))) 
-                          (s_scale ((R1 / (@norm (2^(e-s)) ((U_v  (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v)))) ^2) st').
+State_eval (QExp_s  s  e  ((R1 / (@norm (2^(e-s)) ((U_v s' e' s e (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))))%R .* 
+                          (U_v s' e' s e (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))) 
+                          (s_scale ((R1 / (@norm (2^(e-s)) ((U_v s' e' s e  (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v)))) ^2) st').
 Proof.  intros s' e' s e v z x n st st' He' Hn H' Hv Hz. intros.  
-remember ((R1 / norm (U_v (∣ z ⟩_ (e' - s') × ⟨ z ∣_ (e' - s')) v))%R). 
+remember ((R1 / norm (U_v s' e' s e (∣ z ⟩_ (e' - s') × ⟨ z ∣_ (e' - s')) v))%R). 
 simpl in *. 
 unfold outer_product in *.
 rewrite Mscale_adj.  
@@ -1316,9 +1316,9 @@ s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
 ceval (QMeas x s' e') st mu-> 
 sat_Assert st ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s'))) ->
-sat_Assert mu  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
-                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
-                               (U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
+sat_Assert mu  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
+                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+                               (U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
 Proof. 
 intros s' e' s e v x P n st mu  He Hv Hv'. intros. destruct mu as [ mu IHmu]. 
 inversion_clear H; simpl in H3.
@@ -1387,7 +1387,7 @@ apply inner_product_ge_0.
 assert(forall j,  Sorted.Sorted(StateMap.Raw.PX.ltk (elt:=qstate n)) 
 [(c_update x j (fst st),
 (R1 /( (@norm (2^(e-s))
-            (U_v (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v))
+            (U_v s' e' s e(∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v))
        ^ 2))%R .* (q_update
   (I (2 ^ s')
    ⊗ (∣ j ⟩_ (e' - s')
@@ -1401,7 +1401,7 @@ rewrite big_pOplus_get_pro.
 assert(big_dapp'
 (fun_to_list
 (fun i : nat =>
- ((@norm (2^(e-s)) (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v))
+ ((@norm (2^(e-s)) (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v))
   ^ 2)%R) (2 ^ (e' - s')))
 
        (fun_to_list (fun j : nat =>
@@ -1410,7 +1410,7 @@ assert(big_dapp'
    (big_dapp  (fun_to_list
    (fun i : nat =>
     (
-       (@norm (2^(e-s)) (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v))
+       (@norm (2^(e-s)) (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v))
      ^ 2)%R) (2 ^ (e' - s')))
           (fun_to_list (fun j : nat =>
           StateMap.Build_slist (H7 j) ) (2 ^ (e' - s')))) ).
@@ -1420,8 +1420,8 @@ reflexivity.  apply Forall_fun_to_list.
 intros. simpl. rewrite Rmult_1_r. rewrite inner_trace.
 assert((fst
 (@trace (2^(e-s))
-   (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v
-    × (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) †)) > 0)%R).
+   (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v
+    × (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) †)) > 0)%R).
 apply mixed_state_trace_gt0_aux. apply Vector_Mix_State.
 unfold U_v. auto_wf. admit. lra. unfold U_v. auto_wf.
 
@@ -1432,8 +1432,8 @@ inversion_clear H11. rewrite map2_nil_r.
   rewrite fun_dstate_to_list.  simpl.
   rewrite big_app_map2. apply big_app_eq_bound. intros. 
   simpl.  f_equal.  f_equal. 
-  remember ((norm (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) *
-  (norm (U_v (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) * 1))%R).
+  remember ((norm (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) *
+  (norm (U_v s' e' s e (∣ i ⟩_ (e' - s') × ⟨ i ∣_ (e' - s')) v) * 1))%R).
   rewrite Mscale_assoc. rewrite Rdiv_unfold. rewrite Rmult_1_l.
   rewrite RtoC_mult.
   rewrite Rinv_r. rewrite Mscale_1_l.  unfold QMeas_fun.
@@ -1461,21 +1461,21 @@ reflexivity. assumption. assumption.
   econstructor.
   assert((c_update x j (fst st),
   (R1 /
-   (norm (U_v (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) *
-    (norm (U_v (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) * 1)))%R
+   (norm (U_v s' e' s e (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) *
+    (norm (U_v  s' e' s e (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) * 1)))%R
   .* q_update
        (I (2 ^ s') ⊗ (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) ⊗ I (2 ^ (n - e')))
        (snd st))=
  s_scale ((R1 /
- (norm (U_v (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) ^ 2))%R )   
+ (norm (U_v   s' e' s e (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) v) ^ 2))%R )   
   (c_update x j (fst st), q_update
        (I (2 ^ s') ⊗ (∣ j ⟩_ (e' - s') × ⟨ j ∣_ (e' - s')) ⊗ I (2 ^ (n - e')))
        (snd st))). unfold s_scale.
        simpl. reflexivity.  rewrite H9.
 
-       assert(State_eval (QExp_s  s  e  ((R1 / (@norm (2^(e-s)) ((U_v  (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v))))%R .* 
-       (U_v  (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v))) 
-       (s_scale ((R1 / (@norm (2^(e-s)) ((U_v  (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v)))) ^2) (s_update x j (((I (2^(s'))) ⊗ ((Vec (2^(e'-s')) j ) × (Vec (2^(e'-s')) j )†) ⊗ (I (2^(n-e'))))) st))).
+       assert(State_eval (QExp_s  s  e  ((R1 / (@norm (2^(e-s)) ((U_v  s' e' s e (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v))))%R .* 
+       (U_v  s' e' s e (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v))) 
+       (s_scale ((R1 / (@norm (2^(e-s)) ((U_v  s' e' s e (∣ j ⟩_ (e'-s') × ⟨ j ∣_ (e'-s')) v)))) ^2) (s_update x j (((I (2^(s'))) ⊗ ((Vec (2^(e'-s')) j ) × (Vec (2^(e'-s')) j )†) ⊗ (I (2^(n-e'))))) st))).
        apply rule_Meas_aux with x st. lia.  assumption. apply WF_state_dstate.
        assumption. assumption. assumption. reflexivity.
        inversion_clear H0. apply H12. 
@@ -1781,9 +1781,9 @@ s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
 ceval (QMeas x s' e') mu mu'-> 
 sat_State mu ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s'))) ->
-sat_Assert mu'  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
-                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
-                               (U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
+sat_Assert mu'  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
+                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+                               (U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
 Proof.  intros s' e' s e v x P n  (mu, IHmu). induction mu; intros; destruct mu' as(mu', IHmu').
         inversion H2; subst. simpl in H6. inversion_clear H6. 
 -- simpl in H3.  apply WF_sat_State in H3. simpl in H3. destruct H3. destruct H3. reflexivity.
@@ -1844,9 +1844,9 @@ s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
 {{ (QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s')) }}
  QMeas x s' e' 
-{{ big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
- (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
- (U_v  (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s')) }}.
+{{ big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
+ (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+ (U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s')) }}.
 Proof. unfold hoare_triple.
 intros. 
 rewrite sat_Assert_to_State in *.
