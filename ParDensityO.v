@@ -25,8 +25,6 @@ Inductive Mixed_State {n} : Matrix n n -> Prop :=
 -> Mixed_State ρ1 -> Mixed_State ρ2 ->Mixed_State (p1 .* ρ1 .+ p2 .* ρ2).  
 
 
-
-
 Lemma WF_Pure : forall {n} (ρ : Density n), Pure_State ρ -> WF_Matrix ρ.
 Proof. intros. destruct H as [φ [[WFφ IP1] Eρ]]. rewrite Eρ. auto with wf_db. Qed.
 #[export] Hint Resolve WF_Pure : wf_db.

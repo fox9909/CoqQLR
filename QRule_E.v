@@ -779,45 +779,6 @@ sat_State mu F1->
 
 
 
-Lemma WWF_dstate_not_0{n:nat}:forall (mu: list (cstate *qstate n)),
-mu<>[]->
-WWF_dstate_aux mu -> d_trace_aux mu <> 0 .
-Proof. intros. destruct mu. intuition. simpl.
-       assert(s_trace p + d_trace_aux mu>0).
-       rewrite Rplus_comm.
-       apply Rplus_le_lt_0_compat. 
-       apply WWF_dstate_gt_0_aux. inversion_clear H0.
-       assumption. 
-       apply WWF_state_gt_0.
-       inversion_clear H0. assumption.
-      lra.
-  
-Qed.
-
-Lemma WF_dstate_in01'{n:nat}:forall (mu: list (cstate *qstate n)),
-mu<>[]->
-WF_dstate_aux mu ->0< d_trace_aux mu <=1.
-Proof.  intros. destruct mu. intuition. simpl.
-rewrite Rplus_comm. split.
-apply Rplus_le_lt_0_compat. 
-apply WWF_dstate_gt_0_aux. inversion_clear H0.
-apply WWF_dstate_aux_to_WF_dstate_aux.
-assumption.  
-apply WF_state_gt_0.
-inversion_clear H0.  assumption.
-assert(d_trace_aux mu + s_trace p= d_trace_aux ((p :: mu))).
-simpl. rewrite Rplus_comm.
-reflexivity. rewrite H1.
-apply WF_dstate_in01_aux. assumption.
-Qed.
-
-Require Import ParDensityO.
-Lemma WF_state_in01{n:nat}: forall (st:state n), 
-WF_state st -> 0<s_trace st <=1.
-Proof. unfold WF_state. unfold WF_qstate. unfold s_trace. intros.
-       apply mixed_state_Cmod_1. intuition. 
-Qed.
-
 
 Local Open Scope R_scope.
 Lemma  rule2: forall n (mu:list (state n)) (sigma:cstate) (rho:qstate n) H1 H2
@@ -826,8 +787,7 @@ sat_Assert {| StateMap.this := (sigma, rho) :: mu;
               StateMap.sorted := H1
        |} (ANpro ([F0; F1 ]))-> mu<>nil ->
      sat_Assert {| StateMap.this := mu; StateMap.sorted := H2 |}
-     (ANpro ([F0; F1 ]))
-          .
+     (ANpro ([F0; F1 ])).
 Proof. intros. inversion_clear H. destruct p_n.
  simpl in *. discriminate H3. destruct p_n. 
  discriminate H3. destruct p_n.

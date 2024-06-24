@@ -620,7 +620,7 @@ Proof.
       rewrite Rinv_r. intuition.
       lra. lra. 
      
-      apply WF_state_gt_0 in H0.
+      apply WF_state_in01 in H0.
       simpl in H0. unfold not. 
       intros. unfold s_trace in *. simpl in *.
       simpl in H1.
@@ -1207,13 +1207,18 @@ Proof. induction pF. intros. inversion_clear H0.
 Qed.
 
 Lemma d_scale_trace_le{n:nat}:forall (mu mu':dstate n) r,  
+0<=r->
 WF_dstate mu ->
 d_scale r mu mu'-> 
 d_trace mu' <=r.
-Proof.  intros. inversion_clear H0. 
+Proof.  intros. inversion_clear H1. 
        unfold d_trace. unfold d_empty.
-       simpl. lra. 
-Admitted.
+       simpl. lra.  rewrite d_trace_scale_not_0.
+       apply Rle_trans with (r * 1)%R.
+       apply Rmult_le_compat_l. lra.
+       apply WF_dstate_in01. assumption.
+       rewrite Rmult_1_r. lra. lra.  
+Qed.
 
 Lemma  Forall_WWF_WF{n:nat}: forall (mu_n:list (dstate n)),
 Forall (fun x : dstate n => WF_dstate x) mu_n->
@@ -1241,7 +1246,9 @@ Proof. induction pF. intros. inversion_clear H0.
          rewrite d_trace_app.
          rewrite sum_over_list_cons_formula.
          apply Rplus_le_compat.
-          apply d_scale_trace_le with hd. inversion_clear H.
+          apply d_scale_trace_le with hd.
+          inversion_clear H1. assumption.
+           inversion_clear H.
           assumption. simpl. assumption.
          apply IHpF with td. inversion_clear H.
          assumption. assumption.
@@ -1284,6 +1291,17 @@ Proof. induction mu_n; destruct nF.
    apply IHmu_n with nF. simpl in H. intuition.
 Qed.
 
+(* Lemma big_dapp_nil1: forall {n : nat} (g : list R) (f : list (dstate n)) (mu':dstate n),
+big_dapp' g f mu'->
+StateMap.this mu'=[] -> (f =[]) \/ (g=[]).
+Proof. intros. destruct g.  right. reflexivity.
+destruct f. left. reflexivity. 
+inversion H; subst. 
+assert(StateMap.this (d_app r0 d0)<>[]).
+apply d_app_not_nil. left. inversion_clear H6.  
+  
+Qed. *)
+
        
 Lemma WF_sat_Pro{n:nat}: forall   (pF:pro_formula) (mu:dstate n), 
 sat_Assert mu pF-> StateMap.this mu <> [] /\ WF_dstate mu.
@@ -1291,6 +1309,7 @@ Proof.  intros.
       inversion_clear H.  
       inversion_clear H2. split. 
       unfold dstate_eq in H3. rewrite H3.
+      
       admit. 
       apply WF_dstate_eq with mu'. apply dstate_eq_sym.
       assumption. 
@@ -1354,11 +1373,11 @@ Require Import Classical_Prop.
   Qed.
 
 
-  Definition id_state : state 1:= ([0]%nat, I 2) .
+  (* Definition id_state : state 1:= ([0]%nat, I 2) .
   
   Lemma  WF_id_state: WF_state  id_state  .
   Proof. Admitted.
-  
+   *)
 
 Notation " c *l d" := (StateMap.Raw.map (fun x => c .* x) d)
   (at  level 80, no associativity)

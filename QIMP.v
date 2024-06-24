@@ -75,7 +75,7 @@ Inductive com : Type :=
   | CWhile (b : bexp) (c : com)
   | QInit (s e: nat) 
   | QUnit_One (s e:nat) (U: Square (2^(e-s)))
-  | QUnit_Ctrl (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1)))
+  | QUnit_Ctrl (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1)))
   | QMeas (i : nat) (s e:nat).
 
 
@@ -194,10 +194,10 @@ Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
 
 Definition QUnit_One_fun{n:nat} (s e:nat)(U: Square (2^(e-s)))  (rho:qstate n):= q_update ((I (2^(s)) ⊗ U ⊗ (I (2^(n-e))))) rho .
 
-Definition QUnit_Ctrl_fun{n:nat} (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))) (rho:qstate n) :=
+Definition QUnit_Ctrl_fun{n:nat} (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))) (rho:qstate n) :=
   q_update  ((big_sum (fun i:nat =>@Mmult (2^(n)) (2^(n)) (2^(n))
                 (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
-                 (I (2^(s1)) ⊗ (U ^ i) ⊗ (I (2^(n-e1))))) (2^(e0 -s0)))) rho.
+                 (I (2^(s1)) ⊗ (U i) ⊗ (I (2^(n-e1))))) (2^(e0 -s0)))) rho.
 
 Lemma  pow_U_unitary: forall s e (U: Square (2^(e-s))) i,
 WF_Unitary U ->
@@ -209,17 +209,184 @@ Qed.
 Ltac type_sovle':=
   try (repeat rewrite  <-Nat.pow_add_r; f_equal ; lia).
 
-Lemma QUnit_Ctrl_unitary{n:nat}: forall (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))),
-s0<=e0/\ e0<=n->s1<=e1/\ e1<=n->
-WF_Unitary U->
+  Lemma  big_sum_I: forall n,
+  big_sum
+      (fun i : nat => ∣ i ⟩_ n × ⟨ i ∣_ n)
+      (2 ^ n)= I (2^n).
+  Proof. induction n. simpl. rewrite Mplus_0_l. unfold adjoint. 
+       unfold Vec. admit.
+       simpl.    
+  Admitted.
+
+  Lemma base_innner: forall i n,
+  (i<(2^n))%nat->
+  ⟨ i ∣_ (n) × ∣ i ⟩_ (n) = I 1.
+  Proof. intros. assert(⟨ i ∣_ (n) × ∣ i ⟩_ (n)= ⟨ i ∣_ (n) × I (2^n) ×  ∣ i ⟩_ (n)).
+         rewrite Mmult_1_r. reflexivity. auto_wf. 
+         rewrite H0. 
+        rewrite inner'.  
+         unfold I. bdestruct ((i =? i)). bdestruct (i <? 2 ^ n). simpl.
+         rewrite Mscale_1_l. reflexivity.     
+         lia. lia. auto_wf. assumption.
+  Qed.
+
+Lemma base_inner_0{n:nat}:forall i j :nat,
+i<>j->
+(⟨ i ∣_ (n) × ∣ j ⟩_ (n))=C0 .* I 1.
+Proof.  induction n. simpl. intros. 
+destruct i. destruct j. intuition.
+     Admitted.
+
+
+Lemma QInit_fun_plus{n:nat}: forall s e (q q0: qstate n), 
+s<=e/\e<=n->
+QInit_fun s e q .+ QInit_fun s e q0=
+QInit_fun s e (q .+ q0) .
+Proof. unfold QInit_fun.  intros. 
+rewrite <-Msum_plus. apply big_sum_eq_bounded.
+intros. assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H1.
+rewrite Mmult_plus_distr_l. 
+rewrite Mmult_plus_distr_r. reflexivity.
+Qed.
+
+Lemma QInit_fun_scale{n:nat}: forall s e p (q : qstate n), 
+s<=e/\e<=n->
+QInit_fun s e (p .* q) =
+p .* (QInit_fun s e q) .
+Proof. unfold QInit_fun.  intros. 
+rewrite <-Mscale_Msum_distr_r. apply big_sum_eq_bounded.
+intros. assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H1.
+rewrite Mscale_mult_dist_r.
+rewrite Mscale_mult_dist_l. reflexivity.
+Qed.
+
+Lemma QUnit_One_fun_plus{n:nat}: forall s e (q q0: qstate n) (U:Square (2^(e-s))), 
+s<=e/\e<=n->
+@Mplus (2^n) (2^n) (QUnit_One_fun s e U q0) (QUnit_One_fun s e U q)=
+@QUnit_One_fun n s e U (q0 .+ q).
+Proof. unfold QUnit_One_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H0.
+rewrite Mmult_plus_distr_l. 
+rewrite Mmult_plus_distr_r. reflexivity.
+Qed.
+
+
+Lemma QUnit_One_fun_scale{n:nat}: forall s e p (q : qstate n) (U:Square (2^(e-s))), 
+s<=e/\e<=n->
+@scale (2^n) (2^n) p (QUnit_One_fun s e U q)=
+@QUnit_One_fun n s e U (p .*  q).
+Proof. unfold QUnit_One_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H0.
+rewrite Mscale_mult_dist_r. 
+rewrite Mscale_mult_dist_l. reflexivity.
+Qed.
+
+Lemma QUnit_Ctrl_fun_plus{n:nat}: forall s0 e0 s1 e1 (q q0: qstate n) (U: nat-> Square (2^(e1-s1))), 
+s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=n->
+@Mplus (2^n) (2^n) (QUnit_Ctrl_fun s0 e0 s1 e1 U q0) (QUnit_Ctrl_fun s0  e0 s1 e1 U q)=
+@QUnit_Ctrl_fun n s0 e0 s1 e1 U (q0 .+ q).
+Proof. unfold QUnit_Ctrl_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s1 * 2^(e1-s1) * 2^(n-e1))%nat.
+type_sovle'. destruct H0.
+rewrite Mmult_plus_distr_l. 
+rewrite Mmult_plus_distr_r. reflexivity.
+Qed.
+
+Lemma QUnit_Ctrl_fun_scale{n:nat}: forall s0 e0 s1 e1 p (q: qstate n) (U: nat-> Square (2^(e1-s1))), 
+s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=n->
+@scale (2^n) (2^n) p (QUnit_Ctrl_fun s0  e0 s1 e1 U q)=
+@QUnit_Ctrl_fun n s0 e0 s1 e1 U (p .* q).
+Proof. unfold QUnit_Ctrl_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s1 * 2^(e1-s1) * 2^(n-e1))%nat.
+type_sovle'. destruct H0.
+rewrite Mscale_mult_dist_r. 
+rewrite Mscale_mult_dist_l. reflexivity. 
+Qed.
+
+
+Lemma QUnit_Ctrl_unitary{n:nat}: forall (s0 e0 s1 e1:nat) (U: nat -> Square (2^(e1-s1))) ,
+s0<=e0/\ e0<=s1->s1<=e1/\ e1<=n->
+(forall i, WF_Unitary (U i))->
 WF_Unitary (big_sum (fun i:nat =>@Mmult (2^(n)) (2^(n)) (2^(n))
                 (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
-                 (I (2^(s1)) ⊗ (U ^ i) ⊗ (I (2^(n-e1))))) (2^(e0-s0))).
+                 (I (2^(s1)) ⊗ (U i) ⊗ (I (2^(n-e1))))) (2^(e0-s0))).
 Proof. intros. unfold WF_Unitary in *. split. 
         apply WF_Msum. intros. apply WF_mult. 
         auto_wf. apply WF_kron;   type_sovle'. apply WF_kron; try reflexivity; 
-        try auto_wf. apply pow_U_unitary. intuition. auto_wf.
-Admitted.  
+        try auto_wf. apply H1. auto_wf.
+        rewrite Msum_adjoint.
+         rewrite Mmult_Msum_distr_l.
+         rewrite (big_sum_eq_bounded _  
+         (fun i : nat =>
+         big_sum
+           (fun i0 : nat =>
+           (I (2 ^ s0)
+           ⊗ ((∣ i0 ⟩_ (e0 - s0)
+              × ⟨ i0 ∣_ (e0 - s0)) × (∣ i ⟩_ (e0 - s0)
+              × ⟨ i ∣_ (e0 - s0)))
+           ⊗ I (2 ^ (s1 - e0)) ⊗ (((U i0)†) × (U i))
+           ⊗ I (2 ^ (n - e1)) ) )
+           (2 ^ (e0 - s0)))
+       ). 
+         rewrite (big_sum_eq_bounded _  
+         (fun i : nat =>
+          (I (2 ^ s0)
+           ⊗ (∣ i ⟩_ (e0 - s0)
+              × ⟨ i ∣_ (e0 - s0))
+           ⊗ I (2 ^ (s1 - e0)) ⊗ I (2 ^ (e1 - s1))
+           ⊗ I (2 ^ (n - e1)) ))  
+       ). repeat rewrite <-kron_Msum_distr_r.
+       rewrite <-kron_Msum_distr_l. 
+        rewrite big_sum_I.    
+        repeat rewrite id_kron; auto_wf.
+        f_equal; type_sovle'. 
+      intros. 
+       apply big_sum_unique. exists x.
+        split.  assumption. 
+        split.  f_equal. f_equal. f_equal.
+        f_equal. rewrite Mmult_assoc. 
+        rewrite <-(Mmult_assoc (⟨ x ∣_ (e0 - s0))).
+        rewrite base_innner. rewrite Mmult_1_l; auto_wf. reflexivity.
+        assumption. apply H1.
+        intros. rewrite Mmult_assoc. 
+        rewrite <-(Mmult_assoc (⟨ x' ∣_ (e0 - s0))).
+        rewrite base_inner_0. rewrite Mscale_0_l.
+        rewrite Mmult_0_l. rewrite Mmult_0_r.
+        rewrite kron_0_r. repeat rewrite kron_0_l. reflexivity.
+        intuition.
+        intros. rewrite Mmult_Msum_distr_r.  apply big_sum_eq_bounded.
+        intros. 
+        apply Logic.eq_trans with ((I (2 ^ s0)
+        ⊗ (∣ x0 ⟩_ (e0 - s0) × ⟨ x0 ∣_ (e0 - s0))
+        ⊗ I (2^ (s1-e0)) ⊗ I (2^ (e1-s1)) ⊗ I (2 ^ (n - e1))
+        × (I (2^ s0) ⊗ I (2^ (e0-s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ U x0 ⊗ I (2 ^ (n - e1)))) †
+       × (I (2 ^ s0)
+          ⊗ (∣ x ⟩_ (e0 - s0) × ⟨ x ∣_ (e0 - s0))
+          ⊗ I (2^ (s1-e0)) ⊗ I (2^ (e1-s1)) ⊗ I (2 ^ (n - e1))
+          × (I (2^ s0) ⊗ I (2^ (e0-s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ U x ⊗ I (2 ^ (n - e1))))).
+        f_equal; type_sovle';  repeat rewrite id_kron; auto_wf; f_equal; type_sovle'.
+         f_equal; type_sovle'. repeat rewrite kron_assoc; auto_wf; f_equal; type_sovle'.
+         f_equal; type_sovle'. repeat rewrite id_kron; auto_wf. f_equal; type_sovle'.
+         repeat rewrite id_kron; auto_wf.
+         f_equal; type_sovle'; f_equal; type_sovle'. f_equal; type_sovle'.
+         repeat rewrite kron_assoc; auto_wf; f_equal; type_sovle'.
+         f_equal; type_sovle'.  repeat rewrite id_kron; auto_wf. f_equal; type_sovle'.
+         f_equal; type_sovle'; f_equal; type_sovle'. f_equal; type_sovle'.
+           rewrite Mmult_adjoint.
+        repeat rewrite kron_adjoint.  rewrite Mmult_adjoint.
+        repeat rewrite id_adjoint_eq. rewrite adjoint_involutive.
+        repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf. 
+        repeat rewrite Mmult_1_l; auto_wf. reflexivity. apply H1.
+        apply WF_adjoint. apply H1.
+Qed.  
 
 Lemma  big_sum_trace{n:nat}: forall (f: nat-> Square n) n0,
 trace (big_sum f n0)= big_sum (fun x=> (trace (f x))) n0 .
@@ -228,15 +395,13 @@ Proof. induction n0. simpl. rewrite Zero_trace. reflexivity.
   
 Qed.
 
-Lemma  big_sum_I: forall n,
-big_sum
-    (fun i : nat => ∣ i ⟩_ n × ⟨ i ∣_ n)
-    (2 ^ n)= I (2^n).
-Proof. induction n. simpl. rewrite Mplus_0_l. unfold adjoint. 
-     unfold Vec. admit.
-     simpl.    
-Admitted.
-
+Local Open Scope nat_scope.
+Lemma pow_gt_0: forall n ,
+2^ n >0 .
+Proof. induction n. simpl. lia.
+      simpl. rewrite Nat.add_0_r. 
+      lia.
+Qed.
 
 Lemma QInit_trace{n:nat}: forall (s e:nat) (rho:Square (2^n)),
 s<=e/\ e<=n-> WF_Matrix rho->
@@ -267,9 +432,9 @@ rewrite big_sum_trace.
           repeat  rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
           rewrite <-Mmult_assoc.  rewrite (Mmult_assoc _ (⟨ 0 ∣_ (e - s)) _).
           assert((⟨ 0 ∣_ (e - s) × ∣ 0 ⟩_ (e - s)) = I 1). 
-          admit. rewrite H2.  rewrite Mmult_1_r. reflexivity.
+          apply base_innner. apply pow_gt_0. rewrite H2.  rewrite Mmult_1_r. reflexivity.
           auto_wf. auto_wf. auto_wf.
-Admitted.
+Qed.
 
 
 Lemma QUnit_One_trace
@@ -287,10 +452,10 @@ assumption. apply id_unitary.
 Qed.
 
 
-Lemma QUnit_Ctrl_trace{n:nat}: forall (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))) (rho:qstate n),
-s0<=e0/\ e0<=n->s1<=e1/\ e1<=n->
+Lemma QUnit_Ctrl_trace{n:nat}: forall (s0 e0 s1 e1:nat) (U: nat-> Square (2^(e1-s1))) (rho:qstate n),
+s0<=e0/\ e0<=s1->s1<=e1/\ e1<=n->
 @WF_Matrix (2^n) (2^n) rho->
-WF_Unitary U-> @trace (2^n) (QUnit_Ctrl_fun s0 e0 s1 e1 U rho) = @trace (2^n) rho.
+(forall i, WF_Unitary (U i))-> @trace (2^n) (QUnit_Ctrl_fun s0 e0 s1 e1 U rho) = @trace (2^n) rho.
 Proof. intros. unfold QUnit_Ctrl_fun. unfold q_update. unfold super. 
 rewrite <-trace_mult_Unitary. reflexivity. apply QUnit_Ctrl_unitary. 
 assumption. assumption. assumption. assumption.
@@ -301,6 +466,32 @@ Qed.
 
 Definition  QMeas_fun{n:nat} (s e j:nat) (rho: qstate n):= 
 (q_update (((I (2^(s))) ⊗ ((Vec (2^(e-s)) j) × (Vec (2^(e-s)) j )†) ⊗ (I (2^(n-e))))) rho).
+
+Lemma QMeas_fun_plus{n:nat}: forall s e  x (q q0: qstate n) , 
+s<=e/\e<=n->
+@Mplus (2^n) (2^n) (QMeas_fun s e x q0) (QMeas_fun s e x q)=
+@QMeas_fun n s e x (q0 .+ q).
+Proof. unfold QMeas_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H0.
+rewrite Mmult_plus_distr_l. 
+rewrite Mmult_plus_distr_r. reflexivity.
+Qed.
+
+
+Lemma QMeas_fun_scale{n:nat}: forall s e  x p (q: qstate n) , 
+s<=e/\e<=n->
+@scale (2^n) (2^n) p (QMeas_fun s e x q)=
+@QMeas_fun n s e x (p .*  q).
+Proof. unfold QMeas_fun.  intros. 
+unfold q_update. unfold super.
+assert(2^n=2^s * 2^(e-s) * 2^(n-e))%nat.
+type_sovle'. destruct H0.
+rewrite Mscale_mult_dist_r. 
+rewrite Mscale_mult_dist_l. reflexivity.
+Qed.
+
 
 Lemma WWF_dstate_big_app: forall n (f:nat -> list (state n)) n_0,
 (forall i:nat, i< n_0 -> WWF_dstate_aux (f i))->
@@ -348,18 +539,148 @@ Proof. induction n0; simpl; intros. rewrite Zero_trace. rewrite Cmod_0. reflexiv
      intuition.  
 Qed.
 
-
-Local Open Scope nat_scope.
-Lemma pow_gt_0: forall n ,
-2^ n >0 .
-Proof. induction n. simpl. lia.
-      simpl. rewrite Nat.add_0_r. 
-      lia.
-Qed.
-
 Lemma WF_Mixed_aux : forall {n} (ρ : Density n), Mixed_State_aux ρ -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
 #[export] Hint Resolve WF_Mixed : wf_db.
+
+Local Open Scope nat_scope.
+Lemma Vector_State_snd_0: forall n (x: Vector (2 ^ n)),
+WF_Matrix x->
+(snd (((x) † × x) 0%nat 0%nat)= 0)%R.
+ Proof.  intros.  simpl. unfold adjoint. unfold Mmult. 
+ apply big_sum_snd_0.  intros.  rewrite  Cmult_comm.
+ apply Cmult_conj_real.  
+Qed.
+         
+Lemma matrix_0_0_rev:forall (x: Vector 1), 
+WF_Matrix x->
+(x  0 0) .* I 1= x.
+Proof. intros.   assert(WF_Matrix (x 0 0 .* I 1)).
+apply WF_scale. apply WF_I.   prep_matrix_equality. bdestruct (x0=?0).
+bdestruct (y=?0). rewrite H2. rewrite H1. unfold scale.
+unfold I.  simpl. rewrite Cmult_1_r. reflexivity.
+rewrite H1. unfold WF_Matrix in *.   
+  rewrite (H _ y).   rewrite (H0 _ y). reflexivity.
+  right. lia. right. lia.  unfold WF_Matrix in *.    
+  rewrite (H _ y).   rewrite (H0 _ y). reflexivity.
+  left. lia. left. lia.
+  
+  
+  Qed.         
+
+
+Lemma inner_eq: forall n (x: Vector (2 ^ n)),
+WF_Matrix x->
+((x) † × x) = ((norm x) * (norm x))%R .* I 1
+ .
+Proof. intros. unfold norm. rewrite sqrt_sqrt. unfold inner_product.
+     rewrite <-(matrix_0_0_rev ((x) † × x)) at 1.
+      unfold RtoC.  f_equal. 
+      destruct (((x) † × x) 0 0)  eqn:E. 
+      simpl.  f_equal. assert(r0= snd (((x) † × x) 0 0)).
+      rewrite E. simpl. reflexivity. rewrite H0.
+     apply Vector_State_snd_0. assumption.
+     apply WF_mult.
+     apply WF_adjoint. assumption. assumption.   
+      apply inner_product_ge_0.
+       
+  
+Qed.
+
+Require Import ParDensityO.
+
+Local Open Scope R_scope.
+Lemma Vector_Mix_State{n:nat} : forall (x: Vector (2^n)),
+WF_Matrix x-> x <> Zero->
+Mixed_State_aux (x × (x) †).
+Proof. intros. assert(x= ( (norm x))%R .* ( (R1 / ( (norm x)))%R .* x )).
+          rewrite Mscale_assoc. rewrite Rdiv_unfold.
+          rewrite Rmult_1_l. rewrite Cmult_comm. 
+          rewrite RtoC_mult. 
+          rewrite Rinv_l.
+          rewrite Mscale_1_l. reflexivity.
+          unfold not. intros.
+          apply norm_zero_iff_zero in H1. rewrite H1 in H0.
+          destruct H0. reflexivity. assumption.
+          rewrite H1. rewrite Mscale_mult_dist_l.
+          rewrite Mscale_adj.   rewrite Mscale_mult_dist_r.
+          remember ( (norm x)). rewrite Mscale_assoc.
+          rewrite Cconj_R. 
+          rewrite RtoC_mult. 
+          apply Pure_S_aux. 
+          assert(0<=r). rewrite Heqr.
+          apply norm_ge_0 . assert(0<r).   destruct H2.  
+          assumption. rewrite Heqr in H2. 
+          symmetry in H2.
+          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
+          destruct H0. reflexivity.  
+          assumption. apply Rmult_gt_0_compat.
+          assumption. assumption.    
+          unfold Pure_State. exists (((R1 / r)%R .* x)).
+          split. unfold Pure_State_Vector. split. apply WF_scale.
+          assumption.
+           rewrite Mscale_adj. rewrite Mscale_mult_dist_r.
+          rewrite Cconj_R. rewrite Mscale_mult_dist_l.
+          rewrite inner_eq. 
+          rewrite Heqr.  
+          rewrite Rdiv_unfold. rewrite Rmult_1_l.
+          repeat rewrite Mscale_assoc. 
+          repeat rewrite RtoC_mult. 
+          rewrite <-Rmult_assoc . 
+          rewrite (Rmult_assoc  _ (/ norm x) _).
+          assert((norm x<> 0)%R). 
+          unfold not. intros.
+          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
+          destruct H0. reflexivity. assumption.  
+          rewrite Rinv_l. rewrite Rmult_1_r. 
+          rewrite  Rinv_l. rewrite Mscale_1_l. reflexivity.
+          assumption. assumption. assumption. reflexivity.
+Qed.
+          
+
+
+Local Open Scope nat_scope.
+Lemma WF_dstate_init: forall s e i j n (rho:qstate n),
+s<=e/\ e<=n-> i < 2 ^ (e - s)-> j < 2 ^ (e - s)->
+WWF_qstate rho->
+@WWF_qstate n ((I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
+       ⊗ I (2 ^ (n - e))) × rho
+       × (I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
+          ⊗ I (2 ^ (n - e))) †).
+Proof. intros. unfold WWF_qstate in *.
+       assert( (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat= (Nat.pow (S (S O)) n) ) .
+       type_sovle'. destruct H3.
+
+       induction H2.
+       remember ((I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
+        ⊗ I (2 ^ (n - e)))). 
+       rewrite (Mscale_mult_dist_r _ _ _ p m ρ). 
+       rewrite Mscale_mult_dist_l. 
+        destruct H3. destruct H3.
+        rewrite H4.  destruct H3.   
+       
+       apply Mixed_State_scale_aux. 
+       repeat rewrite Mmult_assoc. 
+        rewrite <-(Mmult_adjoint m x). 
+        repeat rewrite<- Mmult_assoc.
+        remember (m × x).
+
+        assert( (Nat.pow (S (S O)) n)%nat= (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat ) .
+        type_sovle'. destruct H6.
+        apply Vector_Mix_State.   rewrite Heqm0.
+         apply WF_mult. rewrite Heqm. auto_wf. auto_wf.
+         rewrite Heqm0.  rewrite Heqm.  
+        admit.  assumption.
+       remember (I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e))).
+       rewrite Mmult_plus_distr_l.  rewrite Mmult_plus_distr_r.
+       apply Mix_S_aux; intuition.
+Admitted.
+
+
+Lemma  Mixed_State_aux_eq{n:nat}: forall (q1 q2: Square (2^n)),
+q1 = q2 -> Mixed_State_aux q1 -> Mixed_State_aux q2 .
+Proof. intros. rewrite <-H. assumption.
+Qed.
 
 Local Open Scope nat_scope.
 Lemma  QMeas_trace{n:nat}:  forall (s e i j:nat) sigma (rho: qstate n),
@@ -400,14 +721,27 @@ assumption.
     repeat  rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
     rewrite <-Mmult_assoc.  rewrite (Mmult_assoc _ (⟨ x ∣_ (e - s)) _).
     assert((⟨ x ∣_ (e - s) × ∣ x ⟩_ (e - s)) = I 1). 
-    admit. rewrite H2.  rewrite Mmult_1_r. reflexivity.
+    apply base_innner. assumption. rewrite H2.  rewrite Mmult_1_r. reflexivity.
     auto_wf. auto_wf. auto_wf. assert(2 ^ (e - s) > 0). apply pow_gt_0.
-    lia.  intros. admit.
+    lia.  intros. 
+    assert(2^n=2 ^ s * 2 ^ (e - s) * 2 ^ (n - e)). type_sovle'. destruct H2.
+    apply Mixed_State_aux_eq with ((I (2 ^ s)
+    ⊗ (∣ i0 ⟩_ (e - s) × ⟨ i0 ∣_ (e - s)) ⊗ I (2 ^ (n - e)) × rho
+    × (I (2 ^ s)
+       ⊗ (∣ i0 ⟩_ (e - s) × ⟨ i0 ∣_ (e - s))
+       ⊗ I (2 ^ (n - e))) †)). f_equal; type_sovle'.  f_equal; type_sovle'. 
+       apply WF_dstate_init; try lia. assumption. 
     intros.  rewrite Rplus_0_r. f_equal. f_equal;
     type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'. 
     intros. econstructor.  unfold WWF_state. simpl.
-    admit. apply WF_nil'.
-Admitted.
+    assert(2^n=2 ^ s * 2 ^ (e - s) * 2 ^ (n - e)). type_sovle'. destruct H2.
+    apply Mixed_State_aux_eq with ((I (2 ^ s)
+    ⊗ (∣ i0 ⟩_ (e - s) × ⟨ i0 ∣_ (e - s)) ⊗ I (2 ^ (n - e)) × rho
+    × (I (2 ^ s)
+       ⊗ (∣ i0 ⟩_ (e - s) × ⟨ i0 ∣_ (e - s))
+       ⊗ I (2 ^ (n - e))) †)). f_equal; type_sovle'.  f_equal; type_sovle'. 
+       apply WF_dstate_init; try lia. assumption. apply WF_nil'.
+Qed.
 
 
 
@@ -431,9 +765,9 @@ Admitted.
                  -> ceval_single (QUnit_One s e U) mu mu'
                 -> ceval_single (QUnit_One s e U) ((sigma,rho)::mu) 
                 (StateMap.Raw.map2 option_app [(sigma, QUnit_One_fun s e U rho)] mu')
-  |E_QUnit_Ctrl sigma rho mu: forall mu' (s0 e0 s1 e1:nat) (U: Square (2^(e1-s1))), 
+  |E_QUnit_Ctrl sigma rho mu: forall mu' (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))), 
                     (s0<=e0)/\ (e0<=s1) /\ (s1<=e1) /\ (e1<=n)
-                   ->(WF_Unitary U)
+                   ->(forall i,WF_Unitary (U i))
                    -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'
                    -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) ((sigma,rho)::mu) 
                 (StateMap.Raw.map2 option_app [(sigma, (QUnit_Ctrl_fun s0 e0 s1 e1 U rho))] mu')
@@ -847,8 +1181,124 @@ rewrite H4. rewrite Heql0.
           rewrite map_assoc. rewrite map2_comm. rewrite H4.  reflexivity.
 Qed.
 
+Lemma  map_nil:forall (n : nat) (p: R) (x : list (cstate * qstate n)),
+([] = StateMap.Raw.map (fun i: Square (2 ^ n) => @scale (2^n) (2^n) p i) x)
+-> x = [].
+Proof. destruct x. simpl. intuition. destruct p0. simpl.
+intros. discriminate H. 
+Qed.
+
+
+Lemma ceval_scale_while{n:nat}: 
+       forall b c,
+      (forall  (p:R) (x  mu : list (cstate * qstate n)),
+      ceval_single c (StateMap.Raw.map (fun i => p .* i) x) mu ->
+      exists mu1 : list (cstate * qstate n),
+        ceval_single c x mu1  /\ mu = (StateMap.Raw.map (fun i => p .* i)mu1))->
+
+       (forall (mu mu' : list (cstate *qstate n)),
+      ceval_single <{ while b do c end }> mu mu' ->
+      (forall (p:R) x,  mu=(StateMap.Raw.map (fun i => p .* i) x )->
+      exists mu1, (ceval_single <{ while b do c end }> x mu1
+      /\mu'=StateMap.Raw.map (fun i => p .* i) mu1))).
+      Proof.  intros b c Hc mu mu' H.
+
+      remember <{while b do c end}> as original_command eqn:Horig. 
+      induction H;  try inversion Horig; subst.
+       intros.   apply map_nil in H0. rewrite H0.
+       exists []. split.   try apply E_nil. intuition. 
+
+       destruct x; intros. discriminate H3.
+       destruct p0. simpl in H3.  
+       inversion H3. 
+       assert( exists mu1 : list (cstate * qstate n),
+       ceval_single <{ while b do c end }> x mu1 /\
+       mu''= StateMap.Raw.map
+       (fun i : Square (2 ^ n) => p .* i) mu1).
+       apply IHceval_single1. reflexivity. assumption.
+       destruct H4.  
+       assert(exists mu2 : list (cstate * qstate n),
+       ceval_single c [(c0,m)] mu2 /\ mu1 = StateMap.Raw.map
+       (fun i : Square (2 ^ n) => p .* i) mu2 ).
+       apply (Hc p [(c0, m)] mu1). simpl. 
+       rewrite <-H5. rewrite <-H6. assumption.
+       destruct H8.   
+       assert(exists mu1 : list (cstate * qstate n),
+       ceval_single <{ while b do c end }> x1
+         mu1 /\ mu' =
+       StateMap.Raw.map
+         (fun i : Square (2 ^ n) => p .* i)
+         mu1). apply IHceval_single3. reflexivity.
+         intuition. destruct H9.
+       exists (x2 +l x0) .  split.
+       apply E_While_true with x1. 
+       rewrite <-H5. rewrite (state_eq_bexp _ (sigma, rho)).
+       assumption. reflexivity. intuition. intuition. intuition.
+       rewrite <-d_scalar_app_distr_aux.
+       f_equal. intuition. intuition.
+
+       destruct x; intros. discriminate H1.
+       destruct p0. simpl in H1.  
+       inversion H1. 
+       assert( exists mu1 : list (cstate * qstate n),
+       ceval_single <{ while b do c end }> x mu1 /\
+       mu'= StateMap.Raw.map
+       (fun i : Square (2 ^ n) => p .* i) mu1).
+       apply IHceval_single. reflexivity. assumption.
+       destruct H2.  
+       exists (([(c0 , m)]) +l x0) .  split.
+       pose (@E_While_false n). unfold qstate in c1.
+       apply c1. rewrite <-H3. rewrite (state_eq_bexp _ (sigma, rho)).
+       assumption. reflexivity. intuition. 
+       rewrite <-d_scalar_app_distr_aux.
+       f_equal. intuition.
+
+
+
+Qed.
+
+
+
+Fixpoint dstate_fst_eq{n:nat} (mu1 mu2:list(cstate * qstate n)) :=
+  match mu1, mu2 with
+  |[], [] => True
+  |(c0,q0)::mu1', (c1,q1)::mu2' => c0= c1 /\ dstate_fst_eq mu1' mu2'
+  |_, _ =>False
+  end.
+
+
+Lemma big_app_plus{n:nat}: forall n0 (f g: nat -> list(cstate * qstate n)), 
+(big_app f n0) +l (big_app g n0) =
+big_app (fun j:nat => (f j) +l (g j)) n0.
+Proof. induction n0; intros. simpl. reflexivity.
+     simpl.  
+     repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ (f n0)).
+     rewrite (map2_comm (f n0) ).
+      rewrite map_assoc. 
+      rewrite <-(map_assoc _ ((big_app f n0 +l big_app g n0))).
+      f_equal. apply IHn0.
+Qed.
+
+Lemma big_app_scale{n:nat}: forall n0 (p:R) (f: nat -> list(cstate * qstate n)), 
+StateMap.Raw.map (fun x0 : qstate n =>@scale (2^n) (2^n) p  x0) (big_app f n0)=
+big_app (fun j:nat => StateMap.Raw.map (fun x0 : qstate n => @scale (2^n) (2^n)  p  x0) (f j)) n0.
+Proof. induction n0; intros. simpl. reflexivity.
+     simpl . unfold qstate.
+     apply Logic.eq_trans with  (StateMap.Raw.map (fun x0 : Square (2 ^ n) => p .* x0)
+    ((big_app f n0) +l f n0)). f_equal. 
+      rewrite <-(d_scalar_app_distr_aux).
+      f_equal.  apply IHn0.
+Qed.
+
 Require Import Coq.Logic.Eqdep_dec.
 Require Import Coq.Arith.Peano_dec.
+Require Import
+  Coq.FSets.FMapList
+  Coq.Structures.OrderedTypeEx.
+Require Import OrderedType.
+Module Import MC := OrderedTypeFacts(Cstate_as_OT).
+
+
 
   Lemma ceval_app_aux{n:nat}:  forall c  ( x y mu: list (cstate *qstate n)),
   ceval_single c (StateMap.Raw.map2 option_app x y) mu ->
@@ -906,9 +1356,16 @@ Require Import Coq.Arith.Peano_dec.
         apply E_Asgn. intuition. 
         split. rewrite Heqt0. apply E_Asgn. intuition.
         rewrite H2. rewrite Heqt. rewrite Heqt0.
-        admit.
-        
-        
+        repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ x0).
+        rewrite (map2_comm x0 ([(c_update i (aeval (c0, q0) a) c0, q0)])).
+         rewrite <-map_assoc. rewrite <-map_assoc.
+         rewrite (map_assoc _ _ _ ((x0 +l x1))).
+         f_equal. simpl. unfold Cstate_as_OT.eq in e.
+         rewrite e. rewrite (state_eq_aexp (c0, q) (c0, q0) a ).
+         MC.elim_comp.  
+         rewrite (state_eq_aexp  (c0, q0) (c0, q.+ q0) a ).
+         f_equal. reflexivity. reflexivity. reflexivity.
+
          inversion H;subst.
         apply IHy in H6. 
         destruct H6. destruct H0.
@@ -1078,8 +1535,13 @@ apply E_Qinit. intuition. intuition.
 split. rewrite Heqt0. apply E_Qinit. intuition.
 intuition.
 rewrite H2. rewrite Heqt. rewrite Heqt0.
-admit.
-
+repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ x0).
+rewrite (map2_comm x0 ([(c, QInit_fun s e q)])).
+ rewrite <-map_assoc. rewrite <-map_assoc.
+ rewrite (map_assoc _ _ _ ((x0 +l x1))).
+ f_equal. simpl. unfold Cstate_as_OT.eq in e0.
+ rewrite e0.  MC.elim_comp.
+ rewrite <-QInit_fun_plus. reflexivity. lia.  
 
  inversion H;subst.
 apply IHy in H7. 
@@ -1143,7 +1605,14 @@ apply E_Qunit_One. intuition. intuition. intuition.
 split. rewrite Heqt0. apply E_Qunit_One. intuition. intuition.
 intuition. 
 rewrite H2. rewrite Heqt. rewrite Heqt0.
-admit. apply Nat.eq_dec. apply Nat.eq_dec.
+repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ x0).
+rewrite (map2_comm x0 ([(c, QUnit_One_fun s e U1 q)])).
+ rewrite <-map_assoc. rewrite <-map_assoc.
+ rewrite (map_assoc _ _ _ ((x0 +l x1))).
+ f_equal. simpl. unfold Cstate_as_OT.eq in e0.
+ rewrite e0.  MC.elim_comp.
+ rewrite QUnit_One_fun_plus. reflexivity. lia.  
+ apply Nat.eq_dec. apply Nat.eq_dec.
 
  inversion H;subst. apply inj_pair2_eq_dec in H2. 
  apply inj_pair2_eq_dec in H2. destruct H2.
@@ -1159,7 +1628,78 @@ rewrite H2. rewrite (map2_comm ([(c, QUnit_One_fun s e U1 (q))]) x1).
 rewrite (map_assoc _ x0). apply map2_comm. 
 apply Nat.eq_dec. apply Nat.eq_dec.
 
-admit.
+induction x; induction y; intros.
+ exists nil. exists nil.
+ split. apply E_nil. split. apply E_nil.
+ simpl. simpl in H. inversion_clear H. reflexivity. 
+ destruct a. simpl in H. rewrite map2_r_refl in H.
+ inversion H;subst. apply inj_pair2_eq_dec in H5. 
+ apply inj_pair2_eq_dec in H5. destruct H5.
+ exists nil. exists ((StateMap.Raw.map2 option_app
+ [(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)] mu')).
+ split. apply E_nil. split. intuition.
+ rewrite map2_nil_l.  reflexivity.
+ apply Nat.eq_dec. apply Nat.eq_dec.
+ destruct a. simpl in H. rewrite map2_l_refl in H.
+ inversion H;subst.  apply inj_pair2_eq_dec in H5. 
+ apply inj_pair2_eq_dec in H5. destruct H5.
+ exists ((StateMap.Raw.map2 option_app
+ [(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)] mu')).
+ exists nil. 
+ split.  intuition. split.  apply E_nil.
+ rewrite map2_nil_r.  reflexivity.
+ apply Nat.eq_dec. apply Nat.eq_dec.
+ destruct a0. destruct a. simpl in H.
+ destruct (Cstate_as_OT.compare c0 c).
+ inversion H;subst. 
+ apply inj_pair2_eq_dec in H5. 
+ apply inj_pair2_eq_dec in H5. destruct H5.
+apply IHx in H11. destruct H11. destruct H0.
+destruct H0. destruct H1. 
+remember (StateMap.Raw.map2 option_app
+[(c0, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q0)] x0).
+exists t. exists x1.
+split. rewrite Heqt. apply E_QUnit_Ctrl.
+intuition. intuition.  intuition. split. intuition. 
+rewrite H2. rewrite Heqt. apply map_assoc.
+apply Nat.eq_dec. apply Nat.eq_dec.
+inversion H;subst. 
+apply inj_pair2_eq_dec in H5. 
+apply inj_pair2_eq_dec in H5. destruct H5.
+apply IHx in H11. destruct H11. destruct H0.
+destruct H0. destruct H1.
+remember (StateMap.Raw.map2 option_app
+[(c0, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q0)] x0).
+remember (StateMap.Raw.map2 option_app
+[(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)] x1).
+exists t. exists t0.
+split. rewrite Heqt. 
+apply E_QUnit_Ctrl. intuition. intuition. intuition. 
+split. rewrite Heqt0. apply E_QUnit_Ctrl. intuition. intuition.
+intuition. 
+rewrite H2. rewrite Heqt. rewrite Heqt0.
+repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ x0).
+rewrite (map2_comm x0 ([(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)])).
+ rewrite <-map_assoc. rewrite <-map_assoc.
+ rewrite (map_assoc _ _ _ ((x0 +l x1))).
+ f_equal. simpl. unfold Cstate_as_OT.eq in e.
+ rewrite e.  MC.elim_comp.
+ rewrite QUnit_Ctrl_fun_plus. reflexivity. lia.  
+ apply Nat.eq_dec. apply Nat.eq_dec.
+
+ inversion H;subst. apply inj_pair2_eq_dec in H5. 
+ apply inj_pair2_eq_dec in H5. destruct H5.
+apply IHy in H11. 
+destruct H11. destruct H0.
+destruct H0. destruct H1.
+exists x0. 
+remember (StateMap.Raw.map2 option_app [(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)] x1).
+exists t. 
+rewrite Heqt. split. intuition.
+split. apply E_QUnit_Ctrl. intuition. intuition. intuition.
+rewrite H2. rewrite (map2_comm ([(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)]) x1).
+rewrite (map_assoc _ x0). apply map2_comm. 
+apply Nat.eq_dec. apply Nat.eq_dec.
 
 
 induction x; induction y; intros.
@@ -1209,7 +1749,17 @@ apply E_Meas. intuition. intuition.
 split. rewrite Heqt0. apply E_Meas. intuition.
 intuition.
 rewrite H2. rewrite Heqt. rewrite Heqt0.
-admit.
+repeat rewrite map_assoc. repeat rewrite <-(map_assoc _ _ x0).
+rewrite (map2_comm x0 (big_app
+(fun j : nat => [(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s)))).
+ rewrite <-map_assoc. rewrite <-map_assoc.
+ rewrite (map_assoc _ _ _ ((x0 +l x1))).
+ f_equal. rewrite big_app_plus. f_equal.
+ apply functional_extensionality. intros.
+ unfold Cstate_as_OT.eq in e0. rewrite e0.
+ simpl. MC.elim_comp.
+ rewrite <-QMeas_fun_plus. reflexivity. lia.  
 
 
  inversion H;subst.
@@ -1228,8 +1778,7 @@ rewrite H2. rewrite (map2_comm (big_app
  [(c_update i j c, QMeas_fun s e j q)])
 (2 ^ (e - s)))  x1).
 rewrite (map_assoc _ x0). apply map2_comm.
-
- Admitted.
+Qed.
 
  
  Lemma ceval_dscale_aux{n:nat}:  forall c  (y mu: list (cstate *qstate n)) (p:R),
@@ -1340,7 +1889,12 @@ rewrite (state_eq_bexp _ (c, p .* q)). intuition.
 reflexivity. assumption. assumption.
 rewrite H1. rewrite H3.   apply d_scalar_app_distr_aux.
 
--admit.
+- 
+
+intros. apply ceval_scale_while with ((StateMap.Raw.map
+(fun x : qstate n => p .* x) y)). intros.
+apply IHc. assumption. assumption. reflexivity.
+
 -induction y; intros. exists []. split. apply E_nil.
 inversion_clear H. reflexivity. destruct a. inversion H; subst.
  assert(exists y' : list (cstate * qstate n),
@@ -1353,7 +1907,8 @@ exists  ([(c, QInit_fun s e  q)] +l x).
 split.  apply E_Qinit. intuition. intuition.
 rewrite H1.  
 assert ([(c, @QInit_fun n s e (p .* q))]=  StateMap.Raw.map (fun x0 : qstate n => p .* x0) [(c, QInit_fun s e q)]).
-admit. rewrite H2. apply d_scalar_app_distr_aux.
+simpl. rewrite QInit_fun_scale. reflexivity. lia.
+ rewrite H2. apply d_scalar_app_distr_aux.
 
 induction y; intros. exists []. split. apply E_nil.
 inversion_clear H. reflexivity. destruct a. inversion H; subst.
@@ -1372,7 +1927,8 @@ rewrite H1.
 assert ([(c, @QUnit_One_fun n s e U1 (p .* q))]=  
 StateMap.Raw.map (fun x0 : qstate n => p .* x0) 
 [(c, QUnit_One_fun s e U1 ( q))]).
-admit. rewrite H2. apply d_scalar_app_distr_aux.
+simpl. rewrite QUnit_One_fun_scale. reflexivity. lia.
+ rewrite H2. apply d_scalar_app_distr_aux.
 apply Nat.eq_dec. apply Nat.eq_dec.
 
 -induction y; intros. exists []. split. apply E_nil.
@@ -1385,7 +1941,16 @@ destruct H5.
  StateMap.Raw.map (fun x : qstate n => p .* x)
    y'). apply IHy. assumption.
  destruct H0. destruct H0.
-admit. apply Nat.eq_dec. apply Nat.eq_dec.
+ exists  ([(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 (q))] +l x).
+ split.  apply E_QUnit_Ctrl. intuition.
+assumption. assumption. 
+rewrite H1. 
+assert ([(c, @QUnit_Ctrl_fun n s0 e0 s1 e1 U1 (p .* q))]=  
+StateMap.Raw.map (fun x0 : qstate n => p .* x0) 
+[(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)]).
+simpl. rewrite QUnit_Ctrl_fun_scale . reflexivity.
+lia. rewrite H2. apply  d_scalar_app_distr_aux.
+  apply Nat.eq_dec. apply Nat.eq_dec.
 
 
 -induction y; intros. exists []. split. apply E_nil.
@@ -1402,7 +1967,20 @@ exists  ((big_app
    QMeas_fun s e j  q)])
 (2 ^ (e - s)) +l x)).
 split.  apply E_Meas. intuition. intuition.
-rewrite H1. admit.  
+rewrite H1. 
+assert ((@big_app n
+(fun j : nat =>
+ [(c_update i j c, QMeas_fun s e j (p .* q))])
+(2 ^ (e - s)))=  
+StateMap.Raw.map (fun x0 : qstate n => p .* x0) 
+(big_app
+   (fun j : nat =>
+    [(c_update i j c, QMeas_fun s e j q)])
+   (2 ^ (e - s)))).  rewrite big_app_scale.
+   f_equal. apply functional_extensionality.
+   intros. rewrite <-QMeas_fun_scale. 
+   simpl. reflexivity. lia.
+ rewrite H2. apply  d_scalar_app_distr_aux.
 Admitted.
  
 
@@ -1560,138 +2138,11 @@ Lemma qubit01_I: ∣0⟩⟨0∣ .+ ∣1⟩⟨1∣ = I 2.
 Proof. Admitted. *)
 
 
-Lemma Vector_State_snd_0: forall n (x: Vector (2 ^ n)),
-WF_Matrix x->
-snd (((x) † × x) 0 0)= 0%R.
- Proof.  intros.  simpl. unfold adjoint. unfold Mmult. 
- apply big_sum_snd_0.  intros.  rewrite  Cmult_comm.
- apply Cmult_conj_real.  
-Qed.
-         
-Lemma matrix_0_0_rev:forall (x: Vector 1), 
-WF_Matrix x->
-(x  0 0) .* I 1= x.
-Proof. intros.   assert(WF_Matrix (x 0 0 .* I 1)).
-apply WF_scale. apply WF_I.   prep_matrix_equality. bdestruct (x0=?0).
-bdestruct (y=?0). rewrite H2. rewrite H1. unfold scale.
-unfold I.  simpl. rewrite Cmult_1_r. reflexivity.
-rewrite H1. unfold WF_Matrix in *.   
-  rewrite (H _ y).   rewrite (H0 _ y). reflexivity.
-  right. lia. right. lia.  unfold WF_Matrix in *.    
-  rewrite (H _ y).   rewrite (H0 _ y). reflexivity.
-  left. lia. left. lia.
-  
-  
-  Qed.         
 
 
-Lemma inner_eq: forall n (x: Vector (2 ^ n)),
-WF_Matrix x->
-((x) † × x) = ((norm x) * (norm x))%R .* I 1
- .
-Proof. intros. unfold norm. rewrite sqrt_sqrt. unfold inner_product.
-     rewrite <-(matrix_0_0_rev ((x) † × x)) at 1.
-      unfold RtoC.  f_equal. 
-      destruct (((x) † × x) 0 0)  eqn:E. 
-      simpl.  f_equal. assert(r0= snd (((x) † × x) 0 0)).
-      rewrite E. simpl. reflexivity. rewrite H0.
-     apply Vector_State_snd_0. assumption.
-     apply WF_mult.
-     apply WF_adjoint. assumption. assumption.   
-      apply inner_product_ge_0.
-       
-  
-Qed.
-
-Require Import ParDensityO.
-
-Local Open Scope R_scope.
-Lemma Vector_Mix_State{n:nat} : forall (x: Vector (2^n)),
-WF_Matrix x-> x <> Zero->
-Mixed_State_aux (x × (x) †).
-Proof. intros. assert(x= ( (norm x))%R .* ( (R1 / ( (norm x)))%R .* x )).
-          rewrite Mscale_assoc. rewrite Rdiv_unfold.
-          rewrite Rmult_1_l. rewrite Cmult_comm. 
-          rewrite RtoC_mult. 
-          rewrite Rinv_l.
-          rewrite Mscale_1_l. reflexivity.
-          unfold not. intros.
-          apply norm_zero_iff_zero in H1. rewrite H1 in H0.
-          destruct H0. reflexivity. assumption.
-          rewrite H1. rewrite Mscale_mult_dist_l.
-          rewrite Mscale_adj.   rewrite Mscale_mult_dist_r.
-          remember ( (norm x)). rewrite Mscale_assoc.
-          rewrite Cconj_R. 
-          rewrite RtoC_mult. 
-          apply Pure_S_aux. 
-          assert(0<=r). rewrite Heqr.
-          apply norm_ge_0 . assert(0<r).   destruct H2.  
-          assumption. rewrite Heqr in H2. 
-          symmetry in H2.
-          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
-          destruct H0. reflexivity.  
-          assumption. apply Rmult_gt_0_compat.
-          assumption. assumption.    
-          unfold Pure_State. exists (((R1 / r)%R .* x)).
-          split. unfold Pure_State_Vector. split. apply WF_scale.
-          assumption.
-           rewrite Mscale_adj. rewrite Mscale_mult_dist_r.
-          rewrite Cconj_R. rewrite Mscale_mult_dist_l.
-          rewrite inner_eq. 
-          rewrite Heqr.  
-          rewrite Rdiv_unfold. rewrite Rmult_1_l.
-          repeat rewrite Mscale_assoc. 
-          repeat rewrite RtoC_mult. 
-          rewrite <-Rmult_assoc . 
-          rewrite (Rmult_assoc  _ (/ norm x) _).
-          assert((norm x<> 0)%R). 
-          unfold not. intros.
-          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
-          destruct H0. reflexivity. assumption.  
-          rewrite Rinv_l. rewrite Rmult_1_r. 
-          rewrite  Rinv_l. rewrite Mscale_1_l. reflexivity.
-          assumption. assumption. assumption. reflexivity.
-Qed.
-          
 
 
-Local Open Scope nat_scope.
-Lemma WF_dstate_init: forall s e i j n (rho:qstate n),
-s<=e/\ e<=n-> i < 2 ^ (e - s)-> j < 2 ^ (e - s)->
-WWF_qstate rho->
-@WWF_qstate n ((I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
-       ⊗ I (2 ^ (n - e))) × rho
-       × (I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
-          ⊗ I (2 ^ (n - e))) †).
-Proof. intros. unfold WWF_qstate in *.
-       assert( (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat= (Nat.pow (S (S O)) n) ) .
-       type_sovle'. destruct H3.
 
-       induction H2.
-       remember ((I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s))
-        ⊗ I (2 ^ (n - e)))). 
-       rewrite (Mscale_mult_dist_r _ _ _ p m ρ). 
-       rewrite Mscale_mult_dist_l. 
-        destruct H3. destruct H3.
-        rewrite H4.  destruct H3.   
-
-       
-       apply Mixed_State_scale_aux. 
-       repeat rewrite Mmult_assoc. 
-        rewrite <-(Mmult_adjoint m x). 
-        repeat rewrite<- Mmult_assoc.
-        remember (m × x).
-
-        assert( (Nat.pow (S (S O)) n)%nat= (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat ) .
-        type_sovle'. destruct H6.
-        apply Vector_Mix_State.   rewrite Heqm0.
-         apply WF_mult. rewrite Heqm. auto_wf. auto_wf.
-         rewrite Heqm0.  rewrite Heqm.  
-        admit.  assumption.
-       remember (I (2 ^ s) ⊗ (∣ i ⟩_ (e - s) × ⟨ j ∣_ (e - s)) ⊗ I (2 ^ (n - e))).
-       rewrite Mmult_plus_distr_l.  rewrite Mmult_plus_distr_r.
-       apply Mix_S_aux; intuition.
-Admitted.
 
 Lemma WF_qstate_big_sum: forall n (f:nat -> Square (2^n)) n_0,
 n_0>0->
@@ -1875,7 +2326,7 @@ Proof.
 Qed.
 
 
-Lemma ceval_trace_QUnit_ctrl: forall n (mu mu':list (cstate * qstate n)) s0 e0  s1 e1 (U: Square (2 ^ (e1 - s1))),
+Lemma ceval_trace_QUnit_ctrl: forall n (mu mu':list (cstate * qstate n)) s0 e0  s1 e1 (U: nat-> Square (2 ^ (e1 - s1))),
 WWF_dstate_aux mu->
 ceval_single <{ QUnit_Ctrl s0 e0 s1 e1 U }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 

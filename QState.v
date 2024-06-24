@@ -202,6 +202,17 @@ Proof.  unfold WF_qstate. intros. unfold q_update.
          apply mixed_unitary. intuition. intuition.
 Qed.
 
+Lemma WF_qstate_gt_0{n:nat}: forall (q:qstate n), 
+WF_qstate q -> fst (@trace (2^n) q) > 0.
+Proof.  unfold WF_qstate.  intros. apply mixed_state_trace_gt0.   intuition.  
+Qed.
+
+Lemma WF_qstate_not_0{n:nat}: forall (q:qstate n), 
+WF_qstate q -> fst (@trace (2^n) q) <> 0.
+Proof.  unfold WF_qstate.  intros. assert(fst (@trace (2^n) q) > 0).
+apply mixed_state_trace_gt0.   intuition. lra. 
+Qed.
+
 
 
 (*----------------------C-Q state------------------------------------------*)
@@ -276,12 +287,17 @@ Proof.
         intuition. 
 Qed. 
 
-Lemma WF_state_gt_0{n:nat}: forall (st:state n), 
-WF_state st -> s_trace st > 0.
+Lemma WF_state_in01{n:nat}: forall (st:state n), 
+WF_state st -> 0<s_trace st <=1.
 Proof. unfold WF_state. unfold WF_qstate. unfold s_trace. intros.
        apply mixed_state_Cmod_1. intuition. 
 Qed.
 
+Lemma WF_state_not_0{n:nat}: forall (st:state n), 
+WF_state st -> s_trace st<>0.
+Proof. intros. assert(0<s_trace st). apply WF_state_in01. intuition.
+      lra.
+Qed.
 
 Lemma  WF_state_not_Zero{n:nat}: forall (st:state n),  
 WF_state st -> snd st <> Zero .
@@ -326,6 +342,7 @@ Qed.
 
 
 (*------------------------Distribution state------------------------------*)
+
 
 Module Import StateMap:= FMapList.Make(Cstate_as_OT).
 
@@ -496,11 +513,29 @@ Proof.  intros. split; intros. induction mu. apply WF_nil.
          apply IHmu. assumption. assumption.  
 Qed.
 
+
+Lemma WWF_dstate_not_0{n:nat}:forall (mu: list (cstate *qstate n)),
+mu<>[]->
+WWF_dstate_aux mu -> d_trace_aux mu <> 0 .
+Proof. intros. destruct mu. intuition. simpl.
+       assert(s_trace p + d_trace_aux mu>0).
+       rewrite Rplus_comm.
+       apply Rplus_le_lt_0_compat. 
+       apply WWF_dstate_gt_0_aux. inversion_clear H0.
+       assumption. 
+       apply WWF_state_gt_0.
+       inversion_clear H0. assumption.
+      lra.
+  
+Qed.
+
+
+
 (*------------WF_d_scale-------------------*)
 
 Local Open Scope R_scope.
 Lemma s_trace_scale{n:nat}: forall c (q :(qstate n)) (p:R) ,
-(0<p<=1)-> @s_trace n (c, p .* q)=
+(0<p)-> @s_trace n (c, p .* q)=
 p * s_trace (c,q).
 Proof. intros. unfold s_trace. simpl. rewrite trace_mult_dist.
        rewrite Cmod_mult. rewrite Cmod_R. rewrite Rabs_right. reflexivity.
@@ -509,7 +544,7 @@ Qed.
 
 Local Open Scope R_scope.
 Lemma d_trace_scale_aux{n:nat}: forall (mu:list (cstate * qstate n)) (p:R),
-(0<p<=1)-> @d_trace_aux n
+(0<p)-> @d_trace_aux n
 (StateMap.Raw.map (fun x : qstate n => p .* x) mu)=
 p * d_trace_aux mu.
 Proof. intros. induction mu. intros. simpl. rewrite Rmult_0_r. intuition.
@@ -524,7 +559,7 @@ Qed.
 
 
 Lemma d_trace_scale_not_0{n:nat}:forall (mu: dstate n) (p:R), 
-(0<p<=1)-> d_trace (d_scale_not_0 p mu)= p * (d_trace mu) .
+(0<p)-> d_trace (d_scale_not_0 p mu)= p * (d_trace mu) .
 Proof.  intros (mu, IHmu) p Hp.
         unfold d_trace. 
         unfold d_scale_not_0. 
@@ -535,7 +570,7 @@ Proof.  intros (mu, IHmu) p Hp.
 Qed.
 
 Lemma d_trace_scale{n:nat}:forall (mu mu': dstate n) (p:R), 
-(0<=p<=1)->d_scale p mu mu'-> d_trace (mu')= p * (d_trace mu).
+(0<=p)->d_scale p mu mu'-> d_trace (mu')= p * (d_trace mu).
 Proof. intros. inversion_clear H0. 
 -unfold d_trace. unfold d_empty.  simpl. rewrite Rmult_0_l. reflexivity.
 -apply d_trace_scale_not_0. lra.
@@ -549,8 +584,26 @@ Proof. intros. induction mu.
 --simpl.  intuition.
 --inversion_clear H. apply IHmu in H1. 
 split. simpl. apply Rplus_le_le_0_compat. 
-apply WF_state_gt_0 in H0. simpl in H0. 
+apply WF_state_in01 in H0. simpl in H0. 
 intuition. intuition. intuition. 
+Qed.
+
+
+Lemma WF_dstate_in01'{n:nat}:forall (mu: list (cstate *qstate n)),
+mu<>[]->
+WF_dstate_aux mu ->0< d_trace_aux mu <=1.
+Proof.  intros. destruct mu. intuition. simpl.
+rewrite Rplus_comm. split.
+apply Rplus_le_lt_0_compat. 
+apply WWF_dstate_gt_0_aux. inversion_clear H0.
+apply WWF_dstate_aux_to_WF_dstate_aux.
+assumption.  
+apply WF_state_in01.
+inversion_clear H0.  assumption.
+assert(d_trace_aux mu + s_trace p= d_trace_aux ((p :: mu))).
+simpl. rewrite Rplus_comm. 
+reflexivity. rewrite H1.
+apply WF_dstate_in01_aux. assumption.
 Qed.
 
 Lemma WF_dstate_in01{n:nat}: forall (mu:dstate n),
@@ -578,11 +631,10 @@ Proof. intros. induction mu.
         apply Rmult_1_l. rewrite<-H0.
         apply Rmult_le_compat. intuition. 
         apply WF_dstate_in01_aux in H2. 
-        apply WF_state_gt_0 in H1. 
+        apply WF_state_in01 in H1. 
         apply Rplus_le_le_0_compat. 
         intuition. intuition. intuition.
-        simpl in H3. intuition.
-        assumption. assumption.
+        simpl in H3. intuition. intuition. intuition.
 Qed.
 
 
@@ -952,6 +1004,18 @@ Proof.
         rewrite Mplus_0_r. reflexivity.
 Qed.
 
+
+(* End  Raw_dstate.
+
+Module Make_dstate.
+
+Record dstate (n:nat) :=
+  {this :> Raw_dstate.dstate n; well_formed : Raw_dstate.WF_dstate this}.
+
+Definition d_empty(n:nat) := Build_dstate n (Raw_dstate.d_empty n) (Raw_dstate.WF_dstate_empty n) .
+Definition d_update{n:nat} (p: state n) (m: dstate n) := Build_dstate n (Raw_dstate.d_update p m) (Raw_dstate.WF_dstate_update n) 
+
+End Make_dstate. *)
 
 
 (*-------------------------------dstate_eq-----------------------------*)
