@@ -115,29 +115,276 @@ Theorem rule_qframe': forall (F1 F2 F3: State_formula) c,
          rule_solve.   
          Qed.
 
+Lemma PMtrace_Separ{n:nat}: forall s x e (q:Square (2^n)),
+s<=x/\x<=e/\ e<=n->
+PMpar_trace q s (n-e) = PMpar_trace q s (n-x) ⊗ PMpar_trace q x (n-e). 
+Proof.  
+intros. repeat rewrite Ptrace_l_r'.
+Admitted.
+
+Lemma PMtrace_SepaR_L{n:nat}: forall s x e (q:Square (2^n)),
+s<=x/\x<=e/\ e<=n->
+ PMpar_trace q s (n-x) = PMLpar_trace (PMpar_trace q s (n-e)) (e-x). 
+Proof.  
+intros. repeat rewrite Ptrace_l_r'.
+unfold PMLpar_trace.
+simpl. 
+ (* rewrite Mplus_0_l.
+assert( 2^(x-s)= 2 ^ (n - (n - e) - s - (e - x) - 0)).
+type_sovle'. destruct H0.
+assert(2^ (x-s)= (2 ^ (n - (n - x) - s))). 
+type_sovle'. destruct H0.
+assert(2^(e-s)= 2 ^ (n - (n - e) - s)).
+type_sovle'. destruct H0.
+apply Logic.eq_trans with (big_sum
+(fun j : nat =>
+ big_sum
+     (fun i : nat =>
+      big_sum
+        (fun j0 : nat =>
+         ⟨ i ∣_ (s) ⊗ ((Vec 1 0) † ⊗ I (2 ^ (x - s)) ⊗ ⟨ j ∣_ (e - x)) ⊗ ⟨ j0 ∣_ (n - e) × q
+         × (∣ i ⟩_ (s) ⊗ ((Vec 1 0 ⊗ I (2 ^ (x - s)) ⊗ ∣ j ⟩_ (e - x))) ⊗ ∣ j0 ⟩_ (n - e))) 
+        (2 ^ (n - e))) (2 ^ s))
+(2 ^ (e - x))). *)
+
+
+
+Admitted.
 
  Theorem  rule_Separ':forall s x e u v, 
+ s<=x/\x<=e-> 
 (( (| v ⊗ u >[ s , e ])) ->>
 ((| v >[ s , x ]) ⊗* (| u >[ x , e ]))).
 Proof.   intros.  unfold assert_implies. 
-intros;   rule_solve. simpl.  destruct H0. destruct H3.
-admit.
+intros;   rule_solve. simpl.  destruct H3.
+ destruct H4.
+split.  admit. 
+split. split. intuition. split. intuition.
+unfold outer_product in *.
+assert((@adjoint (Nat.pow (S (S O)) (Nat.sub e s)) (S O) (v ⊗ u))=(v ⊗ u) †).
+f_equal; type_sovle'. rewrite H6 in H5.
+rewrite kron_adjoint in H5.
+assert ((@Mmult (Nat.pow (S (S O)) (Nat.sub e s)) 
+(S O) (Nat.pow (S (S O)) (Nat.sub e s))
+(v ⊗ u) ((v) † ⊗ (u) †)) = v ⊗ u × ((v) † ⊗ (u) †)).
+f_equal; type_sovle'. rewrite H7 in H5.
+rewrite kron_mixed_product in H5. 
+rewrite (PMtrace_SepaR_L _ _ e).
+rewrite H5.
+(* rewrite (trace''' 0 (e-x) _ (I 1) (v × (v) †) (u × (u) †)).
+admit. lia. lia. auto_wf. admit.
+auto_wf. admit. admit.  rewrite kron_1_l.
+reflexivity. admit. lia.  *)
+
+
 Admitted. 
 
+Require Import Coq.Logic.Eqdep_dec.
+Require Import Coq.Arith.Peano_dec.
  Theorem rule_QUnit_One' : forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))),
 s<=s' /\ e' <=e ->WF_Matrix v->
 {{ QExp_s s  e  v }} QUnit_One s' e' U {{ QExp_s s  e  (U_v s' e' s e U v) }}.
-Proof. Admitted.
+Proof. intros. unfold hoare_triple. intros. 
+inversion_clear H1. destruct mu. destruct mu'. simpl in *.
+inversion H5; subst. apply WF_sat_Assert in H2. simpl in H2. intuition.
+assert(v= U_v s' e' s e (adjoint U1) (U_v s' e' s e U1 v) ).
+unfold U_v. 
+assert(2^(s'-s) * 2^(e'-s')* 2^(e-e')=2^(e-s)). type_sovle'. destruct H1.
+rewrite <-Mmult_assoc.
+repeat rewrite kron_mixed_product. 
+repeat rewrite Mmult_1_r. destruct H11.
+apply inj_pair2_eq_dec in H7. apply inj_pair2_eq_dec in H7. destruct H7.
+ rewrite H6. repeat rewrite id_kron.   
+ rewrite Mmult_1_l. reflexivity. assumption.
+ apply Nat.eq_dec. apply Nat.eq_dec.  auto_wf. auto_wf.
+apply (rule_QUnit_One _ _ _ _ ( U1) (U_v s' e' s e ( U1) v)) in H. 
+unfold QRule_Q.hoare_triple in H.
+ apply H with (StateMap.Build_slist sorted).
+ econstructor. assumption. assumption.
+ apply E_Qunit_One. assumption. assumption.
+ assumption. rewrite<- H1. assumption. 
+ apply WF_U_v. intuition. assumption. apply H11.
+Qed.
 
 Definition UCtrl_v (s0 e0 s1 e1 s e: nat) (U: nat->Square (2^(e1-s1))) (v: Vector (2^(e-s))) :=
   (big_sum (fun i:nat =>
        (I (2^(s0-s)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(e-e0)))) ×
        (I (2^(s1-s)) ⊗ (U i) ⊗ (I (2^(e-e1))))) (2^(e0 -s0))) × v.
 
+
+(* Lemma  sum_super: forall {m n:nat} (M N : Matrix m n) (A :Matrix n n) ,
+super (M .+ N ) ( A) = (super M A) .+ (super N A) .
+Proof. unfold super. intros. rewrite Mmult_plus_distr_r.
+rewrite Mplus_adjoint.
+rewrite Mmult_plus_distr_l. repeat rewrite Mmult_plus_distr_r. reflexivity.   
+  
+Qed. *)
+
+Theorem rule_QUnit_Ctrl_aux:  forall s0 e0 s1 e1 s e (U: nat -> Square (2^(e1-s1))) (v: Vector (2^(e-s)))
+(n:nat) (st :state n) (st': state n),
+s<=s0 /\ e1 <=e ->
+WF_state st->WF_Matrix v->
+ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) [st] [st'] ->
+State_eval (QExp_s s  e  v ) st->
+State_eval (QExp_s s  e  (UCtrl_v s0 e0 s1 e1 s e ( U) v) ) st'.
+Proof. intros. simpl in *. destruct H3. destruct H4.
+      split. intuition. split. intuition. 
+      destruct st.  
+      inversion H2; subst. inversion H17; subst.
+      clear H17.  apply inj_pair2_eq_dec in H11.
+      apply inj_pair2_eq_dec in H11. subst.
+      injection H15. intros. rewrite <-H6.
+      rewrite <-PMtrace_scale in *. simpl in *.
+      remember ((R1 /Cmod (trace (QUnit_Ctrl_fun s0 e0 s1 e1 U q)))%R).
+      remember ((R1 / Cmod (trace q))%R).
+      unfold QUnit_Ctrl_fun. unfold q_update.
+      assert((big_sum
+      (fun i : nat =>
+       @Mmult (2^n) (2^n) (2^n)
+       (I (2 ^ s0)
+       ⊗ (∣ i ⟩_ (e0 - s0)
+          × ⟨ i ∣_ (e0 - s0))
+       ⊗ I (2 ^ (n - e0)))
+        (I (2 ^ s1) ⊗ U i
+          ⊗ I (2 ^ (n - e1))))
+      (2 ^ (e0 - s0)))= I (2 ^ s)
+      ⊗ (big_sum
+      (fun i : nat =>
+       @Mmult (2^(e-s)) (2^(e-s)) (2^(e-s))(I (2 ^ (s0-s))
+       ⊗ (∣ i ⟩_ (e0 - s0) × ⟨ i ∣_ (e0 - s0))
+       ⊗ I (2 ^ ( e- e0)))
+        (I (2 ^ (s1-s)) ⊗ U i ⊗ I (2 ^ (e - e1))))
+      (2 ^ (e0 - s0))) ⊗ I (2 ^ (n-e) )).
+      rewrite kron_Msum_distr_l. rewrite kron_Msum_distr_r.
+      apply big_sum_eq_bounded. intros. 
+      apply Logic.eq_trans with ((I (2 ^ s0) ⊗ (∣ x ⟩_ (e0 - s0) × ⟨ x ∣_ (e0 - s0))
+      ⊗ I (2 ^ (s1 - e0)) ⊗  I (2 ^ (e1- s1))  ⊗ I (2 ^ (n - e1)) )
+      × (I (2 ^ s0) ⊗ I (2^(e0-s0)) ⊗ I (2 ^ (s1 - e0)) ⊗  U x ⊗ I (2 ^ (n - e1)))).
+      f_equal; type_sovle'. repeat rewrite kron_assoc; auto_wf.
+       f_equal; type_sovle'. f_equal; type_sovle'. repeat rewrite id_kron; auto_wf.
+       f_equal; type_sovle'. repeat rewrite id_kron; auto_wf. 
+       f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle' .
+       repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+       repeat  rewrite Mmult_1_l; auto_wf.
+       apply Logic.eq_trans with 
+       (I (2 ^ s)
+       ⊗ (I (2 ^ (s0 - s)) ⊗ (∣ x ⟩_ (e0 - s0) × ⟨ x ∣_ (e0 - s0))
+       ⊗ I (2 ^ (s1 - e0)) ⊗ U x ⊗ I (2 ^ (e - e1)))
+       ⊗ I (2 ^ (n - e))). 
+       rewrite Mmult_kron_5; auto_wf.  rewrite Mmult_kron_5; auto_wf.
+       repeat rewrite id_kron. f_equal; type_sovle'.
+       rewrite <-kron_assoc; auto_wf.
+       f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.
+       f_equal; type_sovle'. apply H16. f_equal; type_sovle'.
+       apply H16. apply H16.
+       f_equal; type_sovle'. f_equal; type_sovle'.
+       apply Logic.eq_trans with ((I (2 ^ (s0-s)) ⊗ (∣ x ⟩_ (e0 - s0) × ⟨ x ∣_ (e0 - s0))
+       ⊗ I (2 ^ (s1 - e0)) ⊗  I (2 ^ (e1- s1))  ⊗ I (2 ^ (e - e1)) )
+       × (I (2 ^ (s0-s)) ⊗ I (2^(e0-s0)) ⊗ I (2 ^ (s1 - e0)) ⊗  U x ⊗ I (2 ^ (e - e1)))).
+      repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+      repeat rewrite Mmult_1_l; auto_wf. reflexivity.
+      apply H16. f_equal; type_sovle'. 
+      repeat rewrite kron_assoc; auto_wf.
+       f_equal; type_sovle'. f_equal; type_sovle'. repeat rewrite id_kron; auto_wf.
+       f_equal; type_sovle'. repeat rewrite id_kron; auto_wf. 
+       f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle' .
+       apply H16. rewrite H7. 
+      remember ( (big_sum
+      (fun i : nat =>
+       @Mmult (2^(e-s)) (2^(e-s)) (2^(e-s))(I (2 ^ (s0-s))
+       ⊗ (∣ i ⟩_ (e0 - s0) × ⟨ i ∣_ (e0 - s0))
+       ⊗ I (2 ^ ( e- e0)))
+        (I (2 ^ (s1-s)) ⊗ U i ⊗ I (2 ^ (e - e1))))
+      (2 ^ (e0 - s0)))).
+      
+      assert(2^(n-(n-e)-s)=((2 ^ (e - s)))). type_sovle'. destruct H8.
+      apply Logic.eq_trans with (r .* PMpar_trace (super (I (2 ^ s) ⊗ m ⊗ I (2 ^ (n - e))) q) s (n - e)).
+      f_equal. f_equal. f_equal; type_sovle'.
+      rewrite<-(PMtrace_Super_swap s (n-e) m q). 
+      rewrite <-super_scale. 
+      assert(r=r0).
+      rewrite Heqr. rewrite Heqr0. f_equal. f_equal.
+      (* assert((2 ^ n)%nat= (2 ^ s * 2 ^ (e - s) * 2 ^ (n - e))%nat).
+        type_sovle'. destruct H7.  *)
+        apply QUnit_Ctrl_trace.   lia. lia.  apply WF_Mixed.
+        apply H0. assumption. rewrite H8.  rewrite H5.
+        unfold UCtrl_v. unfold outer_product.
+        (* assert(2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e')= 2 ^ (e - s)).
+        type_sovle'. destruct H8. *)
+        assert(((2 ^ (e-s)))=2^(n-(n-e)-s)). type_sovle'. destruct H10.
+        unfold super. 
+        rewrite Heqm.  repeat rewrite Mmult_assoc.
+         rewrite <-Mmult_adjoint.
+         repeat rewrite <-Mmult_assoc.
+         assert(2 ^ (e - s) = 2 ^ (s0 - s) * 2 ^ (e0 - s0) * 2 ^ (e - e0)).
+         type_sovle'. destruct H10. reflexivity.
+         type_sovle'. lia.  rewrite Heqm.
+        apply WF_Msum. intros. 
+         apply WF_mult; apply WF_kron; type_sovle'; auto_wf.
+        apply WF_kron; type_sovle'; auto_wf. apply H16.
+        apply Nat.eq_dec. apply Nat.eq_dec.
+Qed.
+
+
+Theorem rule_QUnit_Ctrl_aux' : forall s0 e0 s1 e1 s e (U: nat -> Square (2^(e1-s1))) (v: Vector (2^(e-s)))
+(n:nat) (mu : list (cstate * qstate n)) (mu': list (cstate * qstate n)),
+s<=s0 /\ e1 <=e ->
+WF_dstate_aux mu->WF_Matrix v->
+ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu' ->
+State_eval_dstate (QExp_s s  e  v ) mu->
+State_eval_dstate (QExp_s s  e  (UCtrl_v s0 e0 s1 e1 s e ( U) v) ) mu'.
+Proof.  induction mu; intros. inversion H2; subst.
+  -- simpl in H3. destruct H3.
+  -- destruct mu. inversion H2; subst. inversion H14; subst. 
+     apply inj_pair2_eq_dec in H9. apply inj_pair2_eq_dec in H9.
+     destruct H9. rewrite map2_nil_r in *.
+      * econstructor.
+       apply rule_QUnit_Ctrl_aux with  ((sigma, rho)). intuition. 
+       inversion_clear H0. assumption. 
+       assumption. assumption. inversion_clear H3. assumption.  apply Forall_nil.
+       apply Nat.eq_dec. apply Nat.eq_dec.
+      
+       *destruct a. inversion H2; subst.  
+       apply inj_pair2_eq_dec in H9. apply inj_pair2_eq_dec in H9.
+       destruct H9.  
+       apply d_seman_app_aux. 
+       apply WF_ceval with (QUnit_Ctrl s0 e0 s1 e1 U1) ([(c,q)]).
+       apply WF_state_dstate_aux.  inversion_clear H0. assumption.
+       apply ceval_eq with ((StateMap.Raw.map2 (@option_app n) ([(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)])  ([]))).
+       reflexivity.  apply E_QUnit_Ctrl. assumption. assumption.  apply E_nil.
+
+      apply WF_ceval with (QUnit_Ctrl s0 e0 s1 e1 U1) ((p :: mu)).
+      inversion_clear H0. assumption. assumption.
+
+      econstructor.   apply rule_QUnit_Ctrl_aux with  ((c, q)). intuition. 
+      inversion_clear H0. assumption. assumption. 
+      apply ceval_eq with ((StateMap.Raw.map2 (@option_app n) ([(c, QUnit_Ctrl_fun s0 e0 s1 e1 U1 q)])  ([]))).
+      reflexivity.  apply E_QUnit_Ctrl. assumption. assumption.  apply E_nil.
+      inversion_clear H3. assumption.
+      apply Forall_nil.
+
+      apply IHmu. intuition. inversion_clear H0.  assumption. assumption. 
+      intuition. inversion_clear H3.  apply State_eval_dstate_Forall.
+      discriminate.  assumption. apply Nat.eq_dec. apply Nat.eq_dec.
+Qed.    
+
+
+
+
+
 Theorem rule_QUnit_Ctrl' : forall s0 e0 s1 e1 s e (U: nat -> Square (2^(e1-s1))) (v: Vector (2^(e-s))),
 s<=s0 /\ e1 <=e ->WF_Matrix v->
 {{ QExp_s s  e  v }} QUnit_Ctrl s0 e0 s1 e1 U {{ QExp_s s  e  ( UCtrl_v s0 e0 s1 e1 s e U v) }}.
-Proof. Admitted.
+Proof. unfold hoare_triple.
+intros s0 e0 s1 e1 s e U v Hs Hv n (mu,IHmu) (mu', IHmu').
+intros. 
+inversion_clear H; simpl in H3.
+rewrite sat_Assert_to_State in *.
+inversion_clear H0.
+apply sat_F. intuition.
+apply  rule_QUnit_Ctrl_aux' with mu .
+intuition. intuition. assumption. assumption. assumption. 
+Qed.
 
 Theorem rule_AndC: forall F1 F2:State_formula,
 ((F1 /\ F2) ->> (F2 /\ F1))/\
@@ -194,7 +441,15 @@ Qed.
 Coercion INR : nat >-> R.
 Local Open Scope R_scope.
 
+Lemma implies_trans: forall (D D1 D2:Assertion), 
+(D->> D1)-> (D1->>D2) 
+->(D->>D2).
+Proof. unfold assert_implies. intros. auto. Qed.
 
+Lemma implies_trans': forall (D D1 D2:Assertion), 
+ (D1->>D2) -> (D->> D1)
+->(D->>D2).
+Proof.  unfold assert_implies. intros. auto. Qed.
 
 Module HHL.
 Definition v:nat:= 0.
@@ -607,15 +862,7 @@ repeat rewrite kron_0_l. rewrite Mscale_0_r. reflexivity.
 intuition.
 Admitted.
 
-Lemma implies_trans: forall (D D1 D2:Assertion), 
-(D->> D1)-> (D1->>D2) 
-->(D->>D2).
-Proof. unfold assert_implies. intros. auto. Qed.
 
-Lemma implies_trans': forall (D D1 D2:Assertion), 
- (D1->>D2) -> (D->> D1)
-->(D->>D2).
-Proof.  unfold assert_implies. intros. auto. Qed.
 
 
 Lemma simpl_QFT: 
@@ -905,7 +1152,7 @@ Proof. unfold HHL.
         assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H. 
         assert(2^(n+m+1-(n+m))=2). assert(2^1=2). simpl. reflexivity.
         rewrite<- H. rewrite H at 1. f_equal. lia. destruct H.
-        eapply rule_Separ'.
+        eapply rule_Separ'. lia. 
         eapply  implies_trans. 
         apply rule_odotT. 
         eapply  implies_trans. 
@@ -920,7 +1167,7 @@ Proof. unfold HHL.
       f_equal. apply add_sub_eq. destruct H.
       assert(2^(n+m-n)=(2 ^ (n + m + 1 - (n + m))) ^ m). 
       repeat rewrite add_sub_eq. simpl. reflexivity. destruct H.
-      eapply rule_Separ'. 
+      eapply rule_Separ'. lia. 
       eapply  implies_trans. 
       apply rule_odotT.  
       eapply  implies_trans. 
@@ -1221,9 +1468,9 @@ Definition y:nat :=3 .
 Definition y':nat :=4 .
 Definition N2 := (N mod 2).
 Definition  b2 :=(BAnd (BEq (z mod 2) 0) (BNeq (x^(z/2) mod N) 1)) .
-Definition  b3 :=(BAnd (BNeq y' 1)  (BNeq y' N)) .
+Definition  b3 :=(BAnd (BNeq (Nat.gcd (x ^ (z / 2) - 1) N) 1)  (BNeq ((Nat.gcd (x ^ (z / 2) - 1) N)) N)) .
 
-Hypothesis Hran: forall i a b, {{BTrue}} i:=random a b {{BLe a i /\ BLe i b}}.
+Hypothesis Hran: forall i a b, (BEq i (random a b)) ->> (BLe a i /\ BLe i b).
 
 Definition Shor:=
   <{  if BEq N2 0 then
@@ -1234,9 +1481,8 @@ Definition Shor:=
            while BEq y 1 do 
                   OF;
                   if b2 then
-                      y':=Nat.gcd (x^(z/2)-1) N;
-                      if b3 then 
-                          y:=y'
+                      if  b3 then 
+                          y:=Nat.gcd (x ^ (z / 2) - 1) N
                       else 
                           y:=Nat.gcd (x^(z/2)+1) N
                       end 
@@ -1276,58 +1522,79 @@ Theorem rule_qframe': forall (F1 F2 F3: State_formula) c,
                 Proof. intros. eapply rule_conseq. apply H. 
                 apply implies_refl. assumption. Qed.   
 
+Lemma Assn_implies: forall (P:State_formula) x i,
+P->> (P/\ (Assn_sub x i (BEq x i))) .
+Proof. intros. unfold assert_implies.
+    intros.  rewrite sat_Assert_to_State in *.
+    rewrite seman_find in *.
+     split.  intuition.
+     split. intuition.
+     intros. split.  apply H. assumption.
+Admitted.
+
+
 
 Theorem Shor_correctness :
-{{ BTrue}} Shor {{(BEq (N mod y) 0) /\ (BNeq y' 1) /\ (BNeq y' N)}} .
+{{ BTrue}} Shor {{  (BEq (N mod y) 0) /\ (BNeq y 1) /\ (BNeq y N)}} .
 Proof. unfold Shor. 
-eapply rule_cond_classic. split.
-{eapply rule_conseq with (P':= (BEq N2 0) /\ (Assn_sub y 2 (BEq y 2)))
-(Q':=   ((BEq N2 0)) /\ (BEq y 2)).
-eapply rule_qframe'. split. apply rule_assgn.
-unfold N2. admit. admit.
-unfold N2. unfold assert_implies. intros.
-rewrite sat_Assert_to_State in *.
-inversion_clear H.  econstructor. intuition.
-rewrite State_eval_conj in *. }
-{ eapply rule_seq with (Q:= (BLe 2 x /\ BLe x (N-1)) /\ Assn_sub y (Nat.gcd x N) (BEq y (Nat.gcd x N))).
-
-  {eapply rule_conseq_r with (Q':= BLe 2 x /\ BLe x (N-1)). admit.
-   eapply rule_conseq.
-   apply Hran. apply rule_AndE. apply implies_refl. }
-  eapply rule_seq.
- {eapply rule_qframe'. split.  
-  apply rule_assgn.  simpl. admit. }
-
-  eapply rule_conseq_l with (P':=  (BEq (N mod y) 0) /\ (BNeq y N)).
-  admit.
-  eapply rule_conseq_r'.
-  eapply rule_while_classic. 
-  eapply rule_seq.  
-  eapply rule_conseq_l'.  
-  apply OF_correctness. admit.
-  apply rule_cond_classic. split.
-  eapply rule_seq. 
-  eapply rule_conseq_l'.
-  apply rule_assgn with (P:= (BEq y' (Nat.gcd (x ^ (z / 2) - 1) N))).
-  admit.
-  eapply rule_conseq_l with (P':= (BEq (N mod y') 0) ).
-  admit.
-  eapply rule_conseq_r with (Q':= (BEq (N mod y) 0) /\ (BNeq y 1) /\ (BNeq y N)).
-  admit.
-  apply rule_cond_classic.
-  split. unfold b3. admit.
-  unfold b3. 
-    eapply rule_conseq.
-    apply rule_assgn with (P:= (BEq y (Nat.gcd (x ^ (z / 2) - 1) N))).
-    admit. admit. 
-    eapply rule_seq with (Q:= (BLe 2 x /\ BLe x (N-1)) /\ Assn_sub y (Nat.gcd x N) (BEq y (Nat.gcd x N))).
-    eapply rule_conseq_r with (Q':= BLe 2 x /\ BLe x (N-1)). admit.
-   eapply rule_conseq.
-   apply Hran. admit. apply implies_refl.
-   eapply rule_conseq_r'. 
-   eapply rule_qframe'. split.  
-  apply rule_assgn.  simpl. admit. admit.
-  admit.
+       eapply rule_cond_classic. split.
+       {eapply rule_conseq_l.
+       apply Assn_implies.
+       eapply rule_conseq_r'.
+       eapply rule_qframe'.
+       split.  apply rule_assgn. }
+       {eapply rule_seq with ((BTrue /\  (BNot (BEq N2 0))) /\ (BLe 2 x /\ BLe x (N-1))). 
+          {eapply rule_conseq_l.
+          apply Assn_implies.
+          eapply rule_conseq_r'.
+          eapply rule_qframe'.
+          split.  apply rule_assgn. admit.
+          apply rule_AndCon. apply implies_refl.
+          apply Hran. }
+          eapply rule_seq with ((BTrue /\  (BNot (BEq N2 0)) /\ (BLe 2 x /\ BLe x (N-1)) /\ BEq y ((Nat.gcd x N))) /\
+          (BEq (N mod y) 0) /\ (BNeq y N)).
+          {eapply rule_conseq_l.
+          apply Assn_implies.
+          eapply rule_conseq_r'.
+          eapply rule_qframe'.
+          split.  apply rule_assgn. admit.
+          }
+          eapply rule_conseq_r'.
+          apply rule_while_classic.
+          {
+           eapply rule_seq.
+           eapply rule_conseq_l with (BLe 2 x /\  BLe x (N-1) /\ BEq (Nat.gcd x N) 1 /\ BNeq (N mod 2) 0).
+           admit.
+           apply OF_correctness.
+           apply rule_cond_classic. split.
+           apply rule_cond_classic. split.
+           eapply rule_conseq_l.
+           apply Assn_implies.
+          eapply rule_conseq_r'.
+          eapply rule_qframe'.
+          split.  apply rule_assgn.
+          admit. admit.
+          eapply rule_conseq_l.
+          apply Assn_implies.
+         eapply rule_conseq_r'.
+         eapply rule_qframe'.
+         split.  apply rule_assgn.
+         admit. admit.
+         eapply rule_seq.
+         eapply rule_conseq_l.
+           apply Assn_implies.
+          eapply rule_conseq_r'.
+          eapply rule_qframe'.
+          split.  apply rule_assgn.
+          admit. apply rule_AndCon. apply implies_refl.
+          apply Hran.
+          eapply rule_conseq_l.
+          apply Assn_implies.
+         eapply rule_conseq_r'.
+         eapply rule_qframe'.
+         split.  apply rule_assgn. admit. admit. }
+         admit.
+        }
 Admitted.
 
 End OF.
