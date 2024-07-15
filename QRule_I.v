@@ -71,7 +71,7 @@ Theorem rule_asgn_aux :  forall (P:Pure_formula) (i:nat) ( a:aexp)
 (n:nat) (mu : list (cstate * qstate n)) (mu': list (cstate * qstate n)),
 WF_dstate_aux mu->
 ceval_single (<{i := a}>) mu mu' ->
-State_eval_dstate (Assn_sub i a P) mu->
+State_eval_dstate (Assn_sub_P i a P) mu->
 State_eval_dstate P mu'.
 Proof. intros P i a n mu. induction mu; intros; inversion H; subst.
   --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
@@ -92,7 +92,7 @@ Proof. intros P i a n mu. induction mu; intros; inversion H; subst.
 Qed.    
 
 Theorem rule_assgn: forall (P:Pure_formula) (i:nat) ( a:aexp),
-             {{Assn_sub i a P}} i := a {{P}}.
+             {{Assn_sub_P i a P}} i := a {{P}}.
 Proof. unfold hoare_triple;
        intros F X a n (mu,IHmu) (mu', IHmu').
        intros. 

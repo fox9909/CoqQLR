@@ -24,7 +24,11 @@ Inductive aexp : Type :=
   | AId (i : nat)            
   | APlus (a1 a2 : aexp)
   | AMinus (a1 a2 : aexp)
-  | AMult (a1 a2 : aexp).
+  | AMult (a1 a2 : aexp)
+  | AGcd (a1 a2:aexp)
+  | AMod (a1 a2:aexp)
+  | APow (a1 a2: aexp)
+  | ADiv (a1 a2:aexp).
 
 Definition X0 : nat := 0.
 Definition X1 : nat := 1.
@@ -38,7 +42,8 @@ Inductive bexp : Type :=
   | BLe (a1 a2 : aexp)
   | BGt (a1 a2 : aexp)
   | BNot (b : bexp)
-  | BAnd (b1 b2 : bexp).
+  | BAnd (b1 b2 : bexp)
+  | BOr (b1 b2 :bexp).
 
 Coercion AId : nat >-> aexp.
 
@@ -66,10 +71,12 @@ Notation "x <> y"  := (BNeq x y) (in custom com at level 70, no associativity).
 Notation "x && y"  := (BAnd x y) (in custom com at level 80, left associativity).
 Notation "'~' b"   := (BNot b) (in custom com at level 75, right associativity).
 
+
 Inductive com : Type :=
   | CSkip
   | CAbort
   | CAsgn (i:nat) (a : aexp)
+  | Clet (i a:nat)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
   | CWhile (b : bexp) (c : com)
@@ -135,6 +142,22 @@ Definition fact_in_coq : com :=
 
 (*-----------------------Semantics------------------------------------*)
 
+Fixpoint ord' n a N :=
+  match n with
+  | O => O
+  | S n' => match (ord' n' a N) with
+           | O => (if (a ^ n mod N =? 1) then n else O)
+           | _ => ord' n' a N
+           end
+  end.
+
+Require Import Coq.ZArith.Znumtheory.
+Definition ϕ (n : nat) :=
+big_sum (fun x => if rel_prime_dec x n then 1%nat else 0%nat) n.
+Definition ord a N := ord' (ϕ N) a N. 
+
+Require Import Psatz ZArith Znumtheory.
+Local Open Scope nat_scope.
 Fixpoint aeval{n:nat} (st: state n) 
                (a : aexp) : nat :=
   match a with
@@ -143,6 +166,10 @@ Fixpoint aeval{n:nat} (st: state n)
   | <{a1 + a2}> => (aeval st a1) + (aeval st a2)
   | <{a1 - a2}> => (aeval st a1) - (aeval st a2)
   | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
+  | AGcd a1 a2 => Nat.gcd (aeval st a1) (aeval st a2)
+  | APow a1 a2 => Nat.pow (aeval st a1) (aeval st a2)
+  | ADiv a1 a2 => (Nat.div (aeval st a1) (aeval st a2))
+  | AMod a1 a2 => (Nat.modulo (aeval st a1) (aeval st a2))
   end.
 
 
@@ -157,6 +184,7 @@ Fixpoint beval{n: nat} (st : state n)
   | <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
   | <{~ b1}>      => negb (beval st b1)
   | <{b1 && b2}>  => andb (beval st b1) (beval st b2)
+  | BOr b1 b2 => orb  (beval st b1) (beval st b2)
   end.
 
 
@@ -166,39 +194,6 @@ Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
     |S i'=> U × (exp_U U i')
     end.
 Notation "U ^ i":=(exp_U U i).
-
-
-Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate n)) (n_0 : nat) : list (cstate * qstate n) := 
-  match n_0 with
-  | 0 => nil
-  | S n' =>StateMap.Raw.map2 option_app (big_app f n')  (f n')
-  end.
-
-
-  
-
-Declare Scope state_scope.
-Notation "mu1 +l mu2" :=
-  (StateMap.Raw.map2 option_app mu1 mu2)
-  (at level 70, no associativity)
-  : state_scope.
-Local Open Scope state_scope.
-
-
-Local Open Scope com_scope.
-
-
-Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
-  big_sum (fun i:nat=>  (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i )†) ⊗ (I (2^(n-e))))) × rho
-                         × (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i)†) ⊗ (I (2^(n-e))))† )) (2^(e-s)) .
-
-Definition QUnit_One_fun{n:nat} (s e:nat)(U: Square (2^(e-s)))  (rho:qstate n):= q_update ((I (2^(s)) ⊗ U ⊗ (I (2^(n-e))))) rho .
-
-Definition QUnit_Ctrl_fun{n:nat} (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))) (rho:qstate n) :=
-  q_update  ((big_sum (fun i:nat =>@Mmult (2^(n)) (2^(n)) (2^(n))
-                (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
-                 (I (2^(s1)) ⊗ (U i) ⊗ (I (2^(n-e1))))) (2^(e0 -s0)))) rho.
-
 Lemma  pow_U_unitary: forall s e (U: Square (2^(e-s))) i,
 WF_Unitary U ->
 WF_Unitary (U^i).
@@ -206,36 +201,128 @@ Proof. induction i; simpl; intros. apply id_unitary.
       apply Mmult_unitary. assumption. intuition.  
 Qed.
 
+Local Open Scope state_scope.
+Fixpoint big_app{n:nat} (f : nat -> list (cstate * qstate n)) (n_0 : nat) : list (cstate * qstate n) := 
+  match n_0 with
+  | 0 => nil
+  | S n' =>  (big_app f n') +l (f n')
+  end.
+
+Local Open Scope com_scope.
+
+Definition QInit_fun{n:nat} (s e:nat) (rho:(qstate n)):=
+  big_sum (fun i:nat=>  
+  (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i )†) ⊗ (I (2^(n-e))))) × rho
+× (((I (2^(s))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i)†) ⊗ (I (2^(n-e))))† )) (2^(e-s)) .
+
+Definition QUnit_One_fun{n:nat} (s e:nat)(U: Square (2^(e-s)))  (rho:qstate n):= 
+  q_update ((I (2^(s)) ⊗ U ⊗ (I (2^(n-e))))) rho .
+
+Definition QUnit_Ctrl_fun{n:nat} (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))) (rho:qstate n) :=
+  q_update  ((big_sum (fun i:nat => @Mmult (2^(n)) (2^(n)) (2^(n))
+                (I (2^(s0)) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(n-e0)))) 
+                 (I (2^(s1)) ⊗ (U i) ⊗ (I (2^(n-e1))))) (2^(e0 -s0)))) rho.
+
 Ltac type_sovle':=
   try (repeat rewrite  <-Nat.pow_add_r; f_equal ; lia).
 
+Lemma  Vec0: forall (n i x:nat), x = i -> Vec n i x 0= C1.
+Proof. intros. simpl Vec. bdestruct (x=?i).
+reflexivity. lia.   
+Qed.
+Lemma big_sum_I_i: forall n i, 
+i< n -> Vec n i ×  (adjoint (Vec n i)) =
+fun x y => if (x =? i) && (y =? i) && (x<? n) then C1 else C0.
+Proof. intros. prep_matrix_equality. unfold Mmult.
+      simpl. rewrite Cplus_0_l. 
+      bdestruct((x =? i)).  simpl.
+      bdestruct((y =? i)).  simpl.
+      bdestruct(x<? n). simpl.
+      unfold adjoint. rewrite Vec0. 
+      rewrite Cconj_R.
+      rewrite Cmult_1_l. reflexivity.
+      assumption. intuition.
+      unfold adjoint. rewrite Vec1. 
+      rewrite Cconj_R.
+      rewrite Cmult_0_r. reflexivity.
+      assumption. simpl. 
+      rewrite Cmult_0_l. reflexivity.
+Qed.
+
+Local Open Scope nat_scope.
+Lemma pow_gt_0: forall n ,
+2^ n >0 .
+Proof. induction n. simpl. lia.
+      simpl. rewrite Nat.add_0_r. 
+      lia.
+Qed.
+
+Lemma big_sum_x_y{n:nat}: forall (f:nat-> Matrix n n) x y n_0,
+big_sum f n_0 x y= big_sum (fun i=> (f i) x y) n_0 .
+Proof. induction n_0. simpl. unfold Zero. reflexivity.
+      simpl. unfold Mplus. f_equal. intuition.
+  
+Qed.
+
+Lemma eq_x_y:forall x y,
+x=y-> x=? y = true.
+Proof.  induction x; destruct y. simpl. reflexivity.
+         lia. lia. simpl. intro. apply IHx.
+         lia. 
+  
+Qed.
+
+
+
   Lemma  big_sum_I: forall n,
-  big_sum
-      (fun i : nat => ∣ i ⟩_ n × ⟨ i ∣_ n)
+  big_sum (fun i : nat => ∣ i ⟩_ n × ⟨ i ∣_ n)
       (2 ^ n)= I (2^n).
-  Proof. induction n. simpl. rewrite Mplus_0_l. unfold adjoint. 
-       unfold Vec. admit.
-       simpl.    
-  Admitted.
-
-  Lemma base_innner: forall i n,
-  (i<(2^n))%nat->
-  ⟨ i ∣_ (n) × ∣ i ⟩_ (n) = I 1.
-  Proof. intros. assert(⟨ i ∣_ (n) × ∣ i ⟩_ (n)= ⟨ i ∣_ (n) × I (2^n) ×  ∣ i ⟩_ (n)).
-         rewrite Mmult_1_r. reflexivity. auto_wf. 
-         rewrite H0. 
-        rewrite inner'.  
-         unfold I. bdestruct ((i =? i)). bdestruct (i <? 2 ^ n). simpl.
-         rewrite Mscale_1_l. reflexivity.     
-         lia. lia. auto_wf. assumption.
-  Qed.
-
-Lemma base_inner_0{n:nat}:forall i j :nat,
-i<>j->
-(⟨ i ∣_ (n) × ∣ j ⟩_ (n))=C0 .* I 1.
-Proof.  induction n. simpl. intros. 
-destruct i. destruct j. intuition.
-     Admitted.
+  Proof. intros. 
+         rewrite (big_sum_eq_bounded  _
+          (fun i=> fun x y => if (x =? i) && (y =? i) && (x<? 2^n) then C1 else C0)).
+          prep_matrix_equality.
+          rewrite big_sum_x_y.
+          unfold I.  destruct x; destruct y.
+          rewrite (big_sum_unique  C1).
+          simpl. assert(0 <? 2 ^ n = true). 
+          rewrite Lt_n_i. reflexivity. apply pow_gt_0.
+          rewrite H. reflexivity.
+          exists 0. split. apply pow_gt_0.
+          split. simpl. rewrite Lt_n_i.  reflexivity.
+          apply pow_gt_0. intros.
+          assert((0 =? x')=false). rewrite Neq_i_j.
+          reflexivity. assumption. rewrite H1.
+          simpl. reflexivity.
+          rewrite big_sum_0. simpl. reflexivity.
+          intros. destruct x. simpl. reflexivity. 
+          simpl. reflexivity. 
+          rewrite big_sum_0. simpl. reflexivity.
+          intros. destruct x0. simpl. reflexivity. 
+          simpl. bdestruct ((x =? x0) ); reflexivity. 
+         simpl. bdestruct (x =? y). simpl. 
+         bdestruct (S x <? 2 ^ n). 
+         rewrite (big_sum_unique  C1).
+          simpl. assert(0 <? 2 ^ n = true). 
+          rewrite Lt_n_i. reflexivity. apply pow_gt_0.
+          reflexivity.
+          exists (S x). split. assumption.
+          split. rewrite eq_x_y. rewrite eq_x_y.
+          simpl. reflexivity. intuition. reflexivity. 
+          intros. destruct x'. simpl. reflexivity. 
+          simpl.  rewrite Neq_i_j.  rewrite Neq_i_j. reflexivity.
+          rewrite <-H. lia. lia.
+          rewrite big_sum_0. simpl. reflexivity.
+          intros. destruct x0. simpl. reflexivity. 
+          simpl. bdestruct ((x =? x0)); bdestruct ((y =? x0));
+           reflexivity.
+          simpl. 
+          rewrite big_sum_0. simpl. reflexivity.
+          intros. destruct x0. simpl. reflexivity. 
+          simpl.  bdestruct ((x =? x0)); bdestruct ((y =? x0));
+          bdestruct ((S x <? 2 ^ n)); try lia; 
+           reflexivity.
+           intros. apply big_sum_I_i. assumption.
+Qed.
 
 
 Lemma QInit_fun_plus{n:nat}: forall s e (q q0: qstate n), 
@@ -354,14 +441,14 @@ Proof. intros. unfold WF_Unitary in *. split.
         split.  f_equal. f_equal. f_equal.
         f_equal. rewrite Mmult_assoc. 
         rewrite <-(Mmult_assoc (⟨ x ∣_ (e0 - s0))).
-        rewrite base_innner. rewrite Mmult_1_l; auto_wf. reflexivity.
+        rewrite Vec_inner_1. rewrite Mmult_1_l; auto_wf. reflexivity.
         assumption. apply H1.
         intros. rewrite Mmult_assoc. 
         rewrite <-(Mmult_assoc (⟨ x' ∣_ (e0 - s0))).
-        rewrite base_inner_0. rewrite Mscale_0_l.
+        rewrite Vec_inner_0. rewrite Mscale_0_l.
         rewrite Mmult_0_l. rewrite Mmult_0_r.
         rewrite kron_0_r. repeat rewrite kron_0_l. reflexivity.
-        intuition.
+        intuition. assumption. assumption.
         intros. rewrite Mmult_Msum_distr_r.  apply big_sum_eq_bounded.
         intros. 
         apply Logic.eq_trans with ((I (2 ^ s0)
@@ -395,13 +482,7 @@ Proof. induction n0. simpl. rewrite Zero_trace. reflexivity.
   
 Qed.
 
-Local Open Scope nat_scope.
-Lemma pow_gt_0: forall n ,
-2^ n >0 .
-Proof. induction n. simpl. lia.
-      simpl. rewrite Nat.add_0_r. 
-      lia.
-Qed.
+
 
 Lemma QInit_trace{n:nat}: forall (s e:nat) (rho:Square (2^n)),
 s<=e/\ e<=n-> WF_Matrix rho->
@@ -432,7 +513,7 @@ rewrite big_sum_trace.
           repeat  rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
           rewrite <-Mmult_assoc.  rewrite (Mmult_assoc _ (⟨ 0 ∣_ (e - s)) _).
           assert((⟨ 0 ∣_ (e - s) × ∣ 0 ⟩_ (e - s)) = I 1). 
-          apply base_innner. apply pow_gt_0. rewrite H2.  rewrite Mmult_1_r. reflexivity.
+          apply Vec_inner_1. apply pow_gt_0. rewrite H2.  rewrite Mmult_1_r. reflexivity.
           auto_wf. auto_wf. auto_wf.
 Qed.
 
@@ -564,8 +645,6 @@ rewrite H1. unfold WF_Matrix in *.
   right. lia. right. lia.  unfold WF_Matrix in *.    
   rewrite (H _ y).   rewrite (H0 _ y). reflexivity.
   left. lia. left. lia.
-  
-  
   Qed.         
 
 
@@ -721,7 +800,7 @@ assumption.
     repeat  rewrite kron_mixed_product.  repeat rewrite Mmult_1_r.
     rewrite <-Mmult_assoc.  rewrite (Mmult_assoc _ (⟨ x ∣_ (e - s)) _).
     assert((⟨ x ∣_ (e - s) × ∣ x ⟩_ (e - s)) = I 1). 
-    apply base_innner. assumption. rewrite H2.  rewrite Mmult_1_r. reflexivity.
+    apply Vec_inner_1. assumption. rewrite H2.  rewrite Mmult_1_r. reflexivity.
     auto_wf. auto_wf. auto_wf. assert(2 ^ (e - s) > 0). apply pow_gt_0.
     lia.  intros. 
     assert(2^n=2 ^ s * 2 ^ (e - s) * 2 ^ (n - e)). type_sovle'. destruct H2.
@@ -755,6 +834,8 @@ Qed.
                     (StateMap.Raw.map2 option_app 
                     [((c_update x (aeval (sigma, rho) a) sigma), rho)] 
                     mu')
+  |Elet sigma rho mu : forall (x a:nat) ,  let x:= a in 
+                   ceval_single (Clet x a) ((sigma,rho)::mu) ((sigma,rho)::mu)
   |E_Qinit sigma rho mu: forall mu'(s e:nat), s<=e /\ e<=n ->
                    ceval_single (QInit s e) mu mu'
                    -> ceval_single (QInit s e) ((sigma,rho)::mu) 
@@ -817,6 +898,10 @@ Fixpoint Free_aexp (a:aexp) : CSet :=
   | <{a1 + a2}> => NSet.union (Free_aexp a1)  (Free_aexp a2)
   | <{a1 - a2}> => NSet.union (Free_aexp a1)  (Free_aexp a2)
   | <{a1 * a2}> => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  | AGcd a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  | APow a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  |ADiv a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  |AMod a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   end.
 
 Fixpoint Free_bexp (b:bexp):CSet:=
@@ -825,7 +910,7 @@ Fixpoint Free_bexp (b:bexp):CSet:=
     | <{a1 <> a2}>  => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{a1 <= a2}>  => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{a1 > a2}>   => NSet.union (Free_aexp a1)  (Free_aexp a2)
-    | <{~ b}>      => (Free_bexp b) 
+    | <{~ b}>       => (Free_bexp b) 
     | <{b1 && b2}>  => NSet.union (Free_bexp b1)  (Free_bexp b2)
     |_=>NSet.empty
     end.
@@ -924,6 +1009,11 @@ Proof. intros. induction a.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      
 Qed.
 
 Lemma state_eq_bexp{n:nat}: forall (st st':state n) (b:bexp),
@@ -944,6 +1034,8 @@ Proof. intros. induction b.
       rewrite (state_eq_aexp  st st' a2). reflexivity.
        assumption. assumption.
       --simpl. rewrite IHb. reflexivity.
+      --simpl. rewrite IHb1.
+      rewrite IHb2. reflexivity.
       --simpl. rewrite IHb1.
       rewrite IHb2. reflexivity.
 Qed.
@@ -1376,7 +1468,8 @@ Module Import MC := OrderedTypeFacts(Cstate_as_OT).
         rewrite Heqt. split. intuition.
         split. apply E_Asgn. intuition.
         rewrite H2. rewrite (map2_comm ([(c_update i (aeval (c0, q0) a) c0, q0)]) x1).
-        rewrite (map_assoc _ x0). apply map2_comm.  
+        rewrite (map_assoc _ x0). apply map2_comm.
+      - admit.  
 
       -intros. inversion H; subst.
       apply map2_app_nil in H2. destruct H2.
@@ -1778,7 +1871,7 @@ rewrite H2. rewrite (map2_comm (big_app
  [(c_update i j c, QMeas_fun s e j q)])
 (2 ^ (e - s)))  x1).
 rewrite (map_assoc _ x0). apply map2_comm.
-Qed.
+Admitted.
 
  
  Lemma ceval_dscale_aux{n:nat}:  forall c  (y mu: list (cstate *qstate n)) (p:R),
@@ -1811,7 +1904,7 @@ assert ((@cons (prod cstate (qstate n))
 simpl. rewrite (state_eq_aexp (c, p .* q)  (c, q)).
 reflexivity. reflexivity.
 rewrite H2. apply d_scalar_app_distr_aux.
-
+-admit.
 -destruct y; intros. inversion H; subst.
 exists []. split. apply E_nil. reflexivity.
 destruct p. inversion H; subst. 
@@ -2030,6 +2123,7 @@ induction c.
   apply Sorted_cons. 
   apply Sorted_nil.  apply HdRel_nil. apply IHmu.
   inversion_clear Hm.  intuition. intuition.
+-admit.
 -intros. inversion H;subst. intuition.
   apply IHc2 with mu1. apply IHc1 with ((sigma, rho) :: mu0).
   intuition. intuition. intuition.
@@ -2083,7 +2177,7 @@ apply Sorted_cons. apply Sorted_nil.  apply HdRel_nil.
 apply IHmu.
 inversion_clear Hm.  intuition.
 intuition.
-Qed.
+Admitted.
 
 
 Inductive ceval{n:nat}: com -> dstate n-> dstate n->Prop:=
@@ -2172,6 +2266,7 @@ Proof. induction c.
    unfold WWF_state in *. unfold WWF_qstate  in *.
    simpl in *. assumption.  apply WF_nil'.
    apply IHmu. inversion_clear H. assumption.  intuition.
+-- admit.
 --intros. inversion H0; subst. assumption.   apply IHc2 with mu1.
    apply IHc1 with  ((sigma, rho) :: mu0). assumption.
    assumption. assumption.
@@ -2252,7 +2347,7 @@ inversion_clear H. intuition.
 apply WF_nil'. 
 apply IHmu.  inversion_clear H. assumption.
 intuition.  
-Qed. 
+Admitted. 
 
 
 
@@ -2388,6 +2483,7 @@ Proof. induction c.
 -- --intros. apply ceval_skip_1 in H0. rewrite <- H0. intuition.
 --admit.
 -- intros. rewrite <-(ceval_trace_assgn _ mu _ i a). lra. assumption. assumption.
+-- admit.
 -- intros. inversion H0; subst. simpl. lra. apply eq_trans with (d_trace_aux mu1).
    apply IHc2. apply WF_ceval' with c1 ((sigma, rho) :: mu0). assumption.
    assumption. assumption. apply IHc1. assumption. assumption.

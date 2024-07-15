@@ -1115,11 +1115,40 @@ Qed.
 
 
 Local Open Scope com_scope.
+
+Lemma ceval_single_1{n:nat}: forall (mu mu':list (state n)) X a,
+ceval_single <{ X := a }> mu mu'->
+mu'= d_update_cstate_aux X a mu .
+Proof. induction mu;  intros;
+       inversion H; subst.
+       simpl. reflexivity.
+       unfold d_update_cstate_aux.
+       f_equal. apply IHmu.
+       assumption. 
+Qed.
+
+
+Theorem rule_assgn: forall (D:Assertion) (i:nat) ( a:aexp),
+             {{Assn_sub i a D}} i := a {{D}}.
+Proof. unfold hoare_triple;
+       intros F X a n (mu,IHmu) (mu', IHmu').
+       intros. 
+       inversion_clear H; simpl in H3.
+       apply ceval_single_1 in H3.
+       apply sat_Assert_dstate_eq with 
+       ({|
+        StateMap.this := d_update_cstate_aux X a mu;
+        StateMap.sorted := d_update_cstate_sorted X a mu IHmu
+      |}).
+       unfold dstate_eq. simpl. intuition. 
+       inversion_clear H0. unfold d_update_cstate in H.
+       simpl in H. assumption.
+Qed. 
 Theorem rule_asgn_aux :  forall (P:Pure_formula) (i:nat) ( a:aexp) 
 (n:nat) (mu : list (cstate * qstate n)) (mu': list (cstate * qstate n)),
 WF_dstate_aux mu->
 ceval_single (<{i := a}>) mu mu' ->
-State_eval_dstate (Assn_sub i a P) mu->
+State_eval_dstate (Assn_sub_P i a P) mu->
 State_eval_dstate P mu'.
 Proof. intros P i a n mu. induction mu; intros; inversion H; subst.
   --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
@@ -1138,6 +1167,8 @@ Proof. intros P i a n mu. induction mu; intros; inversion H; subst.
      inversion_clear H1. apply State_eval_dstate_Forall.
      discriminate.  assumption.
 Qed.    
+
+
 
 
 Lemma Cdiv_1: forall (r1 r2: C),
@@ -1196,7 +1227,7 @@ Theorem rule_Meas_aux':forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure_
 s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
 ceval (QMeas x s' e') st mu-> 
-sat_Assert st ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s'))) ->
+sat_Assert st ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x i (P i))) (2^(e'-s'))) ->
 sat_Assert mu  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
                                (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
                                (U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
@@ -1661,7 +1692,7 @@ Theorem rule_Meas_aux'':forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure
 s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
 ceval (QMeas x s' e') mu mu'-> 
-sat_State mu ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s'))) ->
+sat_State mu ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x i (P i))) (2^(e'-s'))) ->
 sat_Assert mu'  (big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
                                (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
                                (U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))).
@@ -1723,7 +1754,7 @@ Admitted.
 Theorem rule_QMeas : forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure_formula)),
 s<=s' /\ e'<=e->
 (norm v = 1)%R -> WF_Matrix v->
-{{ (QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub x i (P i))) (2^(e'-s')) }}
+{{ (QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x i (P i))) (2^(e'-s')) }}
  QMeas x s' e' 
 {{ big_pOplus (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
  (fun i:nat=> SAnd ((P i))  (QExp_s  s  e ((R1 / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 

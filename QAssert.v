@@ -21,8 +21,9 @@ Require Import Basic_Supplement.
 
 Inductive Pure_formula:Type:=
 |PBexp (b:bexp)
-|PUniver(i:nat)( P: Pure_formula)
-|Assn_sub (i:nat) (a:aexp) (P:Pure_formula).
+|PUniver  (P: nat ->Pure_formula)
+|PExists  (P: nat -> Pure_formula)
+|Assn_sub_P (i:nat) (a:aexp) (P:Pure_formula).
 
 Inductive QExp : Type :=
 |QExp_s (s e:nat) (v: Vector (2^(e-s))): QExp
@@ -73,7 +74,8 @@ Qed.
   
 Inductive Assertion : Type:=
 |APro (pF: pro_formula)
-|ANpro (nF: npro_formula).
+|ANpro (nF: npro_formula)
+|Assn_sub (i:nat) (a:aexp) (D:Assertion).
 
 Definition State_formula_to_npro (F:State_formula):npro_formula:= [F] .
 
@@ -113,8 +115,9 @@ Import QIMP.
 Fixpoint Free_pure (P: Pure_formula ): CSet :=
   match P with
       | PBexp b=> Free_bexp b
-      | PUniver x P0 => Free_pure P0
-      | Assn_sub X a P => Free_pure P
+      | PUniver P0 => Free_pure (P0 1%nat)
+      | PExists P0 => Free_pure (P0 1%nat)
+      |Assn_sub_P i a P0 => Free_pure P0
   end.
 
 Fixpoint Free_Qexp (qs: QExp) : QSet :=
@@ -148,10 +151,11 @@ Fixpoint Free_npro(nF: npro_formula): (CSet * QSet) :=
                       NSet.union (snd (Free_state F))  (snd (Free_npro nF')))
     end.
 
-Definition Free (d: Assertion) : (CSet * QSet):=
+Fixpoint Free (d: Assertion) : (CSet * QSet):=
   match d with 
     |APro pF => Free_pro pF
     |ANpro F=> Free_npro F
+    |Assn_sub x i D => Free D
   end. 
 
 (*-------------------------------Semantics-----------------------------------*)
@@ -163,8 +167,9 @@ Local Open Scope nat_scope.
 Fixpoint Pure_eval{n:nat} (pf:Pure_formula) (st:state n): Prop :=
   match pf with 
  |PBexp b => if ((beval st b)) then True else False
- |PUniver x P=> forall a, Pure_eval P (s_update_cstate x a st)
- |Assn_sub i a P => Pure_eval P (s_update_cstate i (aeval st a) st)
+ |PUniver P=> forall (a:nat),  Pure_eval (P a) st
+ |PExists P=> exists (a:nat),  Pure_eval (P a) st
+ |Assn_sub_P i a P => Pure_eval P (s_update_cstate i (aeval st a) st)
  end. 
 
 Fixpoint QExp_eval{n:nat} (qs: QExp) (st: state n){struct qs} :Prop:=
@@ -270,6 +275,33 @@ Inductive sat_Pro {n:nat}: (dstate n)-> (pro_formula)-> Prop:=
                           -> sat_Pro mu pF.
 
 Local Open Scope R_scope.
+
+Fixpoint d_update_cstate_aux{n:nat}  i a (mu:list (state n)) := 
+  match mu with
+  |[] => []
+  |(c, q):: mu' => (StateMap.Raw.map2 option_app [((c_update i (aeval (c,q) a) c), q)] (d_update_cstate_aux i a mu'))
+  end.
+
+
+
+Lemma d_update_cstate_sorted{n:nat}: forall i a (mu:list (state n)),
+Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))   mu -> 
+Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate n))  (d_update_cstate_aux i a mu).
+Proof. intros. induction mu. simpl. apply Sorted.Sorted_nil. 
+destruct a0.  unfold d_update_cstate_aux.
+      apply StateMap.Raw.map2_sorted.
+      apply Sorted.Sorted_cons.
+      apply Sorted.Sorted_nil.
+      apply Sorted.HdRel_nil.
+      apply IHmu. 
+     inversion_clear H.  assumption.  
+Qed.
+
+
+Definition d_update_cstate {n:nat} i a (mu:dstate n) := 
+  StateMap.Build_slist (d_update_cstate_sorted i a (StateMap.this mu)
+  (StateMap.sorted mu)).
+ 
 Inductive sat_Assert {n:nat}: (dstate n)-> (Assertion)-> Prop:=
 |sat_APro: forall (mu:dstate n) pF , 
                  WF_dstate mu -> distribution_formula pF -> sat_Pro mu pF -> 
@@ -277,7 +309,10 @@ Inductive sat_Assert {n:nat}: (dstate n)-> (Assertion)-> Prop:=
 |sat_ANpro: forall (mu:dstate n) nF (p_n:list R), 
                      length p_n =length nF
                     -> sat_Assert mu (npro_to_pro_formula nF p_n)
-                    ->sat_Assert mu (ANpro nF).
+                    ->sat_Assert mu (ANpro nF)
+|sat_Assn: forall (mu:dstate n) i a D, 
+                      sat_Assert (d_update_cstate i a mu) D
+                   -> sat_Assert mu (Assn_sub i a D).
 
 Lemma  big_dapp_nil{n:nat}: forall g (f:list (dstate n)),
 g=[]\/f=[]-> dstate_eq (big_dapp g f ) (d_empty n) .
@@ -549,13 +584,17 @@ Proof. induction P.
       rewrite (state_eq_bexp st st' b). reflexivity.
        intuition.
     --simpl.  
-      simpl. destruct st. destruct st'. unfold s_update_cstate. intros. 
-      simpl in H. rewrite H.
-      simpl in IHP. split; intros.
-      apply IHP with  (c_update i a c0, q). simpl. reflexivity.
-      apply H0. 
-      apply (IHP  ((c_update i a c0), q0) ). simpl. reflexivity.
-      apply H0.
+      simpl. destruct st. destruct st'. unfold s_update_cstate.
+       intros. split. intros. apply H with  (c, q). intuition. 
+       apply H1. 
+       intros. apply H with  (c0, q0). intuition. 
+       apply H1. 
+    -simpl.  
+    simpl. destruct st. destruct st'. unfold s_update_cstate. intros.
+    split. intros. destruct H1. exists x. apply H with  (c, q). intuition. 
+    apply H1. 
+    intros. destruct H1. exists x. apply H with  (c0, q0). intuition. 
+    apply H1. 
     - split; intros; destruct st; destruct st'; 
       simpl in *; unfold s_update_cstate in *;
       simpl in H; subst.
@@ -1118,15 +1157,39 @@ Proof. intros. induction D.
         assumption. apply H2.
 Qed.
 
+(* Lemma sat_Assn_dstate_eq:
+forall n (D:Assertion) (mu mu': dstate n) i a,
+dstate_eq mu mu'->
+sat_Assert mu (Assn_sub i a D) -> sat_Assert mu' ((Assn_sub i a D)). 
+Proof. intros. inversion_clear H0. econstructor. 
+      destruct mu as [mu IHmu].
+      destruct mu' as [mu' IHmu'].
+      unfold dstate_eq in *. unfold d_update_cstate in *.
+      simpl in *.  
+
+Qed. *)
+
+
 
 
 Lemma  sat_Assert_dstate_eq: forall n (D:Assertion) (mu mu': dstate n),
 dstate_eq mu mu'->
 sat_Assert mu D-> sat_Assert mu' D.
-Proof. intros. induction D;   
+Proof.  induction D;  intros;
         [apply sat_Pro_dstate_eq with mu|
-        apply sat_Npro_dstate_eq with mu]; 
+        apply sat_Npro_dstate_eq with mu | ]; 
         intuition; intuition.
+        econstructor. inversion_clear H0.
+      destruct mu as [mu IHmu].
+      destruct mu' as [mu' IHmu'].
+      unfold dstate_eq in *. unfold d_update_cstate in *.
+      simpl in *. apply IHD with ({|
+        StateMap.this := d_update_cstate_aux i a mu;
+        StateMap.sorted :=
+          d_update_cstate_sorted i a mu IHmu
+      |}).
+        simpl. rewrite H. reflexivity.
+        assumption. 
 Qed.
 
 Lemma d_app_not_nil:
@@ -1324,12 +1387,135 @@ sat_Assert mu nF-> StateMap.this mu <> [] /\ WF_dstate mu.
 Proof.  intros.  inversion_clear H. apply (WF_sat_Pro _ _ H1) .
 Qed.
 
+(* Lemma d_trace_add{n:nat}: forall c (q:qstate n) (mu:list (state n)),
+d_trace_aux (StateMap.Raw.add c q mu)<=
+s_trace (c,q)+ d_trace_aux mu.
+Proof. intros. induction mu. simpl. lra.
+       destruct a. 
+       simpl. destruct (Cstate_as_OT.compare c c0).
+       simpl. lra.
+       simpl. admit.
+       simpl.  admit.  
+Admitted.
 
-Lemma WF_sat_Assert{n:nat}: forall (mu:dstate n) (D:Assertion), 
+
+Lemma WF_dstate_add{n:nat}: forall c (q:qstate n) (mu:list (state n)),
+WF_state (c,q)->
+WF_dstate_aux mu->
+s_trace (c,q) + d_trace_aux mu <=1->
+WF_dstate_aux (StateMap.Raw.add c q mu) .
+Proof. induction mu; intros.
+       simpl. admit.
+       destruct a.
+       simpl. destruct (Cstate_as_OT.compare c c0).
+       econstructor. assumption.
+       assumption.  simpl. assumption.
+       econstructor. assumption.
+       inversion_clear H0. assumption.
+       simpl.  simpl in H1. admit.
+       econstructor. inversion_clear H0.
+       assumption. 
+       apply IHmu. assumption.
+       inversion_clear H0. assumption.
+       simpl in H1. admit.
+       simpl in H1.
+       simpl. apply Rle_trans with (s_trace (c0, q0) +s_trace (c, q) + d_trace_aux mu).
+       admit. admit.
+Admitted.
+
+Lemma d_trace_update{n:nat}: forall  (mu:list (state n)) i a,
+d_trace_aux (d_update_cstate_aux i a mu)<=
+d_trace_aux mu.
+Proof. induction mu; intros.
+      simpl. lra. destruct a.
+      simpl.  
+      apply Rle_trans with (s_trace ((c_update i (aeval (c, q) a0) c), q) +d_trace_aux (d_update_cstate_aux i a0 mu)).
+      apply d_trace_add.
+      unfold s_trace. simpl.
+Admitted. *)
+
+Lemma WWF_d_update_cstate{n:nat}: forall i a (mu:list (state n)),
+WWF_dstate_aux mu<->
+WWF_dstate_aux (d_update_cstate_aux i a mu).
+Proof. split. induction mu; intros.
+     simpl. apply WF_nil'.
+     unfold d_update_cstate_aux.
+     destruct a0. apply WWF_d_app_aux.
+     admit. apply IHmu.
+     inversion_clear H.
+     assumption.
+     induction mu; intros.
+     simpl. apply WF_nil'.
+     unfold d_update_cstate_aux in H.
+     destruct a0. 
+     econstructor.
+Admitted.
+
+Lemma d_trace_update{n:nat}: forall  (mu:list (state n)) i a,
+WWF_dstate_aux mu->
+d_trace_aux (d_update_cstate_aux i a mu)=
+d_trace_aux mu.
+Proof. induction mu; intros.
+      simpl. lra. destruct a.
+      unfold d_update_cstate_aux.
+      rewrite d_trace_app_aux.
+      simpl d_trace_aux.
+      f_equal. unfold s_trace.
+      simpl. rewrite Rplus_0_r. reflexivity.
+      apply IHmu. inversion_clear H. 
+      assumption.  
+      econstructor. 
+      admit. apply WF_nil'.
+      apply WWF_d_update_cstate.
+      inversion_clear H. assumption.
+Admitted.
+
+
+Lemma WF_d_update_cstate{n:nat}: forall i a (mu:list (state n)),
+WF_dstate_aux mu<->
+WF_dstate_aux (d_update_cstate_aux i a mu).
+Proof. split; intros. 
+       induction mu. simpl. assumption.
+       destruct a0. 
+       unfold d_update_cstate_aux.
+        apply WF_d_app_aux.
+       admit. apply IHmu.
+       inversion_clear H. assumption.
+       rewrite d_trace_app_aux.
+       rewrite d_trace_update. 
+       admit. admit.
+       admit. 
+       apply WWF_d_update_cstate.
+       admit.
+       
+
+
+       induction mu. simpl. assumption.
+       destruct a0.
+
+       unfold d_update_cstate_aux in H.
+      econstructor.
+Admitted.
+
+
+
+Lemma WF_sat_Assert{n:nat}: forall  (D:Assertion) (mu:dstate n), 
 sat_Assert  mu D-> StateMap.this mu <> [] /\ WF_dstate mu.
-Proof. intros. induction D. 
+Proof.  induction D; intros. 
        apply (WF_sat_Pro _ _ H).
        apply (WF_sat_Npro _ _ H).
+       inversion_clear H.
+       apply IHD in H0.
+       destruct mu as [mu IHmu].  
+       unfold d_update_cstate in *.
+       unfold WF_dstate in *.
+       simpl in *.
+       induction mu. simpl in *.
+       destruct H0. destruct H. reflexivity.
+       split. discriminate.
+       destruct H0. destruct a0.
+       apply WF_d_update_cstate in H0.
+       assumption.    
 Qed.
 
 

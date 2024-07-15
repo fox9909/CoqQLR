@@ -190,9 +190,6 @@ Definition qstate (n :nat):= Density (2^n).
 Definition WF_qstate{n:nat} (rho : qstate n ):=
     @Mixed_State (2^(n)) rho.
 
-Definition WWF_qstate{n:nat} (rho : qstate n ):=
-  @Mixed_State_aux (2^(n)) rho.
-
 Definition q_update{n:nat} (U: Square (2^n)) (rho :qstate n): qstate n:=
   super U rho.
 
@@ -214,6 +211,10 @@ apply mixed_state_trace_gt0.   intuition. lra.
 Qed.
 
 
+Definition WWF_qstate{n:nat} (rho : qstate n ):=
+  @Mixed_State_aux (2^(n)) rho.
+
+
 
 (*----------------------C-Q state------------------------------------------*)
 Module NSet := FSetList.Make Nat_as_OT.
@@ -227,7 +228,7 @@ Fixpoint Qsys_to_Set_aux (n m :nat)(l: QSet): QSet:=
   end) 
   else l .
 
-Definition Qsys_to_Set (n m :nat): QSet:= Qsys_to_Set_aux n m (NSet.empty) .
+Definition Qsys_to_Set (n m :nat): QSet:= Qsys_to_Set_aux n m (NSet.empty).
 
 
 Local Open Scope R_scope.
@@ -236,9 +237,6 @@ Definition state(n: nat) := (cstate * (qstate n))%type.
 
 Definition WF_state{n:nat} (st:state n): Prop:=
           WF_qstate (snd st).
-
-Definition WWF_state{n:nat} (st:state n): Prop:=
-  WWF_qstate (snd st).
 
 Definition s_update_cstate{n:nat} (i v :nat) (m:state n): state n:=
   match m with 
@@ -341,6 +339,28 @@ apply Cstate_as_OT.eq_sym in H.  apply l in H. intuition.
 Qed.
 
 
+Local Open Scope R_scope.
+Lemma s_trace_scale{n:nat}: forall c (q :(qstate n)) (p:R) ,
+(0<p)-> @s_trace n (c, p .* q)=
+p * s_trace (c,q).
+Proof. intros. unfold s_trace. simpl. rewrite trace_mult_dist.
+       rewrite Cmod_mult. rewrite Cmod_R. rewrite Rabs_right. reflexivity.
+intuition.
+Qed.
+
+Lemma WF_s_plus{n}:forall (c c0:cstate) (q q0:qstate n ) (p1 p2:R),
+(0<p1<=1/\0<p2<=1)-> (p1+p2<=1)-> 
+WF_state (c, q)-> WF_state ( c0, q0)->
+@WF_state n (c, (p1 .* q .+ p2 .* q0)).
+Proof. unfold WF_state.  unfold s_trace. unfold WF_qstate. simpl. 
+       intros. apply Mix_S; intuition. 
+Qed.
+
+
+Definition WWF_state{n:nat} (st:state n): Prop:=
+  WWF_qstate (snd st).
+
+
 (*------------------------Distribution state------------------------------*)
 
 
@@ -372,17 +392,9 @@ Inductive WF_dstate_aux{n:nat}: list(cstate * (qstate n)) -> Prop:=
 |WF_cons st mu': WF_state st -> WF_dstate_aux mu'->
                          (d_trace_aux (st::mu')) <=1 
                         -> WF_dstate_aux (st::mu').
-
-Inductive WWF_dstate_aux{n:nat}: list(cstate * (qstate n)) -> Prop:=
-|WF_nil': WWF_dstate_aux nil
-|WF_cons' st mu': WWF_state st -> WWF_dstate_aux mu' 
-                        -> WWF_dstate_aux (st::mu').
-
+                       
 Definition WF_dstate{n:nat} (mu: dstate n):Prop:=
-    WF_dstate_aux (this mu).
-
-Definition WWF_dstate{n:nat} (mu: dstate n):Prop:=
-  WWF_dstate_aux (StateMap.this mu).
+  WF_dstate_aux (this mu).
 
 Definition option_qstate{n:nat} (q: option (qstate n)): (qstate n) :=
     match q with 
@@ -480,6 +492,15 @@ Proof. unfold WWF_state. unfold WWF_qstate. unfold s_trace. intros.
        apply mixed_state_Cmod_1_aux. intuition. 
 Qed.
 
+Inductive WWF_dstate_aux{n:nat}: list(cstate * (qstate n)) -> Prop:=
+|WF_nil': WWF_dstate_aux nil
+|WF_cons' st mu': WWF_state st -> WWF_dstate_aux mu' 
+                        -> WWF_dstate_aux (st::mu').
+
+
+Definition WWF_dstate{n:nat} (mu: dstate n):Prop:=
+  WWF_dstate_aux (StateMap.this mu).
+
 Lemma WWF_dstate_gt_0_aux{n:nat}: forall (mu:list( cstate*qstate n)),
 WWF_dstate_aux mu-> 0 <= ((d_trace_aux mu)).
 Proof. intros. induction mu.
@@ -532,15 +553,6 @@ Qed.
 
 
 (*------------WF_d_scale-------------------*)
-
-Local Open Scope R_scope.
-Lemma s_trace_scale{n:nat}: forall c (q :(qstate n)) (p:R) ,
-(0<p)-> @s_trace n (c, p .* q)=
-p * s_trace (c,q).
-Proof. intros. unfold s_trace. simpl. rewrite trace_mult_dist.
-       rewrite Cmod_mult. rewrite Cmod_R. rewrite Rabs_right. reflexivity.
-intuition.
-Qed.
 
 Local Open Scope R_scope.
 Lemma d_trace_scale_aux{n:nat}: forall (mu:list (cstate * qstate n)) (p:R),
@@ -682,14 +694,6 @@ Qed.
 
 (*------------------WF_d_app------------------------------*)
 
-
-Lemma WF_s_plus{n}:forall (c c0:cstate) (q q0:qstate n ) (p1 p2:R),
-(0<p1<=1/\0<p2<=1)-> (p1+p2<=1)-> 
-WF_state (c, q)-> WF_state ( c0, q0)->
-@WF_state n (c, (p1 .* q .+ p2 .* q0)).
-Proof. unfold WF_state.  unfold s_trace. unfold WF_qstate. simpl. 
-       intros. apply Mix_S; intuition. 
-Qed.
 
 
 Lemma WWF_s_plus{n}:forall (c c0:cstate) (q q0:qstate n ) ,
