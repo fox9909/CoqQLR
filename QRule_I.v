@@ -1482,31 +1482,12 @@ Proof. intros. apply while_seq. apply rule_seq with (ANpro[F0 /\ b; F1 /\ (BNot 
 Qed.
 
 
-
-Lemma rule_f: forall  F c n (mu mu':list (cstate * qstate n )) ,
-State_eval_dstate F mu->
-ceval_single c mu mu'-> 
-NSet.inter (fst (Free_state F)) (fst (MVar c)) =
-NSet.empty /\
-NSet.inter (snd (Free_state F)) (snd (MVar c)) =
-NSet.empty->
-State_eval_dstate F mu'.
-Proof. induction c. intros. 
--(*skip*) apply ceval_skip_1 in H0. rewrite <-H0. assumption.
--admit.
--intros. inversion H0; subst.  assumption. 
-  
-
-
-destruct H1. 
-Admitted.
-
 Lemma State_eval_odot:forall (n : nat) (mu : list (cstate * qstate n)) (F1 F2 : State_formula),
 State_eval_dstate ((F1 ⊙ F2)) mu <->
 State_eval_dstate F1 mu /\ State_eval_dstate F2 mu /\ 
 NSet.Equal (NSet.inter (snd (Free_state F1))
          (snd (Free_state F2)))
-     NSet.empty  .
+     NSet.empty .
 Proof.
 intros. split; intros; 
        induction mu; 
@@ -1526,17 +1507,220 @@ intros. split; intros;
 Qed.
 
 
+(* Lemma rule_f: forall  F1 F2 c n (mu mu':list (cstate * qstate n )) ,
+State_eval_dstate (F1 ⊙ F2) mu->
+ceval_single c mu mu'-> 
+NSet.Subset (fst (MVar c)) (fst (Free_state F1))->
+NSet.Subset (snd (MVar c)) (snd (Free_state F1))->
+State_eval_dstate F2 mu'.
+Proof. induction c. intros. 
+-(*skip*) apply ceval_skip_1 in H0. rewrite <-H0.
+  rewrite State_eval_odot in H.  intuition.
+-admit.
+-intros. inversion H0; subst.  assumption. *)
+Lemma rule_f': forall a n sigma (rho:qstate n) i a',
+NSet.Equal (NSet.inter (NSet.add i NSet.empty)
+       ((Free_aexp a))) (NSet.empty) ->
+ aeval 
+  (c_update i (aeval (sigma, rho) a') sigma, rho) a =
+  aeval 
+  (sigma, rho) a .
+Proof. induction a; intros.
+       simpl. reflexivity.   
+       simpl in *. 
+       assert(i0<>i). admit.
+       rewrite c_update_find_not.
+       reflexivity. assumption.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+       simpl in *. rewrite IHa1.
+       rewrite IHa2. reflexivity.
+       admit. admit.
+Admitted.
+
+Lemma rule_f_b: forall b n sigma (rho:qstate n) i a,
+NSet.Equal (NSet.inter (NSet.add i NSet.empty)
+       ((Free_bexp b))) (NSet.empty) ->
+beval 
+  (c_update i (aeval (sigma, rho) a) sigma, rho) b=
+beval 
+  (sigma, rho) b .
+Proof. induction b; intros.
+       simpl. reflexivity.
+       simpl. reflexivity.   
+       simpl in *. repeat rewrite rule_f'.
+       reflexivity. admit. admit.
+       simpl in *. repeat rewrite rule_f'.
+       reflexivity. admit. admit.
+       simpl in *. repeat rewrite rule_f'.
+       reflexivity. admit. admit.
+       simpl in *. repeat rewrite rule_f'.
+       reflexivity. admit. admit.
+       simpl in *.  rewrite IHb.
+       reflexivity. assumption.
+       simpl in *. rewrite IHb1. rewrite IHb2.
+       reflexivity. admit. admit.
+       simpl in *. rewrite IHb1. rewrite IHb2.
+       reflexivity. admit. admit.
+Admitted.
+
+(* Lemma Free_map: forall (P:nat->Pure_formula) (x y:nat) ,
+(Free_pure (P x))= (Free_pure (P y)).
+Proof. induction P. simpl. intros. induction (P x); induction (P y).
+       destruct b; destruct b0. reflexivity.
+
+  
+Qed. *)
+
+
+Lemma rule_f'_p: forall  P n sigma (rho:qstate n) i a,
+NSet.Equal (NSet.inter (NSet.add i NSet.empty)
+       ((Free_pure P))) (NSet.empty) ->
+Pure_eval P
+  (c_update i (aeval (sigma, rho) a) sigma, rho)<->
+Pure_eval P
+  (sigma, rho) .
+Proof. induction P; intros.
+       simpl. rewrite rule_f_b. reflexivity.    
+       assumption. admit. admit.
+       split. 
+       simpl in *. intros.
+       remember (c_update i (aeval (sigma, rho) a) sigma).
+       apply (IHP _ c rho i0 a0).
+       assumption.
+       rewrite Heqc. admit.
+       intros.
+       simpl in *.
+       remember (c_update i (aeval (sigma, rho) a) sigma).
+       apply (IHP _ c rho i0 a0) in H0.
+Admitted.
+
+Lemma rule_f_assn: forall  F n sigma (rho:qstate n) i a,
+NSet.Equal (NSet.inter (fst (MVar <{ i := a }>)) (fst (Free_state F))) NSet.empty ->
+State_eval F (c_update i (aeval (sigma, rho) a) sigma, rho) <-> State_eval F (sigma, rho) .
+Proof. induction F; intros; simpl in *. 
+       apply rule_f'_p. assumption. 
+       admit.
+       simpl.
+       split. rewrite IHF1. rewrite IHF2.
+       intuition. admit. admit. 
+       rewrite IHF1. rewrite IHF2.
+       intuition. admit. admit.
+       split. rewrite IHF1. rewrite IHF2.
+       intuition. admit. admit. 
+       rewrite IHF1. rewrite IHF2.
+       intuition. admit. admit.
+Admitted.
+
+
+Lemma rule_f_qinit_qs: forall  (qs:QExp) F1 n (st st': (cstate * qstate n )) s e,
+State_eval (F1 ⊙ qs) st->
+ceval_single (QInit s e) [st] [st']-> 
+NSet.Subset (snd (MVar (QInit s e))) (snd (Free_state F1))->
+State_eval qs st'.
+Proof. induction qs. intros. 
+       inversion H0; subst. inversion H8; subst.
+       inversion_clear H8. injection H7.
+       intros. rewrite <-H2.  clear H7. clear H2.
+
+
+       assert(e < s0 \/ s> e0)%nat. admit.
+       destruct H2.
+       simpl in *. split. intuition.
+       split. intuition.  
+        admit.
+        intros.
+        simpl in *.
+        split.  intuition.
+        split. apply (IHqs1 F1  n st st' s e).
+        split. admit. intuition.
+        assumption. assumption.
+        apply (IHqs2 F1  n st st' s e).
+        split. admit. intuition.
+        assumption. assumption.
+Admitted.
+
+
+
+
+
+
+Lemma rule_f_qinit: forall  F1 F2 n (st st': (cstate * qstate n )) s e,
+State_eval (F1 ⊙ F2) st->
+ceval_single (QInit s e) [st] [st']-> 
+NSet.Subset (snd (MVar (QInit s e))) (snd (Free_state F1))->
+State_eval F2 st'.
+Proof. intros. inversion H0; subst. inversion H8; subst.
+       inversion_clear H8. injection H7. intros.
+       rewrite <-H2.  simpl in *.
+       
+       induction F2. simpl. apply state_eq_Pure with (sigma, rho).
+       reflexivity. intuition.
+
+       admit.
+
+       simpl.   destruct H.
+       destruct H3. simpl in H4. split.  intuition.
+       split. apply IHF2_1.
+       split. simpl in H. admit.
+       intuition. 
+       apply IHF2_2.
+       split. simpl in H. admit.
+       intuition. 
+
+       simpl.   destruct H.
+       destruct H3. simpl in H4. 
+       split. apply IHF2_1.
+       split. simpl in H. admit.
+       intuition. 
+       apply IHF2_2.
+       split. simpl in H. admit.
+       intuition. 
+Admitted.
+       
+      
+        
+
+
+
+ 
+  
+
+
+
+
+
+
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
          ({{F1}} c {{F2}}) /\  (NSet.inter (fst (Free_state F3)) (fst (MVar c)) =NSet.empty) 
          /\ (NSet.inter (snd (Free_state F3)) (snd (MVar c)) =NSet.empty) 
          ->  {{F1 ⊙ F3}} c {{F2 ⊙ F3}}.
 Proof.  unfold hoare_triple.  intros. destruct H.
+        assert(sat_Assert mu F1 -> sat_Assert mu' F2).
+        apply H. assumption. 
         destruct mu as [mu IHmu].
         destruct mu' as [mu' IHmu'].
         inversion_clear H0. simpl in H5.
-        rewrite sat_Assert_to_State in *.
+        repeat rewrite sat_Assert_to_State in *.
         inversion_clear H1.  simpl in *.
-        econstructor. assumption.  
+        econstructor. assumption. simpl in *.
+        inversion_clear H3.  
         simpl in H6.
         rewrite State_eval_odot in *.
         destruct H6. destruct H6.

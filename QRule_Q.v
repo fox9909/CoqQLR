@@ -778,17 +778,7 @@ admit. apply Uq.  admit.
   apply mixed_state_trace_real. apply Uq. apply WF_U_v. lia. auto_wf. auto_wf. 
 Admitted. 
 
-Lemma base_innner: forall i n,
-(i<(2^n))%nat->
-⟨ i ∣_ (n) × ∣ i ⟩_ (n) = I 1.
-Proof. intros. assert(⟨ i ∣_ (n) × ∣ i ⟩_ (n)= ⟨ i ∣_ (n) × I (2^n) ×  ∣ i ⟩_ (n)).
-       rewrite Mmult_1_r. reflexivity. auto_wf. 
-       rewrite H0. 
-      rewrite inner'.  
-       unfold I. bdestruct ((i =? i)). bdestruct (i <? 2 ^ n). simpl.
-       rewrite Mscale_1_l. reflexivity.     
-       lia. lia. auto_wf. assumption.
-Qed.
+
 
 Lemma Rinv_l': forall (r1 r2:R),
 (r2<>0)%R->
@@ -1290,7 +1280,7 @@ rewrite<- Mmult_assoc. rewrite (Mmult_assoc  _ m m).
 f_equal. f_equal. rewrite Heqm. repeat rewrite kron_mixed_product.
 repeat rewrite Mmult_1_r. rewrite <-Mmult_assoc.  
 rewrite (Mmult_assoc  _ (⟨ x0 ∣_ (e' - s')) _). 
-rewrite base_innner. rewrite Mmult_1_r. reflexivity.
+rewrite Vec_inner_1. rewrite Mmult_1_r. reflexivity.
 auto_wf. assumption. auto_wf. auto_wf. simpl. reflexivity.
 intros.  rewrite Rmult_1_r. rewrite sqrt_sqrt. f_equal.
 f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.

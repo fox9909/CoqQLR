@@ -9,7 +9,9 @@ Quantum.v
 Basic_Supplement.v
 ParDensityO.v
 QState.v
+QState_L.v
 QIMP.v
+QIMP_L.v
 QAssert.v
 QRule_E.v 
 QRule_Q.v 
