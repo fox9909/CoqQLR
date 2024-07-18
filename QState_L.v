@@ -1451,9 +1451,9 @@ Qed.
 (*--------------------------------------------------------------------*)
 
        
-(* Lemma dstate_1{n:nat}: forall (mu: list (cstate *qstate n))
-(t x:cstate) (q:qstate n),
-Sorted (Raw.PX.ltk (elt:=qstate n))
+ Lemma dstate_1{s e:nat}: forall (mu: list (cstate *qstate s e))
+(t x:cstate) (q:qstate s e),
+Sorted (Raw.PX.ltk (elt:=qstate s e))
           ((t, q) :: mu)->
 option_qstate (StateMap.Raw.find x mu)<>Zero -> Cstate_as_OT.lt t x.
 Proof. induction mu.
@@ -1465,7 +1465,7 @@ Proof. induction mu.
     inversion_clear H. inversion_clear H2.
     unfold Raw.PX.ltk in H.  
     simpl in H. unfold Cstate_as_OT.lt. assumption.
-    rewrite <-e in H1. assumption.
+    rewrite <-e0 in H1. assumption.
     inversion_clear H. 
     inversion_clear H2.
     inversion_clear H1. 
@@ -1514,11 +1514,11 @@ Qed.
 Proof. intro. unfold not. intro.  
   
 Qed. *)
-Lemma find_dec{n:nat}: forall x (mu:list (cstate * qstate n)),
+Lemma find_dec{s e:nat}: forall x (mu:list (cstate * qstate s e)),
 option_qstate
-(Raw.find (elt:=qstate n) x mu)= Zero
+(Raw.find (elt:=qstate s e) x mu)= Zero
 \/ option_qstate
-(Raw.find (elt:=qstate n) x mu)<>Zero.
+(Raw.find (elt:=qstate s e) x mu)<>Zero.
 Proof. intros. 
     induction mu.
     --simpl. intuition.
@@ -1531,7 +1531,7 @@ Proof. intros.
 Qed.
 
 
-Lemma dstate_2{n:nat}: forall x (mu1 mu2: list (cstate *qstate n)),
+Lemma dstate_2{s e:nat}: forall x (mu1 mu2: list (cstate *qstate s e)),
 (option_qstate (StateMap.Raw.find x mu1)<>
 option_qstate (StateMap.Raw.find x mu2))->
 option_qstate (StateMap.Raw.find x mu1)<>Zero \/
@@ -1567,7 +1567,7 @@ Proof. intros. unfold not in H. unfold not.
       assumption.
 Qed.
 
-Lemma Nforall{n:nat}:  forall  (mu1 mu2:dstate n),
+Lemma Nforall{s e:nat}:  forall  (mu1 mu2:dstate s e),
 (forall x : cstate,
  d_find x mu1 = d_find x mu2) ->
 ~
@@ -1587,7 +1587,7 @@ Proof. intros.  assert(P/\Q/\R2). intuition.
 Qed.
 
 
-Lemma d_eq{n:nat}: forall (mu1 mu2:dstate n),
+Lemma d_eq{s e:nat}: forall (mu1 mu2:dstate s e),
 WF_dstate mu1 -> WF_dstate mu2->
   (~ dstate_eq mu1 mu2-> exists x, d_find x mu1<>d_find x mu2) .
 Proof. intros  (mu1, IHmu1); induction mu1; intros (mu2, IHmu2);
@@ -1621,8 +1621,8 @@ Proof. intros  (mu1, IHmu1); induction mu1; intros (mu2, IHmu2);
         destruct H12.
         *unfold dstate_eq in IHmu0. 
          simpl in IHmu0.
-        unfold Cstate_as_OT.eq in e.
-        rewrite e in H1. rewrite H12 in H1. 
+        unfold Cstate_as_OT.eq in e0.
+        rewrite e0 in H1. rewrite H12 in H1. 
         assert(mu1<>mu2). unfold not. intros.
         destruct H1. f_equal. assumption.
         assert( exists x : cstate,
@@ -1633,8 +1633,8 @@ Proof. intros  (mu1, IHmu1); induction mu1; intros (mu2, IHmu2);
         apply (IHmu0 H2 (Build_slist H10) H5 H8 H13).
         destruct H14. unfold d_find in H14.
         unfold find in H14. simpl in H14.
-        assert(option_qstate (Raw.find (elt:=qstate n) x mu1) <>
-        option_qstate (Raw.find (elt:=qstate n) x mu2)).
+        assert(option_qstate (Raw.find (elt:=qstate s e) x mu1) <>
+        option_qstate (Raw.find (elt:=qstate s e) x mu2)).
         assumption.
         apply dstate_2 in H14. 
          destruct H14. 
@@ -1655,7 +1655,7 @@ Qed.
 
 
  
-Lemma d_eq_1{n:nat}: forall (mu1 mu2:dstate n),
+Lemma d_eq_1{s e:nat}: forall (mu1 mu2:dstate s e),
  WF_dstate mu1 -> WF_dstate mu2->
   ( forall x, d_find x mu1=d_find x mu2)-> dstate_eq mu1 mu2 .
 Proof.  intros  mu1 mu2 H1 H2. 
@@ -1667,10 +1667,10 @@ Proof.  intros  mu1 mu2 H1 H2.
        apply NNP. assumption. 
 Qed.
 
-Lemma dstate_equal{n:nat}: forall (mu1 mu2:dstate n),
+Lemma dstate_equal{s e:nat}: forall (mu1 mu2:dstate s e),
   WF_dstate mu1 -> WF_dstate mu2->
 ( forall x, d_find x mu1=d_find x mu2)<-> dstate_eq mu1 mu2 .
 Proof. split. apply d_eq_1. assumption. assumption.
      apply  d_find_eq.
-Qed. *)
+Qed. 
 

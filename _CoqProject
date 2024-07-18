@@ -13,6 +13,9 @@ QState_L.v
 QIMP.v
 QIMP_L.v
 QAssert.v
+QAssert_L.v
 QRule_E.v 
+QRule_E_L.v
 QRule_Q.v 
+QRule_Q_L.v
 QRule_I.v
