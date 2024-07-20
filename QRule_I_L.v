@@ -25,14 +25,6 @@ From Quan Require Import QRule_E_L.
 
 Local Open Scope com_scope.
 
-Definition assert_implies (P Q : Assertion) : Prop :=
-    forall (s e:nat) (mu:dstate s e), sat_Assert  mu P -> sat_Assert  mu Q.
-Notation "P ->> Q" := (assert_implies P Q)
-    (at level 90) : assert_scope.
-Local Open Scope assert_scope.
-Notation "P <<->> Q" :=
-    ((P ->> Q) /\ (Q ->> P)) (at level 80) : assert_scope.
-
 
 Open Scope rule_scope.
 Theorem rule_skip : forall (D: Assertion), {{D}} skip {{D}}.
@@ -1981,20 +1973,6 @@ Proof. induction x; induction mu1; intros.
 Admitted.
 
 
-Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
-(fst st) = (fst st')-> (aeval st a) = aeval st' a.
-Proof. intros. induction a.
-      --reflexivity. 
-      --simpl. rewrite H. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-Qed.
-
 Lemma q_subseq_trans:forall s e (q0 q1 q2: qstate s e),
  q_subseq q0 q1->
  q_subseq q1 q2->
@@ -2093,29 +2071,167 @@ Qed.
 
 
 
+Fixpoint dstate_cstate_eq{s e:nat} (mu1 mu2: list (state s e)) :=
+match mu1, mu2 with
+|nil, nil => True 
+|(c1,q1)::mu1', (c2,q2)::mu2' => c1=c2 /\ dstate_cstate_eq mu1' mu2'
+|_, _ => False
+end.
+
+Lemma d_c_eq_map2: forall s e
+(mu1 mu2 mu1' mu2':list (cstate *qstate s e)),
+dstate_cstate_eq mu1 mu1'->
+dstate_cstate_eq mu2 mu2'->
+dstate_cstate_eq (StateMap.Raw.map2 option_app mu1 mu2)
+  (StateMap.Raw.map2 option_app mu1' mu2').
+Proof.   induction mu1; induction mu2; intros;
+destruct mu1'; destruct mu2';
+try destruct p; try destruct a; 
+try destruct a0; try intuition.
+simpl in *.
+repeat rewrite map2_r_refl.
+intuition.
+simpl in *. 
+repeat rewrite map2_l_refl.
+intuition.
+destruct p0. 
+simpl in *. destruct H. destruct H0.
+subst. 
+destruct (Cstate_as_OT.compare c c2).
+simpl. split. intuition.
+apply IHmu1. intuition.
+simpl. intuition.
+
+simpl. split. intuition.
+apply IHmu1. intuition. intuition.
+
+split. reflexivity.
+repeat rewrite app_fix in *.
+apply IHmu2.
+split. reflexivity.
+intuition. intuition.
+Qed. 
+
+Fixpoint dstate_qstate_eq{s e:nat} (mu1 mu2: list (state s e)) :=
+match mu1, mu2 with
+|nil, nil => True 
+|(c1,q1)::mu1', (c2,q2)::mu2' => q1=q2 /\ dstate_qstate_eq mu1' mu2'
+|_, _ => False
+end.
+
+(* Lemma d_q_eq_map2: forall s e
+(mu1 mu2 mu1' mu2':list (cstate *qstate s e)),
+dstate_qstate_eq mu1 mu1'->
+dstate_qstate_eq mu2 mu2'->
+dstate_qstate_eq (StateMap.Raw.map2 option_app mu1 mu2)
+  (StateMap.Raw.map2 option_app mu1' mu2').
+Proof.   induction mu1; induction mu2; intros;
+destruct mu1'; destruct mu2';
+try destruct p; try destruct a; 
+try destruct a0; try intuition.
+simpl in *.
+repeat rewrite map2_r_refl.
+intuition.
+simpl in *. 
+repeat rewrite map2_l_refl.
+intuition.
+destruct p0. 
+simpl in *. destruct H. destruct H0.
+subst. 
+destruct (Cstate_as_OT.compare c c2).
+simpl. split. intuition.
+apply IHmu1. intuition.
+simpl. intuition.
+
+simpl. split. intuition.
+apply IHmu1. intuition. intuition.
+
+split. reflexivity.
+repeat rewrite app_fix in *.
+apply IHmu2.
+split. reflexivity.
+intuition. intuition.
+Qed.  *)
+Local Open Scope nat_scope.
+Lemma QInit_fun_sub{s' e':nat}: forall s e (q q': qstate s' e'), 
+s'<=s/\s<=e/\e<=e'->
+q_subseq q q'->
+@q_subseq s' e' (QInit_fun s e q) (QInit_fun s e q').
+Proof. intros. inversion_clear H0. subst. 
+       apply q_subseq_eq. reflexivity.
+      destruct H1. subst.
+      rewrite <-QInit_fun_plus.
+      unfold q_subseq. right.
+      exists (QInit_fun s e x).
+      reflexivity. intuition.
+Qed.
+
+
+Lemma QUnit_Ctrl_fun_sub{s' e':nat}: forall s0 e0 s1 e1 (q q0: qstate s' e') (U: nat-> Square (2^(e1-s1))), 
+s'<=s0/\s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=e'->
+q_subseq q0 q->
+q_subseq (QUnit_Ctrl_fun s0 e0 s1 e1 U q0) 
+(QUnit_Ctrl_fun s0  e0 s1 e1 U q).
+Proof. intros. inversion_clear H0. subst. 
+apply q_subseq_eq. reflexivity.
+destruct H1. subst.
+rewrite <-QUnit_Ctrl_fun_plus.
+unfold q_subseq. right.
+exists (QUnit_Ctrl_fun s0 e0 s1 e1 U x).
+reflexivity. intuition.
+Qed.
+
+
+Lemma QUnit_One_fun_sub{s' e':nat}: forall s e U (q q': qstate s' e'), 
+s'<=s/\s<=e/\e<=e'->
+q_subseq q q'->
+@q_subseq s' e' (QUnit_One_fun s e U q) (QUnit_One_fun s e U q').
+Proof. intros. inversion_clear H0. subst. 
+       apply q_subseq_eq. reflexivity.
+      destruct H1. subst.
+      rewrite <-QUnit_One_fun_plus.
+      unfold q_subseq. right.
+      exists (QUnit_One_fun s e U x).
+      reflexivity. intuition.
+Qed.
+
+Lemma QMeas_fun_sub{s' e':nat}: forall s e i (q q': qstate s' e'), 
+s'<=s/\s<=e/\e<=e'->
+q_subseq q q'->
+@q_subseq s' e' (QMeas_fun s e i q) (QMeas_fun s e i q').
+Proof. intros. inversion_clear H0. subst. 
+       apply q_subseq_eq. reflexivity.
+      destruct H1. subst.
+      rewrite <-QMeas_fun_plus.
+      unfold q_subseq. right.
+      exists (QMeas_fun s e i x).
+      reflexivity. intuition.
+Qed.
+
+
 Lemma rule_two: forall c s0 e0 s1 e1 
 (mu1:list (cstate *qstate s0 e0))
 (mu2:list (cstate *qstate s1 e1))
 s e
-(mu0 mu mu':list (cstate *qstate s e)) ,
+(mu0 mu mu':list (cstate *qstate s e)) F ,
 ceval_single c mu mu'-> 
 d_combin mu1 mu2 mu0  ->
 d_subseq mu mu0 ->
+NSet.inter (fst (Free_state F)) (fst (MVar c)) = NSet.empty ->
+NSet.Subset (snd (MVar c)) (Qsys_to_Set s0 e0) ->
+State_eval_dstate F mu2 ->
 (exists (mu1' :list (cstate *qstate s0 e0))
 ( mu2': list (cstate *qstate s1 e1))
 ( mu'': list (cstate *qstate s e)), and 
 (ceval_single c mu1 mu1')
-(ceval_single c mu2 mu2'/\
- d_combin mu1' mu2' mu''  /\
+(State_eval_dstate F mu2' /\
+d_combin mu1' mu2' mu''  /\
  d_subseq mu' mu'')).
 Proof. induction c. 
 -- induction mu1; intros. 
    {inversion  H0; subst. 
    exists nil. exists nil. exists nil. 
-   split. apply E_nil. split. apply E_nil.
-   split. apply combin_nil. destruct mu.
-   inversion_clear H. intuition. 
-   destruct p. intuition. }
+   split. apply E_nil. destruct H4. }
     { destruct a. 
     inversion H0; subst. clear H0.
     assert(ceval_single <{ skip }> (mu'0) (mu'0)).
@@ -2124,35 +2240,43 @@ Proof. induction c.
     (mu2' : list (cstate * qstate s1 e1)) 
     (mu'' :  list (cstate * qstate s e)),
     ceval_single <{ skip }> mu1 mu1' /\
-    ceval_single <{ skip }> mu4 mu2' /\
+    State_eval_dstate F mu2' /\
     d_combin mu1' mu2' mu'' /\ d_subseq mu'0 mu'').
-    apply (IHmu1 _ _ _ _ _ _ H0 H8). apply d_subseq_eq.
-    reflexivity.
-    destruct H2. destruct H2. destruct H2. 
-    exists (((c, q) :: mu1)). exists (((c, rho1) :: mu4)).
-    exists ((c, rho')::mu'0).
-    split. apply E_Skip. split. apply E_Skip.
+    apply (IHmu1 _ _ _ _ _ _ _ H0 H11). apply d_subseq_eq.
+    reflexivity. assumption. assumption. admit.
+    destruct H5. destruct H5. destruct H5. 
+    destruct H5. apply ceval_skip_1 in H5.
+    subst.
+    exists (((c, q) :: x)). exists (((c, rho1) :: x0)).
+    exists ((c, rho')::x1).
+    split.  apply E_Skip. split. simpl.
+    econstructor. inversion_clear H4. assumption.
+    admit.
     split. econstructor.  intuition.  intuition.
-    apply ceval_skip_1 in H. rewrite <-H. intuition. }
+    apply ceval_skip_1 in H. rewrite <-H. 
+    apply d_subseq_trans with ((c, rho') :: mu'0).
+    assumption. simpl. split. reflexivity.
+    split. apply q_subseq_eq. reflexivity.
+    intuition.
+     }
 -- admit.
 --induction mu1; intros.
   {inversion  H0; subst. 
    exists nil. exists nil. exists nil.
-   split. econstructor. split. econstructor.
-   split. econstructor. destruct mu. 
-   inversion_clear H. econstructor. 
-   destruct p. intuition. }
+   split. econstructor. destruct H4. }
    {destruct a0. inversion H0; subst. clear H0.
     destruct mu. simpl in H1. intuition.
-    destruct p. inversion H; subst. simpl in H1. 
+    destruct p. inversion H; subst. simpl in H1.
+    destruct H1. subst. 
   assert(exists
   (mu1' : list (cstate * qstate s0 e0)) 
   (mu2' : list (cstate * qstate s1 e1)) 
   (mu'' : list  (cstate * qstate s e)),
   (and (ceval_single <{ i := a }> mu1 mu1') 
-   (ceval_single <{ i := a }> mu4 mu2' /\
+   (State_eval_dstate F mu2'/\
    d_combin mu1' mu2' mu'' /\ d_subseq mu'1 mu''))).
-  apply (IHmu1 _ _ _ _ _ _ H9 H8). intuition. 
+  apply (IHmu1 _ _ _ _ _ _ _ H12 H11). intuition.
+  assumption. assumption. admit. 
   destruct H0. destruct H0. destruct H0.
   exists (StateMap.Raw.map2 option_app 
   [(c_update i (aeval (c,q) a) c, q)] x).
@@ -2165,86 +2289,88 @@ Proof. induction c.
   (StateMap.Raw.map2 option_app
      [(c_update i (aeval (c, q) a) c, rho1)] x0) mu'').
   apply rule_6 with  (rho') x1. assumption. intuition. 
-   destruct H2. exists x2. 
+   destruct H5. exists x2. 
   split. apply E_Asgn. intuition.
-  split. apply E_Asgn. intuition.
+  split. admit.
   split. rewrite (state_eq_aexp (c, rho1) (c,q)).
   intuition. reflexivity. 
   apply d_subseq_trans with 
   ((StateMap.Raw.map2 option_app
   [(c_update i (aeval (c, q) a) c, rho')] x1)).
-  admit. 
+  apply d_subseq_map2. simpl.
+  rewrite (state_eq_aexp (c, q0) (c, q)).
+  intuition. reflexivity. intuition.  
   apply rule_three with s0 e0 s1 e1 x x0 q rho1.
-  assumption. intuition. assumption. }
+  assumption. intuition. assumption. } 
  --admit.
  --intros. destruct mu1; intros.
    { inversion  H0; subst.
      exists nil. exists nil. exists nil. 
-     split; econstructor. econstructor.
-     split. econstructor. 
-     destruct mu. inversion_clear H.
-     econstructor. destruct p. intuition. }
+     split; econstructor. destruct H4. 
+     destruct H4. }
    { inversion H0; subst. clear H0.
      destruct mu. intuition.
      destruct p.   inversion H; subst.
-      simpl in H1.
+      simpl in H1. destruct H1. destruct H0.
 assert(exists
 (mu1' : list (cstate * qstate s0 e0)) 
 (mu2' : list (cstate * qstate s1 e1))
 (mu'' : list (cstate * qstate s e)),
 (and (ceval_single c1 (((c, rho0) :: mu1)) mu1') 
- (ceval_single c1 (((c, rho1) :: mu4)) mu2' /\
+ (State_eval_dstate F mu2'  /\
  d_combin mu1' mu2' mu''  /\ d_subseq mu2 mu''))).
-apply IHc1 with  ((c, rho') :: mu'0) (((c, q) :: mu)).
+apply IHc1 with ((c, rho1) :: mu4) ((c, rho') :: mu'0) (((c, q) :: mu)) .
 intuition. econstructor.  intuition.
 intuition. simpl. split. reflexivity. apply H1.
+admit.
+admit. assumption.  
 destruct H0. destruct H0. destruct H0.
 assert( exists
 (mu1' : list (cstate * qstate s0 e0)) 
 (mu2' : list (cstate * qstate s1 e1))
 (mu'' : list (cstate * qstate s e)),
 (and (ceval_single c2 x mu1') 
- (ceval_single c2 x0 mu2' /\
+ (State_eval_dstate F mu2' /\
  d_combin mu1' mu2' mu'' /\ d_subseq mu' mu'' ))).
- apply IHc2 with x1 mu2. intuition. intuition.
- intuition.
- destruct H2. destruct H2. destruct H2.
+ apply IHc2 with x0 x1 mu2. intuition. intuition.
+ intuition. admit. admit. intuition.
+ destruct H5. destruct H5. destruct H5.
  exists x2. exists x3. exists x4. split.
-  apply E_Seq with x. destruct H1. subst. 
-  intuition. intuition. split. 
-  apply E_Seq with x0. destruct H1. subst.
-   intuition. intuition. intuition. }
+  apply E_Seq with x. 
+  intuition. intuition. intuition. }
 
 --induction mu1; intros.
 {inversion  H0; subst. 
  exists nil. exists nil. exists nil.
- split. econstructor. split. econstructor.
- split. econstructor. destruct mu. 
- inversion_clear H. econstructor. 
- destruct p. intuition. }
- {destruct a. inversion H0; subst. clear H0.
+ split. econstructor. destruct H4.
+  } 
+ { destruct a. inversion H0; subst. clear H0.
   destruct mu. simpl in H1. intuition.
   destruct p. inversion H; subst; simpl in H1.
+  destruct H1; subst.
    {assert(exists
   (mu1' : list (cstate * qstate s0 e0)) 
   (mu2' : list (cstate * qstate s1 e1)) 
   (mu''0 : list  (cstate * qstate s e)),
   (and (ceval_single <{ if b then c1 else c2 end }> mu1 mu1') 
-   (ceval_single <{ if b then c1 else c2 end }> mu4 mu2' /\
+   (State_eval_dstate F mu2' /\
    d_combin mu1' mu2' mu''0 /\ d_subseq mu'' mu''0))).
-  apply (IHmu1 _ _ _ _ _ _ H11 H8). intuition. 
+  apply (IHmu1 _ _ _ _ _ _ _ H14 H11). intuition.
+   assumption. assumption. admit.
   destruct H0. destruct H0. destruct H0.
   assert(exists
   (mu1' : list (cstate * qstate s0 e0)) 
   (mu2' : list (cstate * qstate s1 e1)) 
   (mu''0 : list  (cstate * qstate s e)),
   (and (ceval_single c1 [(c,q)] mu1') 
-   (ceval_single c1 [(c,rho1)] mu2' /\
+   (State_eval_dstate F mu2' /\
    d_combin mu1' mu2' mu''0 /\ d_subseq mu'1 mu''0))).
-   apply IHc1 with [(c,rho')] [(c0,q0)]. intuition.
+   apply IHc1 with [(c, rho1)] [(c,rho')] [(c,q0)]. intuition.
    econstructor. intuition. econstructor.
-   simpl. intuition.
-   destruct H2. destruct H2. destruct H2. 
+   simpl. intuition. admit. admit. simpl.
+   econstructor. inversion_clear H4. assumption.
+   econstructor.
+   destruct H5. destruct H5. destruct H5. 
   exists (StateMap.Raw.map2 option_app 
   x2 x).
   exists (StateMap.Raw.map2 option_app 
@@ -2253,108 +2379,300 @@ assert( exists
   d_combin (StateMap.Raw.map2 option_app x2 x)
   (StateMap.Raw.map2 option_app x3 x0) mu'').
   apply rule_7 with x1 x4. intuition. intuition.
-   destruct H3. exists x5. 
-   split. apply E_IF_true. admit. intuition.
+   destruct H6. exists x5. 
+   split. apply E_IF_true.
+  rewrite (state_eq_bexp _ (c, q0)). intuition.
+  reflexivity. intuition.
    intuition.
-   split. apply E_IF_true. admit. intuition.
-   intuition.
-   split. intuition.
+   split. admit.
+   split. intuition. 
   apply d_subseq_trans with 
   ((StateMap.Raw.map2 option_app x4 x1)).
-  admit. 
+  apply d_subseq_map2. intuition. intuition. 
   apply rule_for with s0 e0 s1 e1 x x2 x0 x3.
   intuition. intuition. assumption. 
  }
  { admit. }
 }
 --admit.
---induction mu1; destruct mu2; intros.
- inversion  H0; subst.
-inversion H;subst. exists nil. exists nil.  admit.
-inversion H0. inversion H0.
-destruct a. destruct p.
-inversion H0; subst. clear H0.
-inversion H; subst. 
-apply inj_pair2_eq_dec in H2.
-apply inj_pair2_eq_dec in H2.
-destruct H2.
+--induction mu1; intros.
+{inversion  H0; subst. 
+ exists nil. exists nil. exists nil.
+ split. econstructor. destruct H4. }
+ {destruct a. inversion H0; subst. clear H0.
+  destruct mu. simpl in H1. intuition.
+  destruct p. inversion H; subst. simpl in H1. 
+  destruct H1; subst.
 assert(exists
 (mu1' : list (cstate * qstate s0 e0)) 
-(mu2' : list (cstate * qstate s1 e1)),
-(and (ceval_single (QUnit_One n U1) mu1 mu1' )
- (ceval_single (QUnit_One n U1) mu2 mu2'/\
- d_combin mu1' mu2' mu'1))).
-apply (IHmu1 _ _ _ _ _ H11 H9).
+(mu2' : list (cstate * qstate s1 e1)) 
+(mu'' : list  (cstate * qstate s2 e2)),
+(and (ceval_single <{ (s e) :Q= 0 }> mu1 mu1') 
+ (State_eval_dstate F mu2' /\
+ d_combin mu1' mu2' mu'' /\ d_subseq mu'1 mu''))).
+apply (IHmu1 _ _ _ _ _ _ _ H13 H11). intuition.
+assumption. assumption. admit. 
 destruct H0. destruct H0. destruct H0.
-destruct H1.
 exists (StateMap.Raw.map2 option_app 
-[(c, q_update ((I (2^(s-s0)) ⊗ U1 ⊗ (I (2^(e0-e))))) q)] x).
+[(c,(QInit_fun s e q))] x).
 exists (StateMap.Raw.map2 option_app 
-[(c0, q_update ((I (2^(s-s1)) ⊗ U1 ⊗ (I (2^(e1-e))))) q0)] x0).
-split. apply E_Qunit_One. admit.
-intuition. intuition.
-split. apply E_Qunit_One. admit.
-intuition. intuition.
-apply rule_three. admit. intuition. 
-apply Nat.eq_dec. apply Nat.eq_dec.
+[(c,rho1)] x0).
+assert(exists (mu'': list (cstate *qstate s2 e2)),
+d_combin
+(StateMap.Raw.map2 option_app
+[(c,(QInit_fun s e q))] x)
+(StateMap.Raw.map2 option_app
+[(c,rho1)]  x0) mu'').
+apply (rule_6 _ s2 e2 s0 e0 s1 e1 _ _ 
+ (@kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+ (2^(e1-s1)) (QInit_fun s e q) rho1)_ _ x1).
+  admit. intuition. 
+ destruct H5. exists x2. 
+split. apply E_Qinit. 
+simpl in H2. admit.  intuition.
+split. admit. 
+split. 
+intuition. 
+apply d_subseq_trans with 
+((StateMap.Raw.map2 option_app
+[(c,(@kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+(2^(e1-s1)) (QInit_fun s e q) rho1) )] x1)).
+apply d_subseq_map2.
+simpl. split. reflexivity. split.
+admit. intuition. intuition.
+apply (rule_three s2 e2 s0 e0 s1 e1 x x0 (QInit_fun s e q) rho1).
+admit. intuition. assumption. }
 
---induction mu1; destruct mu2; intros.
-inversion  H0; subst.
-inversion H;subst. exists nil. exists nil.  admit.
-inversion H0. inversion H0.
-destruct a. destruct p.
-inversion H0; subst. clear H0.
-inversion H; subst. 
-apply inj_pair2_eq_dec in H5.
-apply inj_pair2_eq_dec in H5.
-destruct H5.
+--induction mu1; intros.
+{inversion  H0; subst. 
+ exists nil. exists nil. exists nil.
+ split. econstructor. destruct H4. }
+ {destruct a. inversion H0; subst. clear H0.
+  destruct mu. simpl in H1. intuition.
+  destruct p. inversion H; subst. simpl in H1.
+  destruct H1; subst.
+  apply inj_pair2_eq_dec in H6.
+  apply inj_pair2_eq_dec in H6.
+  subst. 
+assert(exists
+(mu1' : list (cstate * qstate s0 e0)) 
+(mu2' : list (cstate * qstate s1 e1)) 
+(mu'' : list  (cstate * qstate s2 e2)),
+(and (ceval_single (QUnit_One s e U) mu1 mu1') 
+ (State_eval_dstate F mu2' /\
+ d_combin mu1' mu2' mu'' /\ d_subseq mu'1 mu''))).
+apply (IHmu1 _ _ _ _ _ _ _ H15 H11). intuition.
+assumption. assumption.  admit.
+destruct H0. destruct H0. destruct H0.
+exists (StateMap.Raw.map2 option_app 
+[(c,(QUnit_One_fun s e U q))] x).
+exists (StateMap.Raw.map2 option_app 
+[(c,rho1)] x0).
+assert(exists (mu'': list (cstate *qstate s2 e2)),
+d_combin
+(StateMap.Raw.map2 option_app
+[(c,(QUnit_One_fun s e U q))] x)
+(StateMap.Raw.map2 option_app
+[(c,rho1)]  x0) mu'').
+apply (rule_6 _ s2 e2 s0 e0 s1 e1 _ _ 
+ (@kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+ (2^(e1-s1)) (QUnit_One_fun s e U q) rho1)_ _ x1).
+  admit. intuition. 
+ destruct H5. exists x2. 
+split. apply E_Qunit_One.  
+simpl in H2. admit.  intuition.
+intuition.
+split. admit. 
+split. 
+intuition. 
+apply d_subseq_trans with 
+((StateMap.Raw.map2 option_app
+[(c,(@kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+(2^(e1-s1)) (QUnit_One_fun s e U q) rho1) )] x1)).
+apply d_subseq_map2.
+simpl. split. reflexivity. split. 
+admit. intuition. intuition. 
+apply (rule_three s2 e2 s0 e0 s1 e1 x x0 (QUnit_One_fun s e U q) rho1).
+admit. intuition. assumption. 
+apply Nat.eq_dec. apply Nat.eq_dec. }
+
+--induction mu1; intros.
+{inversion  H0; subst. 
+ exists nil. exists nil. exists nil.
+ split. econstructor. destruct H4. }
+ {destruct a. inversion H0; subst. clear H0.
+  destruct mu. simpl in H1. intuition.
+  destruct p. inversion H; subst. simpl in H1.
+  destruct H1; subst.
+  apply inj_pair2_eq_dec in H9.
+  apply inj_pair2_eq_dec in H9.
+  subst. 
 assert(exists
 (mu1' : list (cstate * qstate s2 e2)) 
-(mu2' : list (cstate * qstate s3 e3)),
- and (ceval_single  (QUnit_Ctrl s0 e0 s1 e1 U1) mu1 mu1')
-(ceval_single (QUnit_Ctrl s0 e0 s1 e1 U1) mu2 mu2' /\
-d_combin mu1' mu2' mu'1)).
-apply (IHmu1 _ _ _ _ _ H13 H9).
+(mu2' : list (cstate * qstate s3 e3)) 
+(mu'' : list  (cstate * qstate s e)),
+(and (ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu1 mu1') 
+ (State_eval_dstate F mu2' /\
+ d_combin mu1' mu2' mu'' /\ d_subseq mu'1 mu''))).
+apply (IHmu1 _ _ _ _ _ _ _ H17 H11). intuition.
+assumption. assumption. admit. 
 destruct H0. destruct H0. destruct H0.
-destruct H1.  admit.
-(* exists (StateMap.Raw.map2 option_app 
-[(c, q_update ((I (2^(s-s0)) ⊗ U1 ⊗ (I (2^(e0-e))))) q)] x).
 exists (StateMap.Raw.map2 option_app 
-[(c0, q_update ((I (2^(s-s1)) ⊗ U1 ⊗ (I (2^(e1-e))))) q0)] x0).
-split. apply E_Qunit_One. admit.
-intuition. intuition.
-split. apply E_Qunit_One. admit.
-intuition. intuition.
-apply rule_three. admit. intuition.*) 
-apply Nat.eq_dec. apply Nat.eq_dec.
+[(c,(QUnit_Ctrl_fun s0 e0 s1 e1 U q))] x).
+exists (StateMap.Raw.map2 option_app 
+[(c,rho1)] x0).
+assert(exists (mu'': list (cstate *qstate s e)),
+d_combin
+(StateMap.Raw.map2 option_app
+[(c,(QUnit_Ctrl_fun s0 e0 s1 e1 U q))] x)
+(StateMap.Raw.map2 option_app
+[(c,rho1)]  x0) mu'').
+apply (rule_6 _ s e s2 e2 s3 e3 _ _ 
+ (@kron (2^(e2-s2)) (2^(e2-s2)) (2^(e3-s3))
+ (2^(e3-s3)) (QUnit_Ctrl_fun s0 e0 s1 e1 U q)
+  rho1)_ _ x1).
+  admit. intuition. 
+ destruct H5. exists x2. 
+split. apply E_QUnit_Ctrl.  
+simpl in H2. admit.  intuition.
+intuition.
+split. admit.
+split. 
+intuition. 
+apply d_subseq_trans with 
+((StateMap.Raw.map2 option_app
+[(c,(@kron (2^(e2-s2)) (2^(e2-s2)) (2^(e3-s3))
+(2^(e3-s3)) (QUnit_Ctrl_fun s0 e0 s1 e1 U q) rho1) )] x1)).
+apply d_subseq_map2.
+simpl. split. reflexivity.
+split.
+admit. intuition. intuition. 
+apply (rule_three s e s2 e2 s3 e3 x x0 (QUnit_Ctrl_fun s0 e0 s1 e1 U q) rho1).
+admit. intuition. assumption.
+apply Nat.eq_dec. apply Nat.eq_dec. }
 
-
---induction mu1; destruct mu2; intros.
-inversion  H0; subst.
-inversion H;subst. exists nil. exists nil.  admit.
-inversion H0. inversion H0.
-destruct a. destruct p.
-inversion H0; subst. clear H0.
-inversion H; subst. 
+--induction mu1; intros.
+{inversion  H0; subst. 
+ exists nil. exists nil. exists nil.
+ split. econstructor. destruct H4. }
+ {destruct a. inversion H0; subst. clear H0.
+  destruct mu. simpl in H1. intuition.
+  destruct p. inversion H; subst. simpl in H1.
+  destruct H1; subst.
 assert(exists
 (mu1' : list (cstate * qstate s0 e0)) 
-(mu2' : list (cstate * qstate s1 e1)),
- and (ceval_single <{ i :=M [[n]] }> mu1 mu1')
-(ceval_single <{ i :=M [[n]] }> mu2 mu2' /\
-d_combin mu1' mu2' mu'1)).
-apply (IHmu1 _ _ _ _ _ H7 H9).
+(mu2' : list (cstate * qstate s1 e1)) 
+(mu'' : list  (cstate * qstate s2 e2)),
+(and (ceval_single (QMeas i s e ) mu1 mu1') 
+ (State_eval_dstate F mu2' /\
+ d_combin mu1' mu2' mu'' /\ d_subseq mu'1 mu''))).
+apply (IHmu1 _ _ _ _ _ _ _ H14 H11). intuition.
+assumption. assumption. admit. 
 destruct H0. destruct H0. destruct H0.
-destruct H1.  admit. *)
+exists (StateMap.Raw.map2 option_app 
+(big_app (fun j : nat => [(c_update i j c, QMeas_fun s e j q)])
+          (2 ^ (e - s))) x).
+exists (StateMap.Raw.map2 option_app 
+(big_app (fun j : nat => [(c_update i j c, rho1)])
+          (2 ^ (e - s))) x0).
+assert(exists (mu'': list (cstate *qstate s2 e2)),
+d_combin
+(StateMap.Raw.map2 option_app
+(big_app (fun j : nat => [(c_update i j c, QMeas_fun s e j q)])
+          (2 ^ (e - s))) x)
+(StateMap.Raw.map2 option_app
+(big_app (fun j : nat => [(c_update i j c, rho1)])
+(2 ^ (e - s))) x0) mu'').
+apply (rule_7 s2 e2 s0 e0 s1 e1 _ _  _ _
+ x1 (big_app
+(fun j : nat =>
+ [(c_update i j c, @kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+ (2^(e1-s1)) (QMeas_fun s e j q) rho1 )])
+(2 ^ (e - s))) ). 
+  admit. intuition. 
+ destruct H5. exists x2. 
+split. apply E_Meas.   
+simpl in H2. admit.  intuition.
+split. admit.
+split. 
+intuition. 
+apply d_subseq_trans with 
+((StateMap.Raw.map2 option_app
+(big_app
+(fun j : nat =>
+ [(c_update i j c, @kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))
+ (2^(e1-s1)) (QMeas_fun s e j q) rho1 )])
+(2 ^ (e - s))) x1)).
+apply d_subseq_map2. 
+admit. intuition. 
+apply (rule_for s2 e2 s0 e0 s1 e1 x (big_app (fun j : nat => [(c_update i j c, QMeas_fun s e j q)])
+(2 ^ (e - s))) x0 (big_app (fun j : nat => [(c_update i j c, rho1)]) (2 ^ (e - s)))).
+admit. intuition. assumption. }
 Admitted.
 
 
-               
+Lemma State_eval_sub: forall s e (mu mu': list (state s e)) F,
+d_subseq mu mu'->
+State_eval_dstate F mu'->
+State_eval_dstate F mu.
+Proof. intros. Admitted.
 
 
 
+Theorem rule_qframe_aux: forall (c : com) (F1 F2 F3 : State_formula)
+(s e : nat) ( mu mu' :list (cstate *qstate s e)),
+(forall (s e : nat) (mu mu' : list (cstate *qstate s e)),
+ ceval_single c mu mu' -> State_eval_dstate  F1 mu -> State_eval_dstate  F2 mu')->
+NSet.inter (fst (Free_state F3)) (fst (MVar c)) = NSet.empty ->
+NSet.Subset (snd (MVar c)) (snd (Free_state F1)) ->
+ceval_single c mu mu' ->
+State_eval_dstate (F1 ⊙ F3) mu ->
+State_eval_dstate (F2 ⊙ F3) mu'.
+Proof. intros. rewrite State_eval_combin in H3.
+       destruct H3. destruct H3. destruct H3.
+       destruct H3. destruct H3. destruct H3.
+       destruct H3.
+       assert(exists
+       (mu1' : list (cstate * qstate x x0)) 
+     (mu2' : list (cstate * qstate x1 x2)) 
+     (mu'' : list (cstate * qstate s e)),
+       ceval_single c x3 mu1' /\
+       State_eval_dstate F3 mu2' /\
+       d_combin mu1' mu2' mu'' /\ d_subseq mu' mu'').
+       apply rule_two with x4 mu mu.
+      assumption. assumption. apply d_subseq_eq.
+      reflexivity. assumption. admit. intuition.
+      destruct H5. destruct H5. destruct H5.
+      apply State_eval_sub with x7.
+      intuition. rewrite State_eval_combin.
+      exists x. exists x0. exists x1. exists x2.
+      exists x5. exists x6. split.
+      intuition. split. apply H with x3.
+      intuition. intuition. intuition.
+Admitted.
 
 
-Inductive derivable : Assertion -> com -> Assertion-> Type :=
+Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
+         ({{F1}} c {{F2}}) /\ 
+          (NSet.inter (fst (Free_state F3)) (fst (MVar c)) =NSet.empty) 
+         /\ NSet.Subset (snd (MVar c)) (snd (Free_state F1))
+         ->  {{F1 ⊙ F3}} c {{F2 ⊙ F3}}.
+Proof. unfold hoare_triple. intros F1 F2 F3 c. intros H.
+       intros s e (mu ,IHmu) (mu', IHmu');
+       intros. inversion_clear H0. simpl in *.
+       rewrite sat_Assert_to_State in *.
+       inversion_clear H1. econstructor.
+       intuition. simpl in *. apply rule_qframe_aux with c F1 mu.
+       destruct H. admit.
+       intuition. intuition. assumption.
+       assumption.
+Admitted.
+
+              
+
+
+
+(* Inductive derivable : Assertion -> com -> Assertion-> Type :=
   | H_Skip : forall D,
       derivable D <{skip}> D
   | H_Asgn : forall D X a,
@@ -2475,7 +2793,7 @@ exists ((fst x3, q_update ((I (2 ^ (x - s)))) (snd x4))).
 -- admit.
   Qed.
   
-  
+   *)
 
 (* Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
          ({{F1}} c {{F2}}) /\  (NSet.inter (fst (Free_state F3)) (fst (MVar c)) =NSet.empty) 
@@ -2541,7 +2859,7 @@ simpl in H. admit. admit. admit.
 Admitted.   *)
 
 
-Theorem rule_qframe_aux: forall (c : com) (F1 F2 F3 : State_formula)
+(* Theorem rule_qframe_aux: forall (c : com) (F1 F2 F3 : State_formula)
 (s e : nat) ( mu mu' :list (cstate *qstate s e)),
 (forall (s e : nat) (mu mu' : list (cstate *qstate s e)),
  ceval_single c mu mu' -> State_eval_dstate  F1 mu -> State_eval_dstate  F2 mu')->
@@ -2616,8 +2934,8 @@ exists (fst x3, q_update ((I (2 ^ (s' - s)) ⊗ U ⊗ I (2 ^ (x1 - e')))) (snd x
 exists (fst x3, q_update (I (2 ^ (e - x1))) (snd x4)).
 split. admit. split. admit. split. admit.
 split. admit. admit. *)
-Admitted.
-
+Admitted. *)
+(* 
 
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
          ({{F1}} c {{F2}}) /\  (NSet.inter (fst (Free_state F3)) (fst (MVar c)) =NSet.empty) 
@@ -2647,4 +2965,4 @@ Proof.  unfold hoare_triple.  intros. destruct H.
         split. apply rule_f with c mu.
         assumption. assumption. 
         assumption. admit.
-Admitted.
+Admitted. *)

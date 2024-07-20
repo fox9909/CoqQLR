@@ -138,26 +138,146 @@ Admitted.
  Theorem rule_OdotC: forall F1 F2:State_formula,
 ((F1 ⊙ F2) ->> (F2 ⊙ F1))/\
 ((F2 ⊙ F1) ->> (F1 ⊙ F2)).
-Proof. intros. 
-Admitted.
+Proof.   intros. unfold assert_implies; apply conj;
+intros; rule_solve; simpl;
+destruct H0; destruct H0;
+destruct H0; destruct H0; 
+destruct H0; destruct H0;
+destruct H0; exists x2;
+exists x3; exists x0; exists x1;
+exists x5; exists x4; 
+split; try apply s_combin_com;
+ intuition.
+Qed.
 
 
 Theorem rule_OdotA: forall F1 F2 F3:State_formula,
 ((F1 ⊙ (F2 ⊙ F3) )->>( (F1 ⊙ F2) ⊙ F3) )/\
 (( (F1 ⊙ F2) ⊙ F3) ->> (F1 ⊙ (F2 ⊙ F3) )).
-Proof. intros. unfold assert_implies. 
-Admitted.
+Proof. intros. unfold assert_implies; apply conj;
+intros; rule_solve; simpl.
+destruct H0. destruct H0. 
+destruct H0. destruct H0.
+destruct H0. destruct H0.
+destruct H0. destruct H3.
+destruct H4. destruct H4.
+destruct H4. destruct H4.
+destruct H4. destruct H4.
+assert(exists (sz ez : nat) (z : qstate sz ez),
+(and (q_combin x4 x10 z)  (q_combin z x11 (d_find x mu)))).
+apply (s_combin_assoc x4 x5).
+admit. admit. admit.
+assumption. intuition.
+destruct H5. destruct H5. destruct H5.
+exists x12. exists x13. exists x8.
+exists x9. exists x14. exists x11.
+split. intuition.
+split. 
+exists x0. exists x1. exists x6. exists x7.
+exists x4. exists x10. intuition. intuition.
+
+Admitted. 
+
+Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
+(fst st) = (fst st')-> (aeval st a) = aeval st' a.
+Proof. intros. induction a.
+      --reflexivity. 
+      --simpl. rewrite H. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+Qed.
+
+Lemma state_eq_bexp{ s0 e0 s1 e1:nat}: forall (st:state s0 e0) (st' : state s1 e1) (b:bexp),
+(fst st) = (fst st')-> (beval st b) = beval st' b.
+Proof. intros. induction b. 
+       --simpl. reflexivity.
+       --simpl. reflexivity.
+       --simpl. rewrite (state_eq_aexp  st st' a1).
+       rewrite (state_eq_aexp  st st'  a2). reflexivity.
+        assumption. assumption.
+      --simpl. rewrite (state_eq_aexp st st' a1).
+      rewrite (state_eq_aexp st st' a2). reflexivity.
+       assumption. assumption.
+       --simpl. rewrite (state_eq_aexp st st' a1).
+       rewrite (state_eq_aexp st st' a2). reflexivity.
+        assumption. assumption.
+      --simpl. rewrite (state_eq_aexp st st' a1).
+      rewrite (state_eq_aexp  st st' a2). reflexivity.
+       assumption. assumption.
+      --simpl. rewrite IHb. reflexivity.
+      --simpl. rewrite IHb1.
+      rewrite IHb2. reflexivity.
+      --simpl. rewrite IHb1.
+      rewrite IHb2. reflexivity.
+Qed.
+
+Lemma bexp_Pure_eq{s0 e0 s1 e1:nat}:  forall (st :state s0 e0) (st': state s1 e1) (b:bexp) , 
+((beval st b) = beval st' b) -> (Pure_eval b st)<->(Pure_eval b st').
+Proof.  simpl.  intros. destruct (beval st b).
+       rewrite <-H. reflexivity. rewrite <-H.
+       reflexivity. 
+Qed.
+
+Lemma state_eq_Pure{s0 e0 s1 e1:nat}: forall (P:Pure_formula) (st :state s0 e0)  (st': state s1 e1),
+(fst st)= (fst st')-> (Pure_eval P st)<-> Pure_eval P st'.
+Proof. induction P.
+     --intros. apply (bexp_Pure_eq st st' b ).
+      rewrite (state_eq_bexp st st' b). reflexivity.
+       intuition.
+    --simpl.  
+      simpl. destruct st. destruct st'. unfold s_update_cstate.
+       intros. split. intros. apply H with  (c, q). intuition. 
+       apply H1. 
+       intros. apply H with  (c0, q0). intuition. 
+       apply H1. 
+    -simpl.  
+    simpl. destruct st. destruct st'. unfold s_update_cstate. intros.
+    split. intros. destruct H1. exists x. apply H with  (c, q). intuition. 
+    apply H1. 
+    intros. destruct H1. exists x. apply H with  (c0, q0). intuition. 
+    apply H1. 
+    - split; intros; destruct st; destruct st'; 
+      simpl in *; unfold s_update_cstate in *;
+      simpl in H; subst.
+     rewrite (state_eq_aexp (c0, q0) ((c0, q))).
+     apply (IHP  ((c_update i (aeval (c0, q) a) c0, q))
+     (c_update i (aeval (c0, q) a) c0, q0)) .
+     reflexivity. assumption. reflexivity.
+     rewrite <-(state_eq_aexp (c0, q0) ((c0, q))).
+     apply (IHP  ((c_update i (aeval (c0, q0) a) c0, q))
+     (c_update i (aeval (c0, q0) a) c0, q0)) .
+     reflexivity. assumption. reflexivity.
+Qed.
 
 Theorem rule_OdotO: forall (P1 P2:Pure_formula), 
  ((P1 ⊙ P2) ->> (P1 /\ P2)) /\
  ((P1 /\ P2) ->> (P1 ⊙ P2)).
-Proof. intros.  unfold assert_implies.  
+Proof. intros. unfold assert_implies; apply conj;
+intros; rule_solve; simpl;
+destruct H0. destruct H0. destruct H0.
+destruct H0. destruct H0. destruct H0.
+split. rewrite (state_eq_Pure P1  (x, d_find x mu) (x, x4)).
+intuition. reflexivity. 
+rewrite (state_eq_Pure _ _ (x, x5)).
+intuition. reflexivity.
+admit.
 Admitted.
 
 Theorem rule_OdotOP: forall (P:Pure_formula) (F:State_formula),
 (P ⊙ F ->> P /\ F)/\
 (P /\ F ->> P ⊙ F).
-Proof.  intros.  unfold assert_implies. 
+Proof.  intros. unfold assert_implies; apply conj;
+intros; rule_solve; simpl.
+destruct H0. destruct H0. destruct H0.
+destruct H0. destruct H0. destruct H0.
+split. rewrite (state_eq_Pure _ _ (x, x4)).
+intuition. reflexivity. admit.  
+admit.
 Admitted.
 
 Theorem rule_OdotOA: forall (P:Pure_formula) (F1 F2:State_formula),
@@ -165,32 +285,100 @@ Theorem rule_OdotOA: forall (P:Pure_formula) (F1 F2:State_formula),
 ((P /\ (F1 ⊙ F2)) ->> ((P /\ F1) ⊙ (P /\ F2)))
 /\
 (((P /\ F1) ⊙ (P /\ F2))->>(P /\ (F1 ⊙ F2))).
-Proof. intros.  unfold assert_implies; split.
-Admitted.
+Proof. intros; unfold assert_implies; split;
+intros; rule_solve; simpl. 
+destruct H0. destruct H3. 
+destruct H3. destruct H3.
+destruct H3. destruct H3.
+destruct H3.
+exists x0. exists x1. exists x2.
+exists x3. exists x4. exists x5.
+split. intuition. split. 
+split. rewrite (state_eq_Pure _ _ (x, d_find x mu)).
+intuition. reflexivity.
+intuition. 
+split. 
+rewrite (state_eq_Pure _ _ (x, d_find x mu)).
+intuition. reflexivity.
+intuition. 
+destruct H0. destruct H0. destruct H0.
+destruct H0. destruct H0. destruct H0.
+split. rewrite (state_eq_Pure _ _ (x, x4)).
+intuition. reflexivity.
+exists x0. exists x1. exists x2.
+exists x3. exists x4. exists x5.
+intuition.
+Qed. 
 
 
 Theorem rule_OdotOC: forall (F1 F2 F3:State_formula), 
-((F1 ⊙(F2 /\ F3)) ->> ((F1 ⊙ F2) /\ (F1 ⊙ F3)))
-/\
-(((F1 ⊙ F2) /\ (F1 ⊙ F3))->>(F1 ⊙(F2 /\ F3))).
-Proof. intros.  unfold assert_implies;  split.
-Admitted.
+((F1 ⊙(F2 /\ F3)) ->> ((F1 ⊙ F2) /\ (F1 ⊙ F3))).
+Proof. 
+intros; unfold assert_implies.
+intros; rule_solve; simpl. 
+destruct H0. destruct H0.
+destruct H0. destruct H0.
+destruct H0. destruct H0.
+split;
+exists x0; exists x1; exists x2;
+exists x3; exists x4; exists x5;
+intuition.
+Qed.
 
 Notation "| v >[ s , e ]" := (QExp_s s e v) (at level 80) :assert_scope.
-
-
 
 Local Open Scope assert_scope.
 Theorem  rule_ReArr:forall (s e  s' e':nat)  v u,
 ((| v >[ s , e ]) ⊗* (| u >[ s' , e' ]) ->>(| u >[ s' , e' ]) ⊗* (| v >[ s , e ])).
-Proof. intros.  unfold assert_implies. simpl. 
-       intros; intros.  rule_solve; simpl; destruct H0.
-Admitted.
+Proof. intros;  unfold assert_implies; 
+       intros;  rule_solve; simpl.
+       destruct H0. destruct H0.
+       destruct H0. destruct H0.
+       destruct H0. destruct H0.
+       exists x2; exists x3; exists x0;
+       exists x1; exists x5; exists x4.
+       split. apply s_combin_com.
+       intuition.
+       split. intuition.
+       intuition.
+Qed.
 
 Theorem  rule_Separ:forall s x e u v, 
 ((| v >[ s , x ]) ⊗* (| u >[ x , e ])) ->>
 ( (| v ⊗ u >[ s , e ])).
-Proof.   intros.  unfold assert_implies. simpl. 
+Proof.  
+    intros;  unfold assert_implies; 
+       intros;  rule_solve; simpl.
+       destruct H0. destruct H0.
+       destruct H0. destruct H0.
+       destruct H0. destruct H0.
+       destruct H0. inversion H0; subst.
+       clear H0. destruct H3.
+       split. intuition. split. intuition.
+       split. intuition.
+       rewrite <-PMtrace_scale.
+       unfold outer_product in *.
+       assert((@adjoint (2^(e-s)) 1 (v ⊗ u))=
+       (v ⊗ u) †). f_equal.
+       type_sovle'. rewrite H5.
+       rewrite kron_adjoint.
+       assert(@Mmult (2^(e-s)) 1 (2^(e-s))
+       (v ⊗ u) ((v) † ⊗ (u) †)=
+       v ⊗ u × ((v) † ⊗ (u) †) ).
+       f_equal; type_sovle'.
+       rewrite H6. 
+       rewrite kron_mixed_product.
+       destruct H0. destruct H7.
+       destruct H8. destruct H3.
+       destruct H10. destruct H11.
+       assert(x3=x). lia. subst.
+       rewrite Nat.sub_diag in *.
+       rewrite <-H12. rewrite<- H9.
+       admit. 
+       assert(x1=s/\s=x/\x=e). lia.
+       destruct H5. destruct H6.
+       subst.
+
 Admitted. 
 
 Theorem  rule_odotT: forall s e s' e' u v, 
