@@ -16,7 +16,6 @@ From Quan Require Import QVector.
 From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import ParDensityO.
-From Quan Require Import Basic_Supplement.
 
 (*-----------------------------------Classic State----------------------------------------*)
 
@@ -309,6 +308,22 @@ Lemma WF_state_not_0{s e:nat}: forall (st:state s e),
 WF_state st -> s_trace st<>0.
 Proof. intros. assert(0<s_trace st). apply WF_state_in01. intuition.
       lra.
+Qed.
+
+Lemma big_sum_0_R : forall n,
+(Σ (fun _ :nat =>0%R ) n)= 0%R. 
+Proof. 
+intros.
+  induction n.
+  - reflexivity.
+  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
+  rewrite IHn.   
+  rewrite Cplus_0_r. easy.
+Qed.      
+
+Lemma  Zero_trace: forall n, @trace n Zero=C0.
+Proof. intros. unfold Zero.  unfold trace.
+ apply (big_sum_0_R n). 
 Qed.
 
 Lemma  WF_state_not_Zero{s e:nat}: forall (st:state s e),  

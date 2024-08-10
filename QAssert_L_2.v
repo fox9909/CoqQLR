@@ -15,7 +15,7 @@ From Quan Require Import QIMP_L.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import QState_L.
-Require Import Par_trace.
+Require Import Basic_Supplement.
 
 
 (*-------------------------------Synatx------------------------------------*)
@@ -132,7 +132,7 @@ Fixpoint Free_state (F: State_formula) : (CSet * QSet):=
   match F with 
     |SPure P => (Free_pure P , NSet.empty)
     |SQuan qs=> (NSet.empty, Free_Qexp qs)
-    |SOdot F1 F2=> (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
+    |SOdot F1 F2=>  (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
     |SAnd F1 F2 => (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
     (* |SNot F'=> Free_state F'
     | Assn_sub X a F => Free_state F *)
@@ -173,16 +173,16 @@ Fixpoint Pure_eval{s e:nat} (pf:Pure_formula) (st:state s e): Prop :=
  |Assn_sub_P i a P => Pure_eval P (s_update_cstate i (aeval st a) st)
  end. 
 
-(* Inductive q_combin{s0 e0 s1 e1 s2 e2}: (qstate s0 e0) -> (qstate s1 e1)-> (qstate s2 e2)->Prop:=
+Inductive q_combin{s0 e0 s1 e1 s2 e2}: (qstate s0 e0) -> (qstate s1 e1)-> (qstate s2 e2)->Prop:=
 |combin_l: forall q0 q1, e0 = s1-> s0 = s2 -> e1 = e2 ->
              q_combin q0 q1 (@kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1))  
              (2^(e1-s1)) q0 q1)
 |combin_r: forall q0 q1, e1 = s0-> s1= s2 -> e0 =e2 ->
              q_combin q0 q1 (@kron  (2^(e1-s1))  
-            (2^(e1-s1)) (2^(e0-s0)) (2^(e0-s0)) q1 q0). *)
+            (2^(e1-s1)) (2^(e0-s0)) (2^(e0-s0)) q1 q0).
 
 
-(* Lemma WF_qcombin{s0 e0 s1 e1 s2 e2:nat}: forall (q0: qstate s0 e0) (q1:qstate s1 e1)
+Lemma WF_qcombin{s0 e0 s1 e1 s2 e2:nat}: forall (q0: qstate s0 e0) (q1:qstate s1 e1)
 (q2: qstate s2 e2),
 WF_qstate q0-> WF_qstate q1-> q_combin q0 q1 q2->
 WF_qstate q2 .
@@ -199,7 +199,7 @@ q_combin q0 q1 q2->q_combin q1 q0 q2.
        intuition. intuition. intuition. 
       apply combin_l.
        intuition. intuition. intuition.
-Qed. *)
+Qed.
 
 Lemma kron_assoc : forall {m n p q r s : nat}
   (A : Matrix m n) (B : Matrix p q) (C : Matrix r s),
@@ -214,27 +214,31 @@ Qed.
 
 Import ParDensityO.
 
-(* Lemma  s_combin_assoc{s0 e0 s1 e1 s2 e2 s_x e_x sy ey:nat}: forall (q0: qstate s0 e0) (q1:qstate s1 e1)
+Lemma  s_combin_assoc{s0 e0 s1 e1 s2 e2 s_x e_x sy ey:nat}: forall (q0: qstate s0 e0) (q1:qstate s1 e1)
 (q2: qstate s2 e2) (x: qstate s_x e_x) (y: qstate sy ey),
-(s0<=e0/\s_x<=e_x/\sy<=ey)%nat->
-@WF_Matrix (2^(e0-s0)) (2^(e0-s0)) q0 -> 
-@WF_Matrix (2^(e_x-s_x)) (2^(e_x-s_x)) x-> 
-@WF_Matrix (2^(ey-sy)) (2^(ey-sy))y ->
+WF_qstate q0 -> WF_qstate x-> WF_qstate y ->
  q_combin q0 q1 q2->
  q_combin x y q1->
  exists (sz ez : nat) (z:qstate sz ez),
  q_combin q0 x z /\ q_combin z y q2.
-Proof. intros. inversion H3; subst; inversion H4; subst.
+Proof. intros. inversion H2; subst; inversion H3; subst.
 
        exists s2. exists sy.
        exists (@kron  (2^(s1-s2)) (2^(s1-s2))
        (2^(sy-s1)) (2^(sy-s1)) q0 x ).
        split. apply combin_l; try intuition.
        assert((2 ^ (sy - s1) * 2 ^ (e2 - sy))= 2^(e2-s1))%nat.
-       type_sovle'. destruct H5. rewrite <-kron_assoc; auto.
-       econstructor; reflexivity .
-
-Admitted. *)
+       admit. destruct H4. 
+       assert(@kron (2^(s1-s2)) (2^(s1-s2)) (2 ^ (sy - s1) * 2 ^ (e2 - sy))
+       (2 ^ (sy - s1) * 2 ^ (e2 - sy))
+       (q0) (x ⊗ y) =@kron (2 ^ (s1 - s2) * 2 ^ (sy - s1))
+       (2 ^ (s1 - s2) * 2 ^ (sy - s1)) (2 ^ (e2 - sy))
+       (2 ^ (e2 - sy)) ((q0 ⊗ x))  (y)). 
+        rewrite<- kron_assoc. reflexivity.  apply WF_Mixed. apply H.
+         apply WF_Mixed. apply H0.   apply WF_Mixed. apply H1. 
+      rewrite H4. 
+       eapply (@combin_l s2 sy); reflexivity. 
+Admitted.
 
 (* Local Open Scope nat_scope.
 Fixpoint QExp_eval{s' e':nat} (qs: QExp) (st: state s' e'){struct qs} :Prop:=
@@ -244,227 +248,49 @@ Fixpoint QExp_eval{s' e':nat} (qs: QExp) (st: state s' e'){struct qs} :Prop:=
                    q_combin q1 q2 (snd st)/\ QExp_eval qs1 (fst st, q1) /\ QExp_eval qs2 (fst st, q2)
 end. *)
 Local Open Scope nat_scope.
-
-Fixpoint Free_QExp'(qs :QExp) := 
+Fixpoint QExp_eval{s' e':nat} (qs: QExp) (q: qstate s' e'){struct qs} :Prop:=
   match qs with 
-  |QExp_s s e v => (s, e) 
-  |QExp_t qs1 qs2 => if ((snd (Free_QExp' qs1)) =? (fst (Free_QExp' qs2))) 
-  then (fst (Free_QExp' qs1), snd (Free_QExp' qs2))
-  else (fst (Free_QExp' qs2), snd (Free_QExp' qs1))
-  end.
+  |QExp_s s e v=>s'<=s /\ s<=e /\e<=e' /\ ((PMpar_trace (@scale (2^(e'-s')) (2^(e'-s')) (R1 / (Cmod (@trace (2^(e'-s')) (q))))%R  (q)) (s-s') (e'-e) = outer_product v v))
+  |QExp_t qs1 qs2=>exists (s0 e0 s1 e1:nat) (q1: qstate s0 e0) (q2:qstate s1 e1), 
+                   q_combin q1 q2 (q)/\ QExp_eval qs1 q1 /\ QExp_eval qs2 q2
+end.
 
-Fixpoint Free_State(F:State_formula):=
-  match F with 
-    |SPure P => (0, 0)
-    |SQuan qs=> Free_QExp' qs 
-    |SOdot F1 F2=>  if ((snd (Free_State F1)) =? (fst (Free_State F2))) 
-                    then (fst (Free_State F1), snd (Free_State F2))
-                    else (fst (Free_State F2), snd (Free_State F1))
-    |SAnd F1 F2 => if ((fst (Free_State F1)) =? (fst (Free_State F2))) 
-                    then (fst (Free_State F1), snd (Free_State F1))
-                    else if ((snd (Free_State F1)) =? (fst (Free_State F2))) 
-                    then (fst (Free_State F1), snd (Free_State F2))
-                    else (fst (Free_State F2), snd (Free_State F1))
-    (* |SNot F'=> Free_state F'
-    | Assn_sub X a F => Free_state F *)
-  end.
+Inductive QExp_eval_mixed_state{s' e':nat}: QExp ->(qstate s' e') -> Prop:=
+|QExp_eval_pure: forall (p:R) (q:qstate s' e') qs, QExp_eval qs q -> QExp_eval_mixed_state qs (p .* q)
+|QExp_eval_mixed: forall (ρ1 ρ2 : Square (2^(e'-s'))) qs,
+QExp_eval_mixed_state qs ρ1 -> QExp_eval_mixed_state qs ρ2 -> QExp_eval_mixed_state qs ( ρ1 .+  ρ2).
 
-Lemma Vec_I: ((Vec 1 0)= I 1).
-Proof. prep_matrix_equality. 
-unfold Vec. unfold I.
-destruct  x.
-destruct y. simpl. reflexivity.
-simpl. reflexivity. 
-destruct y. simpl. reflexivity.
-simpl.    assert((S x <? 1)<>true).
-unfold not. intros.
+Lemma QExp_eval_s_eq{s' e' s e:nat}: forall (q:qstate s' e') (v:Vector (2^(e-s))),
+@Mixed_State (2^(e'-s')) q->
+QExp_eval_mixed_state (QExp_s s e v) q <-> s'<=s /\ s<=e /\e<=e' /\ ((PMpar_trace (@scale (2^(e'-s')) (2^(e'-s')) (R1 / (Cmod (@trace (2^(e'-s')) (q))))%R  (q)) (s-s') (e'-e) = outer_product v v)).
+Proof.  split. 
+       intros. 
+       remember (QExp_s s e v).
+       induction H0; subst.
+        simpl in H0. admit.
+        inversion H. 
+        admit. 
+        intros. 
+
+      simpl in H4. simpl in H5.
+      admit.
+      intros. 
+      destruct H. 
+      econstructor. 
+     
 Admitted.
 
-Lemma PMpar_trace_refl{s e:nat}: forall l r (q: qstate s e),
-l=s/\r=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) q->
-PMpar_trace q l r=q.
-Proof. intros. destruct H. subst.
-       unfold PMpar_trace.
-       unfold PMLpar_trace.
-       repeat rewrite Nat.sub_diag.
-       simpl. rewrite Mplus_0_l.
-       rewrite Vec_I. rewrite id_adjoint_eq.
-       rewrite kron_1_r.
-       unfold PMRpar_trace.
-       repeat rewrite Nat.sub_diag.
-       simpl. rewrite Mplus_0_l.
-       rewrite Vec_I. rewrite id_adjoint_eq.
-       rewrite kron_1_l; auto_wf.
-       repeat rewrite Nat.add_0_r.
-       repeat rewrite Nat.mul_1_r.
-       repeat rewrite Mmult_1_l; auto_wf.
-       repeat rewrite Mmult_1_r; auto_wf.
-       reflexivity.   
-Qed.
 
-Definition kron_qstate{s0 e0 s1 e1:nat}(q:qstate s0 e0) (q':qstate s1 e1):=
-  @kron (2^(e0-s0)) (2^(e0-s0)) (2^(e1-s1)) (2^(e1-s1)) q q'.
-
-
-Fixpoint Considered_QExp (qs:QExp) : Prop :=
-  match qs with 
-  |QExp_s s e v => s<=e  
-  |QExp_t qs1 qs2 => Considered_QExp qs1 /\ Considered_QExp qs2 /\ 
-                    (((snd (Free_QExp' qs1))=(fst (Free_QExp' qs2)))
-                    \/ ((snd (Free_QExp' qs2))=(fst (Free_QExp' qs1))))
-  end.
-
-Fixpoint Considered_Formula (F:State_formula) : Prop:=
-  match F with
-  | SPure P => True 
-  | SQuan s => Considered_QExp s
-  | SOdot F1 F2 => Considered_Formula F1 /\ Considered_Formula F2 
-                   /\ (((snd (Free_State F1))=(fst (Free_State F2)))
-                   \/ ((snd (Free_State F2))=(fst (Free_State F1))))
-  |SAnd F1 F2 => Considered_Formula F1 /\ Considered_Formula F2 
-                  /\  ((((fst (Free_State F1))=(fst (Free_State F2)))/\
-                        ((snd (Free_State F1))=(snd (Free_State F2))))
-                        \/ ((snd (Free_State F1))=(fst (Free_State F2))) 
-                        \/ (((snd (Free_State F2))=(fst (Free_State F1)))))
-  end. 
-
-
-Fixpoint QExp_eval{s' e':nat} (qs: QExp) (st: state s' e'){struct qs} :Prop:=
-  (match qs with 
-  |QExp_s s e v=> s'<=s /\ s<=e /\ e<=e' /\ ((PMpar_trace (@scale (2^(e'-s')) (2^(e'-s')) (R1 / (Cmod (@trace (2^(e'-s')) (snd st))))%R  (snd st)) s e = outer_product v v))
-  |QExp_t qs1 qs2=>  NSet.Equal (NSet.inter (Free_Qexp qs1) (Free_Qexp qs2)) (NSet.empty)  /\
-  QExp_eval qs1 st /\ QExp_eval qs2 st  
-end).
-
-
-
-
-Fixpoint State_eval{s e:nat} (F:State_formula) (st:state s e): Prop:=
-(match F with 
+Fixpoint State_eval{s e:nat} (sf:State_formula) (st:state s e): Prop:=
+match sf with 
 |SPure P => Pure_eval P st
-|SQuan s=> QExp_eval s st
-|SOdot F1 F2=>  NSet.Equal (NSet.inter (snd (Free_state F1)) (snd (Free_state F2))) (NSet.empty) /\
-State_eval F1 st /\ State_eval F2 st
+|SQuan s=> QExp_eval_mixed_state s (snd st)
+|SOdot F1 F2=> 
+exists (s0 e0 s1 e1:nat) (q1: qstate s0 e0) (q2:qstate s1 e1), 
+q_combin q1 q2 (snd st) /\ State_eval F1 (fst st, q1) /\ State_eval F2 (fst st, q2)
 |SAnd F1 F2 => State_eval F1 st /\ State_eval F2 st
 (* |SNot F => ~(State_eval F st) *)
-end).
-
-
-
-
-Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
-  trace(Mmult A B) =trace (Mmult B A).
-  Proof. intros. unfold trace. unfold Mmult. 
-         rewrite big_sum_swap_order. 
-         apply big_sum_eq. apply functional_extensionality.
-         intros. apply big_sum_eq. apply functional_extensionality.
-         intros.
-  apply Cmult_comm. 
-  Qed.
-
-Lemma  Ptrace_trace: forall s e (A:qstate s e) l r,
-s <= l/\ l<=r /\ r<=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) A->
-@trace (2^(r-l)) (PMpar_trace A  l r) = @trace (2^(e-s)) A.
-Proof. intros. rewrite Ptrace_l_r'.
-   assert(2^(r-l)=1 * 2 ^ (r-l) * 1) . lia.
-   destruct H1. rewrite big_sum_trace.
-   rewrite (big_sum_eq_bounded  _ ((fun i : nat =>
-   trace (big_sum
-      (fun j : nat =>
-        ( (∣ i ⟩_ (l-s) × ⟨ i ∣_ (l-s)) ⊗ I (2 ^ (r-l)) ⊗  (∣ j ⟩_ (e-r)  × ⟨ j ∣_ (e-r)) × A))
-        (2 ^ (e-r)))))).
-    rewrite <-big_sum_trace. 
-    assert(2^(e-s) = 2^(l-s) * 2^(r-l) * (2^(e-r))); type_sovle'. 
-    f_equal; type_sovle'.
-     (* destruct H2. *)
-    rewrite (big_sum_eq_bounded  _ ((fun i : nat =>
-    @Mmult (2^(e-s)) (2^(e-s)) (2^(e-s)) ( (∣ i ⟩_ (l-s) × ⟨ i ∣_ (l-s)) ⊗   I (2 ^ (r-l))
-    ⊗  (big_sum
-      (fun j : nat => (∣ j ⟩_ (e-r) × ⟨ j ∣_ (e-r)) ) 
-      (2 ^ (e-r)) ))  A ))  ). destruct H1.
-    rewrite <-@Mmult_Msum_distr_r. repeat rewrite <-kron_Msum_distr_r.
-    repeat rewrite big_sum_I. repeat rewrite id_kron.
-    assert(2^(l-s) * 2^(r-l) * (2^(e-r))= 2^(e-s)). type_sovle'.
-    destruct H1.
-    rewrite Mmult_1_l. reflexivity. assumption.
-    intros.  rewrite kron_Msum_distr_l.
-    assert(2^(e-s) = 2^(l-s) * 2^(r-l) * (2^(e-r))); type_sovle'.  
-     destruct H3.
-    rewrite Mmult_Msum_distr_r. reflexivity.
-    intros. repeat  rewrite big_sum_trace. apply big_sum_eq_bounded.
-    intros. rewrite trace_mult'.   
-    rewrite <-Mmult_assoc. 
-    apply Logic.eq_trans with (trace
-    (∣ x ⟩_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ∣ x0 ⟩_ (e-r)
-     × (⟨ x ∣_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ⟨ x0 ∣_ (e-r)) × A)).
-     f_equal. f_equal. f_equal; try lia.
-    repeat rewrite kron_mixed_product. 
-    rewrite Mmult_1_r.  reflexivity.
-    auto_wf. intuition.
-Qed.
-
-Lemma WF_PMpar_trace{s e:nat}: forall (q:qstate s e) l r,
-s<=l/\l<=r/\r<=e->
-@WF_Matrix (2^(e-s)) (2^(e-s)) q->
-@WF_Matrix  (2^(r-l)) (2^(r-l)) (PMpar_trace q l r).
-Proof. intros. unfold PMpar_trace. 
-       unfold PMRpar_trace.
-       assert((2^(r-l))=(1* (2^(r-l)))). 
-       rewrite Nat.mul_1_l. reflexivity.
-       destruct H1. apply WF_Msum.
-       intros. apply WF_mult; auto_wf.
-       apply WF_mult; auto_wf. 
-       unfold PMLpar_trace.
-       assert((2^(l-s))*(2^(r-l))=((2^(r-s))*1)).
-       rewrite Nat.mul_1_r.
-       type_sovle'. destruct H2.
-       apply WF_Msum. intros.
-       apply WF_mult. apply WF_mult.
-       apply WF_kron; try rewrite Nat.mul_1_r ; type_sovle'; try reflexivity.
-       auto_wf. auto_wf.
-       assert((2 ^ (e - s)=
-       2 ^ (r - s) * 2 ^ (e - r))). type_sovle'.
-       destruct H3. assumption.
-       apply WF_kron; try rewrite Nat.mul_1_r ; type_sovle'; try reflexivity.
-       auto_wf. auto_wf.
-Qed.
-
-
-(* Lemma QExp_free_eval{s e:nat}:forall (qs: QExp) (st: state s e),
-s<=(fst (Free_QExp' qs)) /\(fst (Free_QExp' qs)) <=
-(snd (Free_QExp' qs))/\ (snd (Free_QExp' qs))<=e->
-@WF_Matrix (2^(e-s)) (2^(e-s)) (snd st)->
-QExp_eval qs st <-> QExp_eval qs (fst st, (PMpar_trace (snd st) ((fst (Free_QExp' qs))) ((snd (Free_QExp' qs))))).
-Proof. induction qs; split; intros. 
-      simpl in *. rewrite PMpar_trace_refl.
-      split. lia.
-      split. lia. split. lia. 
-      rewrite <-PMtrace_scale in H1.
-      rewrite Ptrace_trace. intuition.
-      lia. assumption. lia. apply WF_scale.
-      apply WF_PMpar_trace. lia. assumption.
-      simpl in *.  rewrite PMpar_trace_refl in H1.
-      rewrite Ptrace_trace in H1. 
-      rewrite <-PMtrace_scale. 
-      split. lia. split. lia. split. lia. 
-      intuition. lia. assumption.  lia.
-      apply WF_scale.
-      apply WF_PMpar_trace. lia. assumption.
-      simpl in H1. 
-      simpl. rewrite PMpar_trace_refl.
-      split.  intuition.
-      intuition. intuition. 
-      apply WF_PMpar_trace. 
-      split. intuition. split.
-       intuition. intuition.
-       assumption. 
-      simpl in *. 
-      rewrite PMpar_trace_refl in H1.
-      intuition. intuition.
-      apply WF_PMpar_trace.
-      intuition. assumption.
-Qed. *)
-
+end.
 
 
 Definition  State_eval_dstate{s e:nat} (F:State_formula) (mu:list (cstate *(qstate s e))): Prop:=
@@ -844,52 +670,14 @@ Proof. unfold WF_dstate. unfold d_app. unfold d_trace.
 Qed.
 
 Local Open Scope bool_scope.
-Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
-(fst st) = (fst st')-> (aeval st a) = aeval st' a.
-Proof. intros. induction a.
-      --reflexivity. 
-      --simpl. rewrite H. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-Qed.
-
-Lemma state_eq_bexp{ s0 e0 s1 e1:nat}: forall (st:state s0 e0) (st' : state s1 e1) (b:bexp),
-(fst st) = (fst st')-> (beval st b) = beval st' b.
-Proof. intros. induction b. 
-       --simpl. reflexivity.
-       --simpl. reflexivity.
-       --simpl. rewrite (state_eq_aexp  st st' a1).
-       rewrite (state_eq_aexp  st st'  a2). reflexivity.
-        assumption. assumption.
-      --simpl. rewrite (state_eq_aexp st st' a1).
-      rewrite (state_eq_aexp st st' a2). reflexivity.
-       assumption. assumption.
-       --simpl. rewrite (state_eq_aexp st st' a1).
-       rewrite (state_eq_aexp st st' a2). reflexivity.
-        assumption. assumption.
-      --simpl. rewrite (state_eq_aexp st st' a1).
-      rewrite (state_eq_aexp  st st' a2). reflexivity.
-       assumption. assumption.
-      --simpl. rewrite IHb. reflexivity.
-      --simpl. rewrite IHb1.
-      rewrite IHb2. reflexivity.
-      --simpl. rewrite IHb1.
-      rewrite IHb2. reflexivity.
-Qed.
-
-Lemma bexp_Pure_eq{s0 e0 s1 e1:nat}:  forall (st :state s0 e0) (st': state s1 e1) (b:bexp) , 
-((beval st b) = beval st' b) -> (Pure_eval b st)<->(Pure_eval b st').
+Lemma bexp_Pure_eq{s e:nat}:  forall (st st':state s e ) (b:bexp) , 
+((beval st b) = beval st' b) -> (State_eval b st)<->(State_eval b st').
 Proof.  simpl.  intros. destruct (beval st b).
        rewrite <-H. reflexivity. rewrite <-H.
        reflexivity. 
 Qed.
 
-Lemma state_eq_Pure{s0 e0 s1 e1:nat}: forall (P:Pure_formula) (st :state s0 e0)  (st': state s1 e1),
+Lemma state_eq_Pure{s e:nat}: forall (P:Pure_formula) (st st':state s e) ,
 (fst st)= (fst st')-> (Pure_eval P st)<-> Pure_eval P st'.
 Proof. induction P.
      --intros. apply (bexp_Pure_eq st st' b ).
@@ -920,202 +708,39 @@ Proof. induction P.
      reflexivity. assumption. reflexivity.
 Qed.
 
-
-
-Lemma qstate_eq_Qexp:forall (qs :QExp) {s e:nat} (st st':state s e) , 
- snd st= snd st' -> 
- QExp_eval  qs st -> QExp_eval  qs st'.
-Proof.   induction qs; intros;
-destruct st; destruct st'; simpl in H; subst.
-simpl in *. assumption.
-simpl in *.  
-destruct H0. destruct H0.
- split. assumption.
-split.
-apply IHqs1 with ((c, q0)).
+Lemma qstate_eq_Qexp:forall (qs :QExp) {s e:nat} (q q':qstate s e) , 
+ q= q' -> 
+ QExp_eval  qs q -> QExp_eval  qs q'.
+Proof.   induction qs; intros. 
+simpl. 
+simpl in H0.
+rewrite <-H.
+assumption.
+destruct H0.
+destruct H0.
+destruct H0.
+destruct H0.
+destruct H0.
+destruct H0.
+simpl. exists x.
+exists x0. exists x1. exists x2.
+exists x3. exists x4.  split.
+rewrite  <-H. intuition.
+split. apply IHqs1 with x3.
 reflexivity. intuition.
-apply IHqs2 with ((c, q0)).
+apply IHqs2 with x4.
 reflexivity. intuition. 
 Qed.
 
-(* Local Open Scope nat_scope.
-Lemma State_free_eval{s e:nat}:forall (F: State_formula) (st: state s e),
-s<=(fst (Free_State F)) /\
-(fst (Free_State F)) <=  (snd (Free_State F))
-/\ (snd (Free_State F))<=e->
-@WF_Matrix (2^(e-s)) (2^(e-s)) (snd st) ->
-State_eval F st <-> 
-State_eval F (fst st, (PMpar_trace (snd st) ((fst (Free_State F))) ((snd (Free_State F))))).
-Proof. induction F; split; intros. destruct st. 
-       simpl. simpl in H0. split. intuition. eapply state_eq_Pure with (c, q). 
-        reflexivity. apply H1.
-        destruct st. simpl in *.
-        split. intuition.
-        eapply state_eq_Pure with (c, PMpar_trace q 0 0). 
-        reflexivity. intuition. destruct st.
-        simpl in *. split. intuition.
-        apply (QExp_free_eval _  (c, q)) .
-        intuition. intuition. intuition.
-        destruct st. simpl in *.
-        split. intuition. 
-        apply QExp_free_eval. intuition.
-        intuition. intuition. 
-        simpl. rewrite PMpar_trace_refl.
-        simpl in H1. 
-        
-        split. apply H1. 
-        split. intuition.
 
-      intuition.  intuition. 
-      apply WF_PMpar_trace. 
-      split. intuition. split.
-       intuition. intuition.
-       assumption. 
-      simpl in *. 
-      rewrite PMpar_trace_refl in H1.
-      intuition. intuition.
-      apply WF_PMpar_trace.
-      intuition. assumption.
-
-        simpl in *; split;
-        try apply H1. admit.
-        admit. 
-Admitted. *)
+Lemma qstate_eq_Qexp':forall (qs :QExp) {s e:nat} (q q':qstate s e) , 
+ q= q' -> 
+ QExp_eval_mixed_state  qs q -> QExp_eval_mixed_state qs q'.
+Proof.    intros. subst. intuition. 
+Qed.
 
 
 
-
-Local Close Scope assert_scope.
-Definition q_subseq{s e:nat} (q0 q1: qstate s e):Prop:=
-  q0=q1 \/ exists x, @Mplus (2^(e-s))  (2^(e-s)) q0 x = q1. 
-
-Lemma eq_i_j: forall (i j:nat),
-i=j<-> (i=?j) = true.
-Proof. induction i; destruct j.
-      simpl. intuition.
-      simpl. intuition.
-      simpl. intuition.
-      split; intros. apply IHi.
-      injection H. intuition. 
-      f_equal. apply IHi. intuition.
-Qed. 
-
-(* Lemma QExp_eval_pure: forall qs s e c (q: qstate s e) ,
-QExp_eval qs (c, q)->
-exists (p:R) (φ: Vector (2^((snd (Free_QExp' qs))-(fst (Free_QExp' qs))))),
-p .* (@PMpar_trace s e q ((fst (Free_QExp' qs))) (((snd (Free_QExp' qs)))) )
-= φ  × φ†.
-Proof. induction qs; intros. 
-       simpl in H. 
-       exists ((R1 / Cmod (@trace (2^(e0-s0)) q))%R).
-       exists v.
-       simpl. 
-       rewrite PMtrace_scale.
-       unfold outer_product in H.
-       intuition.
-       simpl QExp_eval in H.  
-       destruct H. 
-       destruct H0.
-       destruct H1.
-       destruct H1.
-       assert(exists (p : R) (φ : Vector (2 ^ ((snd (Free_QExp' qs1)) - (fst (Free_QExp' qs1))))),
-       p
-       .* PMpar_trace x (fst (Free_QExp' qs1) ) (snd (Free_QExp' qs1) ) =
-       φ × (φ) †).
-       apply IHqs1 with c. intuition.
-       assert(exists (p : R) (φ : Vector (2 ^ ((snd (Free_QExp' qs2)) - (fst (Free_QExp' qs2))))),
-       p
-       .* PMpar_trace x0 (fst (Free_QExp' qs2)) (snd (Free_QExp' qs2) ) =
-       φ × (φ) †).
-       apply IHqs2 with c. 
-        intuition.
-       destruct H2. destruct H2.
-       destruct H3. destruct H3.
-       rewrite PMpar_trace_refl in H2.
-       rewrite PMpar_trace_refl in H3.
-       destruct H1. inversion H4; subst; clear H4.
-       assert(snd (Free_QExp' qs1) =? fst (Free_QExp' qs2)=true).
-         rewrite <-eq_i_j. assumption. 
-        rewrite H4 in *.  clear H7. 
-        clear H10. 
-       exists (x1*x3)%R. 
-       exists (kron x2 x4). 
-       simpl. rewrite H4. 
-       rewrite <-H5. 
-      admit.
-      assert(snd (Free_QExp' qs2) =? fst (Free_QExp' qs1)=true).
-      rewrite <-eq_i_j. assumption.
-      simpl. 
-     rewrite <-H7 in *. 
-     rewrite <-H10  in   *.
-    exists (x1*x3)%R. 
-    exists (kron x2 x4). 
-    rewrite <-H5.
-      admit.
-
-      intuition. admit.
-      intuition. admit.
-
-Admitted. *)
-
-
-(* Lemma State_eval_pure: forall F s e c (q: qstate s e) ,
-State_eval qs (c, q)->
-exists (p:R) (φ: Vector (2^((snd (Free_State F))-(fst (Free_State F))))),
-p .* (@PMpar_trace s e q ((fst (Free_State F))) (((snd (Free_State F)))) )
-= φ  × φ†.
-Proof. induction qs; intros. 
-       simpl in H. 
-       exists ((R1 / Cmod (@trace (2^(e0-s0)) q))%R).
-       exists v.
-       simpl. 
-       rewrite PMtrace_scale.
-       unfold outer_product in H.
-       intuition.
-       simpl QExp_eval in H.  
-       destruct H. 
-       destruct H0.
-       destruct H1.
-       destruct H1.
-       assert(exists (p : R) (φ : Vector (2 ^ ((snd (Free_QExp' qs1)) - (fst (Free_QExp' qs1))))),
-       p
-       .* PMpar_trace x (fst (Free_QExp' qs1) ) (snd (Free_QExp' qs1) ) =
-       φ × (φ) †).
-       apply IHqs1 with c. intuition.
-       assert(exists (p : R) (φ : Vector (2 ^ ((snd (Free_QExp' qs2)) - (fst (Free_QExp' qs2))))),
-       p
-       .* PMpar_trace x0 (fst (Free_QExp' qs2)) (snd (Free_QExp' qs2) ) =
-       φ × (φ) †).
-       apply IHqs2 with c. 
-        intuition.
-       destruct H2. destruct H2.
-       destruct H3. destruct H3.
-       rewrite PMpar_trace_refl in H2.
-       rewrite PMpar_trace_refl in H3.
-       destruct H1. inversion H4; subst; clear H4.
-       assert(snd (Free_QExp' qs1) =? fst (Free_QExp' qs2)=true).
-         rewrite <-eq_i_j. assumption. 
-        rewrite H4 in *.  clear H7. 
-        clear H10. 
-       exists (x1*x3)%R. 
-       exists (kron x2 x4). 
-       simpl. rewrite H4. 
-       rewrite <-H5. 
-      admit.
-      assert(snd (Free_QExp' qs2) =? fst (Free_QExp' qs1)=true).
-      rewrite <-eq_i_j. assumption.
-      simpl. 
-     rewrite <-H7 in *. 
-     rewrite <-H10  in   *.
-    exists (x1*x3)%R. 
-    exists (kron x2 x4). 
-    rewrite <-H5.
-      admit.
-
-      intuition. admit.
-      intuition. admit.
-
-Admitted. *)
 
 
 Local Open Scope R_scope.
@@ -1127,224 +752,87 @@ Qed.
 
 
 Local Open Scope C_scope.
-Lemma s_seman_scale_Qexp: forall  (qs:QExp) (p:R)  (s e:nat) (c:cstate) (q:qstate s e),
-0<p-> 
-(QExp_eval qs (c, q) <-> @QExp_eval s e qs  (c, p.* q)).
-Proof. split. intros.
-induction qs.  
-simpl in H0.
-simpl.
-rewrite trace_mult_dist.
-rewrite Rdiv_unfold.
-rewrite Mscale_assoc.
-rewrite Cmod_mult.
-rewrite Rinv_mult.
-rewrite Rmult_1_l.
-rewrite Cmod_R. rewrite Rabs_right.   
-rewrite Cmult_comm with (y:=(RtoC p)).
-rewrite RtoC_mult. 
-rewrite <-Rmult_assoc. 
-rewrite Rinv_r. intuition.
-lra. lra. 
-
-simpl in H0.
-destruct H0. destruct H1.
-simpl.  split. assumption.
-apply IHqs1 in H1.
-apply IHqs2 in H2.
-split. assumption. assumption.
-
-
-induction qs.  
-simpl; 
-rewrite trace_mult_dist.
-rewrite Rdiv_unfold.
-rewrite Mscale_assoc.
-rewrite Cmod_mult.
-rewrite Rinv_mult.
-rewrite Rmult_1_l.
-rewrite Cmod_R. rewrite Rabs_right.   
-rewrite Cmult_comm with (y:=(RtoC p)).
-rewrite RtoC_mult. 
-rewrite <-Rmult_assoc. 
-rewrite Rinv_r. intuition.
-lra. lra.
-intros.
-simpl in H0.
-destruct H0. destruct H1.
-simpl.  split. assumption.
-apply IHqs1 in H1.
-apply IHqs2 in H2.
-split. assumption. assumption.
-Qed.
-
-
-
-(* Lemma State_eval_sub: forall qs s e c (q q': qstate s e) ,
-q_subseq q q'->
-QExp_eval qs (c, q')->
-QExp_eval qs (c, q).
-Proof. induction qs; intros; 
-       destruct H; subst; try assumption.
-       destruct H.  subst.
+Lemma s_seman_scale_Qexp: forall  (qs:QExp) (p:R)  (s e:nat) (q:qstate s e),
+0<p-> @Mixed_State (2^(e-s)) q->
+(QExp_eval_mixed_state qs q <-> @QExp_eval_mixed_state s e qs (p .* q)).
+Proof.  intros. split. intros. 
+       induction H1; subst.
+       econstructor. admit.
+       rewrite Mscale_plus_distr_r.
+       econstructor. apply IHQExp_eval_mixed_state1.
+       admit. 
+       apply IHQExp_eval_mixed_state2.
        admit.
-       destruct H. subst.
-       assert (exists (p:R) (φ: Vector (2^((snd (Free_QExp' ((qs1 ⊗* qs2))))-(fst (Free_QExp' ((qs1 ⊗* qs2))))))),
-       p .* (PMpar_trace (q.+ x) ((fst (Free_QExp' ((qs1 ⊗* qs2))))) (((snd (Free_QExp' ((qs1 ⊗* qs2)))))) )= φ  × φ†).
-       apply QExp_eval_pure with c. assumption.
-       destruct H. destruct H.
-       destruct H0. 
-       destruct H1.
-       destruct H2.
-       destruct H2.
-       destruct H2.
-       destruct H2.
-       simpl ((snd (c, q .+ x))) in H3.
-    rewrite PMtrace_plus in *.
-    simpl QExp_eval. split. apply H0. 
-    split. apply H1.
-     inversion H3; subst;
-     simpl in *;  simpl in *;  
-     rewrite <-H7 in *; rewrite <-H10 in *.
-    assert(x0 .*  (@kron ((2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))) 
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1)))) 
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))x2 x3)= x1 × (x1) † ).
-    rewrite H5. apply H. 
-    rewrite Mscale_plus_distr_r in H.
-    remember (PMpar_trace q (fst (Free_QExp' qs1))
-    (snd (Free_QExp' qs2))).
-    remember (PMpar_trace x (fst (Free_QExp' qs1))
-    (snd (Free_QExp' qs2))).
-    eapply (Mixed_pure (x0 .* q0) (x0 .* q1 )) in H.
-    destruct H. destruct H.
-    exists (sqrt x4 .* x2).
-    exists (sqrt x4 .* x3).
-    split. 
-    split. apply s_seman_scale_Qexp.
-    apply sqrt_lt_R0. 
-    admit. intuition.
-    apply s_seman_scale_Qexp.
-    admit. intuition.
-    admit.
-     admit. admit. 
-    admit. admit. 
-  
-
-    assert(x0 .*  (@kron ((2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))) 
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2)))) 
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))x3 x2)= x1 × (x1) † ).
-    rewrite H5. try assumption.
-    rewrite Mscale_plus_distr_r in H.
-    remember (PMpar_trace q (fst (Free_QExp' qs2))
-    (snd (Free_QExp' qs1))).
-    remember (PMpar_trace x (fst (Free_QExp' qs2))
-    (snd (Free_QExp' qs1))).
-    eapply (Mixed_pure (x0 .* q0) (x0 .* q1 )) in H.
-    destruct H. destruct H.
-    exists (sqrt x4 .* x2).
-    exists (sqrt x4 .* x3).
-    split. 
-    split. apply s_seman_scale_Qexp.
-    admit. intuition.
-    apply s_seman_scale_Qexp.
-    admit. intuition.
-     admit. admit. 
-    admit. admit. admit.
-Admitted.  *)
+       intros. induction H0.
+       econstructor. 
+       rewrite Mscale_assoc in H1.
+       inversion H1.   admit. 
+       admit. 
+       econstructor.
+       
 
 
        
 
-(* Lemma State_eval_sub': forall F s e c (q q': qstate s e) ,
-q_subseq q q'->
-State_eval F (c, q')->
-State_eval F (c, q).
-Proof. induction F; intros. simpl in *.
-       split. intuition.
-       apply state_eq_Pure with (c,q').
-       reflexivity. intuition. simpl in *.
-       split. intuition. 
-       apply State_eval_sub with q'.
-       assumption. intuition. 
-       destruct H. subst.
-        apply H0. 
-       destruct H. subst.
-       assert (exists (p:R) (φ: Vector (2^((snd (Free_State ((F1 ⊙ F2))))-(fst (Free_State ((F1 ⊙ F2))))))),
-       p .* (PMpar_trace (q.+ x) ((fst (Free_State ((F1 ⊙ F2))))) (((snd (Free_State ((F1 ⊙ F2)))))) )= φ  × φ†).
-       apply QExp_eval_pure with c. assumption.
-       destruct H. destruct H.
-       destruct H0. 
-       destruct H1.
-       destruct H2.
-       destruct H2.
-       destruct H2.
-       destruct H2.
-       simpl ((snd (c, q .+ x))) in H3.
-    rewrite PMtrace_plus in *.
-    simpl QExp_eval. split. apply H0. 
-    split. apply H1.
-     inversion H3; subst;
-     simpl in *;  simpl in *;  
-     rewrite <-H7 in *; rewrite <-H10 in *.
-    assert(x0 .*  (@kron ((2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))) 
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1)))) 
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))x2 x3)= x1 × (x1) † ).
-    rewrite H5. apply H. 
-    rewrite Mscale_plus_distr_r in H.
-    remember (PMpar_trace q (fst (Free_QExp' qs1))
-    (snd (Free_QExp' qs2))).
-    remember (PMpar_trace x (fst (Free_QExp' qs1))
-    (snd (Free_QExp' qs2))).
-    eapply (Mixed_pure (x0 .* q0) (x0 .* q1 )) in H.
-    destruct H. destruct H.
-    exists (sqrt x4 .* x2).
-    exists (sqrt x4 .* x3).
-    split. 
-    split. apply s_seman_scale_Qexp.
-    apply sqrt_lt_R0. 
-    admit. intuition.
-    apply s_seman_scale_Qexp.
-    admit. intuition.
-    admit.
-     admit. admit. 
-    admit. admit. 
-  
 
-    assert(x0 .*  (@kron ((2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2))))) 
-    (2^((snd (Free_QExp' qs2))-(fst (Free_QExp' qs2)))) 
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))
-    (2^((snd (Free_QExp' qs1))-(fst (Free_QExp' qs1))))x3 x2)= x1 × (x1) † ).
-    rewrite H5. try assumption.
-    rewrite Mscale_plus_distr_r in H.
-    remember (PMpar_trace q (fst (Free_QExp' qs2))
-    (snd (Free_QExp' qs1))).
-    remember (PMpar_trace x (fst (Free_QExp' qs2))
-    (snd (Free_QExp' qs1))).
-    eapply (Mixed_pure (x0 .* q0) (x0 .* q1 )) in H.
-    destruct H. destruct H.
-    exists (sqrt x4 .* x2).
-    exists (sqrt x4 .* x3).
-    split. 
-    split. apply s_seman_scale_Qexp.
-    admit. intuition.
-    apply s_seman_scale_Qexp.
-    admit. intuition.
-     admit. admit. 
-    admit. admit. admit.
-       simpl in *.
-       split. split. apply IHF1 with q'.
-       assumption. intuition.
-       apply IHF2 with q'.
-       assumption. intuition.
-       intuition.
-Admitted. *)
         
 
 
 
+      induction qs; intros; destruct st.
+      simpl.
+      repeat rewrite trace_mult_dist.
+      repeat rewrite Rdiv_unfold.
+      repeat rewrite Mscale_assoc.
+      repeat rewrite Cmod_mult.
+      repeat rewrite Rinv_mult.
+      repeat rewrite Rmult_1_l.
+       rewrite Cmod_R.
+       rewrite Rabs_right.   
+      rewrite Cmult_comm with (y:=(RtoC p)).
+      rewrite RtoC_mult. 
+      rewrite <-Rmult_assoc. 
+      rewrite Rinv_r. rewrite Rmult_1_l. intuition.
+      lra. lra.
+
+      split;
+      simpl; intros; destruct H0;
+      destruct H0; destruct H0;
+      destruct H0; destruct H0;
+      destruct H0;
+      exists x; exists x0;
+      exists x1; exists x2.
+      exists (sqrt p .*  x3).
+      exists (sqrt p .*  x4).
+      split. admit.
+      split. assert((c, √ p .* x3)= s_scale (√ p) (c, x3) ).
+      unfold s_scale. reflexivity.
+      unfold qstate. 
+      rewrite H1. 
+      apply IHqs1. admit. intuition. 
+      assert((c, √ p .* x4)= s_scale (√ p) (c, x4) ).
+      unfold s_scale. reflexivity.
+      unfold qstate. 
+      rewrite H1. 
+      apply IHqs2. admit. intuition. 
+
+
+
+
+      exists ((1/sqrt p)%R .*  x3).
+      exists ((1/sqrt p)%R .*  x4).
+      split. admit.
+      split. assert((c, (1/√ p)%R .* x3)= s_scale (1/√ p) (c, x3) ).
+      unfold s_scale. reflexivity.
+      unfold qstate. 
+      rewrite H1. 
+      apply IHqs1. admit. intuition. 
+      assert((c, (1/√ p)%R .* x4)= s_scale (1/√ p) (c, x4) ).
+      unfold s_scale. reflexivity.
+      unfold qstate. 
+      rewrite H1. 
+      apply IHqs2. admit. intuition. 
+Admitted.
 
 
 Local Open Scope R_scope.
@@ -1354,13 +842,11 @@ Lemma s_seman_scale: forall (F:State_formula) (p:R) s e  (st:state s e),
 Proof.  induction F. 
 -- intros. split. apply (state_eq_Pure  P st (s_scale p st)) . simpl. reflexivity.
                   apply (state_eq_Pure  P (s_scale p st) st ) . simpl. reflexivity.
--- intros. destruct st.  unfold s_scale. simpl. apply s_seman_scale_Qexp. assumption.
--- split; simpl; intros; destruct H0; destruct H1;
-split;  try assumption; split; try  apply (IHF1 p s e st); try assumption;
-try apply (IHF2 p s e st); try assumption.  
+-- intros. apply s_seman_scale_Qexp. assumption.
+-- admit.  
 -- split; simpl; intros; destruct H0;
-split; try apply (IHF1 p s e st); try assumption;
-try apply (IHF2 p  s e st); try assumption.
+split; try apply (IHF1 p n st); try assumption;
+try apply (IHF2 p n st); try assumption.
 (* --intros. split; intros; simpl; unfold not; simpl in H1; unfold not in H1;
 intros.
 assert(State_eval  F st). apply (IHF p n st). assumption. assumption. assumption. apply H1 in H3.
@@ -1393,7 +879,7 @@ assumption. *)
    unfold WF_state. simpl.
   unfold WF_state in H0. simpl in H0.
   assumption. *)
-Qed.
+Admitted.
 
 Local Open Scope C_scope.
 Lemma d_seman_scale_aux: forall  (F:State_formula) (p:R)  (s e:nat) (mu:list (cstate * qstate s e)),
@@ -1586,19 +1072,17 @@ unfold WF_qstate.  intros.
 apply mixed_state_Cmod_1. intuition. 
 Qed.
 
-
-
 Lemma  State_eval_plus{s e:nat}: forall F c (q q0: qstate s e),
 WF_qstate q ->
 WF_qstate q0->
 State_eval F (c, q)->
 State_eval F (c,q0) ->
-@State_eval s e F (c, q .+ q0) .
+@State_eval s e F (c, q .+ q0).
 Proof.  
-       induction F; intros;  intros.
+       induction F. intros;  intros.
       -apply state_eq_Pure with  (c, q0). 
        reflexivity. intuition.   
-      -induction qs. simpl in *.
+      -induction qs; intros. simpl in *.
         rewrite Rdiv_unfold in *.
         rewrite trace_plus_dist.
         rewrite <-PMtrace_scale.
@@ -1630,7 +1114,8 @@ Proof.
           rewrite PMtrace_plus. 
           rewrite <-PMtrace_scale. 
           rewrite Rdiv_unfold in *.
-          destruct H1. destruct H5. destruct H6. destruct H2.
+          destruct H1. destruct H5. 
+          destruct H6. destruct H2.
           destruct H8. destruct H9.
           split. intuition. split. intuition.
           split. intuition.
@@ -1653,16 +1138,14 @@ Proof.
          intuition.  apply mixed_state_Cmod_1. apply H0.
          assumption.
          apply H. apply H0. 
-       
-        simpl in *. split. intuition.
-        destruct H2. destruct H3. 
-        destruct H1. destruct H5. 
-        apply IHqs1 in H5. apply IHqs2 in H6.
-        split. assumption. assumption. assumption.
-        assumption.  
-      -simpl in *. split. intuition.  split. intuition. intuition. 
+         lia. lia.
+         
+         simpl in *.  admit.
+
+      -simpl in *. admit.
       - simpl in *.  split. intuition. intuition. 
-Qed.
+Admitted.
+
 
 
 Lemma d_seman_app_aux: forall s e  (mu mu':list (cstate * qstate s e))  (F:State_formula),

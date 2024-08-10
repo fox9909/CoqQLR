@@ -13,7 +13,7 @@ From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import QState_L.
-From Quan Require Import Basic_Supplement.
+From Quan Require Import Par_trace.
 
 Delimit Scope C_scope with C.
 Local Open Scope C_scope.
