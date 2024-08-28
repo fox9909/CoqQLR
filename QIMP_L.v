@@ -479,10 +479,10 @@ Lemma QUnit_Ctrl_fun_kron{s x e:nat}: forall s0 e0 s1 e1 (U:nat-> Square (2^(e1-
 forall j, WF_Matrix (U j)->
 @WF_Matrix (2^(e-x)) (2^(e-x)) q->
 s<=s0/\s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=x /\ x<=e->
-@QUnit_Ctrl_fun s e  s0 e0 s1 e1 U (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
-(2^(e0-x)) p q) =
-@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
-(2^(e0-x)) (QUnit_Ctrl_fun s0 e0 s1 e1 U p) q.
+@QUnit_Ctrl_fun s e  s0 e0 s1 e1 U (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))
+(2^(e-x)) p q) =
+@kron  (2^(x-s)) (2^(x-s)) (2^(e-x))
+(2^(e-x)) (QUnit_Ctrl_fun s0 e0 s1 e1 U p) q.
 Proof. unfold QUnit_Ctrl_fun.  intros. unfold q_update.
 unfold super.  repeat rewrite Msum_adjoint.
 assert(2^(e-s)=2^(s1-s) * 2^(e1-s1) * 2^(e-e1))%nat.
