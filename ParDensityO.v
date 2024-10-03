@@ -27,6 +27,14 @@ Lemma WF_Mixed : forall {n} (ρ : Density n), Mixed_State ρ -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
 #[export] Hint Resolve WF_Mixed : wf_db.
 
+Lemma Pure_Mixed{n:nat}: forall ( ρ : Matrix n n),
+Pure_State ρ ->
+Mixed_State ρ .
+Proof. intros. assert(ρ= C1 .* ρ). rewrite Mscale_1_l. reflexivity.
+       rewrite H0. econstructor. intuition. assumption. 
+Qed.
+#[export] Hint Resolve  Pure_Mixed: Mixed.
+
 Lemma pure0 : Pure_State ∣0⟩⟨0∣. 
 Proof. exists ∣0⟩. intuition. split. auto with wf_db. solve_matrix. Qed.
 
@@ -85,7 +93,7 @@ Lemma mixed_unitary : forall {n} (U ρ : Matrix n n),
     rewrite 2 Mscale_mult_dist_l.
     apply Mix_S; trivial.
 Qed.
-
+#[export] Hint Resolve  mixed_unitary: Mixed.
 
 Lemma pure_state_vector_kron : forall {n m} (ϕ : Vector n) (ψ : Vector m),
   Pure_State_Vector ϕ -> Pure_State_Vector ψ -> Pure_State_Vector (ϕ ⊗ ψ).
@@ -135,6 +143,7 @@ Proof.
     rewrite 2 Mscale_kron_dist_l.
     apply Mix_S; easy.
 Qed.
+#[export] Hint Resolve  mixed_state_kron: Mixed.
 
 
 
@@ -273,7 +282,7 @@ apply Rmult_le_pos; intuition.
 apply Rle_trans with (p1 * r1 + p2 * r1 ).
 apply Rplus_le_compat;
 apply Rmult_le_compat;
-intuition. 
+intuition.  
 rewrite <-Rmult_plus_distr_r. 
 assert((p1 + p2) * r1 <= 1*1).
 apply Rmult_le_compat. 
@@ -282,7 +291,18 @@ intuition. intuition. intuition.
 rewrite Rmult_1_l in H5.
 intuition.
 Qed.
+#[export] Hint Resolve Rplus_mult_le_1 : Rsimpl.
 
+Lemma Rgt_ge: forall r:R, r>0 -> r>=0 .
+Proof. intro. lra.
+Qed.
+
+Lemma Rge_le: forall r:R, r>=0 <->0 <=r.
+Proof. intro. lra.
+Qed.
+#[export] Hint Resolve Rgt_ge Rge_le: Rsimpl.
+
+Ltac RSimpl:= auto with Rsimpl.
 
 Lemma mixed_state_trace_1 : forall {n} (ρ : Density n), Mixed_State ρ ->  fst (trace ρ) <=1.
 Proof.
@@ -290,19 +310,17 @@ Proof.
   induction H. 
   - rewrite trace_mult_dist. simpl. rewrite Rmult_0_l.
     rewrite Rminus_0_r. assert(p * fst (trace ρ) <= 1 * 1).
-    apply Rmult_le_compat. intuition.
-    assert(0 < fst (trace ρ)). 
-    apply mixed_state_trace_gt0. intuition. 
-    assert(ρ=1%R .* ρ). rewrite Mscale_1_l. reflexivity.
-    rewrite H. apply Pure_S. lra. intuition. 
-    intuition. intuition.  rewrite pure_state_trace_1. simpl. intuition.
-     easy. rewrite Rmult_1_r in H1. intuition.
+    apply Rmult_le_compat. intuition. 
+    apply Rge_le. apply Rgt_ge.
+    apply mixed_state_trace_gt0. intuition.  intuition.
+     rewrite pure_state_trace_1. simpl. intuition.
+     easy.  rewrite Rmult_1_r in H1. intuition.
   - rewrite trace_plus_dist.
     rewrite 2 trace_mult_dist.
     simpl. repeat rewrite Rmult_0_l. 
     repeat rewrite Rminus_0_r.
     apply Rplus_mult_le_1. intuition.
-    intuition. assumption. 
+    intuition. assumption.  
     assert(0 < fst (trace ρ1)). 
     apply mixed_state_trace_gt0. intuition.
     intuition.
@@ -370,6 +388,8 @@ rewrite Rmult_0_l. rewrite Rplus_0_l.
  rewrite Rminus_0_r.
 reflexivity.
 Qed.
+#[export] Hint Resolve RtoC_mult: Rsimpl.
+
 
 Lemma Rmult_in01: forall p1 p2,
 0 < p1 <=1->
@@ -381,6 +401,8 @@ Proof. split. apply Rmult_gt_0_compat. intuition. intuition.
         intuition. intuition. intuition. intuition. 
         rewrite Rmult_1_l in H1. assumption.
 Qed.
+#[export] Hint Resolve Rmult_in01: Rsimpl.
+
 
 
 Lemma Mixed_State_scale: forall n (ρ : Square n) p, Mixed_State ρ ->
@@ -529,95 +551,76 @@ Lemma mixed_unitary_aux : forall {n} (U ρ : Matrix n n),
     rewrite Mmult_plus_distr_r.
     apply Mix_S_aux; trivial.
 Qed.
+#[export] Hint Resolve  mixed_unitary_aux: Mixed.
 
+
+Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
+Proof. intros. lra. Qed.
+
+Lemma Rdiv_in_01:forall r1 r2, r1>0 -> r2>0 -> 
+r1<=r2->
+0<r1/r2<=1.
+Proof. intros. split. apply Rdiv_lt_0_compat.
+      assumption. lra. rewrite<- Rcomplements.Rdiv_le_1.
+      assumption. assumption.
+Qed.
+
+Lemma normalize_eq_mixed{n}: forall (ρ: Square n),
+Mixed_State_aux ρ ->
+Cmod (trace ρ).* ((/ Cmod (trace ρ))%R .* ρ)=ρ.
+Proof. intros. rewrite Mscale_assoc. rewrite RtoC_mult.
+      rewrite Rinv_r. Msimpl. reflexivity.
+      apply Rgt_neq_0. apply mixed_state_Cmod_1_aux. assumption.
+Qed.
 
 
 Lemma  Mixed_State_aux_to01:forall {n} (ρ : Density n),
 Mixed_State_aux ρ ->
-Mixed_State ((R1 / Cmod (trace ρ))%R .* ρ) .
-Proof. intros. induction H.  rewrite Mscale_assoc. 
-       rewrite Rdiv_unfold. rewrite trace_mult_dist.
-       rewrite Cmod_mult. rewrite Cmod_R. rewrite Rabs_right.
-        rewrite pure_state_trace_1. rewrite Cmod_1. 
+Mixed_State ((/ Cmod (trace ρ))%R .* ρ).
+Proof. intros. induction H.
+      { rewrite Mscale_assoc. 
+        rewrite trace_mult_dist.
+        rewrite Cmod_mult. rewrite Cmod_R. rewrite Rabs_right.
+        rewrite pure_state_trace_1.  rewrite Cmod_1. 
         rewrite Rmult_1_r. rewrite RtoC_mult.
-        rewrite Rmult_assoc.
-        rewrite Rinv_l. rewrite Rmult_1_r. 
-        apply Pure_S. lra. assumption. lra.
-        assumption.  intuition.
-        rewrite Mscale_plus_distr_r.  
-        assert(ρ1=Cmod (trace ρ1) .* (((R1 / Cmod (trace ρ1))%R) .* ρ1) ).
-        rewrite Mscale_assoc. 
-         rewrite Rdiv_unfold. 
-       rewrite RtoC_mult.  
-       rewrite <-Rmult_assoc . 
-       rewrite Rmult_comm.  
-         rewrite <-Rmult_assoc . 
-         rewrite Rinv_l.  
-         rewrite Rmult_1_r . 
-         rewrite Mscale_1_l. reflexivity.
-         assert(Cmod (trace ρ1) >0). apply mixed_state_Cmod_1_aux.
-       assumption. lra .
-        assert(ρ2=Cmod (trace ρ2) .* (((R1 / Cmod (trace ρ2))%R) .* ρ2) ).
-        rewrite Mscale_assoc.
-        rewrite Rdiv_unfold. 
-        rewrite RtoC_mult.  
-        rewrite <-Rmult_assoc . 
-        rewrite Rmult_comm.  
-          rewrite <-Rmult_assoc . 
-          rewrite Rinv_l.  
-          rewrite Rmult_1_r . 
-          rewrite Mscale_1_l. reflexivity.
-          assert(Cmod (trace ρ2) >0). apply mixed_state_Cmod_1_aux.
-        assumption. lra . remember ((R1 / Cmod (trace (ρ1 .+ ρ2)))%R).
+        rewrite Rinv_l. apply Pure_S. lra. assumption. lra.
+        assumption.  intuition. }
+      { rewrite Mscale_plus_distr_r. 
+        assert(ρ1=Cmod (trace ρ1) .* (((/ Cmod (trace ρ1))%R) .* ρ1) ).
+        symmetry. apply normalize_eq_mixed. assumption. 
+        assert(ρ2=Cmod (trace ρ2) .* ((( / Cmod (trace ρ2))%R) .* ρ2) ).
+        symmetry. apply normalize_eq_mixed. assumption. 
+        remember (( / Cmod (trace (ρ1 .+ ρ2)))%R).
         rewrite H1. rewrite H2.
          rewrite Mscale_assoc.  
          rewrite (Mscale_assoc _ _ r _ _).
-        repeat rewrite RtoC_mult.   
-        apply Mix_S. rewrite Heqr. 
-        rewrite Rdiv_unfold.  rewrite Rmult_1_l.
-        split. apply Rmult_gt_0_compat. apply Rinv_0_lt_compat.
-        rewrite mixed_state_Cmod_plus_aux. apply Rplus_lt_0_compat.
-        apply mixed_state_Cmod_1_aux. assumption. 
-        apply mixed_state_Cmod_1_aux. assumption. assumption. assumption.
-        apply mixed_state_Cmod_1_aux. assumption. 
-        rewrite Rmult_comm. rewrite <-Rdiv_unfold. 
-        apply (Rcomplements.Rdiv_le_1 (Cmod (trace ρ1))). 
-        rewrite mixed_state_Cmod_plus_aux. apply Rplus_lt_0_compat.
-        apply mixed_state_Cmod_1_aux. assumption. 
-        apply mixed_state_Cmod_1_aux. assumption. assumption. assumption.
+        repeat rewrite RtoC_mult.   apply Mix_S. 
+         rewrite Heqr.
         rewrite mixed_state_Cmod_plus_aux. 
-        assert( Cmod (trace ρ1) +0 <= Cmod (trace ρ1) + Cmod (trace ρ2)).
-        apply Rplus_le_compat_l. assert(0<Cmod (trace ρ2) ).
-        apply mixed_state_Cmod_1_aux. assumption. lra.
-      rewrite Rplus_0_r in H3. assumption.  assumption. assumption.
-      rewrite Heqr. 
-      rewrite Rdiv_unfold.  rewrite Rmult_1_l.
-      split. apply Rmult_gt_0_compat. apply Rinv_0_lt_compat.
-      rewrite mixed_state_Cmod_plus_aux. apply Rplus_lt_0_compat.
-      apply mixed_state_Cmod_1_aux. assumption. 
-      apply mixed_state_Cmod_1_aux. assumption. assumption. assumption.
-      apply mixed_state_Cmod_1_aux. assumption. 
-      rewrite Rmult_comm. rewrite <-Rdiv_unfold. 
-      apply (Rcomplements.Rdiv_le_1 (Cmod (trace ρ2))). 
-      rewrite mixed_state_Cmod_plus_aux. apply Rplus_lt_0_compat.
-      apply mixed_state_Cmod_1_aux. assumption. 
-      apply mixed_state_Cmod_1_aux. assumption. assumption. assumption.
-      rewrite mixed_state_Cmod_plus_aux. 
-      assert(0+ Cmod (trace ρ2) <= Cmod (trace ρ1) + Cmod (trace ρ2)).
-      apply Rplus_le_compat_r. assert(0<Cmod (trace ρ1) ).
-      apply mixed_state_Cmod_1_aux. assumption. lra.
-    rewrite Rplus_0_l in H3. assumption.  assumption. assumption.
-    rewrite <-Rmult_plus_distr_l.
+        rewrite Rmult_comm.
+        rewrite <-Rdiv_unfold. apply Rdiv_in_01. 
+        apply mixed_state_Cmod_1_aux. assumption. 
+         apply Rplus_lt_0_compat;
+        apply mixed_state_Cmod_1_aux; assumption. 
+        rewrite <-Rplus_0_r at 1. apply Rplus_le_compat_l.
+        apply Cmod_ge_0. assumption. assumption.
+        rewrite Heqr.
+        rewrite mixed_state_Cmod_plus_aux. 
+        rewrite Rmult_comm.
+        rewrite <-Rdiv_unfold. apply Rdiv_in_01. 
+        apply mixed_state_Cmod_1_aux. assumption. 
+         apply Rplus_lt_0_compat;
+        apply mixed_state_Cmod_1_aux; assumption. 
+        rewrite <-Rplus_0_l at 1. apply Rplus_le_compat_r.
+        apply Cmod_ge_0. assumption. assumption.
+        rewrite <-Rmult_plus_distr_l.
         rewrite Heqr.  rewrite mixed_state_Cmod_plus_aux. 
-        rewrite Rdiv_unfold. rewrite Rmult_assoc. 
-        rewrite Rinv_l. lra. 
-        assert((Cmod (trace ρ1) + Cmod (trace ρ2))%R > 0).
-        apply Rplus_lt_0_compat. apply mixed_state_Cmod_1_aux.
-        assumption. apply mixed_state_Cmod_1_aux.
-        assumption. lra. 
-       assumption. assumption. 
-       apply IHMixed_State_aux1. apply IHMixed_State_aux2.
+        rewrite Rinv_l. lra. apply Rgt_neq_0. 
+        apply Rplus_lt_0_compat; apply mixed_state_Cmod_1_aux;
+        assumption. assumption. assumption.  
+       apply IHMixed_State_aux1. apply IHMixed_State_aux2. }
 Qed.
+#[export] Hint Resolve  Mixed_State_aux_to01 Mixed_State_scale : Mixed.
 
 Lemma Mixed_State_scale_aux: forall n (ρ : Square n) p, Mixed_State_aux ρ ->
 0 < p->
@@ -632,50 +635,64 @@ Proof. intros.
         apply Mix_S_aux; intuition.
 Qed.
 
+
+
 Require Import Reals.
 Lemma Mixed_State_aux_to_Mix_State: forall {n} (ρ : Density n), 
 (Mixed_State_aux ρ /\ Cmod (trace ρ) <=1) <-> Mixed_State ρ. 
-Proof. intros. split; intros. destruct H. induction H. apply Pure_S. 
+Proof. intros. split; intros. destruct H. induction H.
+      { apply Pure_S.  
       rewrite trace_mult_dist in H0. rewrite Cmod_mult in H0.
       rewrite Cmod_R in H0. rewrite Rabs_right in H0.
       split. assumption.  rewrite pure_state_trace_1 in H0.
       rewrite Cmod_1 in H0. rewrite Rmult_1_r in H0. assumption.
-      assumption. intuition. assumption. 
-      rewrite mixed_state_Cmod_plus_aux  in H0. 
-      assert(Mixed_State (Cmod (trace ρ1) .* (((R1 / Cmod (trace ρ1))%R) .* ρ1) .+ 
-           Cmod (trace ρ2) .* (((R1/ Cmod (trace ρ2))%R) .* ρ2))).
+      assumption. intuition. assumption. }
+      {
+      rewrite mixed_state_Cmod_plus_aux  in H0.
+       rewrite <-(normalize_eq_mixed ρ1). 
+        rewrite <- (normalize_eq_mixed ρ2).
       apply Mix_S. split. apply mixed_state_Cmod_1_aux. assumption.
       apply Rplus_le_1 with (Cmod (trace ρ2)). apply mixed_state_Cmod_1_aux.
       assumption. rewrite Rplus_comm. assumption. split.
       apply mixed_state_Cmod_1_aux. assumption. 
       apply Rplus_le_1 with (Cmod (trace ρ1)). apply mixed_state_Cmod_1_aux. assumption.
-      assumption. assumption.  
+      assumption. assumption.   
       apply Mixed_State_aux_to01. assumption.
-      apply Mixed_State_aux_to01. assumption.
-      repeat rewrite Rdiv_unfold in H2. 
-      repeat rewrite Mscale_assoc in H2. 
-      repeat rewrite RtoC_mult in H2. 
-      repeat rewrite <-Rmult_assoc in H2. 
-       rewrite Rmult_comm in H2. 
-        rewrite (Rmult_comm (Cmod (trace ρ2) * R1) _) in H2.
-        repeat rewrite <-Rmult_assoc in H2. 
-         rewrite Rinv_l in H2.  rewrite Rinv_l in H2. 
-        repeat rewrite Rmult_1_r in H2.
-        repeat rewrite Mscale_1_l in H2. assumption.
-       assert(Cmod (trace ρ2) >0). apply mixed_state_Cmod_1_aux.
-       assumption.  lra.  
-       assert(Cmod (trace ρ1) >0). apply mixed_state_Cmod_1_aux.
-       assumption.  lra.
-      assumption. assumption.
-      induction H. split. apply Pure_S_aux.  intuition.
+      apply Mixed_State_aux_to01. assumption. 
+      assumption. assumption.  assumption. assumption. }
+
+      { induction H. split. apply Pure_S_aux.  intuition.
       assumption. apply mixed_state_Cmod_1. apply Pure_S.
       assumption. assumption.
       split.  apply Mix_S_aux. apply Mixed_State_scale_aux.
       apply IHMixed_State1. intuition. 
       apply Mixed_State_scale_aux.
       apply IHMixed_State2. intuition.  
-      apply mixed_state_Cmod_1. apply Mix_S; intuition.
+      apply mixed_state_Cmod_1. apply Mix_S; intuition. }
 Qed.
+
+
+Lemma Mixed_State_scale_c: forall n (ρ : Square n) c, 
+Mixed_State ρ ->
+0 < fst c <= 1-> 
+snd c =0->
+Mixed_State (c .* ρ).
+Proof. intros. destruct c. simpl in *. rewrite H1. 
+       assert((r, 0) = RtoC r). reflexivity.
+        rewrite H2. apply Mixed_State_scale. assumption.
+        assumption.
+Qed.
+
+Lemma  Mixed_State_aux_to_01':forall {n} (ρ : Density n) p,
+Mixed_State_aux ρ ->
+0<p-> Cmod (trace (p .* ρ) )<=1 ->
+Mixed_State (p .* ρ).
+Proof. intros. apply Mixed_State_aux_to_Mix_State.
+      split. apply Mixed_State_scale_aux.
+      assumption. assumption. assumption.
+Qed.
+#[export] Hint Resolve  Mixed_State_aux_to_Mix_State Mixed_State_scale_aux Mixed_State_scale_c
+Mixed_State_aux_to_01': Mixed.
 
 Import Quan.Complex.
 
@@ -694,63 +711,354 @@ Proof. intros. destruct c.
   
 Qed.
 
+
+Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
+  trace(Mmult A B) =trace (Mmult B A).
+  Proof. intros. unfold trace. unfold Mmult. 
+         rewrite big_sum_swap_order. 
+         apply big_sum_eq. apply functional_extensionality.
+         intros. apply big_sum_eq. apply functional_extensionality.
+         intros.
+  apply Cmult_comm. 
+  Qed.
+
+Lemma inner_trace: forall n (x: Vector (n)),
+WF_Matrix x->
+ ((norm x) * (norm x))%R = (fst (trace (x × x †))).
+Proof. intros. unfold norm. rewrite sqrt_sqrt. 
+f_equal. unfold inner_product. rewrite trace_mult'.  unfold trace.
+simpl. rewrite Cplus_0_l.  reflexivity. apply inner_product_ge_0.
+Qed. 
+
+Lemma trace_vector: forall (m n:Vector 1), 
+ (trace (m × n)) = (trace m) * (trace n).
+Proof. intros. unfold trace.  unfold Mmult. 
+       simpl. repeat rewrite Cplus_0_l.
+       reflexivity.
+Qed.
+
+Lemma real_gt_0_aux:forall a b c : R, 0 < a -> 0 < b -> a = (b * c)%R -> 0 < c.
+Proof. intuition. 
+replace c with (a * / b)%R.
+apply Rlt_mult_inv_pos; auto.
+subst.
+replace (b * c * / b)%R with (b * /b * c)%R by lra.
+rewrite Rinv_r; try lra. 
+  
+Qed.
+
+Lemma Zero_opp{ m n:nat}: forall m n (A B:Matrix m n),
+A .+ (Mopp A) = Zero.
+Proof. intros. prep_matrix_equality.
+       unfold Mplus. unfold Mopp.
+       unfold scale. rewrite<-Copp_mult_distr_l.
+       rewrite Cmult_1_l.
+       rewrite Cplus_opp_r. reflexivity.
+Qed.
+
+Lemma scale_Zero{m n:nat}: forall c (M:Matrix m n),
+c .* M = Zero ->
+c<>0 ->
+M = Zero.
+Proof. intros. unfold scale in H. 
+       unfold Zero in *.
+      prep_matrix_equality.
+      assert((fun x y : nat => c * M x y) x y=
+      c * (M x y)). reflexivity.
+      assert(c * (M x y)= 0).
+      rewrite H in H1. symmetry. assumption. 
+      apply Cmult_integral in H2.
+      destruct H2. rewrite H2 in H0. destruct H0.
+      reflexivity. assumption.
+Qed.
+
+
+
+Lemma Cauchy_Schwartz_ver1' : forall {n} (u v : Vector n),
+WF_Matrix v ->WF_Matrix u->
+v<>Zero-> u <> Zero ->
+((exists c, c .*  u = v) -> False)->
+  (Cmod ⟨u,v⟩)^2 < (fst ⟨u,u⟩) * (fst ⟨v,v⟩).
+Proof. intros n u v Hw Hu H01 H02 Hc. intros.  
+       - assert (H := CS_key_lemma u v).
+         apply real_gt_0_aux in H.
+         lra.  assert(0 <=
+         fst
+           ⟨ ⟨ v, v ⟩ .* u .+ -1 * ⟨ v, u ⟩ .* v,
+           ⟨ v, v ⟩ .* u .+ -1 * ⟨ v, u ⟩ .* v ⟩).
+           apply inner_product_ge_0.
+           assert(fst
+           ⟨ ⟨ v, v ⟩ .* u .+ -1 * ⟨ v, u ⟩ .* v,
+           ⟨ v, v ⟩ .* u .+ -1 * ⟨ v, u ⟩ .* v ⟩<> 0).
+           unfold not. intros.
+           rewrite  <-norm_squared in H1.
+           rewrite <-Rsqr_pow2 in H1.
+         apply Rsqr_0_uniq in H1.
+         apply norm_zero_iff_zero in H1.
+         assert(⟨ v, v ⟩ .* u .+ -1 * ⟨ v, u ⟩ .* v .+ ⟨ v, u ⟩ .* v = ⟨ v, u ⟩ .* v).
+         rewrite H1. rewrite Mplus_0_l. reflexivity.
+         rewrite Mplus_assoc in H2.
+         rewrite (Mplus_comm _ _  _ (⟨ v, u ⟩ .* v) ) in H2.
+         assert(-1 * ⟨ v, u ⟩ .* v= Mopp(⟨ v, u ⟩ .* v)).
+         unfold Mopp. rewrite <-Mscale_assoc.  f_equal.
+         rewrite <-RtoC_opp. reflexivity. 
+        rewrite H3 in H2. rewrite (@Zero_opp n 1) in H2.
+        rewrite Mplus_0_r in H2.
+        destruct Hc. 
+        exists (/ (⟨ v, u ⟩) * (⟨ v, v ⟩)).
+        rewrite <-Mscale_assoc. rewrite H2.
+        rewrite Mscale_assoc. rewrite Cinv_l.
+        rewrite Mscale_1_l. reflexivity.
+        unfold not. intros. rewrite H4 in H2.
+        rewrite Mscale_0_l in H2.
+        apply scale_Zero in H2. rewrite H2 in H02.
+        destruct H02. reflexivity.
+        unfold not. intros.
+        apply inner_product_zero_iff_zero in H5.
+        rewrite H5 in H01. destruct H01. reflexivity.
+        assumption. intuition.
+              auto_wf. lra.
+        
+       -  destruct(inner_product_ge_0 v). lra.
+         rewrite <-norm_squared in H0.
+         rewrite <-Rsqr_pow2 in H0.
+         symmetry in H0.
+         apply Rsqr_0_uniq in H0.
+         apply norm_zero_iff_zero in H0.
+         rewrite H0 in H01. destruct H01. reflexivity.
+         assumption.
+Qed.
+
+Lemma big_sum_Cconj: forall (f: nat->C) n,
+Cconj (big_sum f n)=big_sum (fun x=> Cconj (f x) ) n.
+Proof. induction n; simpl. rewrite Cconj_0.
+       reflexivity. rewrite Cconj_plus_distr.
+       rewrite IHn. reflexivity.
+  
+Qed.
+
+
+Lemma  trace_adj{  n:nat}:forall ( A: Square n),
+trace (A)=Cconj (trace (adjoint A)) .
+Proof. intros.   unfold trace. unfold adjoint.
+rewrite big_sum_Cconj. apply big_sum_eq_bounded. intros.
+      rewrite Cconj_involutive. reflexivity.
+Qed.
+
+Lemma inner_trace'{n:nat}: forall (x x0: Vector n), 
+trace ((x0) † × x)= inner_product x0 x.
+Proof. intros. unfold trace. unfold inner_product.
+      simpl. rewrite Cplus_0_l. reflexivity. 
+Qed.
+
+
+Lemma Rmult_in01': forall p1 p2,
+0 <= p1 <=1->
+0 <= p2 <=1->
+0 <= p1 * p2 <=1.
+Proof. split. assert(0=0*0)%R. rewrite Rmult_0_l. reflexivity.
+     rewrite H1. apply Rmult_le_compat. intuition. intuition.
+      intuition. intuition.
+        assert(p1 * p2 <= 1*1).
+        apply Rmult_le_compat. 
+        intuition. intuition. intuition. intuition. 
+        rewrite Rmult_1_l in H1. assumption.
+Qed.
+
+Lemma trace_vector_mult{n}: forall (x x0:Vector n),
+Cmod (trace (x × ((x) † × x0 × (x0) †)))=
+(Cmod ⟨ x0, x ⟩ * Cmod ⟨ x0, x ⟩)%R.
+Proof. intros.  rewrite trace_mult'. 
+rewrite Mmult_assoc.
+rewrite trace_vector.
+rewrite trace_mult'.
+rewrite trace_adj.
+rewrite Cmod_mult.
+rewrite  Cmod_Cconj.
+rewrite Mmult_adjoint.
+rewrite adjoint_involutive.
+rewrite trace_mult'.
+rewrite inner_trace'. reflexivity.
+Qed.
+
+
 Lemma Mixed_State_mult_trace_le_1:forall {n} (ρ1 :Density n),
 Mixed_State ρ1->
 forall (ρ2: Density n),
 Mixed_State ρ2 ->
-0<=fst (trace (ρ1 × ρ2))<=1.
-Proof. intros n ρ1 Hρ1. induction Hρ1.
-intros.  induction H1.
-destruct H0. destruct H2.
-destruct H0. destruct H2.
-rewrite Mscale_mult_dist_l.
-rewrite Mscale_mult_dist_r.
-rewrite Mscale_assoc.
-rewrite trace_mult_dist.
-rewrite H4. rewrite H3.
-rewrite Mmult_assoc.
-rewrite <-(Mmult_assoc (x) †).
-remember ((x) † × x0).
-rewrite <-RtoC_mult.
-rewrite fst_mult.
-admit.
-rewrite Mmult_plus_distr_l.
-repeat rewrite Mscale_mult_dist_l.
-repeat rewrite Mscale_mult_dist_r.
-  repeat rewrite Mscale_assoc.
- rewrite Cmult_comm.
- rewrite (Cmult_comm _ p2) .
- repeat rewrite<- Mscale_assoc.
- rewrite trace_plus_dist.
-  rewrite trace_mult_dist.
-  rewrite (trace_mult_dist _ p2).
-  rewrite fst_plus. 
-  repeat rewrite fst_mult.
-  repeat rewrite <-Mscale_mult_dist_l.
-  apply Rplus_mult_le_1. lra. lra.
-  assumption. intuition. intuition.  
+0<=Cmod (trace (ρ1 × ρ2))<=1.
+        Proof. intros n ρ1 Hρ1. 
+        induction Hρ1.
+        intros.  induction H1.
+        {
+        destruct H0. destruct H2.
+        destruct H0. destruct H2.
+        rewrite Mscale_mult_dist_l.
+        rewrite Mscale_mult_dist_r.
+        rewrite Mscale_assoc.
+        rewrite trace_mult_dist.
+        rewrite H4. rewrite H3.
+        rewrite Mmult_assoc.
+        rewrite <-(Mmult_assoc (x) †).
+        rewrite <-RtoC_mult. rewrite Cmod_mult.
+        rewrite Cmod_R. rewrite Rabs_right. 
+        apply Rmult_in01'. apply Rmult_in01'.
+         intuition. intuition. rewrite trace_vector_mult.
+        assert(Cmod ⟨ x0, x ⟩ * Cmod ⟨ x0, x ⟩= (Cmod ⟨ x0, x ⟩)^2 )%R.
+        simpl. rewrite Rmult_1_r. reflexivity.
+        rewrite H5. split. apply pow2_ge_0.
+        apply Rle_trans with (fst ⟨ x0, x0 ⟩ * fst ⟨ x, x ⟩)%R.
+        apply Cauchy_Schwartz_ver1. 
+        destruct H0. unfold inner_product. rewrite H6.
+        destruct H2. rewrite H7. simpl. rewrite Rmult_1_l. intuition.
+        apply Rgt_ge. apply Rmult_lt_0_compat. intuition. intuition. }
+
+      { rewrite Mmult_plus_distr_l.
+        repeat rewrite Mscale_mult_dist_l.
+        repeat rewrite Mscale_mult_dist_r.
+        repeat rewrite Mscale_assoc.
+        rewrite Cmult_comm.
+        rewrite (Cmult_comm _ p2) .
+        repeat rewrite<- Mscale_assoc.
+        rewrite trace_plus_dist.
+        rewrite trace_mult_dist.
+        rewrite (trace_mult_dist _ p2).
+        split. apply Cmod_ge_0. 
+        apply Rle_trans with (Cmod
+        (p1 * trace (p .* (ρ × ρ1)))+ Cmod
+        (p2 * trace (p .* (ρ × ρ2))))%R.
+        apply Cmod_triangle. 
+        repeat rewrite Cmod_mult.
+        repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+        repeat rewrite <-Mscale_mult_dist_l.
+        apply Rplus_mult_le_1. lra. lra.
+        assumption. intuition. intuition.
+        intuition. intuition. }   
   
-  intros. 
-  rewrite Mmult_plus_distr_r.
-  repeat rewrite Mscale_mult_dist_l.
-  rewrite trace_plus_dist.
-  repeat rewrite trace_mult_dist.
-  rewrite fst_plus.
-  repeat rewrite fst_mult.
-  apply Rplus_mult_le_1. lra. lra.
-  assumption. apply IHHρ1_1. intuition.
-  apply IHHρ1_2. intuition.
-Admitted.
+        intros. 
+        rewrite Mmult_plus_distr_r.
+        repeat rewrite Mscale_mult_dist_l.
+        rewrite trace_plus_dist.
+        repeat rewrite trace_mult_dist.
+        split. apply Cmod_ge_0. 
+        apply Rle_trans with (Cmod
+        (p1 * trace ( (ρ1 × ρ0)))+ Cmod
+        (p2 * trace ((ρ2 × ρ0))))%R.
+        apply Cmod_triangle. 
+        repeat rewrite Cmod_mult.
+        repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+        repeat rewrite <-Mscale_mult_dist_l.
+        apply Rplus_mult_le_1. lra. lra.
+        assumption.
+        apply IHHρ1_1. assumption.
+        apply IHHρ1_2. assumption.
+        intuition. intuition.
+Qed.
+
+Lemma Rmult_in01'': forall p1 p2,
+0 <= p1 <=1->
+0 <= p2 <1->
+0<=p1 * p2 <1.
+Proof.  split. assert(0=0*0)%R. rewrite Rmult_0_l. reflexivity.
+        rewrite H1. apply Rmult_le_compat. intuition. intuition.
+        intuition. intuition. destruct (Req_dec p1 1).
+        rewrite H1. rewrite Rmult_1_l.  lra. 
+        assert(p1 * p2 < 1*1).
+        apply Rmult_le_0_lt_compat.
+        intuition. intuition. lra. intuition. lra. 
+Qed.
+
+
+Lemma Rplus_mult_lt_1: forall (p1 p2 r1 r2:R),
+0 <p1 <=1->
+0 <p2 <=1->
+p1+p2<=1->
+0<=r1 < 1->
+0<=r2<= 1->
+0<=p1 * r1 + p2 * r2< 1 .
+Proof. intros. 
+assert(r1<r2\/ r2<=r1).
+apply Rlt_or_le.
+destruct H4.
+split. apply Rplus_le_le_0_compat;
+apply Rmult_le_pos; intuition.
+apply Rlt_le_trans with ((p1 * r2)%R + (p2 * r2)%R)%R.
+apply Rplus_lt_compat_r;
+apply Rmult_lt_compat_l. 
+intuition. assumption. 
+rewrite <-Rmult_plus_distr_r. 
+assert((p1 + p2) * r2 <= 1*1).
+apply Rmult_le_compat. 
+ apply Rplus_le_le_0_compat. intuition. intuition.
+intuition. intuition. intuition. 
+rewrite Rmult_1_l in H5.
+intuition.
+
+split. apply Rplus_le_le_0_compat;
+apply Rmult_le_pos; intuition.
+apply Rle_lt_trans with (p1 * r1 + p2 * r1 )%R.
+apply Rplus_le_compat;
+apply Rmult_le_compat;
+intuition. 
+rewrite <-Rmult_plus_distr_r. 
+assert(0<=(p1 + p2) * r1 < 1).
+apply Rmult_in01''. lra. lra. 
+lra. 
+Qed.
+
+Lemma  trace_I: trace (I 1) = C1.
+Proof. unfold trace. simpl.  
+      unfold I. simpl. rewrite Cplus_0_l.
+      reflexivity.
+       
+Qed.
+
+
+Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
+Pure_State_Vector v -> v<>Zero .
+Proof. intros. destruct H.  intro. rewrite H1 in *.
+      rewrite Mmult_0_r in H0. 
+      assert(@trace 1 Zero= trace (I 1)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H2.
+      rewrite trace_I in H2.
+      injection H2. intuition.
+Qed.
+
+Lemma Mixed_not_Zero{n:nat}:forall (M: Square n),
+Mixed_State M -> M<>Zero .
+Proof. intros.  intro.  
+      assert(@trace n Zero= trace (M)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H1.
+      symmetry in H1. pose H.
+        apply mixed_state_trace_gt0 in m.
+        apply mixed_state_trace_real in H.
+      destruct (trace M). simpl in *.
+      injection H1. intros. rewrite H3 in m.
+      lra. 
+Qed.
+
+Lemma mixed_state_trace_in01 : forall {n} (ρ : Density n), Mixed_State ρ ->0<  fst (trace ρ) <=1.
+Proof. intros.  split.
+       apply mixed_state_trace_gt0. intuition.
+       apply mixed_state_trace_1. intuition.
+Qed.
+
+
+
+
 
 Lemma Mixed_State_mult_trace_lt_1:forall {n} (ρ1 :Density n),
 Mixed_State ρ1->
 forall (ρ2: Density n),
 Mixed_State ρ2 ->
-ρ1 <> ρ2 ->
-fst (trace (ρ1 × ρ2))<1.
+((exists c, c .*  ρ1= ρ2) -> False) ->
+Cmod (trace (ρ1 × ρ2))<1.
 Proof. intros n ρ1 Hρ1. induction Hρ1.
-       intros.  induction H1.
-       destruct H0. destruct H3.
+      {intros.  induction H1.
+
+       {destruct H0. destruct H3.
        destruct H0. destruct H3.
        rewrite Mscale_mult_dist_l.
        rewrite Mscale_mult_dist_r.
@@ -759,40 +1067,258 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
        rewrite H4. rewrite H5.
        rewrite Mmult_assoc.
        rewrite <-(Mmult_assoc (x) †).
-       remember ((x) † × x0).
-       admit.
-       rewrite Mmult_plus_distr_l.
-       repeat rewrite Mscale_mult_dist_l.
-       repeat rewrite Mscale_mult_dist_r.
-         repeat rewrite Mscale_assoc.
-        rewrite Cmult_comm.
-        rewrite (Cmult_comm _ p2) .
-        repeat rewrite<- Mscale_assoc.
-        rewrite trace_plus_dist.
-         rewrite trace_mult_dist.
-         rewrite (trace_mult_dist _ p2).
-         rewrite fst_plus. 
-         repeat rewrite fst_mult.
-         repeat rewrite <-Mscale_mult_dist_l.
-         destruct H4. admit.
-         assert(p .* ρ <> ρ1 \/ p .* ρ <> ρ2).
-         admit. destruct H5.
-         admit. admit. intros.
-         rewrite Mmult_plus_distr_r.
-         repeat rewrite Mscale_mult_dist_l.
-         rewrite trace_plus_dist.
-         repeat rewrite trace_mult_dist.
-         rewrite fst_plus.
-         repeat rewrite fst_mult.
-         destruct H1. admit.
-         admit.
-Admitted.
+       destruct (Req_dec p 1). subst. 
+       destruct (Req_dec p0 1). subst.
+       Csimpl. repeat rewrite Mscale_1_l in *.
+      rewrite trace_vector_mult.
+      assert(Cmod ⟨ x0, x ⟩ * Cmod ⟨ x0, x ⟩= (Cmod ⟨ x0, x ⟩)^2 )%R.
+      simpl.  rewrite Rmult_1_r. reflexivity.  rewrite H4.
+      apply Rlt_le_trans with (fst ⟨ x0, x0 ⟩ * fst ⟨ x, x ⟩)%R.
+      apply Cauchy_Schwartz_ver1'.
+      apply H0. apply H3.  
+      apply Pure_State_Vector_not_Zero. assumption.
+      apply Pure_State_Vector_not_Zero. assumption.
+      intro. destruct H2.  destruct H5. 
+      rewrite<-H2. exists (/ (x1* x1 ^*)).
+      rewrite Mscale_mult_dist_l.
+      rewrite Mscale_adj.
+      rewrite Mscale_mult_dist_r.
+      rewrite Mscale_assoc.
+      rewrite Mscale_assoc.
+      rewrite <-Cmult_assoc.
+      rewrite Cinv_l. Msimpl. reflexivity.
+      rewrite Cmult_comm.
+      rewrite <-Cmod_sqr.  rewrite RtoC_pow.
+      apply RtoC_neq. rewrite <-Rsqr_pow2. 
+      apply Rgt_neq_0. apply Rlt_0_sqr. 
+      intro.  apply Cmod_eq_0 in H5. 
+      rewrite H5 in H2. rewrite Mscale_0_l in H2.
+      destruct H2. apply Pure_State_Vector_not_Zero in H0.
+      destruct H0. reflexivity.
+      destruct H0. unfold inner_product. rewrite H5.
+      destruct H3. rewrite H6. simpl. rewrite Rmult_1_l. intuition.
+       assert(p0<1). lra. Csimpl.
+       rewrite Cmod_mult. 
+       rewrite Cmod_R. rewrite Rabs_right.
+       rewrite Rmult_comm.
+       apply Rmult_in01''.
+       rewrite Mmult_assoc.
+       rewrite <-(Mmult_assoc x).
+       apply  Mixed_State_mult_trace_le_1.
+       apply Pure_Mixed. econstructor. 
+       split. apply H0. reflexivity. 
+       apply Pure_Mixed. econstructor. 
+       split. apply H3. reflexivity. 
+       lra. lra. 
+       assert(p<1). lra.
+       rewrite Cmod_mult. rewrite Cmod_mult. 
+       repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+       rewrite Rmult_comm.
+       apply Rmult_in01''.
+       rewrite Mmult_assoc.
+       rewrite <-(Mmult_assoc x).
+       apply  Mixed_State_mult_trace_le_1.
+       apply Pure_Mixed. econstructor. 
+       split. apply H0. reflexivity. 
+       apply Pure_Mixed. econstructor. 
+       split. apply H3. reflexivity. 
+       rewrite Rmult_comm. 
+       apply  Rmult_in01''.
+       lra. lra.  
+       lra. lra. } 
+       
+      { rewrite Mmult_plus_distr_l.
+      repeat rewrite Mscale_mult_dist_l.
+      repeat rewrite Mscale_mult_dist_r.
+      repeat rewrite Mscale_assoc.
+      rewrite Cmult_comm.
+      rewrite (Cmult_comm _ p2) .
+      repeat rewrite<- Mscale_assoc.
+      rewrite trace_plus_dist.
+      rewrite trace_mult_dist.
+      rewrite (trace_mult_dist _ p2).
+      apply Rle_lt_trans with (Cmod
+      (p1 * trace (p .* (ρ × ρ1)))+ Cmod
+      (p2 * trace (p .* (ρ × ρ2))))%R.
+      eapply Cmod_triangle. 
+      repeat rewrite Cmod_mult.
+      repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+      repeat rewrite <-Mscale_mult_dist_l.
+      assert((exists c : C, c .* (p .* ρ) = ρ1) \/ ~((exists c : C, c .* (p .* ρ) = ρ1))).
+      apply Classical_Prop.classic. 
+      destruct H5. destruct H5. 
+      assert((exists c : C, c .* (p .* ρ) = ρ2) \/ ~((exists c : C, c .* (p .* ρ) = ρ2))).
+      apply Classical_Prop.classic. 
+      destruct H6. destruct H6.
+      destruct H2. exists (x * p1+ x0 * p2).
+      rewrite <-H5. rewrite<- H6 .
+      rewrite Mscale_plus_distr_l. 
+      rewrite Cmult_comm.  rewrite <-Mscale_assoc.
+      f_equal.  rewrite Cmult_comm. rewrite <-Mscale_assoc.
+      reflexivity.
+      rewrite Rplus_comm. 
+      apply IHMixed_State2 in H6.
+      apply Rplus_mult_lt_1.
+      assumption. assumption.
+      rewrite Rplus_comm. assumption. 
+      split. apply Cmod_ge_0.
+      assumption. 
+      apply Mixed_State_mult_trace_le_1.
+      apply Mixed_State_scale. 
+      apply Pure_Mixed. assumption.
+      assumption. assumption.
+      apply IHMixed_State1 in H5.
+      apply Rplus_mult_lt_1.
+      assumption. assumption.
+      assumption. 
+      split. apply Cmod_ge_0.
+      assumption. 
+      apply Mixed_State_mult_trace_le_1.
+      apply Mixed_State_scale.
+      apply Pure_Mixed. assumption. 
+      assumption. assumption.
+      lra. lra. } }
+
+    {  intros.
+      rewrite Mmult_plus_distr_r.
+      repeat rewrite Mscale_mult_dist_l.
+      rewrite trace_plus_dist.
+      repeat rewrite trace_mult_dist.
+      apply Rle_lt_trans with (Cmod
+    (p1 * trace ( (ρ1 × ρ0)))+ Cmod
+    (p2 * trace ((ρ2 × ρ0))))%R.
+      eapply Cmod_triangle. 
+      repeat rewrite Cmod_mult.
+      repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+      repeat rewrite <-Mscale_mult_dist_l.
+        assert((exists c : C, c .* (ρ1) = ρ0) \/ ~((exists c : C, c .* ( ρ1) = ρ0))).
+      apply Classical_Prop.classic. 
+      destruct H4. destruct H4. 
+      assert((exists c : C, c .* (ρ2) = ρ0) \/ ~((exists c : C, c .* ( ρ2) = ρ0))).
+      apply Classical_Prop.classic. 
+      destruct H5. destruct H5.
+      destruct H3. 
+      assert(fst x > 0 /\ snd x= 0). 
+      assert(trace (x .* ρ1) = trace ( ρ0)).
+      rewrite H4. reflexivity.  
+      rewrite trace_mult_dist in H3.
+      assert (trace ρ0= (fst (trace ρ0), snd (trace ρ0))).
+      destruct (trace ρ0). reflexivity. rewrite H6 in H3.
+      assert (trace ρ1= (fst (trace ρ1), snd (trace ρ1))).
+      destruct (trace ρ1). reflexivity.  rewrite H7 in H3.
+      rewrite mixed_state_trace_real in H3.
+      rewrite mixed_state_trace_real in H3.
+      destruct x. unfold Cmult in H3.
+      simpl in H3.  repeat rewrite Rmult_0_l in H3.
+      repeat rewrite Rmult_0_r in H3.
+      repeat rewrite Rplus_0_l in H3.
+      repeat rewrite Rmult_0_l in H3.
+      repeat rewrite Rminus_0_r in H3.
+      injection H3. intros. 
+      assert(fst (trace ρ0) > 0).
+      apply mixed_state_trace_in01.
+      assumption.
+      assert(fst (trace ρ1) > 0). apply mixed_state_trace_in01.
+      assumption.
+      split. simpl. assert(r= (fst (trace ρ0)) / (fst (trace ρ1)))%R.
+      rewrite <-H9. rewrite Rmult_comm.
+      rewrite Rdiv_unfold.
+      rewrite Rmult_assoc. rewrite Rmult_comm.
+      rewrite Rmult_assoc. rewrite Rinv_l.
+      rewrite Rmult_1_r. reflexivity. lra. 
+      rewrite H12. apply Rdiv_lt_0_compat.
+      assumption. assumption. simpl.
+      apply Rmult_integral in H8. destruct H8. assumption. 
+      rewrite H8 in H11. lra. assumption. assumption.
+
+      assert(fst x0 > 0 /\ snd x0= 0). 
+      assert(trace (x0 .* ρ2) = trace ( ρ0)).
+      rewrite H5. reflexivity.  
+      rewrite trace_mult_dist in H6.
+      assert (trace ρ0= (fst (trace ρ0), snd (trace ρ0))).
+      destruct (trace ρ0). reflexivity. rewrite H7 in H6.
+      assert (trace ρ2= (fst (trace ρ2), snd (trace ρ2))).
+      destruct (trace ρ2). reflexivity.  rewrite H8 in H6.
+      rewrite mixed_state_trace_real in H6.
+      rewrite mixed_state_trace_real in H6.
+      destruct x0. unfold Cmult in H6.
+      simpl in H6.  repeat rewrite Rmult_0_l in H6.
+      repeat rewrite Rmult_0_r in H6.
+      repeat rewrite Rplus_0_l in H6.
+      repeat rewrite Rmult_0_l in H6.
+      repeat rewrite Rminus_0_r in H6.
+      injection H6. intros. 
+      assert(fst (trace ρ0) > 0).
+      apply mixed_state_trace_in01.
+      assumption.
+      assert(fst (trace ρ2) > 0). apply mixed_state_trace_in01.
+      assumption.
+      split. simpl. assert(r= (fst (trace ρ0)) / (fst (trace ρ2)))%R.
+      rewrite <-H10. 
+      rewrite Rdiv_unfold.
+      rewrite Rmult_assoc.  rewrite Rinv_r.
+      rewrite Rmult_1_r. reflexivity. lra. 
+      rewrite H13. apply Rdiv_lt_0_compat.
+      assumption. assumption. simpl.
+      apply Rmult_integral in H9. destruct H9. assumption. 
+      rewrite H9 in H12. lra. assumption. assumption.
+      assert( ρ1 = /x .* ρ0). rewrite<- H4. rewrite Mscale_assoc.
+      rewrite Cinv_l. rewrite Mscale_1_l. reflexivity.
+      apply C0_fst_neq. lra.  
+      assert( ρ2 = /x0 .* ρ0). rewrite<- H5. rewrite Mscale_assoc.
+      rewrite Cinv_l. rewrite Mscale_1_l. reflexivity.
+      apply C0_fst_neq. lra.
+      exists (/(p1 * /x  +  p2/ x0) ). rewrite H7. rewrite H8.
+      repeat rewrite Mscale_assoc.
+      rewrite <-Mscale_plus_distr_l. 
+      rewrite Mscale_assoc. rewrite Cinv_l. 
+      rewrite Mscale_1_l. reflexivity.
+      apply C0_fst_neq. destruct x. destruct x0. simpl. 
+      repeat rewrite Rmult_1_r. repeat rewrite Rmult_0_l.
+      repeat rewrite Rminus_0_r.  simpl in H3. simpl in H6.
+      destruct H3. destruct H6. rewrite H9. rewrite H10.
+      rewrite Rmult_0_l. repeat rewrite Rplus_0_r. repeat rewrite Rdiv_unfold.
+      repeat rewrite Rinv_mult_distr.
+      rewrite <-(Rmult_assoc r ).  rewrite <-(Rmult_assoc r1 ).
+      repeat rewrite Rinv_r. repeat rewrite Rmult_1_l. 
+      assert(0<(p1 * / r + p2 * / r1)%R). apply Rplus_lt_0_compat.
+      apply Rmult_gt_0_compat. intuition. apply Rinv_0_lt_compat.
+      assumption. 
+      apply Rmult_gt_0_compat. intuition. apply Rinv_0_lt_compat.
+      assumption. lra. lra. lra. lra. lra. lra. lra. 
+
+      rewrite Rplus_comm. 
+      apply IHHρ1_2 in H5.
+      apply Rplus_mult_lt_1.
+      assumption. assumption.
+      rewrite Rplus_comm. assumption. 
+      split. apply Cmod_ge_0.
+      assumption. 
+      apply Mixed_State_mult_trace_le_1.
+      assumption. assumption. assumption.
+
+      apply IHHρ1_1 in H4.
+      apply Rplus_mult_lt_1.
+      assumption. assumption.
+      assumption. 
+      split. apply Cmod_ge_0.
+      assumption. 
+      apply Mixed_State_mult_trace_le_1.
+      assumption.
+      assumption. assumption.
+      lra. lra. } 
+Qed.
 
 
 Lemma Mixed_sqrt_trace: forall {n} (ρ1 ρ2: Density n) (p1 p2: R), 
+0<p1<=1->
+0<p2<=1->
+p1+p2<=1->
+Mixed_State ρ1->
+Mixed_State ρ2->
 Mixed_State (p1 .* ρ1 .+ p2 .* ρ2)->
-ρ1 <>  ρ2 ->
-fst (trace (Mmult (p1 .* ρ1 .+ p2 .* ρ2)  (p1 .* ρ1 .+ p2 .* ρ2)))<1.  
+(((exists c, c .*  ρ1= ρ2) -> False))->
+Cmod (trace (Mmult (p1 .* ρ1 .+ p2 .* ρ2)  (p1 .* ρ1 .+ p2 .* ρ2)))<1.  
 Proof. intros. rewrite Mmult_plus_distr_l.
         repeat rewrite Mmult_plus_distr_r. 
         repeat rewrite trace_plus_dist.
@@ -800,10 +1326,73 @@ Proof. intros. rewrite Mmult_plus_distr_l.
         repeat rewrite Mscale_mult_dist_l.
         repeat rewrite Mscale_assoc.
         repeat rewrite trace_mult_dist.
-        repeat rewrite fst_plus.
+        apply Rle_lt_trans with (Cmod
+        (p1 * p1 * trace (ρ1 × ρ1) + p1 * p2 * trace (ρ2 × ρ1))+ 
+        Cmod
+        (p2 * p1 * trace (ρ1 × ρ2) + p2 * p2 * trace (ρ2 × ρ2)))%R.
+        apply Cmod_triangle.
+      apply Rle_lt_trans with (
+      (Cmod ((p1 * p1 * trace (ρ1 × ρ1))) + Cmod (p1 * p2 * trace (ρ2 × ρ1)))+ 
+      (Cmod  ((p2 * p1 * trace (ρ1 × ρ2))) + Cmod (p2 * p2 * trace (ρ2 × ρ2))))%R.
+        apply Rplus_le_compat;
+        apply Cmod_triangle.  
         repeat rewrite<-RtoC_mult.
-        repeat rewrite fst_mult.
-Admitted.
+        repeat rewrite Cmod_mult.
+        repeat rewrite Cmod_R. repeat rewrite Rabs_right.
+        apply Rlt_le_trans with (p1 * p1 * 1+ p1 * p2 * 1  +
+        (p2 * p1 * 1 + p2 * p2 * 1))%R.
+         apply Rplus_lt_compat.
+         apply Rplus_le_lt_compat.
+         apply Rmult_le_compat_l.
+         apply Rmult_le_pos; lra.
+         apply Mixed_State_mult_trace_le_1;
+         assumption. 
+
+         apply Rmult_lt_compat_l.
+         apply Rmult_gt_0_compat; lra.
+         apply Mixed_State_mult_trace_lt_1; try
+         assumption. intros. destruct H5.
+         destruct H6. exists (/x).
+         rewrite <-H5. rewrite Mscale_assoc.
+         rewrite Cinv_l. rewrite Mscale_1_l.
+         reflexivity. 
+         unfold not. intros. rewrite H6 in H5.
+         rewrite Mscale_0_l in H5.
+         apply Mixed_not_Zero in H2.
+         rewrite H5 in H2. destruct H2. reflexivity. 
+         apply Rplus_lt_le_compat.
+         apply Rmult_lt_compat_l.
+         apply Rmult_gt_0_compat; lra.
+         apply Mixed_State_mult_trace_lt_1; try
+         assumption. 
+
+
+         apply Rmult_le_compat_l.
+         apply Rmult_le_pos; lra.
+         apply Mixed_State_mult_trace_le_1;
+         assumption.
+         repeat rewrite Rmult_1_r.
+         assert((p1+p2)^2= p1 * p1 + p1 * p2 + (p2 * p1 + p2 * p2))%R.
+         simpl. rewrite Rmult_1_r.
+         (* repeat rewrite <-RtoC_mult. *)
+         rewrite Rmult_plus_distr_r;
+         repeat rewrite Rmult_plus_distr_l.
+         reflexivity.
+         rewrite <-H6. simpl. 
+         rewrite Rmult_1_r.
+         assert((p1 + p2) * (p1 + p2) <= 1*1).
+         apply Rmult_le_compat;
+         try apply Rplus_le_le_0_compat; lra.
+         lra. 
+         assert(0<=p2 * p2).
+         apply Rmult_le_pos; lra. lra.
+         assert(0<=p2 * p1).
+         apply Rmult_le_pos; lra. lra.
+         assert(0<=p1 * p2).
+         apply Rmult_le_pos; lra. lra.
+         assert(0<=p1 * p1).
+         apply Rmult_le_pos; lra. lra.
+Qed.
 
 Lemma Pure_sqrt_trace: forall {n} (ρ: Density n), 
 Pure_State ρ->
@@ -819,22 +1408,8 @@ Proof. intros. inversion_clear H.
        apply WF_adjoint. assumption. 
 Qed.
 
-(* Lemma Mixed_State_per: forall {n} (ρ1 ρ2: Density n) , 
-Mixed_State (ρ1 .+  ρ2)-> 
-Mixed_State ρ1 /\
-Mixed_State ρ2.
-Proof. intros. inversion H; subst.
-       inversion H2; subst.
-  
-Qed. *)
-
-Lemma mixed_state_trace_in01 : forall {n} (ρ : Density n), Mixed_State ρ ->0<  fst (trace ρ) <=1.
-Proof. intros.  split.
-       apply mixed_state_trace_gt0. intuition.
-       apply mixed_state_trace_1. intuition.
-Qed.
-
-Lemma mixed_state_fst_plus_aux: forall {n} (ρ1  ρ2: Density n), Mixed_State_aux ρ1 -> Mixed_State_aux ρ2->  
+Lemma mixed_state_fst_plus_aux: forall {n} (ρ1  ρ2: Density n), 
+Mixed_State_aux ρ1 -> Mixed_State_aux ρ2->  
 fst (trace (ρ1 .+ ρ2)) = (fst (trace ρ1) + fst (trace ρ2))%R.
 Proof. intros.   
     try rewrite trace_plus_dist; 
@@ -844,64 +1419,153 @@ Proof. intros.
     try intuition.  
 Qed.
 
+Lemma solve_1{n}: forall (q1 q2:Square n) c,
+Mixed_State q1->
+Mixed_State q2->
+trace (q1)=C1 /\ trace (q2)=C1->
+c .* q1 = q2->
+c=C1.
+Proof. intros.
+assert(fst c =1 /\ snd c= 0).  
+assert(trace (c .* q1) = trace (q2)). rewrite H2. reflexivity.
+rewrite trace_mult_dist in H3.
+assert (trace q1= (fst (trace q1), snd (trace q1))).
+destruct (trace q1). reflexivity. rewrite H4 in *.
+assert (trace q2= (fst (trace q2), snd (trace q2))).
+destruct (trace q2). reflexivity. rewrite H5 in *.
+ rewrite mixed_state_trace_real in *; try assumption.
+ rewrite mixed_state_trace_real in *; try assumption.
+destruct c. unfold Cmult in H3. simpl in H3.
+  repeat rewrite Rmult_0_r in H3.
+ repeat rewrite Rplus_0_l in H3.
+  repeat rewrite Rminus_0_r in H3.
+ injection H3. intros. destruct H1. injection H1; intros.
+ injection H8; intros. rewrite H9 in *. rewrite H10 in *. 
+ simpl in *. repeat rewrite Rmult_1_r in *. injection H3; lra.
+ destruct c. simpl in H3. destruct H3. subst. reflexivity. 
+Qed.
+
+Lemma  Mixed_State_Cmod_trace_trace{n:nat}: forall (q:Square n),
+Mixed_State_aux q->
+( RtoC (Cmod (trace q)) = trace  q).
+Proof. intros. assert(trace q = (fst (trace q), snd (trace q))).
+destruct (trace q). reflexivity. rewrite H0.
+rewrite Cmod_snd_0. simpl. rewrite mixed_state_trace_real_aux.
+ reflexivity. assumption. simpl. apply mixed_state_trace_gt0_aux.
+ assumption. simpl. rewrite mixed_state_trace_real_aux. reflexivity.
+ assumption.
+Qed.
+
+
+Lemma normalize_trace{n:nat}:forall (ρ:Square n),
+Mixed_State_aux ρ->
+trace ((/ Cmod (trace ρ))%R .* ρ) = C1 .
+Proof. intros. rewrite trace_mult_dist.
+rewrite RtoC_inv.
+ rewrite Mixed_State_Cmod_trace_trace.
+ rewrite Cinv_l. reflexivity.
+ apply C0_fst_neq.  apply Rgt_neq_0.
+ apply mixed_state_trace_gt0_aux. assumption.
+ assumption.  apply Rgt_neq_0.
+ apply mixed_state_Cmod_1_aux. assumption.
+Qed.
+
+
+
 
 Lemma Mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
 Mixed_State ρ1 ->
 Mixed_State ρ2 ->
 Mixed_State (ρ1 .+  ρ2)->
 Pure_State_Vector φ ->
-ρ1 .+  ρ2= φ  × φ†->  exists (p1 p2:R), ρ1= p1 .* ( φ  × φ† ) /\ ρ2= p2 .* ( φ  × φ† ).
+ρ1 .+  ρ2= φ  × φ†->  
+exists (p1 p2:R), 
+and (and (0<p1<=1)%R (0<p2<=1)%R)
+  (and (ρ1= p1 .* ( φ  × φ† )) (ρ2= p2 .* ( φ  × φ† ))).
 Proof. intros. 
-    assert(fst (trace ρ1) .* ((1 / fst (trace ρ1))%R.* ρ1) =ρ1).
-    admit. rewrite <-H4 in *.
-    assert(fst (trace ρ2) .* ((1 / fst (trace ρ2))%R.* ρ2) =ρ2).
-    admit. rewrite <-H5 in *.
-    remember (((1 / fst (trace ρ1))%R .* ρ1)).
-    remember (((1 / fst (trace ρ2))%R .* ρ2)).
-    assert(m = m0 \/ m <>  m0).
+    rewrite <-(normalize_eq_mixed ρ1) in H3.  
+    rewrite <-(normalize_eq_mixed ρ2) in H3. 
+    remember ((( / Cmod (trace ρ1))%R .* ρ1)).
+    remember ((( / Cmod (trace ρ2))%R .* ρ2)).
+    assert((exists c : C, c .* m = m0) \/ ~(exists c : C, c .* m = m0)).
     apply Classical_Prop.classic.
-    destruct H6. destruct H6. 
+    destruct H4. destruct H4. 
+    assert(x=C1). apply (@solve_1 n  m m0).
+    rewrite Heqm. apply Mixed_State_aux_to01;
+    apply Mixed_State_aux_to_Mix_State; assumption. 
+    rewrite Heqm0.
+    apply Mixed_State_aux_to01;
+    apply Mixed_State_aux_to_Mix_State; assumption.
+    rewrite Heqm. rewrite Heqm0.
+     split; apply normalize_trace;
+    apply Mixed_State_aux_to_Mix_State; assumption.
+    assumption. 
+    rewrite <-H4 in *. rewrite H5 in *. clear H5. 
+    rewrite Mscale_1_l in *.  
     rewrite <-Mscale_plus_distr_l in H3.
     rewrite <-RtoC_plus in H3.
-    remember ((fst (trace ρ1) + fst (trace ρ2))%R ).
+    remember ((Cmod (trace ρ1) + Cmod (trace ρ2) )%R ).
     rewrite <-H3.
-    exists (fst (trace ρ1) / r)%R.
-    exists (fst (trace ρ2) /r)%R.
+    exists (Cmod (trace ρ1) / r)%R.
+    exists (Cmod (trace ρ2)  /r)%R.
+    split. split. rewrite Heqr. apply Rdiv_in_01.
+    apply mixed_state_Cmod_1. assumption. 
+    apply Rplus_lt_0_compat; apply mixed_state_Cmod_1; assumption.
+    rewrite <-Rplus_0_r at 1. apply Rplus_le_compat_l.
+    apply Cmod_ge_0.  
+    rewrite Heqr. apply Rdiv_in_01.
+    apply mixed_state_Cmod_1. assumption. 
+    apply Rplus_lt_0_compat; apply mixed_state_Cmod_1; assumption.
+    rewrite <-Rplus_0_l at 1. apply Rplus_le_compat_r.
+    apply Cmod_ge_0. 
     repeat rewrite Rdiv_unfold.  
     repeat rewrite Mscale_assoc.
     repeat rewrite RtoC_mult.
     repeat rewrite <-Cmult_assoc.
     repeat rewrite <-RtoC_mult.
     repeat rewrite Rinv_l. repeat rewrite Rmult_1_r.
-    intuition. rewrite Heqr.
-    assert((fst (trace ρ1)%R>0)%R). apply mixed_state_trace_gt0.
-    rewrite<-H4. intuition.
-    assert(fst (trace ρ2)>0)%R. apply mixed_state_trace_gt0.
-    rewrite<-H5. intuition.
-    assert(fst (trace ρ1) + fst (trace ρ2)>0)%R.
-    apply Rplus_lt_0_compat; intuition.
-    unfold not. intros. rewrite H9 in H8.
-     lra.
-    assert(fst (trace (Mmult (fst (trace ρ1) .* m .+ fst (trace ρ2) .* m0)  (fst (trace ρ1) .* m .+ fst (trace ρ2) .* m0)))<1).
-    apply Mixed_sqrt_trace. econstructor.
-    apply mixed_state_trace_in01. rewrite<-H4. intuition.
-    apply mixed_state_trace_in01. rewrite<-H5. intuition.
-    rewrite <-mixed_state_fst_plus_aux.
-    apply mixed_state_trace_in01. 
-    rewrite <-H4. rewrite<-H5. assumption.
-    apply Mixed_State_aux_to_Mix_State. 
-    rewrite <-H4. assumption.
-    apply Mixed_State_aux_to_Mix_State. 
-    rewrite <-H5. assumption.
-     rewrite Heqm.  
-   admit. admit.
+    rewrite Heqm at 1. rewrite Heqm0. 
+    split; symmetry; apply normalize_eq_mixed;
+     apply Mixed_State_aux_to_Mix_State; assumption.
+     rewrite Heqr. apply Rgt_neq_0. 
+     apply Rplus_lt_0_compat; apply mixed_state_Cmod_1; assumption.
+
+    assert(Cmod (trace (Mmult (Cmod (trace ρ1) .* m .+ Cmod (trace ρ2) .* m0)  (Cmod (trace ρ1) .* m .+ Cmod (trace ρ2) .* m0)))<1).
+    apply Mixed_sqrt_trace.  
+    apply mixed_state_Cmod_1. assumption.
+    apply  mixed_state_Cmod_1. assumption.
+    rewrite <-mixed_state_Cmod_plus.
+    apply mixed_state_Cmod_1.  assumption.
      assumption.
+    assumption.
+     rewrite Heqm.
+     apply Mixed_State_aux_to01. 
+     apply Mixed_State_aux_to_Mix_State. assumption.
+     rewrite Heqm0.
+     apply Mixed_State_aux_to01. 
+     apply Mixed_State_aux_to_Mix_State. assumption.
+     rewrite Heqm. rewrite Heqm0.
+     repeat rewrite Mscale_assoc. 
+     repeat rewrite <-RtoC_mult.
+    repeat rewrite Rinv_r. repeat rewrite Mscale_1_l.
+     assumption. 
+     assert(Cmod (trace ρ2) > 0). apply mixed_state_Cmod_1.
+     assumption. lra.
+     assert(Cmod (trace ρ1) > 0). apply mixed_state_Cmod_1.
+     assumption. lra.
+     apply H4.
     assert(trace (Mmult (φ  × φ†)  (φ  × φ†))=1).
     apply Pure_sqrt_trace. econstructor.
     split. apply H2. reflexivity. 
-    assert (fst (trace (Mmult (fst (trace ρ1) .* m  .+ fst (trace ρ2) .* m0) (fst (trace ρ1) .* m  .+ fst (trace ρ2) .* m0)))=
-             fst (trace (Mmult (φ  × φ†)  (φ  × φ†)))).
+    assert (Cmod (trace (Mmult (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0) (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0)))=
+             Cmod (trace (Mmult (φ  × φ†)  (φ  × φ†)))).
     rewrite H3. reflexivity.
-    rewrite H8  in H9. 
-    simpl in H9. lra.
-Admitted.
+    rewrite H6  in H7. 
+    rewrite Cmod_1 in H7. 
+     lra. apply Mixed_State_aux_to_Mix_State.
+      assumption. 
+      apply Mixed_State_aux_to_Mix_State.
+      assumption. 
+Qed.
+
+

@@ -14,3 +14,5 @@ QAssert_L.v
 QRule_E_L.v
 QRule_Q_L.v
 QRule_I_L.v
+QSepar.v
+QRule_QFrame.v

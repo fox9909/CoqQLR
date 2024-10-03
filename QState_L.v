@@ -227,7 +227,7 @@ Qed.
 Definition WWF_qstate{s e:nat} (rho : qstate s e ):=
   @Mixed_State_aux (2^(e-s)) rho.
 
-
+#[export] Hint Resolve WF_qstate_update WF_qstate_kron : QState.
 
 (*----------------------C-Q state------------------------------------------*)
 Module NSet := FSetList.Make Nat_as_OT.
@@ -390,7 +390,8 @@ Qed.
 Definition WWF_state{s e:nat} (st:state s e): Prop:=
   WWF_qstate (snd st)/\ (s<=e)%nat.
 
-
+#[export] Hint Resolve WF_state_cupdate WF_state_qupdate WF_state_qupdate WF_state_scale
+WF_s_plus WF_state_eq: QState.
 (*------------------------Distribution state------------------------------*)
 
 
@@ -585,7 +586,7 @@ Proof. intros. destruct mu. intuition. simpl.
 Qed.
 
 
-
+#[export] Hint Resolve WF_state_dstate WF_dstate_eq WWF_dstate_aux_to_WF_dstate_aux: DState.
 (*------------WF_d_scale-------------------*)
 
 Local Open Scope R_scope.
@@ -726,6 +727,8 @@ Proof. intros. inversion_clear H0. apply WF_dstate_empty.
        apply WF_d_scale_not_0. lra. assumption.
 Qed.
 
+#[export] Hint Resolve WF_d_scale WF_d_scale_aux WF_d_scale_not_0 WF_dstate_empty 
+WWF_d_scale_aux: DState.
 (*------------------WF_d_app------------------------------*)
 
 
@@ -869,7 +872,7 @@ Proof. unfold WF_dstate. unfold d_app. unfold d_trace. unfold StateMap.map2.
  intros  (mu, IHmu) (mu', IHmu') p1 p2. simpl.
  apply WF_d_app_aux. assumption. assumption. 
 Qed.
-
+#[export] Hint Resolve WF_s_plus WF_d_app WF_d_app_aux WWF_d_app_aux: DState.
 
 (*-------------------------d_find---------------------------------------------*)
 

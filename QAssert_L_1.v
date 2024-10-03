@@ -390,7 +390,11 @@ Inductive big_dapp'{s e:nat} :list R -> list (dstate s e) -> dstate s e -> Prop 
 |big_app_cons: forall hr hd tr td r d, d_scale hr hd r-> (big_dapp' tr td d)
                ->big_dapp' (hr::tr) (hd::td) (d_app r d).
 
-
+Inductive big_dapp''{s e:nat}:(nat-> R) -> (nat -> dstate s e) ->(nat)-> dstate s e -> Prop :=
+|big_app_nil': forall f g, big_dapp'' f g 0 (d_empty s e)
+|big_app_cons': forall f g n r d, d_scale (f n) (g n) r
+                                 ->(big_dapp'' f g n d)
+                                 ->big_dapp'' f g (S n) (d_app d r). 
 
 Fixpoint npro_to_pro_formula (nF:npro_formula ) (p_n: list R): pro_formula:=
   match nF, p_n with 
@@ -425,7 +429,7 @@ big_dapp' (get_pro_formula pF) mu_n mu'
 
 Inductive sat_Pro {s e:nat}: (dstate s e)-> (pro_formula)-> Prop:=
 |sat_pro: forall (mu mu':dstate s e) pF (mu_n: list (dstate s e)),
-                          big_dapp' (get_pro_formula pF) mu_n mu'
+                          big_dapp'' (get_pro_formula pF) mu_n mu'
                           ->dstate_eq mu mu'
                           -> (big_and mu_n (pro_to_npro_formula pF)) 
                           -> Forall (fun mu_i => d_trace  mu_i =d_trace mu) mu_n
