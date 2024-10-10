@@ -387,6 +387,7 @@ Proof. unfold WF_state.  unfold s_trace. unfold WF_qstate. simpl.
 Qed.
 
 
+
 Definition WWF_state{s e:nat} (st:state s e): Prop:=
   WWF_qstate (snd st)/\ (s<=e)%nat.
 
@@ -439,6 +440,7 @@ Definition d_find{s e:nat} (sigma:cstate) (mu: dstate s e): qstate s e :=
 Definition d_update{s e:nat} (p: state s e) (m: dstate s e) :=
   StateMap.add (fst p) (snd p) m.
 
+
 Definition option_app {s e:nat} (x y: option (qstate s e)): option (qstate s e) := 
    match x ,y with
    |None,_ => y
@@ -458,14 +460,65 @@ Definition d_app{s e:nat} (mu1 mu2: dstate s e): dstate s e:=
 Definition d_scale_not_0{s e:nat} (p:R) (mu:dstate s e): dstate s e:=
  StateMap.map (fun (x:(qstate s e)) => (p.* x)) mu.
 
+Inductive d_scale_aux{s e:nat}: (R) -> ((list (cstate *qstate s e))) -> ((list (cstate *qstate s e))) ->Prop :=
+|d_scalar_0_aux mu : d_scale_aux 0 mu []
+|d_scalar_r_aux r mu:  (r<>0)%R-> d_scale_aux r mu (StateMap.Raw.map (fun i => r.* i) mu).
+
 Inductive d_scale{s e:nat}: (R) -> (dstate s e) -> (dstate s e) ->Prop :=
 |d_scalar_0 mu : d_scale 0 mu (d_empty s e)
 |d_scalar_r r mu: r<>0-> d_scale r mu (d_scale_not_0 r mu).
 
 
+Inductive big_map2'{s e:nat}: (list R) -> (list (list (cstate *qstate s e))) ->list (cstate *qstate s e)-> Prop :=
+|big_map_nil: big_map2' [] [] []
+|big_map_cons_0: forall hr hd tr td r d,  d_scale_aux hr hd r ->
+                                           big_map2' tr td d -> 
+                                           big_map2' (hr::tr) (hd::td) (StateMap.Raw.map2 option_app r  d).
+
+Fixpoint big_dapp{s e:nat} (g:list R) (f:list (dstate s e))  : dstate s e := 
+match g ,f with 
+|[], [] => d_empty s e
+|[], _ => d_empty s e
+| _ ,[]=>  d_empty s e 
+| hg::tg, hf:: tf =>d_app (d_scale_not_0 hg hf) (big_dapp tg tf)
+end.
+
+Inductive big_dapp'{s e:nat} :list R -> list (dstate s e) -> dstate s e -> Prop :=
+|big_app_nil: big_dapp' nil nil (d_empty s e)
+|big_app_cons: forall hr hd tr td r d, d_scale hr hd r-> (big_dapp' tr td d)
+               ->big_dapp' (hr::tr) (hd::td) (d_app r d).
+
+
+
+
 Definition dstate_pro{s e:nat}  (mu:dstate s e) (m:state s e) :R :=
     let rho:= d_find (fst m) mu in
    Cmod(@trace (2^(e-s)) rho).
+
+Fixpoint dstate_to_list{s e:nat}  (mu_n: list (dstate s e)) : (list (list (cstate *qstate s e))):=
+match mu_n with 
+|nil => nil 
+|muh::mut=> (StateMap.this muh) :: (dstate_to_list mut)
+end.
+
+
+Definition sum_over_list (p_n:list R) := 
+  big_sum (fun i => (nth i p_n 0)) (length p_n).
+
+
+Lemma sum_over_list_nil : sum_over_list [] = 0.
+Proof. unfold sum_over_list. simpl. reflexivity. Qed.
+
+Lemma sum_over_list_cons : forall x l,
+  sum_over_list (x :: l) = ( x + sum_over_list l)%R.
+Proof.
+  intros x l.
+  unfold sum_over_list.
+  simpl length. 
+  rewrite big_sum_shift.
+  simpl nth.
+  reflexivity.
+Qed.
 
 
 Require Import Classical_Prop.
@@ -504,9 +557,22 @@ Proof. unfold WF_dstate. unfold dstate_eq.
 Qed.
 
 
+Lemma WF_state_dstate_aux{s e:nat}: forall (st:state s e), 
+WF_state st <-> WF_dstate_aux [st] .
+Proof. split; unfold WF_dstate;
+       destruct st; simpl; intros. 
+    
+       apply WF_cons. intuition. apply WF_nil. 
+       unfold WF_state in H.  unfold WF_qstate in H. simpl in H.
+       unfold d_trace_aux. unfold s_trace. simpl. rewrite Rplus_0_r.
+       apply mixed_state_Cmod_1. intuition.
+
+       inversion_clear H. intuition. 
+Qed.
+
 
 Lemma WF_state_dstate{s e:nat}: forall (st:state s e), 
-WF_state st <-> WF_dstate st .
+WF_state st <-> WF_dstate st.
 Proof. split; unfold WF_dstate;
        destruct st; simpl; intros. 
        apply WF_cons. intuition. apply WF_nil. 
@@ -588,6 +654,15 @@ Qed.
 
 #[export] Hint Resolve WF_state_dstate WF_dstate_eq WWF_dstate_aux_to_WF_dstate_aux: DState.
 (*------------WF_d_scale-------------------*)
+Lemma WWF_state_scale{s e}: forall c (q: qstate s e) (p:R), 
+(0<p) /\ WWF_state (c,q)-> @WWF_state s e ((c, p .* q)).
+Proof.
+        unfold WF_state. unfold WF_qstate. simpl. 
+        intros. destruct H. unfold WWF_state in *.
+        split. apply Mixed_State_scale_aux. intuition.
+        intuition. intuition. 
+Qed. 
+
 
 Local Open Scope R_scope.
 Lemma d_trace_scale_aux{s e:nat}: forall (mu:list (cstate * qstate s e)) (p:R),
@@ -872,7 +947,354 @@ Proof. unfold WF_dstate. unfold d_app. unfold d_trace. unfold StateMap.map2.
  intros  (mu, IHmu) (mu', IHmu') p1 p2. simpl.
  apply WF_d_app_aux. assumption. assumption. 
 Qed.
-#[export] Hint Resolve WF_s_plus WF_d_app WF_d_app_aux WWF_d_app_aux: DState.
+#[export] Hint Resolve WF_s_plus WF_d_app WF_d_app_aux WWF_d_app_aux: DState. 
+
+
+(*-------------------------------dstate_eq-----------------------------*)
+
+Lemma dstate_eq_refl{ s e:nat}:forall (mu:dstate s e),
+ dstate_eq mu mu .
+Proof. unfold dstate_eq. intuition.
+Qed.
+
+Lemma dstate_eq_sym{s e:nat}:forall (mu1 mu2: dstate s e),
+dstate_eq mu1 mu2-> dstate_eq mu2 mu1 .
+Proof. intros  (mu1,IHmu1) (mu2,IHmu2).
+unfold dstate_eq. simpl. intuition.
+Qed.
+
+Lemma dstate_eq_trans: forall s e (mu mu1 mu2: dstate s e),
+dstate_eq mu mu1 -> dstate_eq mu1 mu2
+-> dstate_eq mu mu2.
+Proof. intros s e (mu, IHmu) (mu1,IHmu1) (mu2,IHmu2).
+  unfold dstate_eq. simpl.
+  intros. rewrite H. assumption.
+  Qed.
+
+Lemma d_app_eq{s e:nat}: forall (mu mu' mu1 mu1': dstate s e),
+dstate_eq mu mu'->
+dstate_eq mu1 mu1'->
+dstate_eq (d_app mu mu1) (d_app mu' mu1') .
+Proof. unfold dstate_eq. intros
+ (mu, IHmu) (mu',IHmu') (mu1,IHmu1) (mu1', IHmu1').
+       simpl. intuition. rewrite H. rewrite H0. reflexivity. 
+Qed.
+
+Lemma d_scale_not_0_eq{s e:nat}: forall (mu mu' : dstate s e) (p:R),
+dstate_eq mu mu'->
+dstate_eq (d_scale_not_0 p mu) (d_scale_not_0 p mu'). 
+Proof. intros (mu, IHmu) (mu',IHmu') . unfold dstate_eq.
+unfold d_scale_not_0.
+       simpl. intros. rewrite H. intuition.
+Qed.
+
+
+Lemma d_scale_eq{s e:nat}: forall (mu mu' mu1 mu'1: dstate s e) (p:R),
+dstate_eq mu mu'->
+d_scale p mu mu1->
+d_scale p mu' mu'1->
+dstate_eq mu1 mu'1.
+Proof. intros. inversion H0; subst; inversion H1; subst.
+-apply dstate_eq_refl.
+-lra. 
+-lra.
+-apply d_scale_not_0_eq. assumption.
+Qed.
+       
+
+(*-------------------------big_d_app-------------------------------------------*)
+
+Lemma big_dapp'_to_app{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) ,  
+length p_n= length mu_n->
+(Forall (fun x => 0<x%R) p_n)->
+big_dapp' p_n mu_n (big_dapp p_n mu_n).
+Proof.  induction p_n; intros. inversion H0; subst. destruct mu_n.
+ simpl. apply big_app_nil. discriminate H.
+ destruct mu_n. discriminate H. 
+  simpl.  apply big_app_cons. 
+  apply d_scalar_r. inversion_clear H0.
+  lra. apply IHp_n. injection H. intuition.
+  inversion_clear H0.
+assumption.
+Qed.
+
+
+Lemma  big_dapp_nil{s e:nat}: forall g (f:list (dstate s e)),
+g=[]\/f=[]-> dstate_eq (big_dapp g f ) (d_empty s e) .
+Proof. intros. destruct H. simpl. destruct g; destruct f.
+    simpl. unfold dstate_eq ;try reflexivity.
+    simpl. unfold dstate_eq ;try reflexivity. 
+    discriminate H. discriminate H. 
+    simpl. destruct g; destruct f.
+    simpl. unfold dstate_eq ;try reflexivity.
+    discriminate H.
+    simpl. unfold dstate_eq ;try reflexivity. 
+    discriminate H. 
+Qed.
+
+
+
+Lemma  big_dapp_exsist {s e:nat} : forall (p_n:list R) (mu_n:list (dstate s e)),
+length p_n = length mu_n ->
+exists mu, big_dapp' p_n mu_n mu.
+Proof. induction p_n; intros;
+        destruct mu_n.  exists (d_empty s e).
+        econstructor.
+        simpl in H. lia.
+        simpl in H. lia.
+        pose (d_scale_exsits a d).
+        destruct e0. injection H.
+        intros.
+        apply IHp_n  in H1.
+        destruct H1.
+        exists  (d_app x x0).
+        econstructor; try assumption.
+Qed.
+
+
+Lemma big_dapp'_length{s e:nat}: forall p_n (mu_n:list (dstate s e)) (mu:dstate s e),
+big_dapp' p_n mu_n mu -> length p_n = length mu_n.
+Proof. induction p_n; intros; destruct mu_n. reflexivity.
+      inversion_clear H. inversion_clear H.
+      inversion H; subst.
+      simpl. f_equal. apply IHp_n with d0 .
+      assumption.
+Qed.
+
+Lemma  big_dapp_nil'{s e:nat}: forall g (f:list (dstate s e)) (d:dstate s e),
+  g=[]\/f=[]-> big_dapp' g f d -> dstate_eq d (d_empty s e) . 
+  Proof.  intros. inversion H0;subst.  apply dstate_eq_refl.
+  destruct H;
+  discriminate H.
+  Qed.
+  
+  
+Lemma big_dapp_eq{s e:nat} :forall (g:list R)  (f:(list (dstate s e)))  (mu mu':dstate s e), 
+big_dapp' g f mu->
+big_dapp' g f mu'->
+dstate_eq mu mu' .
+Proof. induction g; intros; inversion H; subst. 
+inversion_clear H0. apply dstate_eq_refl.
+inversion_clear H0. apply d_app_eq.
+apply d_scale_eq with hd hd a. apply dstate_eq_refl. assumption. 
+assumption. apply IHg with td. assumption. assumption.  
+Qed.
+
+
+Lemma big_dapp_this{s e:nat}:
+forall  (p_n:list R)  (mu_n:list (dstate s e)) (mu':dstate s e),
+big_dapp' p_n mu_n mu'->
+big_map2' p_n (dstate_to_list mu_n) (StateMap.this (mu')).
+Proof.  induction p_n; destruct mu_n; intros; inversion H;subst.
+  simpl; try reflexivity; try econstructor.
+  simpl.
+  econstructor.
+  inversion H5; subst. simpl. econstructor.
+  unfold d_scale_not_0. econstructor. assumption.
+   apply IHp_n. assumption.
+Qed.
+
+
+
+
+
+Lemma WWF_dstate_empty: forall s e, WWF_dstate (d_empty s e) .
+Proof. intros. unfold d_empty.  unfold WWF_dstate.
+ simpl. unfold StateMap.Raw.empty.
+apply WF_nil'. 
+Qed.
+
+Lemma WWF_d_app{s e:nat}: forall (mu mu':dstate s e),
+WWF_dstate mu -> WWF_dstate mu'->
+WWF_dstate  (d_app mu mu').
+Proof. unfold WF_dstate. unfold d_app. unfold d_trace. unfold StateMap.map2. 
+ intros  (mu, IHmu) (mu', IHmu') p1 p2. simpl.
+ apply WWF_d_app_aux. assumption. assumption. 
+Qed.
+
+Lemma WWF_d_scale_not_0{s e}: forall (mu:dstate s e) p, 
+(0<p)
+->WWF_dstate mu 
+->WWF_dstate(d_scale_not_0 p mu).
+Proof. unfold WF_dstate.
+        unfold d_trace.
+        unfold d_scale_not_0.
+        simpl. intros  (mu,IHmu) p H0 H.
+        unfold map.  simpl. 
+        apply WWF_d_scale_aux. intuition.
+        intuition.
+Qed.
+
+Lemma WWF_d_scale{s e:nat}: forall (mu mu':dstate s e) p,
+(0<=p)->
+d_scale p mu mu'
+->WWF_dstate mu 
+->WWF_dstate(mu').
+Proof. intros. inversion_clear H0. apply WWF_dstate_empty.
+       apply WWF_d_scale_not_0. lra. assumption.
+Qed.
+
+
+Lemma WWF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
+Forall (fun x=> WWF_dstate x) mu_n ->
+big_dapp' (p_n) mu_n mu->
+(Forall (fun x => 0<= (x) ) p_n)-> 
+WWF_dstate mu.
+Proof. induction p_n. intros. inversion_clear H0.
+    apply WWF_dstate_empty.
+    intros. simpl in *.
+    inversion H0; subst. 
+    apply WWF_d_app.  
+    apply WWF_d_scale with hd a. 
+    inversion_clear H1. intuition.
+    assumption. inversion_clear H.
+    assumption. apply IHp_n with td.
+      inversion_clear H. assumption.
+     assumption. inversion_clear H1. assumption.
+Qed.
+
+
+Lemma d_scale_trace_le{s e:nat}:forall (mu mu':dstate s e) r,  
+0<=r->
+WF_dstate mu ->
+d_scale r mu mu'-> 
+d_trace mu' <=r.
+Proof.  intros. inversion_clear H1. 
+       unfold d_trace. unfold d_empty.
+       simpl. lra.  rewrite d_trace_scale_not_0.
+       apply Rle_trans with (r * 1)%R.
+       apply Rmult_le_compat_l. lra.
+       apply WF_dstate_in01. assumption.
+       rewrite Rmult_1_r. lra. lra.  
+Qed.
+
+
+Lemma WWF_dstate_to_WF_dstate:forall {s e : nat} (mu : dstate s e),
+WWF_dstate mu /\ d_trace mu <= 1 <-> WF_dstate mu .
+Proof. intros s e(mu, IHmu). unfold WWF_dstate.
+      unfold WF_dstate. unfold d_trace. simpl.
+      apply WWF_dstate_aux_to_WF_dstate_aux.
+  
+Qed.
+
+
+Lemma  Forall_WWF_WF{s e:nat}: forall (mu_n:list (dstate s e)),
+Forall (fun x : dstate s e => WF_dstate x) mu_n->
+Forall (fun x : dstate s e => WWF_dstate x) mu_n .
+Proof. induction mu_n.  intros;
+      apply Forall_nil.
+       intros. inversion_clear H.
+      econstructor. apply WWF_dstate_to_WF_dstate.
+      assumption. apply IHmu_n. assumption.
+Qed.
+
+Lemma d_trace_le_1_big_dapp{s e:nat}: forall (p_n:list  R) (mu_n:list (dstate s e)) (mu:dstate s e), 
+Forall (fun x=> WF_dstate x) mu_n ->
+big_dapp' (p_n) mu_n mu->
+(Forall (fun x =>0<=  (x) ) p_n)->
+d_trace mu <= sum_over_list p_n.
+Proof. induction p_n. intros. inversion_clear H0.
+        rewrite sum_over_list_nil.
+        unfold d_trace. unfold StateMap.this.
+        simpl. lra. 
+        intros.  simpl in *.
+         inversion H0; subst.
+         rewrite d_trace_app.
+         rewrite sum_over_list_cons.
+         apply Rplus_le_compat.
+          apply d_scale_trace_le with hd.
+          inversion_clear H1. assumption.
+           inversion_clear H.
+          assumption. simpl. assumption.
+         apply IHp_n with td. inversion_clear H.
+         assumption. assumption.
+         inversion_clear H1. assumption.
+         apply WWF_d_scale with  hd a. 
+         inversion_clear H1. intuition.
+         assumption. inversion_clear H.
+         apply WWF_dstate_to_WF_dstate. assumption.
+         apply WWF_dstate_big_dapp with p_n td.
+        apply Forall_WWF_WF. inversion_clear H. assumption.
+          assumption. inversion_clear H1. assumption.
+Qed.
+
+
+Lemma WF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
+Forall (fun x=> WF_dstate x) mu_n ->
+big_dapp' p_n mu_n mu->
+(Forall (fun x => 0<= (x)) p_n)->
+sum_over_list p_n<=1->
+WF_dstate mu.
+Proof. intros. apply WWF_dstate_to_WF_dstate.
+split. apply WWF_dstate_big_dapp with p_n mu_n .
+apply Forall_WWF_WF.  assumption. assumption. assumption.
+apply Rle_trans with (sum_over_list p_n).
+apply d_trace_le_1_big_dapp with mu_n. 
+assumption. assumption. assumption.
+assumption.
+Qed.
+
+Lemma Rplus_mult_le_1': forall (p1 p2 r1 r2:R),
+0 < p1 <=1->
+0 < p2 <=1->
+p1+p2<=1->
+0<=r1 <= 1->
+0<=r2<= 1->
+p1 * r1 + p2 * r2<= 1 .
+Proof. intros. 
+assert(r1<r2\/ r2<=r1).
+apply Rlt_or_le.
+destruct H4.
+apply Rle_trans with ((p1 * r2)%R + (p2 * r2)%R)%R.
+apply Rplus_le_compat;
+apply Rmult_le_compat;
+intuition. 
+rewrite <-Rmult_plus_distr_r. 
+assert((p1 + p2) * r2 <= 1*1).
+apply Rmult_le_compat. 
+assert(0<p1 + p2). apply Rplus_lt_0_compat. intuition. intuition.
+intuition. intuition. intuition. intuition. 
+rewrite Rmult_1_l in H5.
+intuition.
+
+apply Rle_trans with (p1 * r1 + p2 * r1 ).
+apply Rplus_le_compat;
+apply Rmult_le_compat;
+intuition. 
+rewrite <-Rmult_plus_distr_r. 
+assert((p1 + p2) * r1 <= 1*1).
+apply Rmult_le_compat. 
+assert(0<p1 + p2). apply Rplus_lt_0_compat. intuition. intuition.
+intuition. intuition. intuition. intuition. 
+rewrite Rmult_1_l in H5.
+intuition.
+Qed.
+
+Require Import ParDensityO.
+Lemma WF_d_app'{s e:nat}: forall (mu mu':dstate s e) (p1 p2:R),
+(0<p1<=1/\0<p2<=1)-> (p1+p2<=1)->
+WF_dstate mu -> WF_dstate mu'-> 
+@WF_dstate s e (d_app (d_scale_not_0 p1 mu) (d_scale_not_0 p2 mu')).
+Proof. unfold WF_dstate. unfold d_app. unfold d_trace.
+ unfold StateMap.map2.
+ intros  (mu, IHmu) (mu', IHmu') p1 p2. simpl. 
+ intros. 
+ apply WF_d_app_aux. 
+ apply WF_d_scale_aux. intuition. intuition.
+ apply WF_d_scale_aux. intuition. intuition.
+ rewrite d_trace_app_aux.  repeat rewrite d_trace_scale_aux.
+ apply Rplus_mult_le_1'. intuition. intuition. intuition.
+ apply WF_dstate_in01_aux. assumption. 
+ apply WF_dstate_in01_aux. assumption.
+ intuition. intuition. 
+ apply WWF_d_scale_aux. intuition.
+ apply WWF_dstate_aux_to_WF_dstate_aux.
+  intuition.
+ apply WWF_d_scale_aux. intuition. 
+ apply WWF_dstate_aux_to_WF_dstate_aux.
+ intuition.
+Qed.
+#[export] Hint Resolve WF_d_app' : DState.
 
 (*-------------------------d_find---------------------------------------------*)
 
@@ -1059,59 +1481,6 @@ Definition d_empty(n:nat) := Build_dstate n (Raw_dstate.d_empty n) (Raw_dstate.W
 Definition d_update{n:nat} (p: state n) (m: dstate n) := Build_dstate n (Raw_dstate.d_update p m) (Raw_dstate.WF_dstate_update n) 
 
 End Make_dstate. *)
-
-
-(*-------------------------------dstate_eq-----------------------------*)
-
-Lemma dstate_eq_refl{ s e:nat}:forall (mu:dstate s e),
- dstate_eq mu mu .
-Proof. unfold dstate_eq. intuition.
-Qed.
-
-Lemma dstate_eq_sym{s e:nat}:forall (mu1 mu2: dstate s e),
-dstate_eq mu1 mu2-> dstate_eq mu2 mu1 .
-Proof. intros  (mu1,IHmu1) (mu2,IHmu2).
-unfold dstate_eq. simpl. intuition.
-Qed.
-
-Lemma dstate_eq_trans: forall s e (mu mu1 mu2: dstate s e),
-dstate_eq mu mu1 -> dstate_eq mu1 mu2
--> dstate_eq mu mu2.
-Proof. intros s e (mu, IHmu) (mu1,IHmu1) (mu2,IHmu2).
-  unfold dstate_eq. simpl.
-  intros. rewrite H. assumption.
-  Qed.
-
-Lemma d_app_eq{s e:nat}: forall (mu mu' mu1 mu1': dstate s e),
-dstate_eq mu mu'->
-dstate_eq mu1 mu1'->
-dstate_eq (d_app mu mu1) (d_app mu' mu1') .
-Proof. unfold dstate_eq. intros
- (mu, IHmu) (mu',IHmu') (mu1,IHmu1) (mu1', IHmu1').
-       simpl. intuition. rewrite H. rewrite H0. reflexivity. 
-Qed.
-
-Lemma d_scale_not_0_eq{s e:nat}: forall (mu mu' : dstate s e) (p:R),
-dstate_eq mu mu'->
-dstate_eq (d_scale_not_0 p mu) (d_scale_not_0 p mu'). 
-Proof. intros (mu, IHmu) (mu',IHmu') . unfold dstate_eq.
-unfold d_scale_not_0.
-       simpl. intros. rewrite H. intuition.
-Qed.
-
-
-Lemma d_scale_eq{s e:nat}: forall (mu mu' mu1 mu'1: dstate s e) (p:R),
-dstate_eq mu mu'->
-d_scale p mu mu1->
-d_scale p mu' mu'1->
-dstate_eq mu1 mu'1.
-Proof. intros. inversion H0; subst; inversion H1; subst.
--apply dstate_eq_refl.
--lra. 
--lra.
--apply d_scale_not_0_eq. assumption.
-Qed.
-       
 
 
 (*--------------------------d_scale----------------------------------------*)
@@ -1463,6 +1832,148 @@ Proof. intros. assert(p=0\/p<>0). apply Classical_Prop.classic.
     unfold d_scale_not_0. unfold StateMap.map.  destruct mu as [mu IHmu].
     destruct mu' as [mu' IHmu']. 
     simpl. apply d_scalar_app_distr_aux.  
+Qed.
+
+
+(*-----------------------------------------------------------*)
+Lemma  big_map2_app'{s e:nat}: forall (f1 : list R) (g1: list( (list (cstate * qstate s e)))) ( f2: list R) (g2: list( (list (cstate * qstate s e)))) mu,
+length f1 =length g1 ->length f2 = length g2->
+big_map2' (f1 ++ f2 ) ( g1++g2) mu ->
+(exists mu1 mu2, and  (and (big_map2' f1 g1 mu1)
+(big_map2' f2 g2 mu2)) (mu = StateMap.Raw.map2 option_app mu1 mu2)).
+Proof. induction f1;  induction g1; intros.
+exists []. exists mu. split. econstructor.
+econstructor. 
+apply H1. simpl in H. simpl. rewrite map2_r_refl.
+reflexivity.
+ discriminate H.
+ discriminate H.
+ inversion H1; subst. 
+ apply IHf1 in H8. destruct H8.
+ destruct H2. 
+ exists (StateMap.Raw.map2 option_app r x).
+ exists x0. split. econstructor. econstructor.
+  try assumption. apply H2. apply H2.
+ rewrite <-map_assoc. destruct H2. rewrite H3.
+ reflexivity.
+injection H. intuition. assumption.
+Qed.
+
+
+Inductive emit_0{A:Type}:(list R) -> (list A)-> (list A)->Prop:=
+|emit_nil: emit_0 [] [] []
+|emit_cons_0: forall hf hg f g d,  (hf = 0)%R -> emit_0 f g d ->
+                                        emit_0 (hf::f) (hg::g) d
+|emit_cons: forall hf hg f g d,  (hf <> 0)%R -> emit_0 f g d ->
+                                        emit_0 (hf::f) (hg::g) (hg::d).
+
+Lemma  emit_0_exsist{A:Type}:forall (f:list R) (g:list A),
+length f = length g->
+exists d, emit_0 f g d.
+Proof. induction f; intros; destruct g.
+       exists []. econstructor.
+       discriminate H. discriminate H.
+       injection H. intros.
+       apply IHf in H0. destruct H0.
+       destruct (Req_dec a 0).
+       exists x. econstructor; try assumption.  
+       exists (a0:: x). apply emit_cons; try assumption.
+Qed.
+
+
+Lemma big_dapp_emit_0{ s e:nat}:forall (f:list R) (g:list (dstate s e)) (mu:dstate s e) r_n mu_n,
+  big_dapp' f g mu->
+  (emit_0 f f r_n) ->
+  (emit_0 f g mu_n) ->
+  (exists mu', and (dstate_eq mu mu') (big_dapp' r_n mu_n mu')).
+  Proof. induction f; intros; destruct g;
+         inversion_clear H; inversion_clear H0; inversion_clear H1.
+         exists ((d_empty s e)).
+         split. apply dstate_eq_refl.
+         econstructor.
+         inversion H2; subst. 
+         apply (IHf _ _  r_n mu_n) in H3; try assumption.
+         destruct H3.
+         exists x. split.
+         apply dstate_eq_trans with d0.
+         apply d_app_empty_l.
+         intuition. intuition.
+         lra. rewrite H in *. lra.
+         rewrite H0 in *. lra.  
+         apply (IHf _ _  d1 d2) in H3; try assumption.
+         destruct H3. destruct H1.
+         exists (d_app r  x).
+         split. apply d_app_eq; auto. try reflexivity.
+        econstructor; try assumption.  
+  Qed.
+
+
+  Lemma emit_0_eq(A:Type):forall (p_n:list R) (g_n :list A) g1 g2,
+emit_0 p_n g_n g1->
+emit_0 p_n g_n g2->
+g1= g2.
+Proof. induction p_n; destruct g_n; intros.
+       inversion_clear H. inversion_clear H0.
+       reflexivity.
+       inversion_clear H. inversion_clear H.
+       inversion H; subst; inversion H0; subst.
+       apply IHp_n with g_n; try assumption.
+       lra. lra. 
+       f_equal; apply IHp_n with g_n; try assumption.  
+Qed.
+
+
+Lemma emit_0_app{A:Type}:forall (p_n1 p_n2 :list R) (g_n1 g_n2:list A) g1 g2 g,
+emit_0 p_n1 g_n1 g1->
+emit_0 p_n2 g_n2 g2->
+emit_0 (p_n1++p_n2) (g_n1++g_n2) g->
+g= g1++g2.
+Proof. induction p_n1; destruct g_n1; intros.
+       simpl in *. 
+       inversion_clear H. simpl. 
+       apply emit_0_eq with p_n2 g_n2; try assumption.
+       inversion_clear H. inversion_clear H.
+       inversion_clear H; simpl in H1;
+       inversion_clear H1. 
+       eapply IHp_n1; [apply H3 | apply H0| apply H4].
+       lra. lra. 
+       simpl. f_equal.  
+       eapply IHp_n1; [apply H3 | apply H0| apply H4].
+Qed.
+
+Fixpoint fun_to_list{G:Type} (g: nat-> G) (n_0 : nat) : list (G) := 
+  match n_0 with
+  | 0 => []
+  | S n' => (fun_to_list g n') ++ [g n']
+  end. 
+
+Lemma fun_to_list_length{G:Type}: forall (g: nat-> G) (n_0 : nat),
+length (fun_to_list g n_0) = n_0.
+Proof. induction n_0. simpl. reflexivity.
+        simpl. rewrite app_length. rewrite IHn_0. 
+        simpl. intuition.
+
+Qed.
+
+Local Open Scope nat_scope.
+Lemma emit_0_dtrace{s e:nat}: forall n (p_n:nat-> R)  (mu_n:nat-> (dstate s e)) (mu:dstate s e) ( mu':list (dstate s e)),
+(forall i : nat, i< n -> p_n i <> 0%R -> d_trace (mu_n i) = d_trace mu) ->
+emit_0 (fun_to_list p_n n) (fun_to_list mu_n n) mu'->
+Forall (fun mu_i : dstate s e => d_trace mu_i = d_trace mu) mu'.
+Proof. induction n; intros. inversion_clear H0. econstructor.
+       simpl in H0. 
+       pose (emit_0_exsist (fun_to_list p_n n) (fun_to_list mu_n n)).
+       pose (emit_0_exsist [p_n n] [mu_n n]).
+       destruct e0; destruct e1; repeat rewrite fun_to_list_length; try reflexivity.
+       eapply emit_0_app in H0; [|apply H1|apply H2].
+       rewrite H0.
+       apply Forall_app.
+       split. eapply (IHn p_n).  intros. apply H; [| apply H4].
+       lia. apply H1. 
+       inversion_clear H2; inversion_clear H4;
+       econstructor. apply H. lia.    assumption. 
+       econstructor. 
+  
 Qed.
 
 

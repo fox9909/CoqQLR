@@ -1211,7 +1211,8 @@ Qed.
 
 
 
-Lemma state_eq_aexp{s e:nat}: forall (st st':state s e )  (a:aexp),
+Local Open Scope bool_scope.
+Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
 (fst st) = (fst st')-> (aeval st a) = aeval st' a.
 Proof. intros. induction a.
       --reflexivity. 
@@ -1223,10 +1224,9 @@ Proof. intros. induction a.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
       --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      
 Qed.
 
-Lemma state_eq_bexp{s e:nat}: forall (st st':state s e) (b:bexp),
+Lemma state_eq_bexp{ s0 e0 s1 e1:nat}: forall (st:state s0 e0) (st' : state s1 e1) (b:bexp),
 (fst st) = (fst st')-> (beval st b) = beval st' b.
 Proof. intros. induction b. 
        --simpl. reflexivity.
@@ -1443,11 +1443,11 @@ Proof. intros b c Hc mu mu' H.
       exists ( [(c0, q)] +l x0). exists ( [(c1, q0)] +l x1).
       split. apply E_While_false. unfold Cstate_as_OT.eq in e0.
       subst. injection H1; intros. subst. 
-      rewrite (state_eq_bexp  _ (c1, q .+ q0) _ ). assumption.
+      rewrite (@state_eq_bexp s e s e _ (c1, q .+ q0) _ ). assumption.
       reflexivity. assumption. split. 
       apply E_While_false. unfold Cstate_as_OT.eq in e0.
       subst. injection H1; intros. subst. 
-      rewrite (state_eq_bexp  _ (c1, q .+ q0) _ ). assumption.
+      rewrite (@state_eq_bexp s e s e _ (c1, q .+ q0) _ ). assumption.
       reflexivity. assumption. injection H1; intros. subst.
       remember ((@cons (prod cstate (qstate s e))
       (@pair cstate (qstate s e) c0
@@ -1757,7 +1757,7 @@ Proof.  induction c.
       f_equal. simpl. unfold Cstate_as_OT.eq in e0.
       rewrite e0. rewrite (state_eq_aexp (c0, q) (c0, q0) a ).
       MC.elim_comp.  
-      rewrite (state_eq_aexp  (c0, q0) (c0, q.+ q0) a ).
+      rewrite (@state_eq_aexp s e s e (c0, q0) (c0, q.+ q0) a ).
       f_equal. reflexivity. reflexivity. reflexivity.
 
       inversion H;subst.
@@ -1833,13 +1833,16 @@ Proof.  induction c.
       destruct H4. destruct H4. destruct H4. destruct H5. 
       exists (StateMap.Raw.map2 option_app x2 x0). 
       exists ((StateMap.Raw.map2 option_app x3 x1)).
-      split.  apply E_IF_true. rewrite (state_eq_bexp _ (c, q .+ q0)).
+      split.  apply E_IF_true.
+       rewrite (@state_eq_bexp s e s e _ (c, q .+ q0)).
       intuition. intuition.
-      intuition.  intuition.   split.  apply E_IF_true. rewrite (state_eq_bexp _ (c, q .+ q0)).
+      intuition.  intuition.   split.  apply E_IF_true.
+       rewrite (@state_eq_bexp s e s e _ (c, q .+ q0)).
       intuition. intuition. 
       intuition.  unfold Cstate_as_OT.eq in e0. rewrite <-e0. intuition.
       rewrite H6. rewrite H3. 
       rewrite (map2_comm x2 _).  rewrite map_assoc.
+
       rewrite<-(map_assoc _ _ x3 x2 x0). rewrite (map2_comm x3 _).
       rewrite <-map_assoc. reflexivity.
 
@@ -1855,9 +1858,11 @@ Proof.  induction c.
       destruct H4. destruct H4. destruct H4. destruct H5. 
       exists (StateMap.Raw.map2 option_app x2 x0). 
       exists ((StateMap.Raw.map2 option_app x3 x1)).
-      split.  apply E_IF_false. rewrite (state_eq_bexp _ (c, q .+ q0)).
+      split.  apply E_IF_false. 
+      rewrite (@state_eq_bexp s e s e _ (c, q .+ q0)).
       intuition. intuition.
-      intuition.  intuition.   split.  apply E_IF_false. rewrite (state_eq_bexp _ (c, q .+ q0)).
+      intuition.  intuition.   split.  apply E_IF_false. 
+      rewrite (@state_eq_bexp s e s e _ (c, q .+ q0)).
       intuition. intuition. 
       intuition.  unfold Cstate_as_OT.eq in e0. rewrite <-e0. intuition.
       rewrite H6. rewrite H3. rewrite (map2_comm x2 _).  rewrite map_assoc.
@@ -2244,7 +2249,7 @@ Proof. induction c.
       destruct H2. destruct H2. 
       exists  (x0 +l x).
       split.  apply E_IF_true.
-      rewrite (state_eq_bexp _ (c, p .* q)). intuition.
+      rewrite (@state_eq_bexp s' e' s' e' _ (c, p .* q)). intuition.
       reflexivity. assumption. assumption.
       rewrite H1. rewrite H3.   apply d_scalar_app_distr_aux.
 
@@ -2263,7 +2268,7 @@ Proof. induction c.
       destruct H2. destruct H2. 
       exists  (x0 +l x).
       split.  apply E_IF_false.
-      rewrite (state_eq_bexp _ (c, p .* q)). intuition.
+      rewrite (@state_eq_bexp s' e' s' e' _ (c, p .* q)). intuition.
       reflexivity. assumption. assumption.
       rewrite H1. rewrite H3.   apply d_scalar_app_distr_aux. }
 
@@ -2354,6 +2359,43 @@ Proof. induction c.
     
    
 Admitted.
+
+
+
+
+(* Lemma  big_app_map2'{s e:nat}: forall n0 (f1: nat-> R) (f2: nat-> ((cstate * qstate s e)))  mu mu',
+(forall i, snd (f2 i) = Zero -> f1 i =0%R) ->
+big_map2' (fun_to_list f1 n0) (fun_to_list (fun i=> [f2 i]) n0) mu ->
+big_app' (fun x =>s_scale  (f1 x) (f2 x)) n0 mu'->
+mu= mu'.
+Proof.  induction n0; intros. inversion_clear H0; inversion_clear H1. 
+ reflexivity. 
+ simpl in H0.
+ apply big_map2_app' in H0. 
+ destruct H0. destruct H0. destruct H0.
+ destruct H0.  
+ 
+ inversion_clear H1.
+simpl in H4.
+destruct (Req_dec (f1 n0) 0).
+rewrite H1 in *. inversion H3; subst.
+inversion H11; subst. inversion_clear H12.
+simpl. rewrite map2_nil_r. apply IHn0 with f1 f2; try assumption.
+lra. assert(snd (f2 n0) = Zero).
+apply (scale_Zero (f1 n0) (snd (f2 n0)) H4). 
+apply C0_fst_neq.  assumption. apply H in H6.
+rewrite H6 in *. lra. rewrite H2.
+f_equal.  apply IHn0 with f1 f2; try assumption.
+inversion_clear H3.  inversion_clear H6.
+rewrite map2_nil_r. inversion H1; subst.
+rewrite<-H6 in *. simpl in *. rewrite Mscale_0_l in *.
+destruct H4. reflexivity. unfold s_scale.
+destruct (f2 n0). simpl. reflexivity.
+repeat rewrite fun_to_list_length. reflexivity.
+reflexivity.
+Qed. *)
+
+
  
 
 
@@ -2471,6 +2513,9 @@ apply IHmu.
 inversion_clear Hm.  intuition.
 intuition.
 Admitted.
+
+
+
 
 
 (* Lemma ceval_2{n:nat}: forall b c1 c2 (mu mu': list (cstate *qstate n)),
@@ -3028,6 +3073,17 @@ apply WF_ceval' with c ([(sigma, rho)]).  apply WF_cons'. assumption.
 Admitted.
 
 
+Lemma ceval_trace_eq': forall c s e  (mu mu':dstate s e),
+WWF_dstate mu->
+ceval c mu mu'-> ((d_trace mu' = d_trace mu)%R).
+Proof. intros  c s e(mu,IHmu) (mu', IHmu').
+ unfold WWF_dstate.  simpl. intros. inversion_clear H0. 
+ unfold d_trace. 
+   simpl in *.  apply ceval_trace_eq with c. assumption.
+   assumption.
+Qed.
+
+
 Lemma WF_ceval{s' e':nat} : forall c (mu mu':list (cstate *qstate s' e')), 
 WF_dstate_aux mu->
 ceval_single c mu mu'->
@@ -3037,4 +3093,147 @@ Proof. intros.   apply WWF_dstate_aux_to_WF_dstate_aux.
  split. apply WF_ceval' with (c) mu . intuition. 
  assumption.   
  rewrite (ceval_trace_eq  c  mu _); intuition.
-Qed. 
+Qed.
+
+
+(* Inductive big_ceval{s e:nat}: list (dstate s e) -> com -> list (dstate s e)-> Prop := 
+|big_ceval_nil: forall c:com, big_ceval nil c nil
+|big_ceval_cons: forall (h h': dstate s e) (t t':list (dstate s e)) (c:com),
+                ceval c h h'->
+                big_ceval t c t'->
+                big_ceval (h::t) c (h'::t'). *)
+
+Lemma ceval_app{s e:nat}:  forall c  (x y mu mu': dstate s e) ,
+WF_dstate x-> WF_dstate y->
+dstate_eq mu (d_app x y)->
+ceval c mu mu' ->
+exists mu1 mu2 , ( and (ceval c x mu1) 
+(ceval c y mu2 
+/\ dstate_eq mu' (d_app mu1 mu2))).
+Proof. unfold dstate_eq.
+    intros c (x, IHx) (y,IHy) (mu,IHmu) (mu', IHmu') Hx Hy;
+    simpl in *. intros.
+    inversion_clear H0.  simpl in *. 
+    rewrite H in H3. 
+    assert( exists mu1 mu2 , (and (ceval_single c x mu1)
+    (ceval_single c y mu2 
+    /\mu'=StateMap.Raw.map2 option_app mu1 mu2))).
+    apply ceval_app_aux. assumption.
+    destruct H0. destruct H0. 
+    destruct H0. destruct H4.
+    assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) x0).
+    apply ceval_sorted with c x.
+    assumption. assumption.
+    assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) x1).
+    apply ceval_sorted with c y.
+    assumption. assumption.
+    exists (StateMap.Build_slist H6).
+    exists (StateMap.Build_slist H7).
+    simpl. split. econstructor.
+    assumption. 
+    apply WF_ceval with c x. 
+    assumption. assumption.
+    simpl. assumption.
+    split. econstructor.
+    assumption. 
+    apply WF_ceval with c y.
+    assumption. 
+    simpl. assumption.
+    simpl. assumption.
+    assumption.
+Qed.
+
+
+
+Lemma ceval_scalar{s e:nat}:  forall c  (x mu mu': dstate s e) (p:R),
+WF_dstate x-> 
+dstate_eq mu (d_scale_not_0 p x)->
+ceval c mu mu' ->
+exists y, (and (ceval c x y)
+(dstate_eq mu' (d_scale_not_0 p y))).
+Proof. unfold dstate_eq.
+intros c (x, IHx) (mu,IHmu) (mu', IHmu') p Hw; simpl.
+intros. inversion_clear H0. simpl in *.
+rewrite H in H3.
+assert(exists y, (and (ceval_single c x y)
+(mu'=StateMap.Raw.map (fun x: qstate s e => p .* x) y))).
+apply ceval_dscale_aux. 
+assumption. destruct H0. destruct H0.
+assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) x0).
+apply ceval_sorted with c x.
+assumption. assumption. 
+exists (StateMap.Build_slist H5).
+split. econstructor. assumption.
+apply WF_ceval with c x. assumption. 
+simpl. assumption.
+simpl. assumption.
+simpl. assumption. 
+Qed.
+
+(* Lemma big_ceval_length{s e:nat}: forall (mu_n mu_n':list (dstate s e)) c,
+big_ceval mu_n c mu_n'-> length mu_n' =length mu_n.
+Proof. induction mu_n; intros; inversion_clear H.
+     reflexivity.
+     simpl. f_equal. apply IHmu_n with c.
+     assumption.
+       
+Qed. *)
+
+Local Open Scope R_scope.
+Require Import Forall_two.
+Lemma ceval_big_dapp{s e:nat}: forall (p_n :list R) (mu_n:list (dstate s e)) (mu mu':dstate s e)   c,
+Forall (fun x : R => 0 < x) p_n ->
+sum_over_list p_n <=1 -> 
+Forall (fun x : dstate s e => WF_dstate x) mu_n ->
+length p_n =length mu_n->
+dstate_eq mu (big_dapp p_n mu_n)->
+ceval c mu mu' ->
+exists (mu_n': list (dstate s e)), 
+ and (Forall_two (fun x y=> ceval c x y) mu_n  mu_n') 
+ (dstate_eq mu' (big_dapp p_n mu_n')).
+Proof. induction  p_n; intros mu_n mu mu' c Hp Hs Hw; intros; destruct mu_n. 
+       simpl in *; exists ([]);
+       split; try econstructor. 
+       inversion H1; subst. unfold dstate_eq in *.
+       simpl in *.    unfold StateMap.Raw.empty in *.
+       rewrite H0 in H4. inversion_clear H4. reflexivity.
+       discriminate H. discriminate H. 
+       simpl. 
+       assert(exists mu1 mu2 ,  and (ceval c (d_scale_not_0 a d) mu1)
+       ((ceval c (big_dapp p_n mu_n) mu2)  /\
+        (dstate_eq mu' (d_app mu1 mu2)))).
+       apply (ceval_app c (d_scale_not_0 a d) (big_dapp p_n mu_n ) mu mu').
+       apply WF_d_scale_not_0. split. inversion_clear Hp. assumption.
+       rewrite sum_over_list_cons in Hs.   admit. inversion_clear Hw. assumption. 
+       apply WF_dstate_big_dapp with p_n mu_n.  inversion_clear Hw. assumption.
+       apply big_dapp'_to_app. injection H. intuition.  inversion_clear Hp. 
+       admit. admit. rewrite sum_over_list_cons in Hs. inversion_clear Hp.
+       lra.
+       assumption. assumption.
+       destruct H2. destruct H2.
+       destruct H2.
+       assert(exists y, (and (ceval c d y)
+       (dstate_eq x (d_scale_not_0 a y)))).
+       apply ceval_scalar with ((d_scale_not_0 a d)).
+       inversion_clear Hw. assumption.
+       unfold dstate_eq. reflexivity.
+       assumption. destruct H4. 
+       assert( exists mu_n' : list (dstate s e),
+       and (Forall_two (fun x y : dstate s e => ceval c x y) mu_n mu_n') 
+       (dstate_eq x0 (big_dapp p_n mu_n' ))).
+       apply IHp_n with ((big_dapp p_n mu_n)).
+       inversion_clear Hp. assumption.
+       rewrite sum_over_list_cons in Hs. inversion_clear Hp.
+       lra.
+       inversion_clear Hw. assumption. 
+       injection H; intuition.
+       unfold dstate_eq . 
+       reflexivity.
+       intuition. destruct H5.
+       exists (x1::x2). 
+       split. econstructor.  intuition.
+       intuition. apply dstate_eq_trans with ((d_app x x0)).
+       intuition. 
+       apply d_app_eq. intuition.
+       intuition.
+Admitted.
