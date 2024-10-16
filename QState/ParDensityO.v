@@ -1,7 +1,20 @@
+Require Import Reals.
+Require Import Coquelicot.Complex.
+Require Import Strings.String.
+Require Import Lists.List.
+Require Import Coq.Init.Datatypes.
+From Coq Require Import Bool.Bool.
+From Coq Require Import Lia.
+From Coq Require Import Init.Nat.
+
+
 Require Import Psatz.
 Require Import Reals.
 From Quan Require Export VecSet.
+From Quan Require Export Matrix.
 From Quan Require Export Quantum.
+From Quan Require Export Complex.
+
 
 
 Notation Density n := (Matrix n n) (only parsing). 
@@ -233,7 +246,7 @@ Proof.
 Qed.
 
 
-Require Import Basic_Supplement.
+(* Require Import Basic_Supplement. *)
 Lemma mixed_state_trace_gt0: forall {n} (ρ : Density n) , Mixed_State ρ -> 
                                                         0 < fst (trace ρ).
 Proof.  
@@ -414,7 +427,7 @@ Proof. intros.
        rewrite RtoC_mult. apply Pure_S.
        apply Rmult_in01. intuition. intuition.
        intuition.
-      --rewrite Mscale_plus_distr_r.
+      -rewrite Mscale_plus_distr_r.
         repeat rewrite Mscale_assoc.
         repeat rewrite RtoC_mult;
         apply Mix_S; try rewrite <-Rmult_plus_distr_l;
@@ -561,7 +574,8 @@ Lemma Rdiv_in_01:forall r1 r2, r1>0 -> r2>0 ->
 r1<=r2->
 0<r1/r2<=1.
 Proof. intros. split. apply Rdiv_lt_0_compat.
-      assumption. lra. rewrite<- Rcomplements.Rdiv_le_1.
+      assumption. lra. 
+       rewrite<- Rcomplements.Rdiv_le_1.
       assumption. assumption.
 Qed.
 
@@ -694,10 +708,10 @@ Qed.
 #[export] Hint Resolve  Mixed_State_aux_to_Mix_State Mixed_State_scale_aux Mixed_State_scale_c
 Mixed_State_aux_to_01': Mixed.
 
-Import Quan.Complex.
 
+Require Import Complex.
 Lemma fst_plus: forall (c1 c2: C),
- fst(c1+ c2)= (fst c1 + fst c2)%R.
+ fst(c1 + c2)= (fst c1 + fst c2)%R.
 Proof. intros. destruct c1. destruct c2.
       simpl. reflexivity.
   
@@ -1014,6 +1028,23 @@ Proof. unfold trace. simpl.
 Qed.
 
 
+Lemma big_sum_0_R : forall n,
+(Σ (fun _ :nat =>0%R ) n)= 0%R. 
+Proof. 
+intros.
+  induction n.
+  - reflexivity.
+  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
+  rewrite IHn.   
+  rewrite Cplus_0_r. easy.
+Qed.      
+
+
+Lemma  Zero_trace: forall n, @trace n Zero=C0.
+Proof. intros. unfold Zero.  unfold trace.
+ apply (big_sum_0_R n). 
+Qed.
+
 Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
 Pure_State_Vector v -> v<>Zero .
 Proof. intros. destruct H.  intro. rewrite H1 in *.
@@ -1278,14 +1309,14 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       repeat rewrite Rminus_0_r.  simpl in H3. simpl in H6.
       destruct H3. destruct H6. rewrite H9. rewrite H10.
       rewrite Rmult_0_l. repeat rewrite Rplus_0_r. repeat rewrite Rdiv_unfold.
-      repeat rewrite Rinv_mult_distr.
+      repeat rewrite Rinv_mult.
       rewrite <-(Rmult_assoc r ).  rewrite <-(Rmult_assoc r1 ).
       repeat rewrite Rinv_r. repeat rewrite Rmult_1_l. 
       assert(0<(p1 * / r + p2 * / r1)%R). apply Rplus_lt_0_compat.
       apply Rmult_gt_0_compat. intuition. apply Rinv_0_lt_compat.
       assumption. 
       apply Rmult_gt_0_compat. intuition. apply Rinv_0_lt_compat.
-      assumption. lra. lra. lra. lra. lra. lra. lra. 
+      assumption. lra. lra. lra. 
 
       rewrite Rplus_comm. 
       apply IHHρ1_2 in H5.

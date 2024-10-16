@@ -16,6 +16,8 @@ From Quan Require Import Quantum.
 From Quan Require Import QState_L.
 From Quan Require Import QAssert_L.
 From Quan Require Import Par_trace.
+From Quan Require Import ParDensityO.
+From Quan Require Import QSepar.
 
 Local Open Scope nat_scope.
 
@@ -270,14 +272,109 @@ Ltac rule_solve :=
          split. rewrite inter_comm. assumption. 
          split; intuition.
   Qed.
+
+
+Lemma WF_dstate_per_state{ s e:nat}: forall  (x:cstate ) (mu:dstate s e),
+(d_find x mu) <>Zero -> (WF_dstate mu -> WF_state (x, (d_find x mu))) .
+Proof. intros x (mu, IHmu0). induction mu. 
+       simpl. intuition.
+       destruct a.
+       unfold WF_dstate.
+       unfold d_find. unfold StateMap.find.
+       simpl. intros. 
+      inversion_clear H0. 
+       destruct (Cstate_as_OT.compare x c).
+       simpl. simpl in H. destruct H. 
+       reflexivity.
+       simpl. 
+       assumption.
+       unfold d_find in IHmu.
+       unfold StateMap.find in IHmu.
+       inversion_clear IHmu0.
+       unfold WF_dstate in IHmu.
+       unfold d_trace in IHmu.
+       simpl in IHmu.
+       apply IHmu in H0.
+       assumption.
+       assumption.
+       assumption.
+Qed.
   
   Theorem  rule_Separ:forall s x e u v, 
   ((| v >[ s , x ]) ⊗* (| u >[ x , e ])) ->>
   ( (| v ⊗ u >[ s , e ])).
   Proof.   intros.  unfold assert_implies. simpl. 
-  intros;   rule_solve. simpl.  destruct H0. destruct H3.
-  admit.
-  Admitted. 
+  intros. rewrite sat_Assert_to_State in *. 
+  rewrite seman_find in *. split. intuition.
+  split. intuition. intros. pose H0. 
+  apply H in n. simpl in *. destruct n. 
+  destruct H2. 
+  split. assert( (2 ^ (x - s)) * (2 ^ (e - x)) = 2^(e-s)).
+  type_sovle'. destruct H4.
+   apply (@ParDensityO.pure_state_vector_kron 
+  (2 ^ (x - s)) (2 ^ (e - x)) ). intuition.
+  intuition. 
+  split. intuition. split. lia. split. lia.
+  assert(WF_qstate (d_find x0 mu)).
+  apply WF_dstate_per_state. assumption. 
+  apply H. 
+  remember (((R1 / Cmod (trace (d_find x0 mu)))%R .* d_find x0 mu)).
+  remember (PMpar_trace m s e).
+  assert( WF_qstate q). rewrite Heqq. apply Mix_par_trace; try lia; 
+  try assumption. rewrite Heqm. 
+  rewrite Rdiv_unfold. rewrite Rmult_1_l.
+  split; try lia. apply Mixed_State_aux_to01.
+  apply Mixed_State_aux_to_Mix_State. apply H4. 
+  pose (@Par_Pure_State_kron s e q x). 
+  assert((PMpar_trace q s x) = (PMpar_trace m s x)).
+  rewrite Heqq. rewrite PMpar_trace_assoc; try lia; try assumption.
+  reflexivity. 
+  assert((PMpar_trace q x e) = (PMpar_trace m x e)).
+  rewrite Heqq. rewrite PMpar_trace_assoc; try lia; try assumption.
+  reflexivity.
+  assert(q= (@trace (2^(e-s)) q) .* @kron (2^(x-s)) (2^(x-s)) (2^(e-x)) (2^(e-x)) 
+  (/(@trace (2^(x-s)) ((PMpar_trace q s x))) .* (PMpar_trace q s x))
+  (/(@trace (2^(e-x)) ((PMpar_trace q x e))) .* (PMpar_trace q x e))).
+  rewrite <-e1; try lia; try assumption.  
+  rewrite Mscale_assoc. rewrite Cinv_r. rewrite Mscale_1_l. reflexivity.
+  apply C0_fst_neq. apply Rgt_neq_0.
+  apply mixed_state_trace_gt0. apply H5.
+  left. econstructor. exists (outer_product v v).
+  assert( 0<R1<=1)%R. lra.  
+  split. apply H8. split. econstructor. split.
+  apply H2. unfold outer_product. reflexivity.
+  rewrite Mscale_1_l. 
+   rewrite H6. apply H2. 
+  rewrite H8. rewrite H6. rewrite H7. 
+  destruct H2. destruct H9. destruct H10.
+  destruct H11.  destruct H3. destruct H13.
+  destruct H14. destruct H15.
+  rewrite H12. rewrite H16.
+  assert((@trace (2^(e-s)) q)= C1).
+  rewrite Heqq. rewrite Heqm. 
+  rewrite Ptrace_trace; try lia.
+  rewrite Rdiv_unfold. rewrite Rmult_1_l.
+  rewrite trace_mult_dist.
+  assert(@trace (2^(e0-s0)) (d_find x0 mu) = (fst (@trace (2^(e0-s0)) (d_find x0 mu)), snd (@trace (2^(e0-s0)) (d_find x0 mu)))).
+  destruct (@trace (2^(e0-s0)) (d_find x0 mu)). simpl. reflexivity.
+  rewrite H17. rewrite mixed_state_trace_real; try apply H4.
+  rewrite Cmod_snd_0; try simpl; try apply mixed_state_trace_gt0;
+  try apply mixed_state_trace_real; try apply H4; try reflexivity.
+  rewrite RtoC_inv;  try apply C0_fst_neq; try apply Rgt_neq_0;
+  try apply mixed_state_trace_gt0; try apply H4.
+  rewrite Cinv_l; try apply C0_fst_neq; try apply Rgt_neq_0;
+  try apply mixed_state_trace_gt0; try apply H4. reflexivity.
+  destruct H4.
+  auto_wf. rewrite H17.
+  unfold outer_product.  rewrite trace_mult'.
+  destruct H2. rewrite H18.
+  rewrite trace_mult'. 
+  destruct H3. rewrite H19.
+  repeat rewrite trace_I.
+  rewrite <-RtoC_inv; try lra. rewrite Rinv_1. 
+  Msimpl. rewrite <-kron_mixed_product.
+  reflexivity. 
+Qed.
   
   Theorem  rule_odotT: forall qs1 qs2, 
   (((qs1) ⊗* (qs2)) ->>
@@ -373,31 +470,6 @@ match mu0, mu1 with
 |_, _=> False
 end. *)
 
-
-Lemma WF_dstate_per_state: forall s e (x:cstate ) (mu:dstate s e),
-(d_find x mu) <>Zero -> (WF_dstate mu -> WF_qstate (d_find x mu)) .
-Proof. intros s e x (mu, IHmu0). induction mu. 
-       simpl. intuition.
-       destruct a.
-       unfold WF_dstate.
-       unfold d_find. unfold StateMap.find.
-       simpl. intros. 
-       inversion_clear H0.  
-       destruct (Cstate_as_OT.compare x c).
-       simpl. simpl in H. destruct H. 
-       reflexivity.
-       simpl. 
-       assumption.
-       unfold d_find in IHmu.
-       unfold StateMap.find in IHmu.
-       inversion_clear IHmu0.
-       unfold WF_dstate in IHmu.
-       unfold d_trace in IHmu.
-       simpl in IHmu.
-       apply IHmu in H0.
-       assumption.
-       assumption. assumption.
-Qed. 
 
 
 

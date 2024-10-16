@@ -310,21 +310,8 @@ Proof. intros. assert(0<s_trace st). apply WF_state_in01. intuition.
       lra.
 Qed.
 
-Lemma big_sum_0_R : forall n,
-(Σ (fun _ :nat =>0%R ) n)= 0%R. 
-Proof. 
-intros.
-  induction n.
-  - reflexivity.
-  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
-  rewrite IHn.   
-  rewrite Cplus_0_r. easy.
-Qed.      
 
-Lemma  Zero_trace: forall n, @trace n Zero=C0.
-Proof. intros. unfold Zero.  unfold trace.
- apply (big_sum_0_R n). 
-Qed.
+
 
 Lemma  WF_state_not_Zero{s e:nat}: forall (st:state s e),  
 WF_state st -> snd st <> Zero .
@@ -1179,13 +1166,18 @@ Qed.
 
 
 Lemma  Forall_WWF_WF{s e:nat}: forall (mu_n:list (dstate s e)),
-Forall (fun x : dstate s e => WF_dstate x) mu_n->
-Forall (fun x : dstate s e => WWF_dstate x) mu_n .
-Proof. induction mu_n.  intros;
-      apply Forall_nil.
-       intros. inversion_clear H.
-      econstructor. apply WWF_dstate_to_WF_dstate.
-      assumption. apply IHmu_n. assumption.
+Forall (fun x : dstate s e => WF_dstate x) mu_n<->
+Forall (fun x : dstate s e => WWF_dstate x) mu_n /\
+Forall  (fun x : dstate s e =>  d_trace x <=1 ) mu_n.
+Proof. induction mu_n; split; intros;
+      try split; try apply Forall_nil;
+       inversion_clear H;
+      econstructor; try  apply WWF_dstate_to_WF_dstate;
+      try assumption; try apply H0;try  apply IHmu_n; try assumption.
+      inversion_clear H0. inversion_clear H1.
+      auto. 
+      inversion_clear H0. inversion_clear H1.
+      auto. 
 Qed.
 
 Lemma d_trace_le_1_big_dapp{s e:nat}: forall (p_n:list  R) (mu_n:list (dstate s e)) (mu:dstate s e), 

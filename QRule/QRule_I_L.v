@@ -19,7 +19,7 @@ From Quan Require Import Quantum.
 From Quan Require Import QState_L.
 From Quan Require Import QIMP_L.
 From Quan Require Import QAssert_L.
-From Quan Require Import Basic_Supplement.
+From Quan Require Import Par_trace.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_E_L.
 Require Import Forall_two.

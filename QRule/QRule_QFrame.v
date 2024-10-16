@@ -126,11 +126,14 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
          rewrite IHb. reflexivity. assumption. 
          simpl in *. apply cstate_eq_union in H.
          rewrite IHb1. rewrite IHb2.
-         reflexivity. intuition. intuition.   
-  Admitted.
+         reflexivity. intuition. intuition. 
+         simpl in *. apply cstate_eq_union in H.  
+         rewrite IHb1. rewrite IHb2.
+         reflexivity. intuition. intuition.  
+  Qed.
   
   
-  Lemma cstate_eq_P{ s e:nat}: forall c1 c2 P (q: qstate s e),
+  Lemma cstate_eq_P{ s e:nat}: forall P c1 c2  (q: qstate s e),
   cstate_eq c1 c2 (Free_pure P)->
   State_eval P (c1, q)->
   State_eval P (c2, q).
@@ -138,7 +141,19 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
          simpl. simpl in H0.
          rewrite<- (cstate_eq_b c1).
          assumption. assumption.
-         simpl in *.
+         simpl in *. 
+         admit. admit.
+         simpl in *. 
+         rewrite (cstate_eq_a _  c1).
+         apply IHP with ((c_update i (aeval (c1, q) a) c1)).
+         unfold cstate_eq in *.
+         intros. destruct (eq_dec j i).
+          rewrite e0.
+         repeat rewrite c_update_find_eq.
+         reflexivity. 
+         repeat rewrite c_update_find_not; try lia.
+         apply H. assumption. assumption. 
+         admit.
   Admitted.
   
   
@@ -1412,74 +1427,6 @@ Proof. induction mu1; intros mu2 s0 e0 s1 e1 Hs; intros. destruct mu2. intuition
 Qed.
 
 
-Lemma  super_0{ m n:nat}:  forall (M: Matrix m n) , 
-super M Zero = Zero.
-Proof. unfold super. intros. 
-rewrite Mmult_0_r. rewrite Mmult_0_l.
-reflexivity.     
-Qed.
-
-
-
-Lemma QInit_fun_sum{s' e':nat}: forall n s e (q: nat-> qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
-QInit_fun s e (@big_sum (Matrix (2^(e'-s')) (2^(e'-s'))) _ q n) =
-@big_sum  (Matrix (2^(e'-s')) (2^(e'-s'))) _ (fun i => QInit_fun s e (q i)) n .
-Proof. induction n;  intros; unfold q_update; unfold super; unfold qstate.
-simpl.  unfold QInit_fun. 
-apply (@big_sum_0_bounded (Matrix (2 ^ (e' - s')) (2 ^ (e' - s')))).
-intros.
-assert(2^(e'-s')= (2^(s-s')) * (2^(e-s)) * (2^(e'-e))).
-type_sovle'. destruct H1. unfold q_update.
-rewrite super_0. reflexivity.  
-simpl.  rewrite <-IHn.
-rewrite <-QInit_fun_plus. f_equal.
-assumption. assumption.
-Qed.
-
-
-Lemma QUnit_One_fun_sum{s' e':nat}: forall n s e U (q: nat-> qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
-QUnit_One_fun s e U (big_sum q n) =
-big_sum (fun i => QUnit_One_fun s e U (q i)) n .
-Proof. induction n;  intros.
-simpl. unfold QUnit_One_fun. unfold q_update.
-apply (@super_0 (2 ^ (e' - s')) (2 ^ (e' - s'))).
-simpl. rewrite <-IHn.
-symmetry.
-apply QUnit_One_fun_plus. 
-assumption. assumption.
-Qed.  
-
-
-
-
-Lemma QUnit_Ctrl_fun_sum{s' e':nat}: forall n s0 e0 s1 e1 U (q: nat-> qstate s' e'), 
-s'<=s0/\ s0<=e0 /\ e0<=s1 /\ s1 <= e1 /\ e1 <=e'->
-QUnit_Ctrl_fun s0 e0 s1 e1  U (big_sum q n) =
-big_sum (fun i => QUnit_Ctrl_fun s0 e0 s1 e1  U (q i)) n .
-Proof. induction n;  intros;
-simpl. unfold QUnit_Ctrl_fun. unfold q_update.
-apply (@super_0 (2 ^ (e' - s')) (2 ^ (e' - s'))).
-rewrite <-IHn.
-symmetry.
-apply QUnit_Ctrl_fun_plus. 
-assumption. assumption.
-Qed.
-
-Lemma QMeas_fun_sum{s' e':nat}: forall n s e j (q: nat-> qstate s' e'), 
-s'<=s /\ s<=e /\ e <=e'->
-QMeas_fun s e j (big_sum q n) =
-big_sum (fun i => QMeas_fun s e j (q i)) n .
-Proof. induction n;  intros.
-simpl. unfold QMeas_fun . unfold q_update.
-apply (@super_0 (2 ^ (e' - s')) (2 ^ (e' - s'))).
-simpl. rewrite <-IHn.
-symmetry.
-apply QMeas_fun_plus. 
-assumption. assumption.
-Qed.
-
 
 Lemma dstate_Separ_Qinit{s e:nat}: forall c (q:qstate s e) s0 e0 s1 e1 s' e',
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
@@ -2005,9 +1952,17 @@ Proof. intros.   destruct H1. econstructor.
        rewrite<- Mixed_State_aux_to_Mix_State in *.
        destruct H1. split. apply Mixed_State_aux_big_sum.
        lia. intros. apply H. lia. destruct H0.
-       exists x.  intuition. apply Rle_trans with (Cmod (@trace (2^(e-s)) (big_sum f n))).
-       admit. assumption. assumption.
-Admitted.
+       exists x.  intuition. 
+       apply Rle_trans with (Cmod (@trace (2^(e-s)) (@big_sum (Matrix (2^(e-s)) (2^(e-s))) _  f n))).
+        repeat  rewrite big_sum_Cmod.
+        apply big_sum_le. intros. 
+        apply H in H5. destruct H5. 
+        apply mixed_state_Cmod_1_aux in H5. lra.
+        rewrite H5. rewrite Zero_trace. rewrite Cmod_0.
+        lra. lia. intros. apply H. assumption.
+        intros. apply H. lia.   
+        assumption. assumption.
+Qed.
 
 
 Lemma  State_eval_plus'{s e:nat}: forall F c (q q0: qstate s e),
@@ -2162,46 +2117,6 @@ Proof. intros. destruct H0. destruct H0. rewrite H1.
 Qed.
 
 
-
-Lemma QInit_Zero{ s' e':nat}: forall s e ,
- (@QInit_fun s' e' s e Zero) = @Zero s' e'.
-Proof.  intros.  unfold QInit_fun. unfold q_update.
-apply (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
-intros. apply super_0. 
-Qed. 
-
-
-Lemma QUnit_One_Zero{s' e'}: forall s e (U:Square (2^(e'-s'))),
- (@QUnit_One_fun s' e' s e U Zero) = Zero.
-Proof. intros. unfold QUnit_One_fun. unfold q_update.
-apply (@super_0 (2^(e'-s'))). 
-Qed.
-
-
-Lemma QUnit_Ctrl_Zero{s' e'}: forall s0 e0 s1 e1  (U:nat ->Square (2^(e1-s1))),
-(@QUnit_Ctrl_fun s' e' s0 e0 s1 e1 U Zero= Zero).
-Proof. 
-intros. unfold QUnit_Ctrl_fun. unfold q_update.
-apply (@super_0 (2^(e'-s'))).
-Qed.
-
-Lemma QMeas_Zero{s' e'}: forall s e  j,
-@QMeas_fun s' e' s e j Zero = Zero.
-Proof. intros. unfold QMeas_fun. unfold q_update.
-apply (@super_0 (2^(e'-s'))).
-Qed.
-
-Lemma Par_trace_Zero{s' e'}: forall l r,
-@PMpar_trace s' e' Zero l r = Zero.
-Proof. unfold PMpar_trace.  intros.
-unfold PMRpar_trace. 
-apply (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
-intros. 
-unfold PMLpar_trace.
-rewrite  (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
-Msimpl. reflexivity.
-intros. Msimpl. reflexivity.
-Qed.
 
 
 Lemma QExp_eval_sub: forall (qs: QExp) s e c (q1 q2 q': qstate s e) ,
@@ -2584,6 +2499,13 @@ assumption.
 lia. lia. lia. lia. lia.     
 Qed.
 
+Lemma d_par_trace_not_nil{s e:nat}: forall s' e' (mu: list (state s e)) (mu':list (state s' e')),
+d_par_trace mu s' e'= mu'->
+mu <> [] -> mu'<>[].
+Proof. induction mu; intros. destruct H0. reflexivity.
+       inversion_clear H. destruct a.  simpl.
+       discriminate. 
+Qed.
 
 
 Lemma r4{s e:nat}: forall c s0 e0 s1 e1
@@ -2952,7 +2874,19 @@ apply Nat.eq_dec. apply Nat.eq_dec. }  }
   rewrite <-H5. apply WF_d_par_trace. lia.
   eapply (WF_qstate_QMeas_app s0 e0 q c i (2 ^ (e0 - s0)) ). lia.  
  lia.    inversion_clear Hw. assumption.  assumption.
-   apply pow_gt_0. admit.
+   apply pow_gt_0. apply d_par_trace_not_nil with mu''.
+   assumption. intro. assert(d_trace_aux mu'' =0%R).
+   rewrite H6. reflexivity. 
+   assert(d_trace_aux mu'' =  (s_trace (c,q))).
+   apply QMeas_trace' with s0 e0 i. intuition.
+   lia. apply Mixed_State_aux_to_Mix_State.
+   inversion_clear Hw. apply H8. assumption.
+   assert(s_trace (c,q)>0)%R. unfold  s_trace.
+   simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+   apply H9. rewrite<- H8 in H9. rewrite H7 in H9.
+   lra. lia. simpl. intros. apply QMeas_fun_ge_0; try lia. 
+   apply Mixed_State_aux_to_Mix_State. inversion_clear Hw.
+   apply H5. 
  apply d_seman_app_aux.
  apply WF_d_par_trace. lia.  
  apply WF_ceval  with <{ i :=M [[s0 e0]] }>  [(c, q)]. 
@@ -3000,7 +2934,20 @@ apply WF_d_par_trace. lia.
 eapply (WF_qstate_QMeas_app s0 e0 q c i (2 ^ (e0 - s0)) ). lia.  
 lia.  inversion_clear Hw.
 assumption. assumption. 
- apply pow_gt_0. admit.
+ apply pow_gt_0. apply d_par_trace_not_nil with mu''.
+ assumption. intro. assert(d_trace_aux mu'' =0%R).
+ rewrite H6. reflexivity. 
+ assert(d_trace_aux mu'' =  (s_trace (c,q))).
+ apply QMeas_trace' with s0 e0 i. intuition.
+ lia. apply Mixed_State_aux_to_Mix_State.
+ inversion_clear Hw. apply H8. assumption.
+ assert(s_trace (c,q)>0)%R. unfold  s_trace.
+ simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+ apply H9. rewrite<- H8 in H9. rewrite H7 in H9.
+ lra. lia. simpl. intros.
+  apply QMeas_fun_ge_0; try lia.  
+   apply Mixed_State_aux_to_Mix_State. inversion_clear Hw.
+   apply H5. 
 apply IHmu. lia.  inversion_clear Hw. assumption.
 assumption. 
 inversion  H0; subst. intuition.
@@ -3010,14 +2957,7 @@ destruct p. simpl. assumption.
 Admitted.
 
 
-Lemma Odot_Sepear'''{ s x e:nat}: forall (q: qstate s e),
-s<=x/\x<=e ->
-@Mixed_State (2^(e-s)) q->
-@Par_Pure_State (2^(e-x)) (PMpar_trace q x e)->
-exists (q1:qstate s x) (q2: qstate x e), 
-and (@WF_qstate  s x q1 /\ @WF_qstate x e q2) 
-(q = @kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) q1 q2).
-Proof. Admitted.
+
 
 Lemma seman_eq_two'''{s e:nat}: forall F r c (q:qstate s e),
 Considered_Formula (F) /\
@@ -3258,13 +3198,19 @@ Proof.  destruct s. simpl. reflexivity. simpl.
       rewrite H. reflexivity.  
 Qed.
 
+Lemma subset_empty: forall a, NSet.Subset NSet.empty a.
+Proof. intros.  pose (NSet.empty_1). unfold NSet.Empty in e.
+       unfold NSet.Subset. intros. apply e in H. destruct H.
+Qed.
+
 Lemma Qsys_subset: 
 forall r s e l  : nat,
 s <=l /\ l <= r /\ r <= e
 ->NSet.Subset (Qsys_to_Set l r) (Qsys_to_Set s e).
 Proof.
        unfold Qsys_to_Set. induction r; intros. 
-      simpl. admit.
+       pose (NSet.empty_1). unfold NSet.Empty in e0.
+      simpl. apply subset_empty.
       simpl. 
       destruct H. destruct H0.
       assert(l=S r \/ l<> S r).
@@ -3273,7 +3219,7 @@ Proof.
       rewrite H2. 
        assert(S r <? S r =false).
        apply ltb_ge. lia. 
-       rewrite H3.   admit.
+       rewrite H3. apply subset_empty. 
        assert(l < S r).
        lia. apply Lt_n_i in H3. 
        rewrite H3.
@@ -3290,42 +3236,565 @@ Proof.
        destruct H6. rewrite H6 in *.
        rewrite Qsys_to_Set_empty in H4.
        apply NSet.add_3 in H4.
-       admit. lia. 
+       pose(NSet.empty_1). unfold NSet.Empty in e0.
+       apply e0 in H4. destruct H4. 
+        lia. 
        apply IHr with l.
        lia.
        apply NSet.add_3 in H4.
        assumption.
        lia.  
-Admitted.
+Qed.
+
+
+Lemma option_not_None{ A:Type }: forall (s: option A), 
+s<> None -> exists a, s= Some a. 
+Proof. intros.  destruct s. exists a. reflexivity.
+      destruct H. reflexivity.  
+  
+Qed.
+
+
+Lemma min_empty : forall s, 
+NSet.Empty s -> 
+NSet.min_elt s = None .
+Proof. intros. unfold NSet.Empty in H. 
+       apply Classical_Prop.NNPP.
+      intro. apply option_not_None in H0.
+      destruct H0. pose (H  x).
+      destruct n. apply NSet.min_elt_1. assumption.
+Qed.
+
+Lemma max_empty : forall s, 
+NSet.Empty s -> 
+NSet.max_elt s = None .
+Proof. intros. unfold NSet.Empty in H. 
+      apply Classical_Prop.NNPP.
+      intro. apply option_not_None in H0.
+      destruct H0. pose (H  x).
+      destruct n. apply NSet.max_elt_1. assumption.
+Qed.
+
+
+Lemma min_not_empty : forall s, 
+~NSet.Empty s -> 
+(exists a, NSet.min_elt s = Some a) .
+Proof. intros. apply option_not_None. 
+       intro. apply NSet.min_elt_3 in H0. 
+       destruct H. assumption.
+Qed.
+
+Lemma max_not_empty : forall s, 
+~NSet.Empty s -> 
+(exists a, NSet.max_elt s = Some a) .
+Proof. intros. apply option_not_None. 
+       intro. apply NSet.max_elt_3 in H0. 
+       destruct H. assumption.
+Qed.
+
+
+Lemma Nexist: forall (A:Type)(P:A->Prop),
+(~(exists x, (P x)))->(forall x, ~(P x) ).
+Proof. intros. unfold not in H. unfold not.
+       intros. assert((exists x : A, P x)).
+       exists x. assumption.
+       apply H in H1.
+      assumption.
+Qed. 
+
+
+Lemma  not_empty_some:  forall s, 
+~ NSet.Empty s -> (exists a, NSet.In a s).
+Proof. intros. unfold NSet.Empty in *.
+       apply Classical_Prop.NNPP.
+       intro. destruct H.   apply (Nexist NSet.elt). 
+       assumption.
+Qed.
+
 
 
 Lemma min_le_max: forall (s: NSet.t),
 (option_nat (NSet.min_elt s)) <= option_nat (NSet.max_elt s).
-Proof.  Admitted. 
+Proof. intros. 
+       assert(NSet.Empty s\/ ~(NSet.Empty s)).
+       apply Classical_Prop.classic.
+       destruct H. rewrite(min_empty s H).
+       rewrite (max_empty s H). simpl. lia.
+       pose H. pose H.  apply max_not_empty in n. 
+       apply min_not_empty in n0.
+       destruct n0. destruct n.
+       apply not_empty_some in H. 
+       destruct H. pose H.   
+       apply (@NSet.min_elt_2 s x x1 ) in i; try assumption.
+       apply (@NSet.max_elt_2 s x0 x1 ) in H; try assumption.
+       rewrite H1. rewrite H0. simpl. lia.   
+Qed. 
 
 Lemma In_min_max: forall (s: NSet.t),
 NSet.Subset s 
-(Qsys_to_Set (option_nat (NSet.min_elt s)) (option_nat (NSet.max_elt s))).
-Proof.  intros. unfold NSet.Subset. intros. 
+(Qsys_to_Set (option_nat (NSet.min_elt s)) (option_nat (NSet.max_elt s) + 1)).
+Proof.  intros. unfold NSet.Subset. intros.
+assert(NSet.Empty s\/ ~(NSet.Empty s)).
+apply Classical_Prop.classic.
+destruct H0. unfold NSet.Empty in H0. pose (H0 a).
+ destruct n. assumption.
+pose H0. pose H0.  apply max_not_empty in n. 
+apply min_not_empty in n0.
+destruct n0. destruct n.
+pose H. 
+apply (@NSet.min_elt_2 s x a ) in i; try assumption.
+apply (@NSet.max_elt_2 s x0 a ) in H; try assumption.
+rewrite H1. rewrite H2. simpl.
+rewrite In_Qsys. lia. lia.    
+Qed. 
+
+Lemma  empty_Empty: forall s, 
+NSet.Equal s NSet.empty <-> NSet.Empty s.
+Proof. unfold NSet.Equal. unfold NSet.Empty.
+       intros. split;intros.
+       intro. apply H in H0. 
+       pose (NSet.empty_1 ).
+       unfold NSet.Empty in e.
+       apply e in H0. 
+      destruct H0.
+      split; intros. apply H in H0.
+      destruct H0. 
+      pose (NSet.empty_1 ).
+       unfold NSet.Empty in e.
+       apply e in H0. 
+      destruct H0.
+ 
+  
+Qed.
+
+Lemma min_1: forall x s,
+~NSet.Empty s -> NSet.In x s ->
+(forall a, NSet.In a s-> x<=a)->
+NSet.min_elt s = Some x.
+Proof. intros. 
+       apply min_not_empty in H. 
+       destruct H.  
+       pose H. pose H. 
+       apply (@NSet.min_elt_2 _ _ x)in e.
+       apply NSet.min_elt_1 in e0. 
+       apply H1 in e0.
+       assert( x= x0). lia.
+       rewrite H2. assumption.
+       assumption.  
+
+       
+Qed.
+
+Lemma max_1: forall x s,
+~NSet.Empty s -> NSet.In x s ->
+(forall a, NSet.In a s-> x>=a)->
+NSet.max_elt s = Some x.
+Proof. intros. 
+       apply max_not_empty in H. 
+       destruct H.  
+       pose H. pose H. 
+       apply (@NSet.max_elt_2 _ _ x)in e.
+       apply NSet.max_elt_1 in e0. 
+       apply H1 in e0.
+       assert( x= x0). lia.
+       rewrite H2. assumption.
+       assumption.  
+Qed.
+
+
+
+Lemma  min_eq: forall x y, 
+NSet.Equal x y ->
+NSet.min_elt x = NSet.min_elt y.
+Proof. intros.
+assert(NSet.Empty x\/ ~(NSet.Empty x)).
+apply Classical_Prop.classic. destruct H0.
+assert(NSet.Empty y).  
+rewrite <-empty_Empty in *. rewrite <-H0. rewrite <-H. reflexivity.
+ repeat rewrite min_empty; try assumption. reflexivity.
+ assert(~ NSet.Empty y).
+ rewrite <-empty_Empty in *. intro. destruct H0.
+  rewrite H. assumption.
+  pose H0. pose H1. 
+  apply not_empty_some in n. 
+  apply min_not_empty in H0. 
+  apply min_not_empty in n0.
+  destruct H0. destruct n0. destruct n.
+  unfold NSet.Equal in H.
+  rewrite H0. 
+  symmetry. apply min_1. assumption.
+  apply NSet.min_elt_1 in H0. apply H . assumption.
+  intros. apply H in H4. 
+  apply (@NSet.min_elt_2 _ _ a) in H0; try assumption.
+  lia.
+Qed. 
+
+Lemma  max_eq: forall x y, 
+NSet.Equal x y ->
+NSet.max_elt x = NSet.max_elt y.
+Proof. intros.
+assert(NSet.Empty x\/ ~(NSet.Empty x)).
+apply Classical_Prop.classic. destruct H0.
+assert(NSet.Empty y).  
+rewrite <-empty_Empty in *. rewrite <-H0. rewrite <-H. reflexivity.
+ repeat rewrite max_empty; try assumption. reflexivity.
+ assert(~ NSet.Empty y).
+ rewrite <-empty_Empty in *. intro. destruct H0.
+  rewrite H. assumption.
+  pose H0. pose H1. 
+  apply not_empty_some in n. 
+  apply max_not_empty in H0. 
+  apply max_not_empty in n0.
+  destruct H0. destruct n0. destruct n.
+  unfold NSet.Equal in H.
+  rewrite H0. 
+  symmetry. apply max_1. assumption.
+  apply NSet.max_elt_1 in H0. apply H . assumption.
+  intros. apply H in H4. 
+  apply (@NSet.max_elt_2 _ _ a) in H0; try assumption.
+  lia.
+Qed. 
+
+Lemma union_empty_r: forall x : NSet.t, 
+NSet.Equal (NSet.union x NSet.empty ) x.
+Proof. intros. unfold NSet.Equal. unfold NSet.union.
+       intros. split. intros.
+       apply NSet.union_1 in H. destruct H.
+       assumption. apply In_empty in H. destruct H.
+       intros. apply NSet.union_2. assumption.
+       
+Qed.
+
+
+Lemma min_union: forall x y, 
+(NSet.Equal x NSet.empty -> 
+option_nat (NSet.min_elt (NSet.union x y)) = (option_nat (NSet.min_elt y)) ) /\
+(NSet.Equal y NSet.empty -> 
+option_nat (NSet.min_elt (NSet.union x y)) = (option_nat (NSet.min_elt x)) ) /\
+(~ NSet.Equal x NSet.empty ->  ~ NSet.Equal y NSet.empty -> 
+option_nat (NSet.min_elt (NSet.union x y)) = min (option_nat (NSet.min_elt x))
+ (option_nat (NSet.min_elt y))).
+Proof. intros. split.  intros. 
+      assert(NSet.Equal (NSet.union x y) y).
+      rewrite H. rewrite union_empty_refl. reflexivity.
+      rewrite (min_eq _ y). reflexivity. assumption.
+      split. 
+      intros. 
+      assert(NSet.Equal (NSet.union x y) x).
+      rewrite H. apply    union_empty_r. 
+      rewrite (min_eq _ x). reflexivity. assumption.
+      intros.
+      assert (~NSet.Equal (NSet.union x y) NSet.empty).
+      intro. apply union_empty in H1. destruct H1. 
+      destruct H. assumption.
+      rewrite empty_Empty in H.
+      rewrite empty_Empty in H0.
+      rewrite empty_Empty in H1.
+      apply min_not_empty in H.
+      apply min_not_empty in H0.
+      destruct H. destruct H0.
+      rewrite H. rewrite H0.
+      simpl.   
+      assert(x0<=x1\/ ~ (x0 <=x1)).
+      apply Classical_Prop.classic.
+      destruct H2.  rewrite min_l; try assumption.
+      assert((NSet.min_elt (NSet.union x y))= Some x0).
+      apply min_1. assumption. 
+      apply NSet.union_2. 
+      apply NSet.min_elt_1; try assumption. 
+      intros. apply NSet.union_1 in H3.
+      destruct H3. 
+      apply (@NSet.min_elt_2 _ _ a) in H; try assumption. lia.
+      apply (@NSet.min_elt_2 _ _ a) in H0; try assumption. lia.
+      rewrite H3. reflexivity.
+      rewrite min_r; try assumption.
+      assert((NSet.min_elt (NSet.union x y))= Some x1).
+      apply min_1. assumption.  
+      apply NSet.union_3. 
+      apply NSet.min_elt_1; try assumption. 
+      intros. apply NSet.union_1 in H3.
+      destruct H3. 
+      apply (@NSet.min_elt_2 _ _ a) in H; try assumption. lia.
+      apply (@NSet.min_elt_2 _ _ a) in H0; try assumption. lia.
+      rewrite H3. reflexivity. lia. 
+
+Qed.
+
+
+Lemma max_union: forall x y, 
+(NSet.Equal x NSet.empty -> 
+option_nat (NSet.max_elt (NSet.union x y)) = (option_nat (NSet.max_elt y)) ) /\
+(NSet.Equal y NSet.empty -> 
+option_nat (NSet.max_elt (NSet.union x y)) = (option_nat (NSet.max_elt x)) ) /\
+(~ NSet.Equal x NSet.empty ->  ~ NSet.Equal y NSet.empty -> 
+option_nat (NSet.max_elt (NSet.union x y)) = max (option_nat (NSet.max_elt x))
+ (option_nat (NSet.max_elt y))).
+ Proof. intros. split.
+ intros. 
+ assert(NSet.Equal (NSet.union x y) y).
+ rewrite H. rewrite union_empty_refl. reflexivity.
+ rewrite (max_eq _ y). reflexivity. assumption.
+ split. 
+ intros. 
+ assert(NSet.Equal (NSet.union x y) x).
+ rewrite H. apply    union_empty_r. 
+ rewrite (max_eq _ x). reflexivity. assumption.
+ intros.
+ assert (~NSet.Equal (NSet.union x y) NSet.empty).
+ intro. apply union_empty in H1. destruct H1. 
+ destruct H. assumption.
+ rewrite empty_Empty in H.
+ rewrite empty_Empty in H0.
+ rewrite empty_Empty in H1.
+ apply max_not_empty in H.
+ apply max_not_empty in H0.
+ destruct H. destruct H0.
+ rewrite H. rewrite H0.
+ simpl.   
+ assert(x0<=x1\/ ~ (x0 <=x1)).
+ apply Classical_Prop.classic.
+ destruct H2.  rewrite max_r; try assumption.
+ assert((NSet.max_elt (NSet.union x y))= Some x1).
+ apply max_1. assumption. 
+ apply NSet.union_3. 
+ apply NSet.max_elt_1; try assumption. 
+ intros. apply NSet.union_1 in H3.
+ destruct H3. 
+ apply (@NSet.max_elt_2 _ _ a) in H; try assumption. lia.
+ apply (@NSet.max_elt_2 _ _ a) in H0; try assumption. lia.
+ rewrite H3. reflexivity.
+ rewrite max_l; try assumption.
+ assert((NSet.max_elt (NSet.union x y))= Some x0).
+ apply max_1. assumption.  
+ apply NSet.union_2. 
+ apply NSet.max_elt_1; try assumption. 
+ intros. apply NSet.union_1 in H3.
+ destruct H3. 
+ apply (@NSet.max_elt_2 _ _ a) in H; try assumption. lia.
+ apply (@NSet.max_elt_2 _ _ a) in H0; try assumption. lia.
+ rewrite H3. reflexivity. lia. Qed. 
+
+Lemma rule_f_classic: forall   c s e (mu mu':list (cstate * qstate s e )) F,
+(Considered_Formula F /\ fst (Free_State F) < snd (Free_State F))->
+WF_dstate_aux mu ->
+State_eval_dstate F mu->
+ceval_single c mu mu'-> 
+NSet.Equal (snd (MVar c)) NSet.empty ->
+NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty) ->
+State_eval_dstate F mu'.
+Proof. induction c. 
+-intros. apply ceval_skip_1 in H2. subst. assumption.
+-admit.
+-induction mu; intros. destruct H1. destruct mu;inversion H2; subst.
+ inversion_clear H10. simpl. econstructor.
+ inversion_clear H1. 
+ apply cstate_eq_F with sigma.
+   simpl in H4. 
+   unfold cstate_eq.
+   intros. rewrite c_update_find_not.
+   reflexivity.
+   unfold not.
+   intros. rewrite<-H7 in *.
+   apply (In_inter_empty _ _ i) in H4.
+   destruct H4. assumption. 
+   apply NSet.add_1. reflexivity.
+    assumption. 
+   econstructor.
+   apply d_seman_app_aux. 
+    apply WF_state_dstate_aux.
+   apply WF_state_eq with (sigma, rho).
+   reflexivity. inversion_clear H0. assumption.
+    apply WF_ceval with <{ i := a }> (p :: mu).
+   inversion_clear H0. assumption.
+   assumption. 
+   simpl. econstructor.
+   apply cstate_eq_F with sigma.
+   simpl in H1. 
+   unfold cstate_eq.
+   intros. rewrite c_update_find_not.
+   reflexivity. intro. rewrite H6 in *.
+   apply (In_inter_empty _ _ j) in H4.
+   destruct H4. assumption. 
+   apply NSet.add_1. reflexivity. inversion_clear H1.
+    assumption. econstructor.
+apply IHmu. assumption. inversion_clear H0. assumption.
+inversion_clear H1.
+    assumption.
+inversion H0; subst.   intuition.
+assumption. assumption.
+-admit.
+-intros. simpl in H3. rewrite union_empty in H3.
+ simpl in H4. rewrite inter_union_dist in H4.
+ apply union_empty in H4. 
+ apply ceval_seq_1 in H2. destruct H2.
+ apply IHc2 with x; try assumption; try apply H2; try apply H3; try apply H4. 
+ apply WF_ceval with c1 mu; try assumption; try apply H2. 
+ apply IHc1 with mu; try assumption; try apply H2; try apply H3; try apply H4.
+- induction mu; intros. destruct H1.
+   inversion_clear H1. inversion_clear  H0.
+   inversion H2; subst;
+  destruct mu.
+  simpl in *.  rewrite inter_union_dist in H4.
+  apply union_empty in H3. apply union_empty in H4.
+  inversion_clear H15; try rewrite map2_nil_r.
+  apply IHc1 with [(sigma, rho)]; 
+  try apply WF_state_dstate_aux; try assumption; try apply H3; try apply H4.
+  econstructor. assumption. econstructor.
+  apply d_seman_app_aux. apply WF_ceval with c1 [(sigma, rho)];
+  try assumption.
+  apply WF_state_dstate_aux; try assumption. 
+  apply WF_ceval with  <{ if b then c1 else c2 end }> (p :: mu);
+  try apply WF_state_dstate_aux; try assumption.
+  simpl in *.  rewrite inter_union_dist in H4.
+  apply union_empty in H3. apply union_empty in H4.
+  apply IHc1 with [(sigma, rho)]; 
+  try apply WF_state_dstate_aux; try assumption; try apply H3; try apply H4.
+  econstructor. assumption. econstructor.
+  apply IHmu; try assumption; try apply H3; try apply H4.
+
+  simpl in *.  rewrite inter_union_dist in H4.
+  apply union_empty in H3. apply union_empty in H4.
+  inversion_clear H15; try rewrite map2_nil_r.
+  apply IHc2 with [(sigma, rho)]; 
+  try apply WF_state_dstate_aux; try assumption; try apply H3; try apply H4.
+  econstructor. assumption. econstructor.
+  apply d_seman_app_aux. apply WF_ceval with c2 [(sigma, rho)];
+  try assumption.
+  apply WF_state_dstate_aux; try assumption. 
+  apply WF_ceval with  <{ if b then c1 else c2 end }> (p :: mu);
+  try apply WF_state_dstate_aux; try assumption.
+  simpl in *.  rewrite inter_union_dist in H4.
+  apply union_empty in H3. apply union_empty in H4.
+  apply IHc2 with [(sigma, rho)]; 
+  try apply WF_state_dstate_aux; try assumption; try apply H3; try apply H4.
+  econstructor. assumption. econstructor.
+  apply IHmu; try assumption; try apply H3; try apply H4.
+
+-admit.
+-intros. simpl in H3.  
+Admitted.
+
+Lemma State_eval_dstate_dom{s e:nat}: forall (mu:list (cstate * qstate s e)) F, 
+State_eval_dstate F mu->
+fst (Free_State F) = snd (Free_State F) \/
+s <=fst (Free_State F) /\ fst (Free_State F) < snd (Free_State F) <= e.
+Proof. induction mu; intros. destruct H. 
+       inversion_clear H. destruct a. 
+        apply State_eval_dom in H0. assumption. 
+Qed.
+
+Lemma Qsys_to_Set_min_max: forall s e,
+s<e ->
+option_nat (NSet.min_elt (Qsys_to_Set s e)) = s/\
+option_nat (NSet.max_elt (Qsys_to_Set s e)) = e-1.
+Proof. intros. induction e.  simpl. lia.  
+   unfold Qsys_to_Set in *.
+      simpl. rewrite Lt_n_i; try assumption.
+      destruct (eq_dec s e). 
+      rewrite e0. rewrite Qsys_to_Set_empty.
+      rewrite Nat.sub_0_r. 
+       admit. 
+       assert(s<e). lia.
+Admitted.
+
+
+Lemma ceval_single_dom{ s e:nat}: forall c (mu mu': list (cstate * qstate s e)) , 
+ceval_single c mu mu' ->
+mu <> [] ->
+~NSet.Equal (snd (MVar c)) NSet.empty ->
+s<=option_nat (NSet.min_elt (snd (MVar c)))
+/\option_nat (NSet.max_elt (snd (MVar c))) < e .
+Proof. induction c. intros  mu mu' H Hnil H0; intros.
+simpl in *. try destruct H0; try reflexivity.
+-admit.
+-intros. try destruct H1; try reflexivity.
+-intros. try destruct H1; try reflexivity.
+-intros  mu mu' H Hnil H0; intros.
+apply ceval_seq_1 in H; destruct H. 
+simpl in H0. 
+pose (min_union (snd (MVar c1)) (snd (MVar c2))).
+destruct a.  destruct H2.
+pose (max_union (snd (MVar c1)) (snd (MVar c2))).
+destruct a. destruct H5. 
+assert(NSet.Equal (snd (MVar c1)) NSet.empty \/ ~NSet.Equal (snd (MVar c1)) NSet.empty ).
+apply Classical_Prop.classic. 
+destruct H7. pose H7. apply H1 in e0.
+apply H4 in H7. simpl. rewrite H7. rewrite e0.
+apply IHc2 with x mu'. apply H. admit.
+admit. 
+assert(NSet.Equal (snd (MVar c2)) NSet.empty \/ ~NSet.Equal (snd (MVar c2)) NSet.empty ).
+apply Classical_Prop.classic. destruct H8.
+pose H8. apply H2 in e0. apply H5 in H8.
+simpl. rewrite H8. rewrite e0. 
+apply IHc1 with mu x. apply H. assumption.
+assumption. 
+assert( x <> []).  admit.  destruct H.
+pose H7.
+pose H7. apply H3 in n ; try assumption.  
+apply H6 in n0; try assumption. simpl.
+pose (IHc1 mu x H Hnil H7). pose (IHc2 x mu' H10 H9 H8).
+rewrite n0.
+rewrite n. 
+split. apply min_glb. apply a. apply a0.
+apply max_lub_lt. apply a. apply a0.
+
+-induction mu; intros mu' H Hnil H0; intros.
+ inversion H; subst. destruct Hnil. reflexivity.
+ inversion H; subst.  
+ simpl in *.  
+ pose (min_union (snd (MVar c1)) (snd (MVar c2))).
+destruct a.  destruct H2.
+pose (max_union (snd (MVar c1)) (snd (MVar c2))).
+destruct a. destruct H5. 
+assert(NSet.Equal (snd (MVar c1)) NSet.empty \/ ~NSet.Equal (snd (MVar c1)) NSet.empty ).
+apply Classical_Prop.classic. 
+destruct H10. pose H10. apply H1 in e0.
+apply H4 in H10. rewrite H10. rewrite e0.
+admit. admit.
+admit. admit.
+-intros  mu mu' H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
+ simpl. pose  (Qsys_to_Set_min_max s0 e0).
+ destruct a. lia. rewrite H1. rewrite H2.
+ lia. 
+-intros  mu mu' H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
+simpl. pose  (Qsys_to_Set_min_max s0 e0).
+destruct a. lia. rewrite H1. rewrite H2.
+lia.
+intros  mu mu' H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
+ simpl. pose  (Qsys_to_Set_min_max s e).
+ destruct a. lia. admit.
+-intros  mu mu' H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
+simpl. pose  (Qsys_to_Set_min_max s0 e0).
+destruct a. lia. rewrite H1. rewrite H2.
+lia.
 Admitted. 
+
+
 
 Lemma rule_f: forall  F c s e (mu mu':list (cstate * qstate s e )) ,
 (Considered_Formula F /\ fst (Free_State F) < snd (Free_State F))->
 WF_dstate_aux mu ->
 State_eval_dstate F mu->
 ceval_single c mu mu'-> 
+~NSet.Equal (snd (MVar c)) NSet.empty ->
 NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty) ->
-((option_nat (NSet.max_elt (snd (MVar c)))) <=  (fst (Free_State F))
+((option_nat (NSet.max_elt (snd (MVar c)))) <  (fst (Free_State F))
 \/((snd (Free_State F))) <=  ((option_nat (NSet.min_elt (snd (MVar c)))))) ->
 State_eval_dstate F mu'.
 Proof. 
-    intros.
-    destruct H4.  
+    intros.  pose (@ceval_single_dom s e c mu mu').
+    destruct a. assumption. destruct mu. destruct H1.
+    discriminate. assumption.  
+    destruct H5.  
     assert(s <= option_nat (NSet.min_elt (snd (MVar c))) /\
     option_nat (NSet.min_elt (snd (MVar c))) <=
     fst (Free_State F) /\
     fst (Free_State F) < snd (Free_State F) /\ snd (Free_State F) <= e).
-    admit.
+    split. assumption. 
+    split. apply le_trans with (option_nat  (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia.  split. apply H.
+    apply State_eval_dstate_dom in H1. destruct H1. lia.
+    apply H1.  
     rewrite (State_dstate_free_eval _ _ (fst (Free_State (F)))
     (snd (Free_State (F)))); try lia. 
     rewrite <-(d_par_trace_assoc   mu' 
@@ -3344,19 +3813,21 @@ Proof.
     apply Par_trace_ceval_swap; try lia; try assumption.
     apply subset_trans with ((Qsys_to_Set
     (option_nat (NSet.min_elt (snd (MVar c))))
-       (option_nat (NSet.max_elt (snd (MVar c)))))).
+       (option_nat (NSet.max_elt (snd (MVar c))) + 1))).
     apply In_min_max. apply Qsys_subset.
-    split. lia. split. apply min_le_max.
-    apply le_trans with  (fst (Free_State F)).
-    assumption. lia. 
-    apply WF_Mixed_dstate. assumption.
+    split. lia. split. 
+    
+
+    apply le_trans with  (option_nat (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia. lia.  
     rewrite Heql0. apply r1; try assumption; try split; [apply H |try lia].
     apply subset_trans with ((Qsys_to_Set
     (option_nat (NSet.min_elt (snd (MVar c))))
-       (option_nat (NSet.max_elt (snd (MVar c)))))).
+       (option_nat (NSet.max_elt (snd (MVar c))) + 1))).
     apply In_min_max. apply Qsys_subset.
-    split. lia. split. apply min_le_max.
-    assumption.
+    split. lia. split. 
+    apply le_trans with  (option_nat (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia. lia. 
     rewrite Heql0. rewrite d_par_trace_assoc; try lia. 
     apply State_dstate_free_eval; try assumption; try lia. 
      apply WF_Mixed_dstate; assumption.
@@ -3368,44 +3839,51 @@ Proof.
     fst (Free_State F) <= fst (Free_State F) /\
     fst (Free_State F) <= snd (Free_State F) /\
     snd (Free_State F) <=
-    option_nat (NSet.max_elt (snd (MVar c))) <= e).
-    admit.
+    option_nat (NSet.max_elt (snd (MVar c))) + 1 <= e).
+    split. apply State_eval_dstate_dom in H1.
+    destruct H1. lia. apply H1.
+    split. lia. split. lia. split.
+    apply le_trans with (option_nat (NSet.min_elt (snd (MVar c)))).
+    assumption.
+    apply le_trans with  (option_nat (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia. lia. 
     rewrite (State_dstate_free_eval _ _ (fst (Free_State (F)))
     (snd (Free_State (F)))); try lia. 
     rewrite <-(d_par_trace_assoc   mu' 
-    (fst (Free_State F)) (option_nat (NSet.max_elt (snd (MVar c))))); try lia.   
+    (fst (Free_State F)) (option_nat (NSet.max_elt (snd (MVar c)))+ 1)); try lia.   
     remember ( (d_par_trace mu' (fst (Free_State F))
-    (option_nat (NSet.max_elt (snd (MVar c)))))).
+    (option_nat (NSet.max_elt (snd (MVar c)))+ 1))).
     remember ((d_par_trace mu
     (fst (Free_State F))
-    (option_nat (NSet.max_elt (snd (MVar c)))))).
+    (option_nat (NSet.max_elt (snd (MVar c))) + 1))).
     apply r4' with c (snd (Free_State F))
-    (option_nat (NSet.max_elt (snd (MVar c)))) l0; try assumption; try lia. 
-    rewrite Heql0. apply WF_d_par_trace; try lia; try assumption. 
+    (option_nat (NSet.max_elt (snd (MVar c))) + 1) l0; try assumption; try lia. 
+    rewrite Heql0. apply WF_d_par_trace; try lia; try assumption.  
     rewrite Heql. rewrite Heql0. 
     apply Par_trace_ceval_swap; try lia; try assumption.
     apply subset_trans with ((Qsys_to_Set 
     (option_nat (NSet.min_elt (snd (MVar c))))
-    (option_nat (NSet.max_elt (snd (MVar c)))))).
+    (option_nat (NSet.max_elt (snd (MVar c))) + 1))).
     apply In_min_max. apply  Qsys_subset .  split.
     apply le_trans with (snd (Free_State F)).
     lia. assumption. split. 
-    apply min_le_max. lia.  
-    apply WF_Mixed_dstate. assumption.
+    apply le_trans with  (option_nat (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia. lia.   
     rewrite Heql0. apply r1'; try assumption; try split; [apply H |try lia].
     apply subset_trans with ((Qsys_to_Set
     (option_nat (NSet.min_elt (snd (MVar c))))
-       (option_nat (NSet.max_elt (snd (MVar c)))))).
+       ((option_nat (NSet.max_elt (snd (MVar c)))) + 1))).
     apply In_min_max. apply Qsys_subset.
-    split. lia. split. apply min_le_max.
-    lia. 
+    split. lia. split. 
+    apply le_trans with  (option_nat (NSet.max_elt (snd (MVar c)))).
+    apply min_le_max. lia. lia. 
     rewrite Heql0. rewrite d_par_trace_assoc; try lia. 
     apply State_dstate_free_eval; try assumption; try lia. 
      apply WF_Mixed_dstate; assumption.
     apply WF_Mixed_dstate.
     apply WF_ceval with c mu. 
     assumption. assumption.
-Admitted.
+Qed.
 
 
 Lemma State_eval_odot:forall (s e : nat) (mu : list (cstate * qstate s e)) (F1 F2 : State_formula),
@@ -3472,8 +3950,6 @@ Proof. induction F;   intros.
        apply QExp_eval_dom in H1.
        unfold Free_State in *.
        lia.
-
-
 
        apply cstate_eq_union in H0. destruct H0.
        simpl in *;
@@ -3725,7 +4201,17 @@ apply Nat.eq_dec. apply Nat.eq_dec. }  }
   apply (WF_qstate_QMeas_app s0 e0 q c i ((2 ^ (e0 - s0)))).
   lia. lia. inversion_clear Hw.
   assumption.   assumption.
-   apply pow_gt_0. admit.
+   apply pow_gt_0.  
+   intro. assert(d_trace_aux mu'' =0%R).
+   rewrite H. reflexivity. 
+   assert(d_trace_aux mu'' =  (s_trace (c,q))).
+   apply QMeas_trace' with s0 e0 i. intuition.
+   lia. apply Mixed_State_aux_to_Mix_State.
+   inversion_clear Hw. apply H2. assumption.
+   assert(s_trace (c,q)>0)%R. unfold  s_trace.
+   simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+   apply H3. rewrite<- H2 in H3. rewrite H1 in H3.
+   lra. 
  apply d_seman_app_aux.
  apply WF_ceval  with <{ i :=M [[s0 e0]] }>  [(c, q)]. 
  apply WF_state_dstate_aux.
@@ -3759,7 +4245,17 @@ econstructor. assumption.
 apply (WF_qstate_QMeas_app s0 e0 q c i ((2 ^ (e0 - s0)))).
 lia. lia. inversion_clear Hw.
 assumption.   assumption.
- apply pow_gt_0. admit.
+ apply pow_gt_0. 
+ intro. assert(d_trace_aux mu'' =0%R).
+   rewrite H. reflexivity. 
+   assert(d_trace_aux mu'' =  (s_trace (c,q))).
+   apply QMeas_trace' with s0 e0 i. intuition.
+   lia. apply Mixed_State_aux_to_Mix_State.
+   inversion_clear Hw. apply H2. assumption.
+   assert(s_trace (c,q)>0)%R. unfold  s_trace.
+   simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+   apply H3. rewrite<- H2 in H3. rewrite H1 in H3.
+   lra. 
 apply IHmu1. lia.  inversion_clear Hw. assumption.
 inversion_clear Hw. assumption.
 assumption.
@@ -3772,7 +4268,7 @@ Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
 Considered_Formula F3 ->
 ({{F1}} c {{F2}}) 
 /\ (NSet.Equal (NSet.inter (fst (Free_state F3)) (fst (MVar c))) (NSet.empty) )
-/\ ((option_nat (NSet.max_elt (snd (MVar c)))) <=  fst (Free_State F3) \/
+/\ ((option_nat (NSet.max_elt (snd (MVar c)))) <  fst (Free_State F3) \/
 snd (Free_State F3) <= ((option_nat (NSet.min_elt (snd (MVar c))))))
 ->  {{F1 ⊙ F3}} c {{F2 ⊙ F3}}.
 Proof.  unfold hoare_triple.  intros F1 F2 F3 c HF3. intros. destruct H.
@@ -3800,12 +4296,19 @@ Proof.  unfold hoare_triple.  intros F1 F2 F3 c HF3. intros. destruct H.
         bdestruct (fst (Free_State F3) =? snd (Free_State F3)).
         apply Pure_eval_preserve with c mu;
         try assumption.  apply H2.
+        assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~NSet.Equal (snd (MVar c)) NSet.empty ).
+apply Classical_Prop.classic.  
+destruct H11. apply rule_f_classic with c mu; try assumption.
+split. assumption. 
+apply Considered_Formula_dom in HF3.
+lia. apply H2.
         apply rule_f  with  c mu; try assumption.
         split. assumption. 
         apply Considered_Formula_dom in HF3.
         lia. apply H2. apply H2.  
          admit.
 Admitted.
+
 
 
 

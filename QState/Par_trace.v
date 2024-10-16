@@ -11,7 +11,7 @@ From Coq Require Import Init.Nat.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import QState_L.
-
+From Quan Require Import ParDensityO.
 
 Delimit Scope C_scope with C.
 Local Open Scope C_scope.
@@ -401,6 +401,19 @@ Definition PMLpar_trace{s e:nat} (M: qstate s e ) (r:nat) : qstate s r:=
 
 Definition PMpar_trace{s e:nat} (M: qstate s e) (l:nat) (r:nat): qstate l r:=
     PMRpar_trace (PMLpar_trace M r) l.
+
+
+Lemma Par_trace_Zero{s' e'}: forall l r,
+@PMpar_trace s' e' Zero l r = Zero.
+Proof. unfold PMpar_trace.  intros.
+unfold PMRpar_trace. 
+apply (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
+intros. 
+unfold PMLpar_trace.
+rewrite  (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
+Msimpl. reflexivity.
+intros. Msimpl. reflexivity.
+Qed.
 
 Lemma Ptrace_l_r{ s e:nat}: forall (A:qstate s e) l r,
 PMpar_trace A  l r = big_sum (fun i : nat => big_sum

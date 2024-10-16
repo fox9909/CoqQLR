@@ -22,8 +22,8 @@ From Quan Require Import QIMP_L.
 From Quan Require Import QAssert_L.
 From Quan Require Import Par_trace.
 From Quan Require Import QRule_Q_L.
-From Quan Require Import QRule_E_L.
-From Quan Require Import QRule_I_L.
+(*From Quan Require Import QRule_E_L.
+From Quan Require Import QRule_I_L. *)
 
 Local Open Scope com_scope.
 
@@ -205,20 +205,7 @@ destruct H3.
 Qed.
 
 
-Lemma big_app_eq_bound'' {s e : nat}: forall (f1 f2 : nat -> cstate * qstate s e) 
-(n0 : nat) (mu1 : list (cstate * qstate s e)),
-big_app' f1 n0 mu1 ->
-(forall i : nat, i < n0 -> f1 i = f2 i) ->
-big_app' f2 n0 mu1.
-Proof. induction n0; intros; inversion H; subst.
-       econstructor. econstructor. rewrite <-H0. assumption. lia.
-       apply IHn0. assumption. intros. apply H0.
-       lia. rewrite H0.  
-       apply (QIMP_L.big_app_cons).  
-       rewrite <-H0. assumption. lia.
-       apply IHn0. assumption.  intros. apply H0.
-       lia. lia. 
-Qed.
+
 
 
 
@@ -226,7 +213,7 @@ Lemma Par_trace_ceval_swap: forall c s e (mu mu': list (cstate *qstate s e)) l r
 s<=l /\ l<=r /\ r<=e ->
 NSet.Subset (snd (MVar c)) (Qsys_to_Set l r)
 ->
-WF_Matrix_dstate mu ->
+WF_dstate_aux mu ->
 ceval_single c mu mu'->
 ceval_single c (d_par_trace mu l r )
 (d_par_trace mu' l r ).
@@ -241,7 +228,7 @@ Proof. induction c. intros.
         simpl d_par_trace.
         rewrite (state_eq_aexp  _ (c,(PMpar_trace q l r) )).
         econstructor. apply IHmu. assumption.
-        assumption. simpl in H1. intuition.
+        assumption. inversion_clear H1. intuition.
         assumption. reflexivity.  }
        { admit. }
        {intros. apply ceval_seq_1 in H2. 
@@ -252,8 +239,8 @@ Proof. induction c. intros.
        intuition.  intuition. intuition.
        apply IHc2. intuition. 
        simpl in H0. apply subset_union in H0.
-       intuition. 
-        admit. intuition.  }
+       intuition. apply WF_ceval with c1 mu; try assumption.
+       apply H2. intuition.  }
        {induction mu; intros. inversion H2; subst.
        simpl. econstructor.
        inversion H2; subst. 
@@ -265,7 +252,8 @@ Proof. induction c. intros.
       assert(d_par_trace [(sigma, rho)] l r = [(sigma, PMpar_trace rho l r)]).
       reflexivity. rewrite <-H3. apply IHc1. assumption.
       simpl in H0. apply subset_union in H0.
-       intuition. inversion_clear H1. simpl. intuition. assumption. 
+       intuition. apply WF_state_dstate_aux.
+        inversion_clear H1.  assumption. assumption. 
       rewrite d_par_trace_map2.
       apply E_IF_false. rewrite (state_eq_bexp _  (sigma, rho)).
       intuition. reflexivity.
@@ -275,7 +263,8 @@ Proof. induction c. intros.
       reflexivity. rewrite <-H3. apply IHc2.
       assumption.  
       simpl in H0. apply subset_union in H0.
-       intuition. inversion_clear H1. simpl. intuition.
+       intuition.  inversion_clear H1. 
+       apply WF_state_dstate_aux. assumption. 
       assumption. 
           }
       { admit. }
@@ -293,7 +282,8 @@ Proof. induction c. intros.
      assumption.
      split. intuition. simpl in H0.
      apply subset_Qsys in H0. lia. lia.  
-       inversion_clear H1. simpl. intuition. 
+       inversion_clear H1. apply WF_Mixed.
+       apply H3. 
      }
      { induction mu; intros. inversion H2; subst.
       simpl. econstructor.
@@ -309,8 +299,9 @@ Proof. induction c. intros.
      apply IHmu.  intuition. assumption. 
      inversion_clear H1. intuition.
      intuition. simpl in H0.
-     apply subset_Qsys in H0. lia. lia.  inversion_clear H1. assumption.
-     assumption.
+     apply subset_Qsys in H0. lia. lia.
+       inversion_clear H1. apply WF_Mixed.
+       apply H3. assumption.
     apply Nat.eq_dec.
      apply Nat.eq_dec.
      }
@@ -335,7 +326,8 @@ Proof. induction c. intros.
      simpl in H0.  apply subset_union in H0. 
      destruct H0. apply subset_Qsys in H3.
      apply subset_Qsys in H0. lia. lia. lia. 
-     inversion_clear H1. assumption.
+     inversion_clear H1.  apply WF_Mixed.
+     apply H3. 
      assumption.
      apply Nat.eq_dec.
      apply Nat.eq_dec.
@@ -356,8 +348,16 @@ Proof. induction c. intros.
       rewrite  <-PMpar_trace_ceval_swap_QMeas; try reflexivity.
      simpl in H0.  
      apply subset_Qsys in H0. lia. lia. 
-      inversion_clear H1; assumption.
-     assumption. 
+      inversion_clear H1;  apply WF_Mixed.
+      apply H6.
+     assumption. lia.  
+    intros.
+     simpl. 
+     assert(QMeas_fun s e i0 rho = Zero \/ QMeas_fun s e i0 rho <> Zero).
+     apply Classical_Prop.classic. destruct H4. 
+     right. assumption. left. apply WWF_qstate_QMeas; try lia; 
+     try assumption.    inversion_clear H1.
+     apply Mixed_State_aux_to_Mix_State. apply H5.
      }
 Admitted.
 
@@ -1591,6 +1591,14 @@ apply mixed_state_trace_gt0.
 assumption. lra.
 Qed.
 
+Lemma Odot_Sepear'''{ s x e:nat}: forall (q: qstate s e),
+s<=x/\x<=e ->
+@Mixed_State (2^(e-s)) q->
+@Par_Pure_State (2^(e-x)) (PMpar_trace q x e)->
+exists (q1:qstate s x) (q2: qstate x e), 
+and (@WF_qstate  s x q1 /\ @WF_qstate x e q2) 
+(q = @kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) q1 q2).
+Proof. Admitted.
 
 
 Lemma Par_Pure_State_wedge{ s e: nat}:forall (q:qstate s e) s' x' e',
@@ -1679,4 +1687,61 @@ rewrite Heqq0. unfold PMpar_trace.
 apply WF_PMRpar_trace. 
 intuition. apply WF_PMLpar_trace.
 intuition. apply WF_Mixed. apply H0.
+Qed.
+
+Lemma Odot_Sepear''''{ s x e:nat}: forall (q: qstate s e),
+s<=x/\x<=e ->
+@Mixed_State (2^(e-s)) q->
+(@Par_Pure_State (2^(x-s)) (PMpar_trace q s x)\/ 
+@Par_Pure_State (2^(e-x)) (PMpar_trace q x e)) ->
+exists (q1:qstate s x) (q2: qstate x e), 
+and (@WF_qstate  s x q1 /\ @WF_qstate x e q2) 
+(q = @kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) q1 q2).
+Proof. intros. destruct H1;
+[apply (@Odot_Sepear'' s x e) | apply (@Odot_Sepear''' s x e)]; 
+try lia; try assumption.
+Qed.
+
+
+Lemma Par_Pure_State_kron{ s e: nat}:forall (q:qstate s e) x,
+s<=x /\ x<= e ->
+WF_qstate q->
+(@Par_Pure_State (2^(x-s)) (PMpar_trace q s x)\/
+@Par_Pure_State (2^(e-x)) (PMpar_trace q x e)) ->
+/(@trace (2^(e-s)) q) .* q =
+ @kron (2^(x-s)) (2^(x-s)) (2^(e-x)) (2^(e-x)) 
+(/(@trace (2^(x-s)) ((PMpar_trace q s x))) .* (PMpar_trace q s x))
+(/(@trace (2^(e-x)) ((PMpar_trace q x e))) .* (PMpar_trace q x e)).
+Proof. intros. destruct H0.
+apply (@Odot_Sepear'''' s x e) in H1; try lia; try assumption.  
+destruct H1. destruct H1. 
+destruct H1. destruct H1.
+destruct H1. destruct H4. 
+assert(PMpar_trace q s x=(@trace (2^(e-x)) x1) .* x0).
+rewrite H3. rewrite PMpar_trace_L; try lia; try auto_wf.
+rewrite (PMpar_trace_l _ x0 x1); try lia; try auto_wf; try reflexivity.
+assert(PMpar_trace q x e=(@trace (2^(x-s)) x0) .* x1).
+rewrite H3. rewrite PMpar_trace_R; try lia; try auto_wf.
+rewrite (PMpar_trace_r _ x0 x1); try lia; try auto_wf; try reflexivity.
+rewrite H7. rewrite H8. 
+repeat rewrite trace_mult_dist. rewrite H3.
+assert(2^(x-s) * (2^(e-x))= 2^(e-s)). type_sovle'.
+destruct H9.  repeat rewrite trace_kron.
+repeat rewrite Mscale_assoc. 
+rewrite (Cmult_comm (@trace (2^(e-x)) x1)). 
+ repeat rewrite Cinv_mult_distr; try apply C0_fst_neq;
+ try apply Rgt_neq_0; try apply mixed_state_trace_gt0; try assumption.
+ rewrite <- Cmult_assoc. rewrite Cinv_l; 
+ try apply C0_fst_neq;
+ try apply Rgt_neq_0; try apply mixed_state_trace_gt0; try assumption.
+ Csimpl. rewrite (Cmult_comm (/(@trace (2^(x-s)) x0))).
+ rewrite <- Cmult_assoc. rewrite Cinv_l; 
+ try apply C0_fst_neq;
+ try apply Rgt_neq_0; try apply mixed_state_trace_gt0; try assumption.
+ Csimpl. 
+ repeat rewrite  Mscale_kron_dist_r.
+ repeat rewrite  Mscale_kron_dist_l.
+ rewrite Mscale_assoc. reflexivity. apply Nat.pow_nonzero. 
+  lia.
+
 Qed.
