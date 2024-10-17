@@ -33,6 +33,16 @@ Proof. intros. destruct c.
 Qed.
 
 
+Lemma trace_mult: forall (n:nat) (A B :Square n),
+trace(Mmult A B) =trace (Mmult B A).
+Proof. intros. unfold trace. unfold Mmult. 
+       rewrite big_sum_swap_order. 
+       apply big_sum_eq. apply functional_extensionality.
+       intros. apply big_sum_eq. apply functional_extensionality.
+       intros.
+apply Cmult_comm. 
+Qed.
+
 Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
   trace(Mmult A B) =trace (Mmult B A).
   Proof. intros. unfold trace. unfold Mmult. 
@@ -42,6 +52,14 @@ Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
          intros.
   apply Cmult_comm. 
   Qed.
+
+
+  Lemma trace_mult_Unitary{n:nat}: forall (A B:Square n) ,
+ WF_Unitary A -> WF_Matrix B-> trace B=trace (A × B ×  A†).
+Proof. intros. rewrite trace_mult. rewrite<-Mmult_assoc. 
+destruct H. rewrite H1. rewrite Mmult_1_l. reflexivity.
+assumption. 
+Qed.
 
 
   Lemma inner_trace: forall n (x: Vector (n)),
@@ -152,3 +170,6 @@ Lemma  Zero_trace: forall n, @trace n Zero=C0.
 Proof. intros. unfold Zero.  unfold trace.
  apply (big_sum_0_R n). 
 Qed.
+
+
+

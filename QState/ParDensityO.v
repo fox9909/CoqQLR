@@ -14,6 +14,7 @@ From Quan Require Export VecSet.
 From Quan Require Export Matrix.
 From Quan Require Export Quantum.
 From Quan Require Export Complex.
+From Quan Require Import Basic.
 
 (*-------------------------------------------------------------------------*)
 
@@ -81,30 +82,7 @@ Proof.
 Qed.
 
 
-Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
-Pure_State_Vector v -> v<>Zero .
-Proof. intros. destruct H.  intro. rewrite H1 in *.
-      rewrite Mmult_0_r in H0. 
-      assert(@trace 1 Zero= trace (I 1)).
-      rewrite H0. reflexivity.
-      rewrite Zero_trace in H2.
-      rewrite trace_I in H2.
-      injection H2. intuition.
-Qed.
 
-Lemma Mixed_not_Zero{n:nat}:forall (M: Square n),
-Mixed_State M -> M<>Zero .
-Proof. intros.  intro.  
-      assert(@trace n Zero= trace (M)).
-      rewrite H0. reflexivity.
-      rewrite Zero_trace in H1.
-      symmetry in H1. pose H.
-        apply mixed_state_trace_gt0 in m.
-        apply mixed_state_trace_real in H.
-      destruct (trace M). simpl in *.
-      injection H1. intros. rewrite H3 in m.
-      lra. 
-Qed.
 
 
 Lemma pure_state_vector_unitary_pres : forall {n} (ϕ : Vector n) (U : Square n),
@@ -478,6 +456,31 @@ Proof. intros. destruct c. simpl in *. rewrite H1.
        assert((r, 0) = RtoC r). reflexivity.
         rewrite H2. apply Mixed_State_scale. assumption.
         assumption.
+Qed.
+
+Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
+Pure_State_Vector v -> v<>Zero .
+Proof. intros. destruct H.  intro. rewrite H1 in *.
+      rewrite Mmult_0_r in H0. 
+      assert(@trace 1 Zero= trace (I 1)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H2.
+      rewrite trace_I in H2.
+      injection H2. intuition.
+Qed.
+
+Lemma Mixed_not_Zero{n:nat}:forall (M: Square n),
+Mixed_State M -> M<>Zero .
+Proof. intros.  intro.  
+      assert(@trace n Zero= trace (M)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H1.
+      symmetry in H1. pose H.
+        apply mixed_state_trace_gt0 in m.
+        apply mixed_state_trace_real in H.
+      destruct (trace M). simpl in *.
+      injection H1. intros. rewrite H3 in m.
+      lra. 
 Qed.
 
 (*----------------------------------Mixed_State_aux-------------------------------------*)
