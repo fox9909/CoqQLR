@@ -1,0 +1,154 @@
+Require Import Reals.
+Require Import Coquelicot.Complex.
+Require Import Strings.String.
+Require Import Lists.List.
+Require Import Coq.Init.Datatypes.
+From Coq Require Import Bool.Bool.
+From Coq Require Import Lia.
+From Coq Require Import Init.Nat.
+
+
+Require Import Psatz.
+Require Import Reals.
+From Quan Require Export VecSet.
+From Quan Require Export Matrix.
+From Quan Require Export Quantum.
+From Quan Require Export Complex.
+
+
+
+Lemma fst_plus: forall (c1 c2: C),
+ fst(c1 + c2)= (fst c1 + fst c2)%R.
+Proof. intros. destruct c1. destruct c2.
+      simpl. reflexivity.
+  
+Qed.
+
+Lemma fst_mult: forall (r: R) (c: C),
+ fst(r * c)= (r * fst c)%R.
+Proof. intros. destruct c. 
+      simpl. rewrite Rmult_0_l.
+      rewrite Rminus_0_r. reflexivity.
+  
+Qed.
+
+
+Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
+  trace(Mmult A B) =trace (Mmult B A).
+  Proof. intros. unfold trace. unfold Mmult. 
+         rewrite big_sum_swap_order. 
+         apply big_sum_eq. apply functional_extensionality.
+         intros. apply big_sum_eq. apply functional_extensionality.
+         intros.
+  apply Cmult_comm. 
+  Qed.
+
+
+  Lemma inner_trace: forall n (x: Vector (n)),
+WF_Matrix x->
+ ((norm x) * (norm x))%R = (fst (trace (x × x †))).
+Proof. intros. unfold norm. rewrite sqrt_sqrt. 
+f_equal. unfold inner_product. rewrite trace_mult'.  unfold trace.
+simpl. rewrite Cplus_0_l.  reflexivity. apply inner_product_ge_0.
+Qed. 
+
+Lemma trace_vector: forall (m n:Vector 1), 
+ (trace (m × n)) = (trace m) * (trace n).
+Proof. intros. unfold trace.  unfold Mmult. 
+       simpl. repeat rewrite Cplus_0_l.
+       reflexivity.
+Qed.
+
+
+
+Lemma Zero_opp{ m n:nat}: forall m n (A B:Matrix m n),
+A .+ (Mopp A) = Zero.
+Proof. intros. prep_matrix_equality.
+       unfold Mplus. unfold Mopp.
+       unfold scale. rewrite<-Copp_mult_distr_l.
+       rewrite Cmult_1_l.
+       rewrite Cplus_opp_r. reflexivity.
+Qed.
+
+Lemma scale_Zero{m n:nat}: forall c (M:Matrix m n),
+c .* M = Zero ->
+c<>0 ->
+M = Zero.
+Proof. intros. unfold scale in H. 
+       unfold Zero in *.
+      prep_matrix_equality.
+      assert((fun x y : nat => c * M x y) x y=
+      c * (M x y)). reflexivity.
+      assert(c * (M x y)= 0).
+      rewrite H in H1. symmetry. assumption. 
+      apply Cmult_integral in H2.
+      destruct H2. rewrite H2 in H0. destruct H0.
+      reflexivity. assumption.
+Qed.
+
+
+Lemma big_sum_Cconj: forall (f: nat->C) n,
+Cconj (big_sum f n)=big_sum (fun x=> Cconj (f x) ) n.
+Proof. induction n; simpl. rewrite Cconj_0.
+       reflexivity. rewrite Cconj_plus_distr.
+       rewrite IHn. reflexivity.
+  
+Qed.
+
+
+Lemma  trace_adj{  n:nat}:forall ( A: Square n),
+trace (A)=Cconj (trace (adjoint A)) .
+Proof. intros.   unfold trace. unfold adjoint.
+rewrite big_sum_Cconj. apply big_sum_eq_bounded. intros.
+      rewrite Cconj_involutive. reflexivity.
+Qed.
+
+Lemma inner_trace'{n:nat}: forall (x x0: Vector n), 
+trace ((x0) † × x)= inner_product x0 x.
+Proof. intros. unfold trace. unfold inner_product.
+      simpl. rewrite Cplus_0_l. reflexivity. 
+Qed.
+
+
+Lemma trace_vector_mult{n}: forall (x x0:Vector n),
+Cmod (trace (x × ((x) † × x0 × (x0) †)))=
+(Cmod ⟨ x0, x ⟩ * Cmod ⟨ x0, x ⟩)%R.
+Proof. intros.  rewrite trace_mult'. 
+rewrite Mmult_assoc.
+rewrite trace_vector.
+rewrite trace_mult'.
+rewrite trace_adj.
+rewrite Cmod_mult.
+rewrite  Cmod_Cconj.
+rewrite Mmult_adjoint.
+rewrite adjoint_involutive.
+rewrite trace_mult'.
+rewrite inner_trace'. reflexivity.
+Qed.
+
+
+
+Lemma  trace_I: trace (I 1) = C1.
+Proof. unfold trace. simpl.  
+      unfold I. simpl. rewrite Cplus_0_l.
+      reflexivity.
+       
+Qed.
+
+
+Lemma big_sum_0_R : forall n,
+(Σ (fun _ :nat =>0%R ) n)= 0%R. 
+Proof. 
+intros.
+  induction n.
+  - reflexivity.
+  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
+  rewrite IHn.   
+  rewrite Cplus_0_r. easy.
+Qed.      
+
+
+Lemma  Zero_trace: forall n, @trace n Zero=C0.
+Proof. intros. unfold Zero.  unfold trace.
+ apply (big_sum_0_R n). 
+Qed.

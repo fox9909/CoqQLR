@@ -15,7 +15,7 @@ From Quan Require Export Matrix.
 From Quan Require Export Quantum.
 From Quan Require Export Complex.
 
-
+(*-------------------------------------------------------------------------*)
 
 Notation Density n := (Matrix n n) (only parsing). 
 
@@ -79,6 +79,33 @@ Proof.
     prep_matrix_equality.
     lca.
 Qed.
+
+
+Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
+Pure_State_Vector v -> v<>Zero .
+Proof. intros. destruct H.  intro. rewrite H1 in *.
+      rewrite Mmult_0_r in H0. 
+      assert(@trace 1 Zero= trace (I 1)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H2.
+      rewrite trace_I in H2.
+      injection H2. intuition.
+Qed.
+
+Lemma Mixed_not_Zero{n:nat}:forall (M: Square n),
+Mixed_State M -> M<>Zero .
+Proof. intros.  intro.  
+      assert(@trace n Zero= trace (M)).
+      rewrite H0. reflexivity.
+      rewrite Zero_trace in H1.
+      symmetry in H1. pose H.
+        apply mixed_state_trace_gt0 in m.
+        apply mixed_state_trace_real in H.
+      destruct (trace M). simpl in *.
+      injection H1. intros. rewrite H3 in m.
+      lra. 
+Qed.
+
 
 Lemma pure_state_vector_unitary_pres : forall {n} (ϕ : Vector n) (U : Square n),
   Pure_State_Vector ϕ -> WF_Unitary U -> Pure_State_Vector (U × ϕ).
@@ -343,6 +370,12 @@ Proof.
  Qed.
 
 
+ Lemma mixed_state_trace_in01 : forall {n} (ρ : Density n), Mixed_State ρ ->0<  fst (trace ρ) <=1.
+Proof. intros.  split.
+       apply mixed_state_trace_gt0. intuition.
+       apply mixed_state_trace_1. intuition.
+Qed.
+
 Lemma mixed_state_diag_real : forall {n} (ρ : Density n) i , Mixed_State ρ -> 
                                                         snd (ρ i i) = 0.
 Proof.
@@ -435,7 +468,19 @@ Proof. intros.
         try assumption.  split. lra. assumption.
 Qed.
 
-(*Mixed_State_aux*)
+
+Lemma Mixed_State_scale_c: forall n (ρ : Square n) c, 
+Mixed_State ρ ->
+0 < fst c <= 1-> 
+snd c =0->
+Mixed_State (c .* ρ).
+Proof. intros. destruct c. simpl in *. rewrite H1. 
+       assert((r, 0) = RtoC r). reflexivity.
+        rewrite H2. apply Mixed_State_scale. assumption.
+        assumption.
+Qed.
+
+(*----------------------------------Mixed_State_aux-------------------------------------*)
 
 Inductive Mixed_State_aux {n} : Matrix n n -> Prop :=
 |Pure_S_aux : forall ρ (p:R), 0 < p -> Pure_State ρ -> Mixed_State_aux (p.* ρ) 
@@ -445,7 +490,6 @@ Local Open Scope C_scope.
 Lemma  Rplus_le_1:forall (r1 r2:R), r1>0->r1+r2<=1 ->r2<=1 .
 Proof. intros. lra.
 Qed.
-
 
 Lemma mixed_state_diag_in01_aux : forall {n} (ρ : Density n) i , Mixed_State_aux ρ -> 
                                                         0 <= fst (ρ i i).
@@ -525,46 +569,55 @@ Qed.
 
 
 
-
- 
-  Lemma mixed_state_Cmod_1_aux : forall {n} (ρ : Density n), Mixed_State_aux ρ ->0<  Cmod (trace ρ).
-  Proof. intros. rewrite Cmod_snd_0. 
-         apply mixed_state_trace_gt0_aux. intuition.
-         apply mixed_state_trace_gt0_aux.  intuition. apply mixed_state_trace_real_aux.
-         intuition.
-  Qed. 
+Lemma mixed_state_Cmod_1_aux : forall {n} (ρ : Density n), Mixed_State_aux ρ ->0<  Cmod (trace ρ).
+Proof. intros. rewrite Cmod_snd_0. 
+        apply mixed_state_trace_gt0_aux. intuition.
+        apply mixed_state_trace_gt0_aux.  intuition. apply mixed_state_trace_real_aux.
+        intuition.
+Qed. 
 
 Local Open Scope R_scope.
-  Lemma mixed_state_Cmod_plus_aux: forall {n} (ρ1  ρ2: Density n), Mixed_State_aux ρ1 -> Mixed_State_aux ρ2->  
-  Cmod (trace (ρ1 .+ ρ2)) = Cmod (trace ρ1) + Cmod (trace ρ2).
-  Proof. intros. 
-      repeat rewrite Cmod_snd_0;      
-      try rewrite trace_plus_dist; 
-      simpl; try reflexivity; try apply Rplus_lt_0_compat;
-      try apply mixed_state_trace_gt0_aux;
-      try intuition; try repeat rewrite mixed_state_trace_real_aux; 
-      try intuition.  
-  Qed.
+Lemma mixed_state_Cmod_plus_aux: forall {n} (ρ1  ρ2: Density n), Mixed_State_aux ρ1 -> Mixed_State_aux ρ2->  
+Cmod (trace (ρ1 .+ ρ2)) = Cmod (trace ρ1) + Cmod (trace ρ2).
+Proof. intros. 
+    repeat rewrite Cmod_snd_0;      
+    try rewrite trace_plus_dist; 
+    simpl; try reflexivity; try apply Rplus_lt_0_compat;
+    try apply mixed_state_trace_gt0_aux;
+    try intuition; try repeat rewrite mixed_state_trace_real_aux; 
+    try intuition.  
+Qed.
   
-
+Lemma Mixed_State_scale_aux: forall n (ρ : Square n) p, Mixed_State_aux ρ ->
+0 < p->
+Mixed_State_aux (p .* ρ).
+Proof. intros.
+        induction H.
+        - rewrite Mscale_assoc.  
+        rewrite RtoC_mult. apply Pure_S_aux.
+        apply Rmult_lt_0_compat. intuition. intuition.
+        intuition.
+      --rewrite Mscale_plus_distr_r. 
+        apply Mix_S_aux; intuition.
+Qed.
 
  
 
 Lemma mixed_unitary_aux : forall {n} (U ρ : Matrix n n), 
-  WF_Unitary U -> Mixed_State_aux ρ -> Mixed_State_aux (super U ρ).
-  Proof.
-  intros n U ρ H M.
-  induction M.
-  + unfold super. rewrite Mscale_mult_dist_r.
-    rewrite Mscale_mult_dist_l.
-    apply Pure_S_aux. intuition.
-    apply pure_unitary; trivial.
-  + unfold WF_Unitary, super in *.
-    rewrite Mmult_plus_distr_l.
-    rewrite Mmult_plus_distr_r.
-    apply Mix_S_aux; trivial.
+WF_Unitary U -> Mixed_State_aux ρ -> Mixed_State_aux (super U ρ).
+Proof.
+intros n U ρ H M.
+induction M.
++ unfold super. rewrite Mscale_mult_dist_r.
+  rewrite Mscale_mult_dist_l.
+  apply Pure_S_aux. intuition.
+  apply pure_unitary; trivial.
++ unfold WF_Unitary, super in *.
+  rewrite Mmult_plus_distr_l.
+  rewrite Mmult_plus_distr_r.
+  apply Mix_S_aux; trivial.
 Qed.
-#[export] Hint Resolve  mixed_unitary_aux: Mixed.
+#[export] Hint Resolve  mixed_unitary_aux Mixed_State_scale_aux: Mixed.
 
 
 Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
@@ -580,7 +633,7 @@ Proof. intros. split. apply Rdiv_lt_0_compat.
 Qed.
 
 Lemma normalize_eq_mixed{n}: forall (ρ: Square n),
-Mixed_State_aux ρ ->
+Mixed_State_aux ρ -> 
 Cmod (trace ρ).* ((/ Cmod (trace ρ))%R .* ρ)=ρ.
 Proof. intros. rewrite Mscale_assoc. rewrite RtoC_mult.
       rewrite Rinv_r. Msimpl. reflexivity.
@@ -636,18 +689,6 @@ Proof. intros. induction H.
 Qed.
 #[export] Hint Resolve  Mixed_State_aux_to01 Mixed_State_scale : Mixed.
 
-Lemma Mixed_State_scale_aux: forall n (ρ : Square n) p, Mixed_State_aux ρ ->
-0 < p->
-Mixed_State_aux (p .* ρ).
-Proof. intros.
-        induction H.
-        - rewrite Mscale_assoc.  
-        rewrite RtoC_mult. apply Pure_S_aux.
-        apply Rmult_lt_0_compat. intuition. intuition.
-        intuition.
-      --rewrite Mscale_plus_distr_r. 
-        apply Mix_S_aux; intuition.
-Qed.
 
 
 
@@ -686,16 +727,7 @@ Proof. intros. split; intros. destruct H. induction H.
 Qed.
 
 
-Lemma Mixed_State_scale_c: forall n (ρ : Square n) c, 
-Mixed_State ρ ->
-0 < fst c <= 1-> 
-snd c =0->
-Mixed_State (c .* ρ).
-Proof. intros. destruct c. simpl in *. rewrite H1. 
-       assert((r, 0) = RtoC r). reflexivity.
-        rewrite H2. apply Mixed_State_scale. assumption.
-        assumption.
-Qed.
+
 
 Lemma  Mixed_State_aux_to_01':forall {n} (ρ : Density n) p,
 Mixed_State_aux ρ ->
@@ -705,52 +737,12 @@ Proof. intros. apply Mixed_State_aux_to_Mix_State.
       split. apply Mixed_State_scale_aux.
       assumption. assumption. assumption.
 Qed.
-#[export] Hint Resolve  Mixed_State_aux_to_Mix_State Mixed_State_scale_aux Mixed_State_scale_c
+#[export] Hint Resolve  Mixed_State_aux_to_Mix_State Mixed_State_scale_c
 Mixed_State_aux_to_01': Mixed.
 
 
+(*----------------------------------------------------------------------------*)
 Require Import Complex.
-Lemma fst_plus: forall (c1 c2: C),
- fst(c1 + c2)= (fst c1 + fst c2)%R.
-Proof. intros. destruct c1. destruct c2.
-      simpl. reflexivity.
-  
-Qed.
-
-Lemma fst_mult: forall (r: R) (c: C),
- fst(r * c)= (r * fst c)%R.
-Proof. intros. destruct c. 
-      simpl. rewrite Rmult_0_l.
-      rewrite Rminus_0_r. reflexivity.
-  
-Qed.
-
-
-Lemma trace_mult': forall (m n:nat) (A:Matrix m n) (B:Matrix n m),
-  trace(Mmult A B) =trace (Mmult B A).
-  Proof. intros. unfold trace. unfold Mmult. 
-         rewrite big_sum_swap_order. 
-         apply big_sum_eq. apply functional_extensionality.
-         intros. apply big_sum_eq. apply functional_extensionality.
-         intros.
-  apply Cmult_comm. 
-  Qed.
-
-Lemma inner_trace: forall n (x: Vector (n)),
-WF_Matrix x->
- ((norm x) * (norm x))%R = (fst (trace (x × x †))).
-Proof. intros. unfold norm. rewrite sqrt_sqrt. 
-f_equal. unfold inner_product. rewrite trace_mult'.  unfold trace.
-simpl. rewrite Cplus_0_l.  reflexivity. apply inner_product_ge_0.
-Qed. 
-
-Lemma trace_vector: forall (m n:Vector 1), 
- (trace (m × n)) = (trace m) * (trace n).
-Proof. intros. unfold trace.  unfold Mmult. 
-       simpl. repeat rewrite Cplus_0_l.
-       reflexivity.
-Qed.
-
 Lemma real_gt_0_aux:forall a b c : R, 0 < a -> 0 < b -> a = (b * c)%R -> 0 < c.
 Proof. intuition. 
 replace c with (a * / b)%R.
@@ -760,32 +752,6 @@ replace (b * c * / b)%R with (b * /b * c)%R by lra.
 rewrite Rinv_r; try lra. 
   
 Qed.
-
-Lemma Zero_opp{ m n:nat}: forall m n (A B:Matrix m n),
-A .+ (Mopp A) = Zero.
-Proof. intros. prep_matrix_equality.
-       unfold Mplus. unfold Mopp.
-       unfold scale. rewrite<-Copp_mult_distr_l.
-       rewrite Cmult_1_l.
-       rewrite Cplus_opp_r. reflexivity.
-Qed.
-
-Lemma scale_Zero{m n:nat}: forall c (M:Matrix m n),
-c .* M = Zero ->
-c<>0 ->
-M = Zero.
-Proof. intros. unfold scale in H. 
-       unfold Zero in *.
-      prep_matrix_equality.
-      assert((fun x y : nat => c * M x y) x y=
-      c * (M x y)). reflexivity.
-      assert(c * (M x y)= 0).
-      rewrite H in H1. symmetry. assumption. 
-      apply Cmult_integral in H2.
-      destruct H2. rewrite H2 in H0. destruct H0.
-      reflexivity. assumption.
-Qed.
-
 
 
 Lemma Cauchy_Schwartz_ver1' : forall {n} (u v : Vector n),
@@ -843,28 +809,6 @@ Proof. intros n u v Hw Hu H01 H02 Hc. intros.
          assumption.
 Qed.
 
-Lemma big_sum_Cconj: forall (f: nat->C) n,
-Cconj (big_sum f n)=big_sum (fun x=> Cconj (f x) ) n.
-Proof. induction n; simpl. rewrite Cconj_0.
-       reflexivity. rewrite Cconj_plus_distr.
-       rewrite IHn. reflexivity.
-  
-Qed.
-
-
-Lemma  trace_adj{  n:nat}:forall ( A: Square n),
-trace (A)=Cconj (trace (adjoint A)) .
-Proof. intros.   unfold trace. unfold adjoint.
-rewrite big_sum_Cconj. apply big_sum_eq_bounded. intros.
-      rewrite Cconj_involutive. reflexivity.
-Qed.
-
-Lemma inner_trace'{n:nat}: forall (x x0: Vector n), 
-trace ((x0) † × x)= inner_product x0 x.
-Proof. intros. unfold trace. unfold inner_product.
-      simpl. rewrite Cplus_0_l. reflexivity. 
-Qed.
-
 
 Lemma Rmult_in01': forall p1 p2,
 0 <= p1 <=1->
@@ -878,23 +822,6 @@ Proof. split. assert(0=0*0)%R. rewrite Rmult_0_l. reflexivity.
         intuition. intuition. intuition. intuition. 
         rewrite Rmult_1_l in H1. assumption.
 Qed.
-
-Lemma trace_vector_mult{n}: forall (x x0:Vector n),
-Cmod (trace (x × ((x) † × x0 × (x0) †)))=
-(Cmod ⟨ x0, x ⟩ * Cmod ⟨ x0, x ⟩)%R.
-Proof. intros.  rewrite trace_mult'. 
-rewrite Mmult_assoc.
-rewrite trace_vector.
-rewrite trace_mult'.
-rewrite trace_adj.
-rewrite Cmod_mult.
-rewrite  Cmod_Cconj.
-rewrite Mmult_adjoint.
-rewrite adjoint_involutive.
-rewrite trace_mult'.
-rewrite inner_trace'. reflexivity.
-Qed.
-
 
 Lemma Mixed_State_mult_trace_le_1:forall {n} (ρ1 :Density n),
 Mixed_State ρ1->
@@ -1019,65 +946,6 @@ assert(0<=(p1 + p2) * r1 < 1).
 apply Rmult_in01''. lra. lra. 
 lra. 
 Qed.
-
-Lemma  trace_I: trace (I 1) = C1.
-Proof. unfold trace. simpl.  
-      unfold I. simpl. rewrite Cplus_0_l.
-      reflexivity.
-       
-Qed.
-
-
-Lemma big_sum_0_R : forall n,
-(Σ (fun _ :nat =>0%R ) n)= 0%R. 
-Proof. 
-intros.
-  induction n.
-  - reflexivity.
-  - simpl. remember (Σ (fun _ : nat => 0%R) n) as f.
-  rewrite IHn.   
-  rewrite Cplus_0_r. easy.
-Qed.      
-
-
-Lemma  Zero_trace: forall n, @trace n Zero=C0.
-Proof. intros. unfold Zero.  unfold trace.
- apply (big_sum_0_R n). 
-Qed.
-
-Lemma Pure_State_Vector_not_Zero{n:nat}:forall (v: Vector n),
-Pure_State_Vector v -> v<>Zero .
-Proof. intros. destruct H.  intro. rewrite H1 in *.
-      rewrite Mmult_0_r in H0. 
-      assert(@trace 1 Zero= trace (I 1)).
-      rewrite H0. reflexivity.
-      rewrite Zero_trace in H2.
-      rewrite trace_I in H2.
-      injection H2. intuition.
-Qed.
-
-Lemma Mixed_not_Zero{n:nat}:forall (M: Square n),
-Mixed_State M -> M<>Zero .
-Proof. intros.  intro.  
-      assert(@trace n Zero= trace (M)).
-      rewrite H0. reflexivity.
-      rewrite Zero_trace in H1.
-      symmetry in H1. pose H.
-        apply mixed_state_trace_gt0 in m.
-        apply mixed_state_trace_real in H.
-      destruct (trace M). simpl in *.
-      injection H1. intros. rewrite H3 in m.
-      lra. 
-Qed.
-
-Lemma mixed_state_trace_in01 : forall {n} (ρ : Density n), Mixed_State ρ ->0<  fst (trace ρ) <=1.
-Proof. intros.  split.
-       apply mixed_state_trace_gt0. intuition.
-       apply mixed_state_trace_1. intuition.
-Qed.
-
-
-
 
 
 Lemma Mixed_State_mult_trace_lt_1:forall {n} (ρ1 :Density n),

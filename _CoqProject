@@ -6,6 +6,7 @@
 ./QuantumLib/Matrix.v
 ./QuantumLib/VecSet.v
 ./QuantumLib/Quantum.v
+./QState/Basic.v
 ./QState/ParDensityO.v
 ./QState/QState_L.v
 ./QState/Par_trace.v
