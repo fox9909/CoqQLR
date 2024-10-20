@@ -483,12 +483,6 @@ repeat rewrite <-Nat.pow_add_r. f_equal. lia.
 Qed.
 
 
-Lemma  super_scale: forall {m n:nat} (M : Matrix m n) (A :Matrix n n) r,
-super M (r .* A) =r.* (super M A) .
-Proof. unfold super. intros. rewrite Mscale_mult_dist_r.
-        rewrite Mscale_mult_dist_l. reflexivity.   
-  
-Qed.
 
 Lemma Unitary_I{n:nat}: forall (U:Square n),
 WF_Unitary U -> (U) † × U = I n .
@@ -1045,14 +1039,6 @@ Proof. intros. induction n0. simpl. unfold Zero. reflexivity.
 Qed.
   
 
-  Fixpoint big_map2{s e:nat} (p_n :list R) (mu_n: list (list (cstate *qstate s e))) : list (cstate *qstate s e) :=
-           match p_n ,mu_n with 
-            |[], [] => []
-            |[], _ => []
-            | _ ,[]=> []
-            | hg::tg, hf:: tf =>StateMap.Raw.map2 (option_app) 
-                                (StateMap.Raw.map (fun i => hg.* i) hf) (big_map2 tg tf)
-             end.
 
 
 

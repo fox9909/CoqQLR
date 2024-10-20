@@ -6,12 +6,13 @@
 ./QuantumLib/Matrix.v
 ./QuantumLib/VecSet.v
 ./QuantumLib/Quantum.v
+./QState/Forall_two.v
 ./QState/Basic.v
 ./QState/ParDensityO.v
-./QState/QState_L.v
+./QState/QState.v
 ./QState/Par_trace.v
-./QState/Forall_two.v
 ./QIMP/QIMP_L.v
+./QIMP/Ceval_Linear.v
 ./QAssert/QAssert_L.v
 ./QRule/QRule_Q_L.v
 ./QRule/QSepar.v

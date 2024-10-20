@@ -1582,58 +1582,7 @@ Lemma dstate_Separ_big_app'{s e:nat}: forall (f: nat -> (cstate *qstate s e)) n 
 Qed.
 
 
-Lemma WF_Mixed_Zero{s e:nat}:forall (q: Square (2^(e-s))),
-WF_qstate q \/ q= Zero ->
-WF_Matrix q .
-Proof. intros. destruct H. destruct H. auto_wf. 
-rewrite H. auto_wf.
-Qed.
-#[export] Hint Resolve WF_Mixed WF_Mixed_Zero : wf_db.
 
-Lemma WF_QInit{s' e'}: forall s e (rho:qstate s' e'),
-s'<=s/\s<=e/\ e<=e'-> 
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) rho-> 
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) (QInit_fun s e rho).
-Proof. intros. unfold QInit_fun. unfold q_update.
-apply (@WF_Msum (2^(e'-s')) (2^(e'-s'))). intros.
-apply (WF_super (2^(e'-s')) (2^(e'-s'))).
-apply WF_kron; type_sovle'. apply WF_kron; type_sovle'.
-auto_wf. apply WF_mult. apply WF_vec. apply pow_gt_0.
- auto_wf. auto_wf. assumption.
-Qed. 
-
-
-Lemma WF_QUnit_One{s' e'}: forall s e (rho:qstate s' e') (U:Square (2^(e-s))),
-s'<=s/\s<=e/\ e<=e'-> 
-WF_Unitary U->
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) rho-> 
-@WF_Matrix (2^(e'-s')) ((2^(e'-s'))) (QUnit_One_fun s e U rho).
-Proof. intros. unfold QUnit_One_fun. unfold q_update. destruct H0.
-auto_wf.
-Qed.
-
-
-Lemma WF_QUnit_Ctrl{s' e'}: forall s0 e0 s1 e1  (rho:qstate s' e') (U:nat ->Square (2^(e1-s1))),
-s'<=s0/\s0<=e0/\ e0<=s1/\ s1<=e1 /\ e1<= e'-> 
-(forall j, WF_Unitary (U j))->
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) rho-> 
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) (QUnit_Ctrl_fun s0 e0 s1 e1 U rho).
-Proof. 
-intros. unfold QUnit_Ctrl_fun. unfold q_update.
-apply WF_super. apply WF_Msum.
-intros. pose (H0 i). destruct w. auto_wf. assumption.
-Qed.
-
-Lemma WF_QMeas{s' e'}: forall s e (rho:qstate s' e') j,
-s'<=s/\s<=e/\ e<=e'-> 
-QMeas_fun s e j rho <> Zero ->
-(j<2^(e-s))->
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) rho-> 
-@WF_Matrix (2^(e'-s'))  (2^(e'-s')) (QMeas_fun s e j rho).
-Proof. intros.
-intros. unfold QMeas_fun. unfold q_update. auto_wf. 
-Qed.
-#[export] Hint Resolve WF_QInit WF_QUnit_One WF_QUnit_Ctrl WF_QMeas : wf_db.
 
 Lemma PMpar_trace_QInit{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->

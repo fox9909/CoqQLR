@@ -184,14 +184,14 @@ Definition qstate (s e :nat):= Density (2^(e-s)).
 Definition WF_qstate{s e :nat} (rho : qstate s e ):=
     @Mixed_State (2^(e-s)) rho /\ (s<=e)%nat.
 
-Definition q_update{s e:nat} (U: Square (2^(e-s))) (rho :qstate s e): qstate s e:=
+Definition q_update{s e:nat} (U: Square   (2^(e-s))) (rho :qstate s e): qstate s e:=
   super U rho.
 
 Definition q_kron{s x e:nat} (q :qstate s x) (q': qstate x e) := 
      (@kron  (2^(x-s)) (2^(x-s))  (2^(e-x)) (2^(e-x)) q  q').
 
-Definition q_scale{s e:nat} (p:R) (q: qstate s e) := 
-    @scale (2^(e-s)) (2^(e-s)) p  q.
+Definition q_scale{s e:nat} (c:C) (q: qstate s e) := 
+    @scale (2^(e-s)) (2^(e-s)) c  q.
 
 Definition q_plus{s e:nat} (q1 q2: qstate s e) := 
     @Mplus (2^(e-s)) (2^(e-s)) q1 q2 .
@@ -227,7 +227,8 @@ Lemma WF_qstate_scale{s e}: forall (q: qstate s e) (p:R),
 (0<p<=1)%R /\ WF_qstate q-> @WF_qstate s e (q_scale p q).
 Proof.
          unfold WF_qstate. simpl. 
-        intros. destruct H. split. apply Mixed_State_scale. intuition.
+        intros. destruct H. split.  
+         apply (@Mixed_State_scale (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
 
@@ -258,7 +259,7 @@ Lemma WWF_qstate_scale{s e}: forall (q: qstate s e) (p:R),
 Proof.
          unfold WF_qstate. simpl. 
         intros. destruct H. unfold WWF_qstate in *.
-        split. apply Mixed_State_scale_aux. intuition.
+        split. apply (@Mixed_State_scale_aux (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
 
@@ -272,10 +273,10 @@ Proof. unfold WF_qstate.  unfold q_plus.  simpl.
 Qed.
 
 Lemma WWF_qstate_to_WF_qstate{s e:nat}:  forall (q:qstate s e), 
-WF_qstate q <-> WWF_qstate q /\ 0<q_trace q<=1.
+WF_qstate q <-> WWF_qstate q /\ q_trace q<=1.
 Proof. intros. unfold WF_qstate in *. unfold WWF_qstate in *. split; intros.
-       destruct H. apply Mixed_State_aux_to_Mix_State in H. intuition.
-       apply mixed_state_Cmod_1_aux. assumption.
+       destruct H. apply Mixed_State_aux_to_Mix_State in H.
+        intuition.
        split. apply Mixed_State_aux_to_Mix_State. intuition. lia. 
 Qed.
 
@@ -349,7 +350,7 @@ Lemma WF_state_scale'{s e}: forall (st: state s e) (p:R),
 (0<p<=1) /\ WF_state st-> WF_state (s_scale p st).
 Proof.
         unfold WF_state. unfold WF_qstate. simpl. 
-        intros. destruct H. split. apply Mixed_State_scale. intuition.
+        intros. destruct H. split. apply (@Mixed_State_scale (2^(e-s))). intuition.
         intuition. intuition. 
 Qed.
 (* Local Open Scope R_scope.
@@ -444,7 +445,7 @@ Lemma WWF_state_scale{s e}: forall (st: state s e) (p:R),
 Proof.
         unfold WWF_state. unfold WWF_qstate. simpl. 
         intros. destruct H. unfold WWF_state in *.
-        split. apply Mixed_State_scale_aux. intuition.
+        split. apply (@Mixed_State_scale_aux (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
 
@@ -741,8 +742,7 @@ WWF_dstate_aux mu /\ d_trace_aux mu <=1 <-> WF_dstate_aux mu.
 Proof.  intros. split; intros. induction mu. apply WF_nil. 
         destruct H. inversion_clear H. simpl in H0.
         apply WF_cons. apply WWF_qstate_to_WF_qstate.
-        split. apply H1.
-        split. apply WWF_qstate_gt_0. apply H1. 
+        split. apply H1. 
         unfold s_trace in H0. simpl in H0.
         apply Rplus_le_reg_pos_r with (d_trace_aux mu); try assumption.
         apply WWF_dstate_gt_0_aux; try  assumption. 
@@ -1482,7 +1482,7 @@ Qed.
 
 
 Lemma map_assoc{s e:nat}: forall (p1 p2:R) (mu:list (state s e)), 
-(p1 *l (p2 *l mu)) =  ((p1* p2)  *l  mu).
+(p1 *l (p2 *l mu)) =  ((p1* p2)%R *l  mu).
 Proof. intros. 
 induction mu. simpl. reflexivity.
 destruct a.
@@ -1498,7 +1498,7 @@ Lemma d_scale_not_0_assoc{s e:nat}: forall (p1 p2:R) (mu:dstate s e),
 dstate_eq (d_scale_not_0 p1 (d_scale_not_0 p2 mu)) (d_scale_not_0 (Rmult p1  p2) mu).
 Proof.
   intros p1 p2 (mu, IHmu). unfold dstate_eq. unfold d_scale_not_0. unfold StateMap.map.
-  simpl. apply map_assoc.
+  simpl.  apply map_assoc.
   Qed.
 
   Lemma d_scale_aux_assoc{s e:nat}: forall (p1 p2:R) (mu mu' mu'' mu''':list (state s e)), 
@@ -2062,7 +2062,23 @@ injection H. intuition. assumption.
 Qed.
 
 
-Lemma  big_dapp_nil{s e:nat}: forall g (f:list (dstate s e)),
+Lemma  big_map2_nil{s e:nat}: forall g (f:list (list (state s e))) (mu:list (state s e)),
+big_map2' g f mu ->
+g=[]\/f=[] -> mu= [].
+Proof.  intros. destruct H0. subst. inversion_clear H. reflexivity.
+       subst. inversion_clear H. reflexivity.
+       
+Qed.
+
+Lemma  big_dapp_nil'{s e:nat}: forall g (f:list (dstate s e)) (d:dstate s e),
+  g=[]\/f=[]-> big_dapp g f d -> dstate_eq d (d_empty s e) . 
+  Proof.  intros. inversion H0;subst. apply big_map2_nil in H1.
+           unfold dstate_eq. apply H1. destruct H. left. apply H.
+           right. rewrite H. simpl. reflexivity. 
+  Qed.
+
+
+(* Lemma  big_dapp_nil{s e:nat}: forall g (f:list (dstate s e)),
 g=[]\/f=[] -> dstate_eq (big_dapp g f ) (d_empty s e) .
 Proof. intros. destruct H. simpl. destruct g; destruct f.
     simpl. unfold dstate_eq ;try reflexivity.
@@ -2073,28 +2089,22 @@ Proof. intros. destruct H. simpl. destruct g; destruct f.
     discriminate H.
     simpl. unfold dstate_eq ;try reflexivity. 
     discriminate H. 
-Qed.
+Qed. *)
 
-
-
-
-
-
-Lemma big_dapp'_length{s e:nat}: forall p_n (mu_n:list (dstate s e)) (mu:dstate s e),
-big_dapp' p_n mu_n mu -> length p_n = length mu_n.
+Lemma big_map2_length{s e:nat}: forall p_n (mu_n:list (list (state s e))) (mu:(list (state s e))),
+big_map2' p_n mu_n mu -> length p_n = length mu_n.
 Proof. induction p_n; intros; destruct mu_n. reflexivity.
       inversion_clear H. inversion_clear H.
       inversion H; subst.
-      simpl. f_equal. apply IHp_n with d0 .
+      simpl. f_equal. apply IHp_n with d.
       assumption.
 Qed.
 
-Lemma  big_dapp_nil'{s e:nat}: forall g (f:list (dstate s e)) (d:dstate s e),
-  g=[]\/f=[]-> big_dapp' g f d -> dstate_eq d (d_empty s e) . 
-  Proof.  intros. inversion H0;subst.  apply dstate_eq_refl.
-  destruct H;
-  discriminate H.
-  Qed.
+Lemma big_dapp'_length{s e:nat}: forall p_n (mu_n:list (dstate s e)) (mu:dstate s e),
+big_dapp p_n mu_n mu -> length p_n = length mu_n.
+Proof. intros. inversion_clear H. apply big_map2_length in H0. 
+       rewrite dstate_to_list_length in H0. assumption.
+Qed.
 
 #[export] Hint Resolve WF_d_app' : DState.
 
@@ -2121,31 +2131,55 @@ Proof. induction f; intros; destruct g.
        exists (a0:: x). apply emit_cons; try assumption.
 Qed.
 
-
-Lemma big_dapp_emit_0{ s e:nat}:forall (f:list R) (g:list (dstate s e)) (mu:dstate s e) r_n mu_n,
-  big_dapp' f g mu->
+Lemma big_map2_emit_0{ s e:nat}:forall (f:list R) (g:list (list (state s e))) (mu:list (state s e)) r_n mu_n,
+  big_map2' f g mu->
   (emit_0 f f r_n) ->
   (emit_0 f g mu_n) ->
-  (exists mu', and (dstate_eq mu mu') (big_dapp' r_n mu_n mu')).
+  (exists mu', and (mu= mu') (big_map2' r_n mu_n mu')).
   Proof. induction f; intros; destruct g;
          inversion_clear H; inversion_clear H0; inversion_clear H1.
-         exists ((d_empty s e)).
-         split. apply dstate_eq_refl.
+         exists [].
+         split. reflexivity.
          econstructor.
          inversion H2; subst. 
          apply (IHf _ _  r_n mu_n) in H3; try assumption.
          destruct H3.
-         exists x. split.
-         apply dstate_eq_trans with d0.
-         apply d_app_empty_l.
-         intuition. intuition.
-         lra. rewrite H in *. lra.
+         exists x. split. rewrite map2_nil_l. apply H.
+         apply H. lra.  rewrite H in *. lra.
          rewrite H0 in *. lra.  
-         apply (IHf _ _  d1 d2) in H3; try assumption.
+         apply (IHf _ _  d0 d1) in H3; try assumption.
          destruct H3. destruct H1.
-         exists (d_app r  x).
-         split. apply d_app_eq; auto. try reflexivity.
+         exists ( r +l x).
+         split. f_equal. assumption. 
         econstructor; try assumption.  
+  Qed.
+
+  Lemma  emit_0_dstate_to_list{s e:nat}: forall (f:list R)(g:list (dstate s e)) mu_n,
+  emit_0 f g mu_n -> emit_0 f (dstate_to_list g) (dstate_to_list mu_n).
+   Proof. induction f; intros; inversion H; subst. econstructor.
+          simpl. econstructor. reflexivity. 
+          apply IHf. assumption.
+          simpl. 
+          apply emit_cons. assumption.
+          apply IHf. assumption.
+  Qed.
+  
+
+Lemma big_dapp_emit_0{ s e:nat}:forall (f:list R) (g:list (dstate s e)) (mu:dstate s e) r_n mu_n,
+  big_dapp f g mu->
+  (emit_0 f f r_n) ->
+  (emit_0 f g mu_n) ->
+  (exists mu', and (dstate_eq mu mu') (big_dapp r_n mu_n mu')).
+  Proof.  intros. inversion_clear H.
+          apply (big_map2_emit_0 _ _ _ r_n (dstate_to_list mu_n)) in H2.
+          destruct H2. destruct H. pose H2.
+          apply big_map_sorted in b. 
+          exists (StateMap.Build_slist b). 
+          split. unfold dstate_eq. apply H.
+          econstructor. apply H2. 
+          apply Forall_list_sort. 
+          apply H0. apply emit_0_dstate_to_list.
+          assumption.  
   Qed.
 
 
@@ -2193,29 +2227,30 @@ length (fun_to_list g n_0) = n_0.
 Proof. induction n_0. simpl. reflexivity.
         simpl. rewrite app_length. rewrite IHn_0. 
         simpl. intuition.
-
 Qed.
 
 Local Open Scope nat_scope.
-Lemma emit_0_dtrace{s e:nat}: forall n (p_n:nat-> R)  (mu_n:nat-> (dstate s e)) (mu:dstate s e) ( mu':list (dstate s e)),
-(forall i : nat, i< n -> p_n i <> 0%R -> d_trace (mu_n i) = d_trace mu) ->
-emit_0 (fun_to_list p_n n) (fun_to_list mu_n n) mu'->
+From Quan Require Import Forall_two.
+Lemma emit_0_dtrace{s e:nat}: forall (p_n:list R)  (mu_n:list (dstate s e)) (mu:dstate s e) ( mu':list (dstate s e)),
+(Forall_two (fun p_i mu_i=> p_i <> 0%R -> d_trace mu_i = d_trace mu ) p_n mu_n)->
+emit_0 p_n mu_n mu'->
 Forall (fun mu_i : dstate s e => d_trace mu_i = d_trace mu) mu'.
-Proof. induction n; intros. inversion_clear H0. econstructor.
-       simpl in H0. 
-       pose (emit_0_exsist (fun_to_list p_n n) (fun_to_list mu_n n)).
-       pose (emit_0_exsist [p_n n] [mu_n n]).
-       destruct e0; destruct e1; repeat rewrite fun_to_list_length; try reflexivity.
-       eapply emit_0_app in H0; [|apply H1|apply H2].
-       rewrite H0.
-       apply Forall_app.
-       split. eapply (IHn p_n).  intros. apply H; [| apply H4].
-       lia. apply H1. 
-       inversion_clear H2; inversion_clear H4;
-       econstructor. apply H. lia.    assumption. 
-       econstructor. 
-  
+Proof. induction p_n; destruct mu_n ; intros;
+       inversion_clear H0;inversion_clear H. econstructor.
+       apply IHp_n with mu_n; try assumption.    
+       econstructor. apply H0. assumption. 
+       apply IHp_n with mu_n; try assumption.  
 Qed.
+
+#[export] Hint Resolve WF_state_dstate WF_dstate_eq WWF_dstate_aux_to_WF_dstate_aux: DState.
+(*------------WF_d_scale-------------------*)
+
+#[export] Hint Resolve WF_d_scale WF_d_scale_aux  WF_dstate_empty 
+WWF_d_scale_aux: DState.
+(*------------------WF_d_app------------------------------*)
+
+
+#[export] Hint Resolve  WF_d_app WF_d_app_aux WWF_d_app_aux: DState. 
 
 
 

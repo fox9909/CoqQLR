@@ -483,6 +483,7 @@ Proof. intros.  intro.
       lra. 
 Qed.
 
+
 (*----------------------------------Mixed_State_aux-------------------------------------*)
 
 Inductive Mixed_State_aux {n} : Matrix n n -> Prop :=
@@ -590,6 +591,7 @@ Proof. intros.
     try intuition; try repeat rewrite mixed_state_trace_real_aux; 
     try intuition.  
 Qed.
+
   
 Lemma Mixed_State_scale_aux: forall n (ρ : Square n) p, Mixed_State_aux ρ ->
 0 < p->
@@ -744,6 +746,218 @@ Qed.
 Mixed_State_aux_to_01': Mixed.
 
 
+Local Open Scope nat_scope.
+Lemma Vector_State_snd_0: forall n (x: Vector (n)),
+WF_Matrix x->
+(snd (((x) † × x) 0%nat 0%nat)= 0)%R.
+ Proof.  intros.  simpl. unfold adjoint. unfold Mmult. 
+ apply big_sum_snd_0.  intros.  rewrite  Cmult_comm.
+ apply Cmult_conj_real.  
+Qed.
+         
+
+Lemma inner_eq: forall n (x: Vector (n)),
+WF_Matrix x->
+((x) † × x) = ((norm x) * (norm x))%R .* I 1.
+Proof. intros. unfold norm. rewrite sqrt_sqrt. unfold inner_product.
+     rewrite <-(matrix_0_0_rev ((x) † × x)) at 1.
+      unfold RtoC.  f_equal. 
+      destruct (((x) † × x) 0 0)  eqn:E. 
+      simpl.  f_equal. assert(r0= snd (((x) † × x) 0 0)).
+      rewrite E. simpl. reflexivity. rewrite H0.
+     apply Vector_State_snd_0. assumption.
+     apply WF_mult.
+     apply WF_adjoint. assumption. assumption.   
+      apply inner_product_ge_0.
+       
+  
+Qed.
+
+Local Open Scope R_scope.
+Lemma Vector_Mix_State{n:nat} : forall (x: Vector (n)),
+WF_Matrix x-> x <> Zero->
+Mixed_State_aux (x × (x) †).
+Proof. intros. assert(x= ( (norm x))%R .* ( (R1 / ( (norm x)))%R .* x )).
+          rewrite Mscale_assoc. rewrite Rdiv_unfold.
+          rewrite Rmult_1_l. rewrite Cmult_comm. 
+          rewrite RtoC_mult. 
+          rewrite Rinv_l.
+          rewrite Mscale_1_l. reflexivity.
+          unfold not. intros.
+          apply norm_zero_iff_zero in H1. rewrite H1 in H0.
+          destruct H0. reflexivity. assumption.
+          rewrite H1. rewrite Mscale_mult_dist_l.
+          rewrite Mscale_adj.   rewrite Mscale_mult_dist_r.
+          remember ( (norm x)). rewrite Mscale_assoc.
+          rewrite Cconj_R. 
+          rewrite RtoC_mult. 
+          apply Pure_S_aux. 
+          assert(0<=r). rewrite Heqr.
+          apply norm_ge_0 . assert(0<r).   destruct H2.  
+          assumption. rewrite Heqr in H2. 
+          symmetry in H2.
+          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
+          destruct H0. reflexivity.  
+          assumption. apply Rmult_gt_0_compat.
+          assumption. assumption.    
+          unfold Pure_State. exists (((R1 / r)%R .* x)).
+          split. unfold Pure_State_Vector. split. apply WF_scale.
+          assumption.
+           rewrite Mscale_adj. rewrite Mscale_mult_dist_r.
+          rewrite Cconj_R. rewrite Mscale_mult_dist_l.
+          rewrite inner_eq. 
+          rewrite Heqr.  
+          rewrite Rdiv_unfold. rewrite Rmult_1_l.
+          repeat rewrite Mscale_assoc. 
+          repeat rewrite RtoC_mult. 
+          rewrite <-Rmult_assoc . 
+          rewrite (Rmult_assoc  _ (/ norm x) _).
+          assert((norm x<> 0)%R). 
+          unfold not. intros.
+          apply norm_zero_iff_zero in H2. rewrite H2 in H0.
+          destruct H0. reflexivity. assumption.  
+          rewrite Rinv_l. rewrite Rmult_1_r. 
+          rewrite  Rinv_l. rewrite Mscale_1_l. reflexivity.
+          assumption. assumption. assumption. reflexivity.
+Qed.
+
+Lemma mixed_super_aux : forall {m n} (M : Matrix m n) (ρ: Matrix n n), 
+WF_Matrix M->
+   Mixed_State_aux ρ ->
+    (super M ρ) <> Zero ->
+   Mixed_State_aux  (super M ρ).
+  Proof.
+  intros m n M ρ Hw H1 H2.
+  induction H1.
+  + unfold super. rewrite Mscale_mult_dist_r.
+    rewrite Mscale_mult_dist_l.
+    apply Mixed_State_scale_aux. 
+    destruct H0. destruct H0. rewrite H1.
+    rewrite Mmult_assoc. rewrite Mmult_assoc.
+     rewrite <-(Mmult_assoc M ). rewrite <-Mmult_adjoint.
+     apply Vector_Mix_State.
+     destruct H0.  
+     auto_wf. rewrite H1 in *. unfold super in H2.
+    rewrite Mscale_mult_dist_r in H2.
+    rewrite Mscale_mult_dist_l in H2.
+    rewrite Mmult_assoc in H2. rewrite Mmult_assoc in H2.
+    rewrite <-(Mmult_assoc M ) in H2 .
+    rewrite <-Mmult_adjoint in H2.
+    intro. rewrite H3 in H2. 
+    rewrite Mmult_0_l in H2.
+    rewrite Mscale_0_r in H2. destruct H2. reflexivity.
+    assumption.
+  + unfold  super in *.
+    rewrite Mmult_plus_distr_l in *.
+    rewrite Mmult_plus_distr_r in *.
+    assert(M × ρ1 × (M) †  = Zero \/ M × ρ1 × (M) †  <> Zero).
+    apply Classical_Prop.classic.
+    assert(M × ρ2 × (M) †  = Zero \/ M × ρ2 × (M) †  <> Zero).
+    apply Classical_Prop.classic.
+    destruct H. rewrite H in *. destruct H0.
+    rewrite H0 in *. 
+    rewrite Mplus_0_l in *. destruct H2. reflexivity.
+    rewrite Mplus_0_l. apply IHMixed_State_aux2.
+    assumption. destruct H0.
+    rewrite H0. rewrite Mplus_0_r. 
+    apply IHMixed_State_aux1. assumption.
+    apply Mix_S_aux; trivial.
+    apply IHMixed_State_aux1. assumption.
+    apply IHMixed_State_aux2. assumption.
+
+Qed.
+
+Local Open Scope nat_scope.
+Lemma Mixed_State_aux_big_sum{n:nat}:forall (f:nat-> Square n) n0,
+(n0<>0)%nat->
+(forall i:nat, (i<n0)%nat ->  Mixed_State_aux (f i) \/ ((f i) =Zero))->
+(exists i:nat, (i<n0)%nat /\   (f i) <> Zero)->
+Mixed_State_aux (big_sum f n0) .
+Proof. induction n0; intros. simpl. intuition. 
+       simpl. destruct n0.  simpl. rewrite Mplus_0_l.
+       destruct H1. destruct H1. assert(x =0)%nat. lia.
+       rewrite H3 in H2. 
+       assert(Mixed_State_aux (f 0) \/ f 0 = Zero).
+       apply H0. lia. destruct H4. assumption.
+       rewrite H4 in H2. destruct H2. reflexivity.
+       assert (((f (S n0)) = Zero) \/  (f (S n0)) <> Zero).
+       apply Classical_Prop.classic. destruct H2.
+       rewrite H2. rewrite Mplus_0_r.
+       apply IHn0. lia. 
+     intros. apply H0. lia.  
+     destruct H1.   destruct H1.
+     exists x. split. bdestruct (x =? S n0).
+     rewrite H4 in *. rewrite H2 in H3. destruct H3. reflexivity.
+     lia. assumption.
+     assert (((big_sum f (S n0))= Zero) \/  (big_sum f (S n0)) <> Zero).
+     apply Classical_Prop.classic. destruct H3.
+     rewrite H3. rewrite Mplus_0_l. 
+     assert(Mixed_State_aux (f (S n0)) \/ f (S n0) = Zero).
+     apply H0. lia. destruct H4. assumption.
+     rewrite H4 in H2. destruct H2. reflexivity.
+     apply Mix_S_aux. 
+     apply IHn0. lia. intros. apply H0. lia.
+     apply big_sum_not_0 in H3. assumption. 
+     assert(Mixed_State_aux (f (S n0)) \/ f (S n0) = Zero).
+     apply H0. lia. destruct H4. assumption.
+     rewrite H4 in H2. destruct H2. reflexivity.
+Qed. 
+
+
+Lemma  big_sum_Cmod{n:nat}: forall (f:nat-> Square n) n0,
+(forall i:nat, (i<n0)%nat-> Mixed_State_aux (f i)\/ f i =Zero)->
+Cmod (trace (big_sum f n0)) = 
+big_sum (fun i=> Cmod (trace (f i))) n0 .
+Proof. induction n0.
+    { simpl. intros. rewrite Zero_trace. 
+     rewrite Cmod_0.  reflexivity. }
+
+    { intros.
+    assert((forall i : nat,
+    (i < S n0)%nat -> f i = Zero) \/ ~(forall i : nat,
+    (i < S n0)%nat ->
+    f i = Zero)).
+     apply Classical_Prop.classic. destruct H0.
+     rewrite big_sum_0_bounded.  rewrite big_sum_0_bounded.
+     rewrite Zero_trace. rewrite Cmod_0. reflexivity.
+     intros. rewrite H0. rewrite Zero_trace. rewrite Cmod_0. reflexivity.
+     lia. apply H0. simpl. 
+     bdestruct (n0=?0).
+
+     rewrite H1. simpl. rewrite Mplus_0_l.
+     rewrite Rplus_0_l. reflexivity.
+
+     assert((forall i : nat,
+     (i <  n0)%nat -> f i = Zero) \/ ~(forall i : nat,
+     (i <  n0)%nat ->
+     f i = Zero)).
+     apply Classical_Prop.classic. destruct H2.
+     rewrite big_sum_0_bounded.  rewrite big_sum_0_bounded.
+     rewrite Mplus_0_l.
+     rewrite Rplus_0_l. reflexivity.
+     intros. rewrite H2. rewrite Zero_trace.
+     rewrite Cmod_0. reflexivity. lia.
+     intros. rewrite H2. reflexivity. lia. 
+     assert(f n0 = Zero \/ f n0 <> Zero).
+     apply Classical_Prop.classic. 
+     destruct H3.
+
+     rewrite H3. 
+     rewrite Mplus_0_r. rewrite Zero_trace.
+     rewrite Cmod_0. rewrite Rplus_0_r.
+     apply IHn0. intros. apply H. lia.     
+     rewrite mixed_state_Cmod_plus_aux. f_equal. apply IHn0.
+     intros. apply H. lia.
+     apply Mixed_State_aux_big_sum. lia. intros. apply H.
+     lia. unfold not.  
+     apply Classical_Pred_Type.not_all_ex_not in H2.
+     destruct H2. exists x. 
+     apply Classical_Prop.imply_to_and.
+     assumption.
+
+     assert(Mixed_State_aux (f n0) \/ f n0 = Zero).
+     apply H. lia. intuition.   }
+Qed.
 (*----------------------------------------------------------------------------*)
 Require Import Complex.
 Lemma real_gt_0_aux:forall a b c : R, 0 < a -> 0 < b -> a = (b * c)%R -> 0 < c.
