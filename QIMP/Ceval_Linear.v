@@ -1365,161 +1365,120 @@ Qed.
 
 Local Open Scope R_scope.
 Require Import Forall_two.
-Fixpoint big_map2{s e:nat} (p_n :list R) (mu_n: list (list (cstate *qstate s e))) : list (cstate *qstate s e) :=
-  match p_n ,mu_n with 
-   |[], [] => []
-   |[], _ => []
-   | _ ,[]=> []
-   | hg::tg, hf:: tf =>StateMap.Raw.map2 (option_app) 
-                     (hg *l hf) (big_map2 tg tf)
-    end.
-
-Lemma  big_map'_sorted{s e:nat}: forall p_n (mu_n: list (list(state s e))) ,
-(Forall (fun i:(list(state s e)) => Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) i ) mu_n) ->
-Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) (big_map2 p_n mu_n).
-Proof. induction p_n; intros; destruct mu_n; simpl; try apply Sorted.Sorted_nil.
-        apply StateMap.Raw.map2_sorted.  apply StateMap.Raw.map_sorted.
-        inversion_clear H. assumption. 
-        eapply IHp_n.
-        inversion_clear H; assumption.
-Qed.
-
-Definition  big_dapp' {s e:nat} (g:list R) (f:list (dstate s e))  : dstate s e := 
-      StateMap.Build_slist (big_map'_sorted g (dstate_to_list f) (Forall_list_sort f)).
+Fixpoint big_dapp{s e:nat} (g:list R) (f:list (dstate s e))  : dstate s e := 
+match g ,f with 
+|[], [] => d_empty s e
+|[], _ => d_empty s e
+| _ ,[]=>  d_empty s e 
+| hg::tg, hf:: tf =>d_app (d_scale_not_0 hg hf) (big_dapp tg tf)
+end.
    
 
-Lemma big_map2'_to_map{s e:nat}: forall (p_n:list R) (mu_n:list (list (cstate *qstate s e))) ,  
+Lemma big_dapp'_to_app{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) ,  
 length p_n= length mu_n->
 (Forall (fun x => 0<x%R) p_n)->
-big_map2' p_n mu_n (big_map2 p_n mu_n).
+big_dapp' p_n mu_n (big_dapp p_n mu_n).
 Proof.  induction p_n; intros. inversion H0; subst. destruct mu_n.
- simpl. econstructor.   discriminate H.
+ simpl. apply big_dapp_nil. discriminate H.
  destruct mu_n. discriminate H. 
-  simpl.  econstructor. 
-  apply (@d_scale_r s e).  inversion_clear H0.
+  simpl.  apply big_dapp_cons. econstructor.  inversion_clear H0.
   lra. apply IHp_n. injection H. intuition.
   inversion_clear H0.
 assumption.
 Qed.
 
-Lemma big_dapp'_to_app{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) ,  
-length p_n= length mu_n->
-(Forall (fun x => 0<x%R) p_n)->
-big_dapp p_n mu_n (big_dapp' p_n mu_n).
-Proof. intros. econstructor.
-unfold big_dapp'. simpl. apply big_map2'_to_map. 
-rewrite dstate_to_list_length. assumption. assumption.
+
+Lemma WF_d_scale_not_0{s e}: forall (mu:dstate s e) p, 
+(0<p<=1)
+->WF_dstate mu 
+->WF_dstate(d_scale_not_0 p mu).
+Proof. unfold WF_dstate.
+        unfold d_trace.
+        unfold d_scale_not_0.
+        simpl. intros  (mu,IHmu) p H0 H.
+        unfold map.  simpl. 
+        apply WF_dstate_map. intuition.
+        intuition.
 Qed.
 
-Lemma WF_dstate_big_map2{s e:nat}: forall (p_n:list R) (mu_n:list (list (state s e))) (mu:list (state s e )), 
-Forall (fun x=> WF_dstate_aux x) mu_n ->
-big_map2' p_n mu_n mu->
-(Forall (fun x => 0<= (x)) p_n)->
-sum_over_list p_n<=1->
-WF_dstate_aux mu.
-Proof. intros. apply WWF_dstate_aux_to_WF_dstate_aux.
-split. apply WWF_dstate_big_map with p_n mu_n .
-apply Forall_WWF_WF.  assumption. assumption. assumption.
-apply Rle_trans with (sum_over_list p_n).
-apply d_trace_le_1_big_map2 with mu_n. 
-assumption. assumption. assumption.
-assumption.
+Lemma ceval_big_dapp{s e:nat}: forall (p_n :list R) (mu_n:list (dstate s e)) (mu mu':dstate s e)   c,
+Forall (fun x : R => 0 < x) p_n ->
+sum_over_list p_n <=1 -> 
+Forall (fun x : dstate s e => WF_dstate x) mu_n ->
+length p_n =length mu_n->
+dstate_eq mu (big_dapp p_n mu_n)->
+ceval c mu mu' ->
+exists (mu_n': list (dstate s e)), 
+ and (Forall_two (fun x y=> ceval c x y) mu_n  mu_n') 
+ (dstate_eq mu' (big_dapp p_n mu_n')).
+Proof. induction  p_n; intros mu_n mu mu' c Hp Hs Hw; intros; destruct mu_n. 
+       simpl in *; exists ([]);
+       split; try econstructor. 
+       inversion H1; subst. unfold dstate_eq in *.
+       simpl in *.    unfold StateMap.Raw.empty in *.
+       rewrite H0 in H4. inversion_clear H4. reflexivity.
+       discriminate H. discriminate H. 
+       simpl. 
+       assert(exists mu1 mu2 ,  and (ceval c (d_scale_not_0 a d) mu1)
+       ((ceval c (big_dapp p_n mu_n) mu2)  /\
+        (dstate_eq mu' (d_app mu1 mu2)))).
+       apply (ceval_app c (d_scale_not_0 a d) (big_dapp p_n mu_n ) mu mu').
+       apply WF_d_scale_not_0. split. inversion_clear Hp. assumption.
+       rewrite sum_over_list_cons in Hs. 
+       destruct p_n. rewrite sum_over_list_nil in Hs. 
+       rewrite Rplus_0_r in Hs. assumption.
+       inversion_clear Hp. apply sum_over_list_gt_0 in H3.
+       lra. discriminate. inversion_clear Hw. assumption. 
+       apply WF_dstate_big_dapp with p_n mu_n.  inversion_clear Hw. assumption.
+       apply big_dapp'_to_app. injection H. intuition.
+         inversion_clear Hp. assumption. 
+         inversion_clear Hp. apply Forall_impl with ((fun x : R => 0 < x)).
+         intros. lra. assumption.
+       rewrite sum_over_list_cons in Hs. inversion_clear Hp.
+       lra.
+       assumption. assumption.
+       destruct H2. destruct H2.
+       destruct H2.
+       assert(exists y, (and (ceval c d y)
+       (dstate_eq x (d_scale_not_0 a y)))).
+       apply ceval_scale with ((d_scale_not_0 a d)).
+       inversion_clear Hw. assumption. 
+       inversion_clear Hp. lra.
+       unfold dstate_eq. reflexivity.
+       assumption. destruct H4. 
+       assert( exists mu_n' : list (dstate s e),
+       and (Forall_two (fun x y : dstate s e => ceval c x y) mu_n mu_n') 
+       (dstate_eq x0 (big_dapp p_n mu_n' ))).
+       apply IHp_n with ((big_dapp p_n mu_n)).
+       inversion_clear Hp. assumption.
+       rewrite sum_over_list_cons in Hs. inversion_clear Hp.
+       lra.
+       inversion_clear Hw. assumption. 
+       injection H; intuition.
+       unfold dstate_eq . 
+       reflexivity.
+       intuition. destruct H5.
+       exists (x1::x2). 
+       split. econstructor.  intuition.
+       intuition. apply dstate_eq_trans with ((d_app x x0)).
+       intuition. 
+       apply d_app_eq. intuition.
+       intuition.
 Qed.
+
+
+
 
 Lemma  WF_dstate_Forall{s e:nat}: forall (mu_n: list (dstate s e)),
-Forall  (fun x : dstate s e => WF_dstate x)
-      mu_n ->
+Forall  (fun x : dstate s e => WF_dstate x)  mu_n ->
 Forall (fun x : list (cstate * qstate s e) =>
    WF_dstate_aux x) (dstate_to_list mu_n).
 Proof. induction mu_n.  simpl. econstructor. 
         econstructor. inversion_clear H. apply H0.
         apply IHmu_n. inversion_clear H. assumption.
-  
-Qed.
-
-Lemma WF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
-Forall (fun x=> WF_dstate x) mu_n ->
-big_dapp p_n mu_n mu->
-(Forall (fun x => 0<= (x)) p_n)->
-sum_over_list p_n<=1->
-WF_dstate mu.
-Proof. intros. inversion_clear H0.
-       apply WF_dstate_big_map2 in H3;unfold WF_dstate; try assumption.
-       apply WF_dstate_Forall. assumption.
-Qed.
-
-Lemma ceval_big_map2{s e:nat}: forall (p_n :list R) (mu_n:list (list (state s e))) (mu mu':(list (state s e)))   c,
-Forall (fun x : R => 0 < x) p_n ->
-sum_over_list p_n <=1 -> 
-Forall (fun x : (list (state s e)) => WF_dstate_aux x) mu_n ->
-length p_n =length mu_n->
-(big_map2 p_n mu_n) = mu->
-ceval_single c mu mu' ->
-exists (mu_n': list (list (state s e))), 
- and (Forall_two (fun x y=> ceval_single c x y) mu_n mu_n') 
- ((big_map2 p_n mu_n') = mu').
-Proof. induction  p_n; intros mu_n mu mu' c Hp Hs Hw; intros; 
-        destruct mu_n.
-       simpl in *; exists ([]); rewrite <-H0 in *.
-       split; try econstructor; 
-       inversion H1; subst. reflexivity.
-       discriminate H. discriminate H. 
-       simpl in H0. rewrite <-H0 in H1. 
-
-       simpl.  
-       assert(exists mu1 mu2 ,  and (ceval_single c (a *l l) mu1)
-       ((ceval_single c (big_map2 p_n mu_n) mu2)  /\
-        (mu'= (mu1 +l mu2)))). 
-       apply (ceval_app_aux c (a *l l) (big_map2 p_n mu_n) mu').
-       apply WF_dstate_map. split. inversion_clear Hp. assumption.
-       rewrite sum_over_list_cons in Hs. 
-       destruct p_n. rewrite sum_over_list_nil in Hs. 
-       rewrite Rplus_0_r in Hs. assumption.
-       inversion_clear Hp. apply sum_over_list_gt_0 in H3.
-       lra. discriminate. inversion_clear Hw. assumption.
-       apply WF_dstate_big_map2 with p_n mu_n.  inversion_clear Hw. assumption.
-       apply big_map2'_to_map. injection H. intuition.
-         inversion_clear Hp. assumption. 
-         inversion_clear Hp. apply Forall_impl with ((fun x : R => 0 < x)).
-         intros. lra. assumption.
-       rewrite sum_over_list_cons in Hs. inversion_clear Hp.
-       lra.   apply H1.  
-       destruct H2. destruct H2.
-       destruct H2.
-       assert(exists y, (and (ceval_single c l y)
-       (x = (a *l y)))).
-       apply ceval_dscale_aux. 
-       inversion_clear Hp. lra. apply H2.
-       destruct H4. 
-       assert( exists mu_n' : list (list (state s e)),
-       and (Forall_two (fun x y : (list (state s e)) => 
-       ceval_single c x y) mu_n mu_n') 
-       ((big_map2 p_n mu_n') = x0)).
-       apply IHp_n with ((big_map2 p_n mu_n)).
-       inversion_clear Hp. assumption.
-       rewrite sum_over_list_cons in Hs. inversion_clear Hp.
-       lra.
-       inversion_clear Hw. assumption. 
-       injection H; intuition. reflexivity.
-       intuition. destruct H5.
-       exists (x1::x2). 
-       split. econstructor.  intuition.
-       intuition.  destruct H3. rewrite H6.
-       f_equal. intuition. intuition.
 Qed.
 
 
-Lemma list_to_dstate {s e:nat}: forall (mu_n:list (list ( state s e))),
- ((Forall (fun i : list (state s e) =>Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) i) mu_n ))->
-exists (mu_n': list (dstate s e)), dstate_to_list mu_n' = mu_n.
-Proof. induction mu_n;intros. exists [].
-        simpl. reflexivity. 
-        inversion_clear H. 
-        apply IHmu_n in H1.
-        destruct H1. 
-        exists (StateMap.Build_slist (H0)::x).
-        simpl. f_equal. assumption.
-Qed.
 
 Lemma  WF_big_ceval{s e:nat}: forall c (mu_n mu_n': list (list (state s e))),
 Forall_two (fun x y : list (cstate * qstate s e) =>
@@ -1558,38 +1517,7 @@ Proof. induction mu_n; intros; destruct mu_n'; simpl  in *; inversion H0; subst.
       apply WF_ceval with c (StateMap.this a).
       apply H1. assumption.
       apply IHmu_n; try assumption.
-       
-  
 Qed.
 
 
 
-Lemma ceval_big_dapp{s e:nat}: forall (p_n :list R) (mu_n:list (dstate s e)) (mu mu':dstate s e)   c,
-Forall (fun x : R => 0 < x) p_n ->
-sum_over_list p_n <=1 -> 
-Forall (fun x : dstate s e => WF_dstate x) mu_n ->
-length p_n =length mu_n->
-dstate_eq mu (big_dapp' p_n mu_n)->
-ceval c mu mu' ->
-exists (mu_n': list (dstate s e)), 
- and (Forall_two (fun x y=> ceval c x y) mu_n  mu_n') 
- (dstate_eq mu' (big_dapp' p_n mu_n')).
-Proof.  intros. 
-        pose (@ceval_big_map2 s e p_n (dstate_to_list mu_n) (StateMap.this mu) (StateMap.this mu') c).
-        destruct e0;try assumption.
-        apply WF_dstate_Forall. assumption.
-        rewrite dstate_to_list_length. assumption.
-        inversion_clear H3. reflexivity.
-        inversion_clear H4. assumption.
-        destruct H5. pose H5. 
-        apply big_ceval_sorted in f; try assumption.
-        apply list_to_dstate in f.
-        destruct f.
-        exists x0. split. 
-        apply Forall_ceval; try assumption.
-        rewrite H7. assumption.
-        unfold dstate_eq. rewrite <-H6.
-        unfold big_dapp'. simpl. rewrite <-H7. 
-        reflexivity.
-        apply Forall_list_sort. 
-Qed.

@@ -17,11 +17,13 @@ Require Import Coq.Arith.Peano_dec.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import ParDensityO.
-From Quan Require Import QState_L.
+From Quan Require Import QState.
 From Quan Require Import QIMP_L.
-From Quan Require Import QAssert_L.
+From Quan Require Import QAssert.
 From Quan Require Import Par_trace.
 From Quan Require Import QRule_Q_L.
+Import Basic.
+Import Ceval_Linear.
 (*From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_I_L. *)
 
@@ -76,8 +78,9 @@ Proof. unfold Qsys_to_Set. induction r; induction l; intros; simpl.
 Qed.
 
 Lemma In_empty: forall s, NSet.In s NSet.empty -> False .
-Proof. 
-Admitted.
+Proof. intros. pose (NSet.empty_1). unfold NSet.Empty in *. 
+        apply e in H. destruct H.
+Qed.
 
 Lemma In_Qsys: forall r l s, 
 l<r->
@@ -207,8 +210,8 @@ Qed.
 
 
 
-
-
+Import ParDensityO.
+Local Open Scope nat_scope.
 Lemma Par_trace_ceval_swap: forall c s e (mu mu': list (cstate *qstate s e)) l r,
 s<=l /\ l<=r /\ r<=e ->
 NSet.Subset (snd (MVar c)) (Qsys_to_Set l r)
@@ -357,7 +360,7 @@ Proof. induction c. intros.
      apply Classical_Prop.classic. destruct H4. 
      right. assumption. left. apply WWF_qstate_QMeas; try lia; 
      try assumption.    inversion_clear H1.
-     apply Mixed_State_aux_to_Mix_State. apply H5.
+     apply WWF_qstate_to_WF_qstate. apply H5.
      }
 Admitted.
 
@@ -562,97 +565,10 @@ Proof. intros. rewrite H. unfold scale.
        reflexivity.
 Qed.
 
-(* Lemma Vec_linear_exsist{ n:nat}: forall (v1 v2 :Vector n) ,
-(exists p, v1= p .* v2) ->
-exists p, (forall i, (v1 i 0) = Cmult p  (v2 i 0)).
-Proof. intros. destruct H. rewrite H. exists x.
-       intros. unfold scale.
-       reflexivity.
-Qed. *)
-
 
 Definition Par_Pure_State { n:nat}(q:Square n): Prop :=
 exists (p:R) (q': Square n), and (0<p<=1)%R  (Pure_State q' /\ q= p .* q').
 
-(* Lemma Mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
-Mixed_State ρ1 ->
-Mixed_State ρ2 ->
-Pure_State_Vector φ ->
-ρ1 .+  ρ2= φ  × φ†->  exists (p1 p2:R), 
-and (and (0<p1<=1)%R (0<p2<=1)%R)
-  (and (ρ1= p1 .* ( φ  × φ† )) (ρ2= p2 .* ( φ  × φ† ))).
-Proof. intros. 
-    assert(fst (trace ρ1) .* ((1 / fst (trace ρ1))%R.* ρ1) =ρ1).
-    rewrite Mscale_assoc. rewrite Rdiv_unfold.
-    rewrite Rmult_1_l. rewrite RtoC_mult.
-    rewrite Rinv_r. rewrite Mscale_1_l. reflexivity.
-    assert(fst (trace ρ1) > 0%R)%R. 
-    apply mixed_state_trace_gt0. assumption.
-    lra. 
-   rewrite <-H3 in *.
-    assert(fst (trace ρ2) .* ((1 / fst (trace ρ2))%R.* ρ2) =ρ2).
-    rewrite Mscale_assoc. rewrite Rdiv_unfold.
-    rewrite Rmult_1_l. rewrite RtoC_mult.
-    rewrite Rinv_r. rewrite Mscale_1_l. reflexivity.
-    assert(fst (trace ρ2) > 0%R)%R. 
-    apply mixed_state_trace_gt0. assumption.
-    lra.  rewrite <-H4 in *.
-    remember (((1 / fst (trace ρ1))%R .* ρ1)).
-    remember (((1 / fst (trace ρ2))%R .* ρ2)).
-    assert(m = m0 \/ m <>  m0).
-    apply Classical_Prop.classic.
-    destruct H5. destruct H5. 
-    rewrite <-Mscale_plus_distr_l in H2.
-    rewrite <-RtoC_plus in H2.
-    remember ((fst (trace ρ1) + fst (trace ρ2))%R ).
-    rewrite <-H2.
-    exists (fst (trace ρ1) / r)%R.
-    exists (fst (trace ρ2) /r)%R.
-    split. rewrite Heqr. 
-    split.   admit. admit.
-    repeat rewrite Rdiv_unfold.  
-    repeat rewrite Mscale_assoc.
-    repeat rewrite RtoC_mult.
-    repeat rewrite Rmult_assoc.
-    repeat rewrite Rinv_l. repeat rewrite Rmult_1_r.
-    intuition. rewrite Heqr.
-    assert((fst (trace ρ1)%R>0)%R). apply mixed_state_trace_gt0.
-    rewrite<-H3. intuition.
-    assert(fst (trace ρ2)>0)%R. apply mixed_state_trace_gt0.
-    rewrite<-H4. intuition.
-    assert(fst (trace ρ1) + fst (trace ρ2)>0)%R.
-    apply Rplus_lt_0_compat; intuition.
-    unfold not. intros. rewrite H8 in H7.
-     lra.
-    assert(fst (trace (Mmult (fst (trace ρ1) .* m .+ fst (trace ρ2) .* m0)  (fst (trace ρ1) .* m .+ fst (trace ρ2) .* m0)))<1)%R.
-    apply Mixed_sqrt_trace. econstructor.
-    apply mixed_state_trace_in01. rewrite<-H3. intuition.
-    apply mixed_state_trace_in01. rewrite<-H4. intuition.
-    rewrite <-mixed_state_fst_plus_aux.
-    apply mixed_state_trace_in01. 
-    rewrite <-H3. rewrite<-H4.
-    rewrite H2. 
-    assert(φ × (φ) † = R1 .* (φ × (φ) †)).
-    rewrite Mscale_1_l. reflexivity.
-    rewrite H6. apply Pure_S. lra. 
-    econstructor . split. apply H1.
-    reflexivity.
-    apply Mixed_State_aux_to_Mix_State. 
-    rewrite <-H3. assumption.
-    apply Mixed_State_aux_to_Mix_State. 
-    rewrite <-H4. assumption.
-     rewrite Heqm.  
-   admit. admit.
-     assumption.
-    assert(trace (Mmult (φ  × φ†)  (φ  × φ†))=C1).
-    apply Pure_sqrt_trace. econstructor.
-    split. apply H1. reflexivity. 
-    assert (fst (trace (Mmult (fst (trace ρ1) .* m  .+ fst (trace ρ2) .* m0) (fst (trace ρ1) .* m  .+ fst (trace ρ2) .* m0)))=
-             fst (trace (Mmult (φ  × φ†)  (φ  × φ†)))).
-    rewrite H2. reflexivity.
-    rewrite H7  in H8. 
-    simpl in H8. lra.
-Admitted. *)
 
 Lemma Mixed_pure': forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
 (Mixed_State_aux ρ1 \/ ρ1 = Zero)  ->
@@ -853,10 +769,10 @@ Proof. intros.
  rewrite (big_sum_unique  (f (g r)))in e0.
  assumption. 
  exists (r). split. assumption.
- split. unfold scale. 
- rewrite Vec0. rewrite Cmult_1_r. reflexivity. reflexivity.
+ split. unfold scale.  
+ rewrite Vec1. rewrite Cmult_1_r. reflexivity. reflexivity.
  intros.  unfold scale. 
- rewrite Vec1. rewrite Cmult_0_r. reflexivity.
+ rewrite Vec0. rewrite Cmult_0_r. reflexivity.
  assumption.   
 Qed.
 
@@ -1039,13 +955,12 @@ Proof. intros q Hs. intros H H0. induction H.
         assumption. 
         apply Nat.pow_nonzero.
         lia.
-        rewrite H10. rewrite H11. rewrite Vec_inner_1.
-        rewrite kron_1_r. reflexivity.
+        rewrite H10. rewrite H11. rewrite Vec_inner_1. unfold c_to_Vector1.
+        Msimpl.  reflexivity.
         assumption. assumption.
-        intros. rewrite Vec_inner_0.
-        rewrite Mscale_0_l. rewrite kron_0_r.
-        rewrite Mscale_0_r. reflexivity. assumption.
-        assumption.
+        intros. rewrite Vec_inner_0. unfold c_to_Vector1.
+        Msimpl.  reflexivity. 
+        assumption. assumption.
         apply mod_bound_pos.
         lia. apply pow_gt_0.  
        intros.
@@ -1159,17 +1074,17 @@ Proof. intros q Hs. intros H H0. induction H.
         rewrite (big_sum_unique  (x3 (j * 2 ^ (e - x) + x1) 0)) in H16.
         assumption. 
         exists j. split. assumption. 
-        split. unfold scale. rewrite Vec0.
+        split. unfold scale. rewrite Vec1.
         rewrite Cmult_1_r. 
         reflexivity. reflexivity. 
-        intros. unfold scale. rewrite Vec1.
+        intros. unfold scale. rewrite Vec0.
         rewrite Cmult_0_r. reflexivity.
         assumption.
         exists j. split. assumption.
-        split. unfold scale. rewrite Vec0.
+        split. unfold scale. rewrite Vec1.
         rewrite Cmult_1_r. 
         reflexivity. reflexivity. 
-        intros. unfold scale. rewrite Vec1.
+        intros. unfold scale. rewrite Vec0.
         rewrite Cmult_0_r. reflexivity.
         assumption.
         
