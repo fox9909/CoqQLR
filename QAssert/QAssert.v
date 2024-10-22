@@ -167,7 +167,7 @@ Fixpoint Free_pure (P: Pure_formula ): CSet :=
       | PBexp b=> Free_bexp b
       | PUniver a P0 => NSet.remove a (Free_pure (P0))
       | PExists a P0 => NSet.remove a  (Free_pure (P0))
-      | Assn_sub_P i a P0 =>NSet.remove i (NSet.union (Free_pure P0) (Free_aexp a))
+      | Assn_sub_P i a P0 => (NSet.union (Free_pure P0) (Free_aexp a))
   end.
 
 Fixpoint Free_Qexp (qs: QExp) : QSet :=
@@ -205,7 +205,7 @@ Fixpoint Free (d: Assertion) : (CSet * QSet):=
     match d with 
         |APro pF => Free_pro pF
         |ANpro F=> Free_npro F
-        |Assn_sub x i D => Free D
+        |Assn_sub i a D =>  (NSet.union (fst (Free D)) (Free_aexp a), snd (Free D))
     end. 
 
 (*-------------------------------Semantics-----------------------------------*)

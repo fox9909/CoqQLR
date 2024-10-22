@@ -625,8 +625,7 @@ Qed.
 #[export] Hint Resolve  mixed_unitary_aux Mixed_State_scale_aux: Mixed.
 
 
-Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
-Proof. intros. lra. Qed.
+
 
 Lemma Rdiv_in_01:forall r1 r2, r1>0 -> r2>0 -> 
 r1<=r2->

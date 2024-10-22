@@ -688,3 +688,195 @@ Proof. induction n0; intros H0. simpl in *. destruct H0. reflexivity.
        apply IHn0.  assumption. 
        destruct H1. exists x. split. lia. intuition. 
 Qed.
+
+
+Lemma Mmult0H: ⟨0∣ × ∣+⟩= / √ 2 .* (I 1).
+Proof. solve_matrix. 
+Qed.
+
+Lemma Mmult1H: ⟨1∣ × ∣+⟩= / √ 2 .* (I 1).
+Proof. solve_matrix. 
+Qed.
+
+Local Open Scope C_scope.
+
+Lemma MmultH0 : (hadamard) × ∣0⟩ = ∣+⟩. Proof. solve_matrix. Qed.
+Lemma H_adjoint: adjoint (hadamard) =hadamard.
+Proof. solve_matrix.
+Qed.
+
+Lemma MmultH_xplus : adjoint (hadamard) × ∣+⟩ = ∣0⟩. Proof.
+assert((hadamard) × ∣0⟩ = ∣+⟩). rewrite MmultH0. reflexivity.
+symmetry in H. rewrite H. rewrite <- Mmult_assoc.
+assert((hadamard) † × hadamard = I 2).
+apply H_unitary. rewrite H0. rewrite Mmult_1_l.
+reflexivity. apply WF_qubit0. Qed. 
+
+#[export] Hint Rewrite @Mmult0H @Mmult1H @kron_1_r @MmultH0 @MmultH_xplus using (auto 100 with wf_db): M_db.
+
+
+Lemma Vec_qubit0: Vec 2 0= qubit0. Proof. unfold Vec. solve_matrix. Qed. 
+Lemma  Vec_qubit1: Vec 2 1= qubit1. Proof. unfold Vec. solve_matrix. Qed. 
+#[export] Hint Rewrite @norm_scale @Vec_qubit0 @Vec_qubit1  using (auto 100 with wf_db) : M_db.
+
+
+Lemma Norm0: (norm ∣0⟩)=1 %R.
+Proof. unfold norm. unfold qubit0. simpl.
+      rewrite Rmult_1_l. repeat rewrite Rmult_0_r.
+      repeat rewrite Rplus_0_l. repeat rewrite Rminus_0_r.
+      rewrite Rplus_0_r. simpl.
+      rewrite sqrt_1.
+     reflexivity.
+Qed. 
+
+
+Lemma Norm1: (norm ∣1⟩)=1 %R.
+Proof. unfold norm. unfold qubit0. simpl.
+      rewrite Rmult_1_l. repeat rewrite Rmult_0_r.
+      repeat rewrite Rplus_0_l. repeat rewrite Rminus_0_r.
+      rewrite Rplus_0_l. simpl.
+      rewrite sqrt_1.
+     reflexivity.
+Qed. 
+
+
+Local Open Scope R_scope.
+Lemma Norm_plus01: 
+norm( ∣0⟩ .+  ∣1⟩)= √ 2.
+Proof. intros. unfold norm. repeat rewrite rewrite_norm.
+unfold Mplus. simpl.
+autorewrite with R_db.
+repeat rewrite Cmod_0. repeat rewrite Rmult_0_l.
+repeat  rewrite Rplus_0_r.  repeat rewrite Cmod_1. repeat rewrite Rmult_1_l.
+repeat rewrite Rplus_0_l. repeat rewrite sqrt_1.
+repeat rewrite Cplus_0_l. repeat rewrite Cplus_0_r.
+repeat rewrite Cmod_1. 
+ rewrite Rmult_1_l.
+reflexivity.
+Qed.
+
+
+Lemma NormH: (norm ∣+⟩)=1 %R.
+Proof. unfold "∣+⟩". rewrite norm_scale.
+      rewrite Norm_plus01.
+      unfold Cmod. simpl.
+       autorewrite with R_db.
+       rewrite <-Rdiv_unfold.
+       repeat rewrite sqrt2_div2.
+       rewrite Rdiv_unfold. 
+       rewrite <-sqrt2_inv.
+       autorewrite with R_db.
+       rewrite sqrt2_inv_sqrt2.
+       reflexivity.
+Qed.
+
+
+
+
+Lemma norm_kron{m n:nat}:forall (M: Vector  m) (N : Vector  n),
+norm (kron M N) = (norm M) * norm (N).
+Proof.
+intros. unfold norm. repeat rewrite rewrite_norm.
+unfold kron. simpl Nat.div. rewrite Nat.mod_1_r.
+rewrite <-sqrt_mult. f_equal. 
+Admitted.
+#[export] Hint Rewrite @kron_mixed_product @Norm0 @Norm1 @NormH @norm_kron  @MmultH_xplus using (auto 100 with wf_db): M_db.
+
+
+Lemma n_kron: forall n, ∣ 0 ⟩_ (n) = n ⨂ qubit0.
+Proof.
+induction n. simpl. unfold Vec.  
+prep_matrix_equality. destruct y; destruct x;
+ simpl; try reflexivity.
+assert (WF_Matrix (I 1)). apply WF_I.
+unfold WF_Matrix in *. rewrite H. reflexivity.
+intuition. rewrite kron_n_assoc. rewrite <-IHn.
+rewrite <-Vec_qubit0.
+rewrite Nat.pow_1_l.
+rewrite (qubit0_Vec_kron n 0). f_equal. f_equal. lia.
+apply pow_gt_0. auto_wf.
+Qed.
+
+
+Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
+Proof. intros. lra. Qed.
+
+Lemma Had_N: forall n:nat, 
+n ⨂ hadamard × ∣ 0 ⟩_ (n) = (C1/ (√ 2) ^ n)%C .* big_sum (fun z=> ∣ z ⟩_ (n)) (2^n).
+Proof. intros. 
+rewrite n_kron. apply Logic.eq_trans with (n ⨂ hadamard × n ⨂ ∣0⟩).
+f_equal. rewrite Nat.pow_1_l. reflexivity.
+rewrite kron_n_mult. rewrite MmultH0. 
+unfold xbasis_plus. 
+rewrite Mscale_kron_n_distr_r. 
+rewrite Cdiv_unfold.
+rewrite Cmult_1_l. 
+rewrite <-RtoC_inv. rewrite RtoC_pow.
+rewrite <-Rinv_pow_depr. 
+f_equal. apply  Nat.pow_1_l.  rewrite RtoC_inv. f_equal.
+rewrite RtoC_pow.
+f_equal. apply Rgt_neq_0. 
+apply pow_lt.   apply sqrt_lt_R0. lra.
+
+induction n.  simpl. rewrite Mplus_0_l.
+rewrite Vec_I. reflexivity.
+ rewrite kron_n_assoc.  rewrite IHn.
+simpl. rewrite Nat.add_0_r.
+rewrite big_sum_sum. 
+rewrite kron_plus_distr_r.
+unfold Gplus.  simpl.
+f_equal. lia.   rewrite Nat.pow_1_l. simpl. reflexivity. 
+apply Logic.eq_trans with (∣0⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (n) ) (2 ^ n)).
+f_equal. apply Nat.pow_1_l.
+rewrite kron_Msum_distr_l.
+apply big_sum_eq_bounded. intros.
+rewrite <-Vec_qubit0.
+rewrite qubit0_Vec_kron. reflexivity. assumption.
+apply Logic.eq_trans with (∣1⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (n) ) (2 ^ n) ).
+f_equal. apply Nat.pow_1_l.
+rewrite kron_Msum_distr_l.
+apply big_sum_eq_bounded. intros.
+rewrite <-Vec_qubit1.
+rewrite qubit1_Vec_kron. rewrite (Nat.add_comm x). reflexivity. assumption.
+auto_wf. apply sqrt_neq_0_compat. lra. 
+apply sqrt_neq_0_compat. lra. 
+Qed.
+
+Local Open Scope nat_scope.
+Lemma c_to_Vector1_refl:forall c, (c_to_Vector1 c) 0 0= c.
+Proof. intros. unfold c_to_Vector1. unfold scale.
+       unfold I. simpl. Csimpl .   reflexivity. Qed.
+
+Lemma WF_c_to_vec: forall c, WF_Matrix (c_to_Vector1 c).
+Proof. intros. unfold c_to_Vector1. auto_wf.
+Qed.
+#[export] Hint Resolve WF_c_to_vec : wf_db.
+
+#[export] Hint Rewrite Rinv_l Rinv_1 : R_db.
+Local Open Scope nat_scope.
+
+
+Lemma kron_n_I : forall n m, n ⨂ I m = I (m ^ n).
+Proof.
+  intros.
+  induction n; simpl.
+  reflexivity.
+  rewrite IHn. 
+  rewrite id_kron.
+  apply f_equal.
+  lia.
+Qed.
+
+Lemma kron_n_unitary : forall {m n} (A : Matrix m m),
+  WF_Unitary A -> WF_Unitary (n ⨂ A).
+Proof.
+  intros m n A  [WFA UA].
+  unfold WF_Unitary in *.
+  split.
+  auto with wf_db.
+  rewrite kron_n_adjoint.
+  rewrite kron_n_mult.
+  rewrite UA.
+  rewrite kron_n_I. 
+  easy. assumption.
+Qed.
