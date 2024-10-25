@@ -20,3 +20,6 @@
 ./QRule/QRule_I_L.v
 ./QRule/QRule_QFrame.v
 ./example/add.v
+./example/HHL.v
+./example/OF.v
+./example/Shor.v

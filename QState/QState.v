@@ -10,7 +10,8 @@ Require Import
 Require Import OrderedType.
 Require Import Coq.MSets.MSetWeakList.
 Require Import Coq.FSets.FSetList.
-
+Require Import QArith.
+Import QArith.QOrderedType.
 (*From Quan Require Import QMatrix.
 From Quan Require Import QVector.
 From Quan Require Import PVector1. *)
@@ -19,20 +20,22 @@ From Quan Require Import ParDensityO.
 
 (*-----------------------------------Classic State----------------------------------------*)
 
+
 Module D:=Nat_as_OT.
+
 Local Open Scope nat_scope.
 Definition  cstate := list nat.
 Fixpoint c_find (i:nat) (s:cstate) : nat :=
   match i,s with
-  | 0   ,  v :: _   => v
+  | 0%nat   ,  v :: _   => v
   | S i',  _ :: s'  => c_find i' s'
   | _   ,  _        => 0
   end.
 
 Fixpoint c_update (i:nat) (v:nat) (s:cstate): cstate :=
     match i,s with
-    | 0   , a :: s' => v :: s'
-    | 0   , []      => v :: nil
+    | 0%nat   , a :: s' => v :: s'
+    | 0%nat   , []      => v :: nil
     | S i', a :: s' => a :: (c_update i' v s' )
     | S i', []      => 0 :: (c_update i' v [] )
     end.
@@ -66,7 +69,7 @@ Fixpoint equal (m m' :cstate) { struct m } : bool :=
    | nil, nil => true
    | h::l, h'::l' =>
       match D.compare h h' with
-       | EQ _ => equal l l'
+       | EQ _  => equal l l'
        | _ => false
       end
    | _, _ => false
@@ -307,7 +310,7 @@ Definition state(s e: nat) := (cstate * (qstate s e))%type.
 Definition WF_state{s e:nat} (st:state s e): Prop:=
           WF_qstate (snd st).
 
-Definition s_update_cstate{s e:nat} (i v :nat) (m:state s e): state s e:=
+Definition s_update_cstate{s e:nat}  i (v :nat) (m:state s e): state s e:=
   match m with 
   |(sigma, rho) => ((c_update i v sigma), rho)
   end.
@@ -316,7 +319,7 @@ Local Open Scope matrix_scope.
 Definition s_update_qstate{s e:nat} (U: Square (2^(e-s))) (m:state s e): state s e:=
     (fst m, q_update U (snd m)).
 
-Definition s_update{s e:nat} (i v:nat) (U: Square (2^(e-s))) (m:state s e): state s e:=
+Definition s_update{s e:nat} i ( v:nat) (U: Square (2^(e-s))) (m:state s e): state s e:=
  (c_update i v (fst m),  q_update U (snd m)).
 
 Definition s_find{s e:nat} (sigma:cstate) (st:state s e): qstate s e:=
@@ -334,7 +337,7 @@ Definition s_trace{s e:nat} (st:state s e): R:=
 
 Local Open Scope R_scope.
 
-Lemma WF_state_cupdate{s e:nat}: forall (i n:nat) (st:state s e),
+Lemma WF_state_cupdate{s e:nat}: forall i ( n:nat) (st:state s e),
 WF_state st-> WF_state (s_update_cstate i n st).
 Proof. unfold WF_state. destruct st. simpl. intuition. Qed.
 
@@ -342,7 +345,7 @@ Lemma WF_state_qupdate{s e:nat}: forall (U:Square (2^(e-s))) (st:state s e),
 WF_Unitary U->WF_state st-> WF_state (s_update_qstate U st).
 Proof. unfold WF_state. destruct st. simpl. apply WF_qstate_update. Qed.
 
-Lemma WF_state_update{s e:nat}: forall (i n:nat) (U: Square (2^(e-s))) (st:state s e),
+Lemma WF_state_update{s e:nat}: forall i ( n:nat) (U: Square (2^(e-s))) (st:state s e),
 WF_Unitary U->WF_state st-> WF_state (s_update i n U st).
 Proof. unfold WF_state. destruct st. simpl. apply WF_qstate_update. Qed.
 
@@ -412,14 +415,14 @@ rewrite Mscale_0_r. reflexivity.
 Qed. 
 
 Lemma s_find_not_Zero{s e:nat}: forall sigma (st: state s e), 
-s_find sigma st <>Zero ->  sigma= (fst st).
+s_find sigma st <>Zero -> Cstate_as_OT.eq sigma (fst st).
 Proof. unfold s_find. intros. destruct (Cstate_as_OT.compare sigma
 (fst st)) in H. destruct H. reflexivity.
  assumption. destruct H. reflexivity.
 Qed.
 
 Lemma s_find_eq{s e:nat}: forall sigma (st:state s e),
-sigma = (fst st) -> s_find sigma st =snd st.
+Cstate_as_OT.eq sigma (fst st) -> s_find sigma st =snd st.
 Proof. intros. unfold s_find. 
 destruct (Cstate_as_OT.compare sigma (fst st)). 
 apply Cstate_as_OT.lt_not_eq in l. unfold not in l. 

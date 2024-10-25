@@ -30,7 +30,8 @@ Inductive aexp : Type :=
   | AGcd (a1 a2:aexp)
   | AMod (a1 a2:aexp)
   | APow (a1 a2: aexp)
-  | ADiv (a1 a2:aexp).
+  | ADiv (a1 a2:aexp)
+  | Afun (f1:R-> nat) (f2:nat->nat->R) (a1:aexp) (a2:aexp).
 
 Definition X0 : nat := 0.
 Definition X1 : nat := 1.
@@ -116,8 +117,8 @@ Notation "( s e ) :Q= 0 "  :=
               no associativity) : com_scope.
  
 Notation " U  '[[' s e ']]' " :=
-         (QUnit_One e U)
-            (in custom com at level 0,  s at level 0,
+         (QUnit_One s e U)
+            (in custom com at level 1,  s at level 0,
             e at level 0,
               no associativity) : com_scope.
 
@@ -160,11 +161,13 @@ Definition ord a N := ord' (ϕ N) a N.
 
 Require Import Psatz ZArith Znumtheory.
 Local Open Scope nat_scope.
+
+
 Fixpoint aeval{s e:nat} (st: state s e) 
                (a : aexp) : nat :=
   match a with
-  | ANum n => n
-  | AId x => c_find x (fst st)                               
+  | ANum n =>   n
+  | AId x =>  (c_find x (fst st))                         
   | <{a1 + a2}> => (aeval st a1) + (aeval st a2)
   | <{a1 - a2}> => (aeval st a1) - (aeval st a2)
   | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
@@ -172,22 +175,24 @@ Fixpoint aeval{s e:nat} (st: state s e)
   | APow a1 a2 => Nat.pow (aeval st a1) (aeval st a2)
   | ADiv a1 a2 => (Nat.div (aeval st a1) (aeval st a2))
   | AMod a1 a2 => (Nat.modulo (aeval st a1) (aeval st a2))
+  | Afun f1 f2 a1 a2 => f1 (f2 (aeval st a1) (aeval st a2))
   end.
 
 
-Fixpoint beval{s e: nat} (st : state s e) 
-               (b : bexp) : bool :=
-  match b with
-  | <{true}>      => true
-  | <{false}>     => false
-  | <{a1 = a2}>   => (aeval st a1) =? (aeval st a2)
-  | <{a1 <> a2}>  => negb ((aeval st a1) =? (aeval st a2))
-  | <{a1 <= a2}>  => (aeval st a1) <=? (aeval st a2)
-  | <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
-  | <{~ b1}>      => negb (beval st b1)
-  | <{b1 && b2}>  => andb (beval st b1) (beval st b2)
-  | BOr b1 b2 => orb  (beval st b1) (beval st b2)
-  end.
+
+  Fixpoint beval{s e: nat} (st : state s e) 
+  (b : bexp) : bool :=
+match b with
+| <{true}>      => true
+| <{false}>     => false
+| <{a1 = a2}>   => (aeval st a1) =? (aeval st a2)
+| <{a1 <> a2}>  => negb ((aeval st a1) =? (aeval st a2))
+| <{a1 <= a2}>  => (aeval st a1) <=? (aeval st a2)
+| <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
+| <{~ b1}>      => negb (beval st b1)
+| <{b1 && b2}>  => andb (beval st b1) (beval st b2)
+| BOr b1 b2 => orb  (beval st b1) (beval st b2)
+end.
 
 
 Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
@@ -406,6 +411,7 @@ Fixpoint Free_aexp (a:aexp) : CSet :=
   | APow a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   |ADiv a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   |AMod a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  |Afun f1 f2  a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   end.
 
 Fixpoint Free_bexp (b:bexp):CSet:=
@@ -1216,40 +1222,16 @@ Qed.
 Local Open Scope bool_scope.
 Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
 (fst st) = (fst st')-> (aeval st a) = aeval st' a.
-Proof. intros. induction a.
-      --reflexivity. 
-      --simpl. rewrite H. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
-      --simpl.  rewrite IHa1. rewrite IHa2. reflexivity.
+Proof. intros. induction a;  simpl; try (rewrite IHa1; rewrite IHa2); try reflexivity.
+      rewrite H. reflexivity.
 Qed.
 
 Lemma state_eq_bexp{ s0 e0 s1 e1:nat}: forall (st:state s0 e0) (st' : state s1 e1) (b:bexp),
 (fst st) = (fst st')-> (beval st b) = beval st' b.
-Proof. intros. induction b. 
-       --simpl. reflexivity.
-       --simpl. reflexivity.
-       --simpl. rewrite (state_eq_aexp  st st' a1).
-       rewrite (state_eq_aexp  st st'  a2). reflexivity.
-        assumption. assumption.
-      --simpl. rewrite (state_eq_aexp st st' a1).
-      rewrite (state_eq_aexp st st' a2). reflexivity.
-       assumption. assumption.
-       --simpl. rewrite (state_eq_aexp st st' a1).
-       rewrite (state_eq_aexp st st' a2). reflexivity.
-        assumption. assumption.
-      --simpl. rewrite (state_eq_aexp st st' a1).
-      rewrite (state_eq_aexp  st st' a2). reflexivity.
-       assumption. assumption.
-      --simpl. rewrite IHb. reflexivity.
-      --simpl. rewrite IHb1.
-      rewrite IHb2. reflexivity.
-      --simpl. rewrite IHb1.
-      rewrite IHb2. reflexivity.
+Proof. intros. induction b; simpl;
+        try  rewrite (state_eq_aexp  st st' a1); try rewrite (state_eq_aexp st st' a2);
+        try assumption;
+       try rewrite IHb; try (rewrite IHb1; rewrite IHb2);  try reflexivity.
 Qed.
 
 

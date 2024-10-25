@@ -103,37 +103,23 @@ Ltac classic_slove :=
 
 Lemma c_update_aeval_eq{s e:nat}: forall i a b c (q:qstate s e),  ~NSet.In i (Free_aexp a) -> 
 aeval (c, q) a = aeval (c_update i b c, q) a.
-Proof. induction a; intros; simpl in *; 
-       try (f_equal; [apply IHa1 | apply IHa2]; 
+Proof. induction a; intros; simpl in *; [ | | | | | | | | | f_equal];
+       try (f_equal;  [rewrite (IHa1 b) | rewrite (IHa2 b)]; try reflexivity;
          intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption). reflexivity.
+         assumption); try reflexivity.
       rewrite c_update_find_not. reflexivity.  
-      intro. destruct H. apply NSet.add_1. lia.
+      intro. destruct H. apply NSet.add_1. lia. 
 Qed.
 
 Lemma c_update_beval_eq{s e:nat}: forall i b a c (q:qstate s e),  ~NSet.In i (Free_bexp b) -> 
 beval (c, q) b = beval (c_update i a c, q) b.
-Proof. induction b; intros; simpl in *;  try reflexivity.
+Proof. induction b; intros; simpl in *; [ | | | f_equal| | f_equal | f_equal| | ];
        try (f_equal; erewrite c_update_aeval_eq; f_equal; 
        intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption).
-        f_equal.  
-        try (f_equal; erewrite c_update_aeval_eq; f_equal; 
-        intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-          assumption). 
-          try (f_equal; erewrite c_update_aeval_eq; f_equal; 
-       intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption).
-         f_equal.
-         try (f_equal; erewrite c_update_aeval_eq; f_equal; 
-       intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption). f_equal. apply IHb. assumption.
-       try (f_equal; [apply IHb1 | apply IHb2]; 
-       intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-       assumption ).
-       try (f_equal; [apply IHb1 | apply IHb2]; 
-       intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-       assumption ).
+         assumption); try apply IHb; try assumption;
+         try (f_equal; [apply IHb1 | apply IHb2]; 
+         intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
+         assumption ); try reflexivity. 
 Qed.
 
 

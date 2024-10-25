@@ -52,7 +52,6 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
         apply H.
         apply NSet.union_3.
         assumption.
-         
   Qed.
   
   
@@ -60,76 +59,21 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
   Lemma cstate_eq_a{ s e:nat}: forall c1 c2 (a:aexp) (q: qstate s e),
   cstate_eq c1 c2 (Free_aexp a)->
   aeval (c1, q) a=aeval (c2,q) a.
-  Proof. induction a; intros. reflexivity.
-         unfold cstate_eq in H. simpl in H.
-         simpl. apply H. 
+  Proof. induction a; intros; simpl in *; try  apply cstate_eq_union in H;
+          try rewrite IHa1; try rewrite IHa2; try reflexivity; try apply H.
+         unfold cstate_eq in H. 
          apply NSet.add_1.
          reflexivity.
-         simpl in *. 
-         apply cstate_eq_union in H.
-         rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition.
-         intuition. 
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition. 
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-          rewrite IHa1. rewrite IHa2.
-         reflexivity. intuition. intuition.     
   Qed.
   
   
   Lemma cstate_eq_b{ s e:nat}: forall c1 c2 (b:bexp) (q: qstate s e),
   cstate_eq c1 c2 (Free_bexp b)->
   beval (c1, q) b=beval (c2,q) b.
-  Proof. induction b; intros. 
-         reflexivity. reflexivity.
-         simpl in *. 
-         apply cstate_eq_union in H.
-         rewrite (cstate_eq_a c1 c2 a1).
-         rewrite (cstate_eq_a c1 c2 a2).
-         reflexivity. intuition. intuition. 
-         simpl in *. 
-         apply cstate_eq_union in H.
-         rewrite (cstate_eq_a c1 c2 a1).
-         rewrite (cstate_eq_a c1 c2 a2).
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-         rewrite (cstate_eq_a c1 c2 a1).
-         rewrite (cstate_eq_a c1 c2 a2).
-         reflexivity. intuition. intuition.
-         simpl in *. 
-         apply cstate_eq_union in H.
-         rewrite (cstate_eq_a c1 c2 a1).
-         rewrite (cstate_eq_a c1 c2 a2).
-         reflexivity. intuition. intuition.   
-         simpl in *.
-         rewrite IHb. reflexivity. assumption. 
-         simpl in *. apply cstate_eq_union in H.
-         rewrite IHb1. rewrite IHb2.
-         reflexivity. intuition. intuition. 
-         simpl in *. apply cstate_eq_union in H.  
-         rewrite IHb1. rewrite IHb2.
-         reflexivity. intuition. intuition.  
+  Proof. induction b; intros; simpl in *; try apply cstate_eq_union in H;
+          try rewrite (cstate_eq_a c1 c2 a1);
+         try rewrite (cstate_eq_a c1 c2 a2); 
+         try  rewrite IHb; try  rewrite IHb1; try  rewrite IHb2; try apply H; try reflexivity.
   Qed.
   
   
