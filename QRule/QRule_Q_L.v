@@ -108,7 +108,7 @@ Proof. intros. repeat rewrite <-kron_assoc; try reflexivity;
 Qed.
 
 Lemma PMpar_trace_ceval_swap_Qinit{ s e:nat}: forall (q: qstate s e ) s0 e0 l r,
-s<=l/\l<=s0 /\s0<=e0 /\ e0<=r /\ r<=e-> 
+s<=l /\ l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
 @WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
 @PMpar_trace  s e (QInit_fun s0 e0 q) l r = QInit_fun s0 e0 (PMpar_trace q l r) .
 Proof. intros. unfold QInit_fun. unfold q_update.
@@ -127,7 +127,7 @@ Qed.
 
 Lemma PMpar_trace_ceval_swap_QUnit_one{ s e:nat}: forall (q: qstate s e ) s0 e0 
 (U:Square (2^(e0-s0))) l r,
-s<=l/\l<=s0 /\s0<=e0 /\ e0<=r /\ r<=e-> 
+s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
 @WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
 WF_Unitary U->
 @PMpar_trace  s e (QUnit_One_fun s0 e0 U q) l r = QUnit_One_fun s0 e0 U (PMpar_trace q l r) .
@@ -145,7 +145,7 @@ Qed.
 
 Lemma PMpar_trace_ceval_swap_QUnit_Ctrl{ s e:nat}: forall (q: qstate s e ) s0 e0 s1 e1  
 (U: nat -> Square (2^(e1-s1))) l r,
-s<=l/\l<=s0 /\s0<=e0 /\ e0 <=s1 /\ s1 <= e1 /\ e1<=r /\ r<=e-> 
+s<=l /\ l<=s0 /\ s0<=e0 /\ e0 <=s1 /\ s1 <= e1 /\ e1<=r /\ r<=e-> 
 @WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
 (forall j, WF_Unitary (U j ))->
 @PMpar_trace  s e (QUnit_Ctrl_fun s0 e0  s1 e1 U q) l r 
@@ -190,7 +190,7 @@ Qed.
 
 
 Lemma PMpar_trace_ceval_swap_QMeas{ s e:nat}: forall (q: qstate s e ) s0 e0 j l r,
-s<=l/\l<=s0 /\s0<=e0 /\ e0<=r /\ r<=e-> 
+s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
 @WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
 j<2^(e0-s0)->
 @PMpar_trace  s e (QMeas_fun s0 e0 j q) l r = QMeas_fun s0 e0 j (PMpar_trace q l r) .
@@ -323,7 +323,7 @@ Notation "{{ P }}  c  {{ Q }}" :=
 
 Local Open Scope rule_scope.
 Theorem rule_QInit: forall s e,
-{{BTrue}} ( s e ) :Q= 0
+{{BTrue}} [[ s e ]] :Q= 0
 {{(QExp_s s e  (Vec (2^(e-s)) 0))}}.
 Proof. 
 unfold hoare_triple.
@@ -347,7 +347,7 @@ Local Open Scope assert_scope.
 Local Open Scope nat_scope.
 
 Lemma U_v_inv{s' e' s e}: forall (U: Square (2 ^ (e' - s'))) (v: Vector (2 ^ (e - s))),
-s<=s' /\s' <=e' /\ e' <=e ->WF_Unitary U->
+s<=s' /\ s' <=e' /\ e' <=e ->WF_Unitary U->
 WF_Matrix v->
 U_v s' e' s e U (U_v s' e' s e (U) † v) = v.
 Proof. intros. unfold U_v. 
@@ -463,7 +463,7 @@ Qed.
 
 Theorem rule_QUnit_One : forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))),
 s<=s' /\ e' <=e ->WF_Matrix v->
-{{ QExp_s s  e  (U_v s' e' s e U† v) }} QUnit_One s' e' U {{ QExp_s s  e  v }}.
+{{ QExp_s s  e  (U_v s' e' s e U† v) }} <{ U [[ s' e' ]] }> {{ QExp_s s  e  v }}.
 Proof. unfold hoare_triple;
 intros s' e' s e U v Hs Hv s0 e0 (mu,IHmu) (mu', IHmu').
 intros. 
@@ -472,7 +472,7 @@ rewrite sat_Assert_to_State in *.
 inversion_clear H0.
 apply sat_F. intuition.
 apply rule_QUnit_One_aux' with s' e' U mu.
-intuition. intuition. assumption. assumption. assumption.
+intuition. intuition. assumption. simpl. assumption. assumption.
 Qed.
 
 
@@ -489,7 +489,7 @@ Require Import Coq.Logic.Eqdep_dec.
 Require Import Coq.Arith.Peano_dec.
 Theorem rule_QUnit_One' : forall s' e' s e (U: Square (2^(e'-s'))) (v: Vector (2^(e-s))),
 s<=s' /\ e' <=e ->
-{{ QExp_s s  e  v }} QUnit_One s' e' U {{ QExp_s s  e  (U_v s' e' s e U v) }}.
+{{ QExp_s s  e  v }} <{ U [[ s' e' ]] }> {{ QExp_s s  e  (U_v s' e' s e U v) }}.
 Proof. intros. unfold hoare_triple. intros. 
 inversion_clear H0. destruct mu. destruct mu'. simpl in *.
 inversion H4; subst. apply WF_sat_Assert in H1. simpl in H1.
@@ -631,7 +631,7 @@ Qed.
 
 Theorem rule_QUnit_Ctrl : forall s0 e0 s1 e1 s e (U: nat -> Square (2^(e1-s1))) (v: Vector (2^(e-s))),
 s<=s0 /\ e1 <=e ->
-{{ QExp_s s  e  v }} QUnit_Ctrl s0 e0 s1 e1 U {{ QExp_s s  e  ( UCtrl_v s0 e0 s1 e1 s e U v) }}.
+{{ QExp_s s  e  v }} <{U [[s0 e0]] [[s1 e1]]}> {{ QExp_s s  e  ( UCtrl_v s0 e0 s1 e1 s e U v) }}.
 Proof. unfold hoare_triple.
 intros  s0 e0 s1 e1 s e U v Hs  s' e' (mu,IHmu) (mu', IHmu').
 intros. 
@@ -657,7 +657,7 @@ Proof. intros. rewrite<-H. reflexivity. Qed.
 Local Open Scope C_scope.
 Lemma PMtrace_Meas{s0 e0:nat}: forall s' e' s e z (v:Vector (2^(e-s))) (q:Square (2^(e0-s0))),
 WF_qstate q->
-s0<=s/\s<=s'/\ s' <= e'/\ e'<=e /\ e<=e0-> (z< 2^(e'-s')) ->WF_Matrix v->
+s0<=s/\ s<=s'/\ s' <= e'/\ e'<=e /\ e<=e0-> (z< 2^(e'-s')) ->WF_Matrix v->
 (R1 / Cmod (trace q))%R .* PMpar_trace q s e = outer_product v v->
 (norm (@U_v (e'-s') (e-s) s' e' s e (∣ z ⟩_ (e' - s') × ⟨ z ∣_ (e' - s')) v) *
 norm (@U_v (e'-s') (e-s) s' e' s e (∣ z ⟩_ (e' - s') × ⟨ z ∣_ (e' - s')) v))%R * (trace q) = 
@@ -768,7 +768,7 @@ Qed.
 
 Lemma QMeas_not_Zero{s0 e0:nat}: forall s' e' s e z (v:Vector (2^(e-s))) (q:Square (2^(e0-s0))) (c:cstate),
 WF_qstate q->
-s0<=s/\s<=s'/\ s' <= e'/\ e'<=e /\ e<=e0-> 
+s0<=s/\ s<=s'/\ s' <= e'/\ e'<=e /\ e<=e0-> 
 (z< 2^(e'-s')) ->WF_Matrix v->
 (R1 / Cmod (trace q))%R .* PMpar_trace q s e = outer_product v v->
 (QMeas_fun  s' e' z q) = Zero <->
@@ -796,7 +796,7 @@ Theorem rule_asgn_aux :  forall (P:Pure_formula) (i:nat) ( a:aexp)
 (s e:nat) (mu : list (cstate * qstate s e)) (mu': list (cstate * qstate s e)),
 WF_dstate_aux mu->
 ceval_single (<{i := a}>) mu mu' ->
-State_eval_dstate (Assn_sub_P i a P) mu->
+State_eval_dstate (PAssn i a P) mu->
 State_eval_dstate P mu'.
 Proof. intros P i a s e mu. induction mu; intros; inversion H; subst.
   --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
@@ -868,8 +868,8 @@ Theorem rule_Meas_aux:  forall s' e' s e (v: Vector (2^(e-s))) z x
 (norm (U_v s' e' s e (∣ z ⟩_ (e' - s') × ⟨ z ∣_ (e' - s')) v)<> 0%R) ->
 s0 <= s /\ s <= s' /\ s' <= e' /\ e' <= e <= e0-> 
 WF_state st-> (z< 2^(e'-s'))->
-(State_eval ((QExp_s  s  e  v ) /\ (big_Sand (fun i:nat => (Assn_sub_P x (ANum i) (P i))) (2^(e'-s')))) st ) ->
-State_eval ( (P z) /\  (QExp_s  s  e  ((/ (@norm (2^(e-s)) ((U_v s' e' s e (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))))%R .* 
+(State_eval ((QExp_s  s  e  v ) /\s (big_Sand (fun i:nat => (PAssn x (ANum i) (P i))) (2^(e'-s')))) st ) ->
+State_eval ( (P z) /\s  (QExp_s  s  e  ((/ (@norm (2^(e-s)) ((U_v s' e' s e (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v))))%R .* 
                                                 (U_v s' e' s e (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v)))) 
                           (s_scale (( / ((@norm (2^(e-s)) ((U_v s' e' s e  (∣ z ⟩_ (e'-s') × ⟨ z ∣_ (e'-s')) v)))%R ^ 2))) 
                                                     (c_update x z (fst st), QMeas_fun s' e' z (snd st))).
@@ -929,8 +929,8 @@ Qed.
 
 
 Lemma State_eval_conj: forall s e (mu:list (cstate * qstate s e)) (F1 F2:State_formula),
-State_eval_dstate  (F1 /\ F2) mu <->
-State_eval_dstate   F1 mu/\ State_eval_dstate F2 mu .
+State_eval_dstate  (F1 /\s  F2) mu <->
+State_eval_dstate   F1 mu /\ State_eval_dstate F2 mu .
 Proof. intros. split; intros; 
        induction mu; 
        simpl in H. destruct H.
@@ -1239,9 +1239,9 @@ Theorem rule_Meas_aux':forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure_
 (s0 e0:nat) (st :state s0 e0) (mu: dstate s0 e0) pF,
 s <= s' /\ s' <= e' /\ e' <= e->
 ceval (QMeas x s' e') st mu-> 
-sat_Assert st ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x (ANum i) (P i))) (2^(e'-s'))) ->
+sat_Assert st ((QExp_s  s  e  v) /\s big_Sand (fun i:nat => (PAssn x (ANum i) (P i))) (2^(e'-s'))) ->
 (big_pOplus' (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
-                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+                               (fun i:nat=>  ((P i)) /\s (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
                              (U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s'))) pF ->
 sat_Assert mu pF.
 Proof. 
@@ -1465,7 +1465,9 @@ Proof. induction p_n; intros; destruct mu_n. reflexivity.
       assumption.
 Qed.
 
-Import Ceval_Linear.
+From Quan Require Import Ceval_Linear.
+
+
 Lemma big_dapp_list_and{s e:nat}: forall (p_n:list R)(mu_n1 mu_n2:list (dstate s e)) ,
 length mu_n1= length mu_n2->
 dstate_eq (big_dapp p_n (list_and mu_n1 mu_n2))
@@ -1642,9 +1644,9 @@ Theorem rule_Meas_aux'':forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure
 (s0 e0:nat) (mu mu': dstate s0 e0) pF,
 s <= s' /\ s' <= e' /\ e' <= e->
 ceval (QMeas x s' e') mu mu'-> 
-sat_State mu ((QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x (ANum i) (P i))) (2^(e'-s'))) ->
+sat_State mu ((QExp_s  s  e  v) /\s big_Sand (fun i:nat => (PAssn x (ANum i) (P i))) (2^(e'-s'))) ->
 (big_pOplus' (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
-                               (fun i:nat=> SAnd ((P i))  (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+                               (fun i:nat=>  ((P i)) /\s (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
                                (U_v  s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s')) pF) ->
 sat_Assert mu' pF .
 Proof.  intros s' e' s e v x P s0 e0  (mu, IHmu). induction mu;  intros mu'  pF; intros; destruct mu' as(mu', IHmu').
@@ -1711,10 +1713,10 @@ Qed.
 Theorem rule_QMeas : forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure_formula)) pF,
 s <= s' /\ s' <= e' /\ e' <= e->
 big_pOplus' (fun i:nat=> (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v))) ^ 2)%R
- (fun i:nat=> SAnd ((P i))  (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
+ (fun i:nat=>  ((P i)) /\s (QExp_s  s  e (( / ( (@norm (2^(e-s)) ((U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))))%R.* 
  (U_v s' e' s e (∣ i ⟩_ (e'-s') × ⟨ i ∣_ (e'-s')) v)))) (2^(e'-s')) pF ->
-{{ (QExp_s  s  e  v) /\ big_Sand (fun i:nat => (Assn_sub_P x (ANum i) (P i))) (2^(e'-s')) }}
- QMeas x s' e' 
+{{ (QExp_s  s  e  v) /\s big_Sand (fun i:nat => (PAssn x (ANum i) (P i))) (2^(e'-s')) }}
+ <{ x :=M [[ s' e' ]] }>
 {{ pF }}.
 Proof. unfold hoare_triple.
 intros. 

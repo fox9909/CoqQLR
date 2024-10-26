@@ -79,26 +79,47 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
   
   Lemma cstate_eq_P{ s e:nat}: forall P c1 c2  (q: qstate s e),
   cstate_eq c1 c2 (Free_pure P)->
-  State_eval P (c1, q)->
+  State_eval P (c1, q) <->
   State_eval P (c2, q).
-  Proof. induction P; intros. 
-         simpl. simpl in H0.
-         rewrite<- (cstate_eq_b c1).
+  Proof. induction P; intros; split; intros;
+         simpl in *.
+         try rewrite<- (cstate_eq_b c1). 
          assumption. assumption.
-         simpl in *.  intros. apply IHP with (c_update i a c1).
+         try rewrite (cstate_eq_b _ c2). assumption. assumption. 
+         rewrite <-(cstate_eq_a c1 c2). apply H0. assumption.
+         rewrite (cstate_eq_a c1 c2). apply H0. assumption.
+         try apply cstate_eq_union in H; split;
+         try  apply (IHP1 c1 c2); try  eapply (IHP2 c1 c2); try apply H0; try apply H.
+         try apply cstate_eq_union in H; split;
+         try  rewrite (IHP1 c1 c2); try  rewrite (IHP2 c1 c2); try apply H0; try apply H.
+
+         intro. destruct H0. eapply IHP. apply H. assumption.
+         intro. destruct H0. rewrite <-(IHP c1 c2). apply H1. assumption.
+
+         apply cstate_eq_union in H.
+         destruct H0. left. rewrite <-(IHP1 c1 c2); try assumption; try apply H.
+         right.  rewrite <-(IHP2 c1 c2); try assumption; try apply H.
+         
+         apply cstate_eq_union in H.
+         destruct H0. left. rewrite (IHP1 c1 c2); try assumption; try apply H.
+         right.  rewrite (IHP2 c1 c2); try assumption; try apply H.
+
+         intros. apply IHP with (c_update i a c1).
+         unfold cstate_eq in *. 
+         intros. destruct (eq_dec j i).
+         subst.  repeat rewrite c_update_find_eq. reflexivity.
+         apply (@NSet.remove_2 _ i j) in H1; try lia. 
+         apply H in H1. repeat rewrite c_update_find_not; try lia.
+         apply H0. 
+
+         intros. apply IHP with (c_update i a c2).
          unfold cstate_eq in *. 
          intros. destruct (eq_dec j i).
          subst.  repeat rewrite c_update_find_eq. reflexivity.
          apply (@NSet.remove_2 _ i j) in H1; try lia. 
          apply H in H1. repeat rewrite c_update_find_not; try lia.
          apply H0.
-         simpl in *. destruct H0. exists x.  apply IHP with (c_update i x c1).
-         unfold cstate_eq in *. 
-         intros. destruct (eq_dec j i).
-         subst.  repeat rewrite c_update_find_eq. reflexivity.
-         apply (@NSet.remove_2 _ i j) in H1; try lia. 
-         apply H in H1. repeat rewrite c_update_find_not; try lia.
-         apply H0.
+
          simpl in *.   
          rewrite (cstate_eq_a _  c1).
          apply IHP with ((c_update i (aeval (c1, q) a) c1)).
@@ -113,7 +134,24 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
         assumption. 
         unfold cstate_eq in *. intros.
         pose (@NSet.union_3 (Free_pure P) (Free_aexp a) j H1). 
-         apply H in i0. rewrite i0. reflexivity.  
+         apply H in i0. rewrite i0. reflexivity.
+
+         simpl in *.   
+         rewrite (cstate_eq_a _  c2).
+         apply IHP with ((c_update i (aeval (c2, q) a) c2)).
+         unfold cstate_eq in *.
+         intros. destruct (eq_dec j i).
+          rewrite e0. 
+         repeat rewrite c_update_find_eq. 
+         reflexivity. 
+         pose (@NSet.union_2 (Free_pure P) (Free_aexp a) j H1). 
+         apply H in i0.  
+         repeat rewrite c_update_find_not; try lia.
+        assumption. 
+        unfold cstate_eq in *. intros.
+        pose (@NSet.union_3 (Free_pure P) (Free_aexp a) j H1). 
+         apply H in i0. rewrite i0. reflexivity.
+
 Qed.
   
   
@@ -136,24 +174,24 @@ Proof. induction mu1; induction mu2; intros. simpl in *. destruct H0.
        destruct a. destruct a0.
        econstructor.
        simpl in H.
-       apply cstate_eq_P with c.
+       rewrite <-(cstate_eq_P _ c c0) .
        intuition.
        simpl.
        rewrite (state_eq_Pure _  _ (c,q)).
        inversion_clear H0.
-       assumption. reflexivity.
+       assumption. reflexivity. apply H.
        econstructor.
        destruct a.
        destruct a0. 
        econstructor.
        simpl in H.
-       apply cstate_eq_P with c.
+       rewrite <-(cstate_eq_P _ c c0) .
        intuition.
        simpl.
        rewrite (state_eq_Pure _  _ (c,q)).
        inversion_clear H0.
        assumption.
-       reflexivity.
+       reflexivity. apply H.
        rewrite <-State_eval_dstate_Forall.
        apply IHmu1.
        simpl in H. 
@@ -164,30 +202,44 @@ Proof. induction mu1; induction mu2; intros. simpl in *. destruct H0.
        assumption. discriminate. discriminate.
 Qed. 
   
-Lemma cstate_eq_F{ s e:nat}: forall c1 c2 F (q: qstate s e),
+Lemma cstate_eq_F{ s e:nat}: forall F c1 c2 (q: qstate s e),
 cstate_eq c1 c2 (fst (Free_state F))->
 State_eval F (c1, q)->
 State_eval F (c2, q).
 Proof. induction F; intros.
-       apply cstate_eq_P with c1.
+       rewrite <-(cstate_eq_P P c1 c2).
        assumption. assumption.
        apply qstate_eq_Qexp with (c1,q).
        reflexivity. assumption.
        simpl in *. 
        split. intuition.
-       split. apply IHF1. 
+       split. apply IHF1 with c1. 
        apply cstate_eq_union in H.
        intuition. intuition.
-       apply IHF2.
+       apply IHF2 with c1.
        apply cstate_eq_union in H.
        intuition. intuition.
        simpl in *. 
-       split. apply IHF1. 
+       split. apply IHF1 with c1. 
        apply cstate_eq_union in H.
        intuition. intuition.
-       apply IHF2.
+       apply IHF2 with c1.
        apply cstate_eq_union in H.
        intuition. intuition.
+       simpl in *.  
+       apply cstate_eq_union in H.
+       rewrite <-(cstate_eq_a c1  c2).
+       apply IHF with (c_update i (aeval (c1, q) a) c1).
+         unfold cstate_eq in *.
+         intros. destruct (eq_dec j i).
+          rewrite e0. 
+         repeat rewrite c_update_find_eq. 
+         reflexivity.
+         apply H in H1.  
+         repeat rewrite c_update_find_not; try lia.
+        assumption. 
+        unfold cstate_eq in *. intros.
+         apply H in H1. rewrite H1. reflexivity.
 Qed.
 
   (*----------------------------------------------------*)
@@ -258,6 +310,7 @@ match F with
               else let a:= option_free (Free_State F1) in let b:=option_free (Free_State F2) in 
               Some (min (fst a) (fst b),
               max  (snd a)  (snd b))
+|SAssn i a F => Free_State F
 end.
 
 Fixpoint Considered_QExp (qs:QExp) : Prop :=
@@ -290,7 +343,8 @@ else  let a:= option_free (Free_State F1) in let b:=option_free (Free_State F2) 
               /\  ((((fst a)=(fst b))/\
                      ((snd a)=(snd b)))
                      \/ ((snd a)=(fst b)) 
-                     \/ (((snd b)=(fst a)))))
+                    \/ (((snd b)=(fst a)))))
+|SAssn i a F => Considered_Formula F
 end. 
 
 (*--------------------------------------------*)
@@ -476,7 +530,9 @@ destruct a. intuition.
 rewrite H4.  rewrite H5. 
 apply le_trans with  (snd (option_free (Free_State F2))).
 assumption. rewrite H3.
-assumption.
+assumption. 
+
+simpl in *. apply IHF. assumption. 
 Qed.
 
 Require Import OrderedType.
@@ -610,7 +666,9 @@ Proof. induction F; intros.
        left. 
        apply max_lt_iff. left. lia.
        apply max_lub_iff.
-       intuition.
+       intuition. 
+
+       simpl in *. eapply IHF. apply H.
 Qed.
 
 
@@ -922,6 +980,9 @@ rewrite H5 in *.
    apply option_eqb_neq in H4. rewrite H4 in *.
    apply H.
    assumption.
+
+   simpl Free_State.  eapply IHF. apply H. 
+   assumption. apply H1. 
 Qed.
 
 
@@ -1021,6 +1082,9 @@ destruct (option_edc (Free_State F2) None); try assumption.
 rewrite H3 in *. simpl in *. rewrite H in *. simpl in *. discriminate H2.
 apply option_eqb_neq in H3. 
 rewrite H3 in *. discriminate H.
+
+eapply IHF. apply H. simpl in H0. rewrite (state_eq_aexp _ (c, q)). apply H0.
+reflexivity.
 Qed. 
 
 (*对于一个连续的而言*)  
@@ -1168,6 +1232,9 @@ Proof. induction F. split; intros. destruct st.
     intuition.
     eapply max_lub_iff.   apply H0.
     intuition.
+
+    intros. destruct st. simpl. rewrite (state_eq_aexp ((c, PMpar_trace q s' e')) (c,q)); try reflexivity.
+    eapply IHF; try assumption.
 Qed.
 
 
@@ -1403,7 +1470,7 @@ Import ParDensityO.
 Local Open Scope nat_scope.
 Lemma dstate_Separ_Qinit{s e:nat}: forall c (q:qstate s e) s0 e0 s1 e1 s' e',
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
-s=s0 /\s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 @dstate_Separ s e [(c, QInit_fun s' e' q)] s0 e0 s1 e1.
 Proof.
@@ -1434,7 +1501,7 @@ Qed.
 
 Lemma dstate_Separ_QUnit_One{s e:nat}: forall c (q:qstate s e) U s0 e0 s1 e1 s' e',
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
-s=s0 /\s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 @WF_Unitary (2^(e'-s')) U->
 @dstate_Separ s e [(c, QUnit_One_fun s' e' U q)] s0 e0 s1 e1.
@@ -1465,7 +1532,7 @@ Lemma dstate_Separ_QUnit_Ctrl{s e:nat}: forall c (q:qstate s e)
 s0 e0 s1 e1 s0' e0' s1' e1' (U: nat -> Square (2 ^ (e1' - s1'))),
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
 (forall j, WF_Unitary (U j))->
-s=s0 /\s0<=s0' /\ s0'<=e0'/\ e0'<= s1' /\ s1'<=e1' /\e1'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s0' /\ s0'<=e0'/\ e0'<= s1' /\ s1'<=e1' /\e1'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 @dstate_Separ s e [(c, QUnit_Ctrl_fun s0' e0' s1' e1' U q)] s0 e0 s1 e1.
 Proof.
@@ -1493,7 +1560,7 @@ Lemma dstate_Separ_QMeas{s e:nat}: forall c (q:qstate s e)
 s0 e0 s1 e1 s' e' j,
 QMeas_fun s' e' j q <> Zero->
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
-s=s0 /\s0<=s' /\ s'<=e' /\e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e' /\e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 (j<(2^(e'-s')))->
 @dstate_Separ s e [(c, QMeas_fun s' e' j q)] s0 e0 s1 e1.
@@ -1559,7 +1626,7 @@ Qed.
 
 Lemma PMpar_trace_QInit{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
-s=s0 /\s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 @PMpar_trace s e (QInit_fun s' e' q) s1 e1=
 PMpar_trace q s1 e1.
@@ -1588,7 +1655,7 @@ Qed.
 
 Lemma PMpar_trace_QUnit_one{ s e:nat}: forall c (q:qstate s e)  s' e' (U:Square (2^(e'-s'))) s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
-s=s0 /\s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
 WF_Unitary U->
 @PMpar_trace s e (QUnit_One_fun s' e' U q) s1 e1=
@@ -1615,7 +1682,7 @@ Qed.
 
 Lemma PMpar_trace_QUnit_Ctrl{ s e:nat}: forall c (q:qstate s e)  s0' e0' s1' e1' (U:nat -> Square (2^(e1'-s1'))) s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
-s=s0 /\s0<=s0' /\ s0'<=e0'/\ e0'<= s1' /\ s1'<=e1' /\e1'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s0' /\ s0'<=e0'/\ e0'<= s1' /\ s1'<=e1' /\e1'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e ->
 (forall j, WF_Unitary (U j))->
 @PMpar_trace s e (QUnit_Ctrl_fun s0' e0' s1' e1' U q) s1 e1=
@@ -1961,7 +2028,10 @@ Proof.
         split. assumption. assumption. assumption.
         assumption.  
       -simpl in *. split. intuition.  split. intuition. intuition. 
-      - simpl in *.  split. intuition. intuition. 
+      - simpl in *.  split. intuition. intuition.
+      -simpl in *. eapply IHF; try assumption.
+      rewrite (state_eq_aexp _ (c,q)); try reflexivity; try assumption.
+      rewrite (state_eq_aexp _ (c,q0)); try reflexivity; try assumption.
 Qed.
 
 
@@ -2229,6 +2299,15 @@ Proof. induction F; intros s0 e0 c q1 q2 q' Hq1 Hq2 Hq'; intros.
       intuition. intuition. assumption. assumption.
       assumption. assumption. assumption.
       assumption. assumption. assumption.
+
+      simpl. split. eapply IHF; [ try apply Hq2| try apply Hq1| apply Hq'| | ].
+      rewrite Mplus_comm. assumption.
+      simpl in H0. 
+      rewrite (state_eq_aexp _ (c, q')); try reflexivity; try assumption.
+      simpl in H0.
+      eapply IHF; [ try apply Hq1| try apply Hq2| apply Hq'| apply H | ].
+      simpl in H0. 
+      rewrite (state_eq_aexp _ (c, q')); try reflexivity; try assumption.
 Qed.
 
 
@@ -2638,12 +2717,12 @@ destruct p. simpl. assumption. }
  econstructor.
  apply d_seman_app_aux.
  apply WF_d_par_trace. lia.  
- apply WF_ceval  with <{ (s0 e0) :Q= 0 }>  [(c, q)]. 
+ apply WF_ceval  with <{ [[ s0 e0 ]] :Q= 0 }>  [(c, q)]. 
  apply WF_state_dstate_aux.
  inversion_clear Hw. assumption.
  apply ceval_Qinit. assumption.
  apply WF_d_par_trace. lia. 
- apply WF_ceval with <{ (s0 e0) :Q= 0 }> (p :: mu).
+ apply WF_ceval with <{ [[ s0 e0 ]] :Q= 0 }> (p :: mu).
  inversion_clear Hw.
  assumption. assumption.
 
@@ -3843,9 +3922,9 @@ cstate_eq c0 c1 (fst (Free_state F))->
 State_eval F (c0, q) -> 
 State_eval F (c1, q0).
 Proof. induction F;   intros.
-        eapply cstate_eq_P. apply H0.
+        rewrite <- (cstate_eq_P P c0 c1). 
         apply state_eq_Pure with (c0,q).
-        reflexivity. apply H1.
+        reflexivity. apply H1.  assumption.
        apply QExp_eval_dom in H1.
        simpl in H. discriminate H.
 
@@ -3879,7 +3958,23 @@ Proof. induction F;   intros.
  apply IHF2 with c0 q; try assumption. reflexivity.
  apply option_eqb_neq in H5. rewrite H5 in *.
    apply option_eqb_neq in H4. rewrite H4 in *. simpl in *.
- discriminate H. 
+ discriminate H.
+
+ simpl in *. apply cstate_eq_union in H0.
+ rewrite <-(cstate_eq_a c0 c1).
+ rewrite (state_eq_aexp _ (c0,q)); try reflexivity.
+ apply (IHF  (c_update i (aeval (c0, q) a) c0) _  q). apply H.
+ unfold cstate_eq in *.
+ intros. destruct (eq_dec j i).
+  rewrite e0. 
+ repeat rewrite c_update_find_eq. 
+ reflexivity.
+ apply H0 in H2.  
+ repeat rewrite c_update_find_not; try lia.
+assumption. 
+unfold cstate_eq in *. intros.
+ apply H0 in H2. rewrite H2. reflexivity.
+
 Qed.
  
 
@@ -4005,11 +4100,11 @@ inversion H0; subst.   intuition. }
  econstructor. apply (@Pure_free_eval' s e) with q; try assumption.
  inversion_clear H0.  assumption.  econstructor.
  apply d_seman_app_aux.
- apply WF_ceval  with <{ (s0 e0) :Q= 0 }>  [(c, q)]. 
+ apply WF_ceval  with <{ [[s0 e0]] :Q= 0 }>  [(c, q)]. 
  apply WF_state_dstate_aux.
  inversion_clear Hw. assumption.
  apply ceval_Qinit. assumption.
- apply WF_ceval with <{ (s0 e0) :Q= 0 }> (p :: mu1).
+ apply WF_ceval with <{ [[s0 e0]] :Q= 0 }> (p :: mu1).
  inversion_clear Hw.
  assumption. assumption.
  simpl. econstructor. 

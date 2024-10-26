@@ -45,24 +45,21 @@ Inductive bexp : Type :=
   | BLe (a1 a2 : aexp)
   | BGt (a1 a2 : aexp)
   | BNot (b : bexp)
-  | BAnd (b1 b2 : bexp)
-  | BOr (b1 b2 :bexp).
+  | BAnd (b1 b2 : bexp).
 
-Coercion AId : nat >-> aexp.
+Coercion ANum : nat >-> aexp.
 
 Declare Custom Entry com.
 Declare Scope com_scope.
 Local Open Scope com_scope.
 Notation "<{ e }>" := e (at level 0, e custom com at level 99) : com_scope.
-Notation "( x )" := x (in custom com, x at level 99) : com_scope.
 Notation "x" := x (in custom com at level 0, x constr at level 0) : com_scope.
-Notation "f x .. y" := (.. (f x) .. y)
-                  (in custom com at level 0, only parsing,
-                  f constr at level 0, x constr at level 9,
-                  y constr at level 9) : com_scope.
 Notation "x + y"   := (APlus x y) (in custom com at level 50, left associativity).
 Notation "x - y"   := (AMinus x y) (in custom com at level 50, left associativity).
 Notation "x * y"   := (AMult x y) (in custom com at level 40, left associativity).
+Notation "x / y"   := (ADiv x y) (in custom com at level 40, left associativity).
+Notation "x % y"   := (AMod x y) (in custom com at level 40, left associativity).
+Notation "x ^ y"   := (APow x y) (in custom com at level 30, left associativity).
 (*Notation "'true'"  := true (at level 1).*)
 Notation "'true'"  := BTrue (in custom com at level 0).
 (*Notation "'false'" := false (at level 1).*)
@@ -110,11 +107,11 @@ Notation "'while' x 'do' y 'end'" :=
            (in custom com at level 89, x at level 99,
             y at level 99) : com_scope.
 
-Notation "( s e ) :Q= 0 "  :=
-         (QInit s e)
-            (in custom com at level 0, s  constr at level 0,
-            e  constr at level 0,
-              no associativity) : com_scope.
+            Notation "[[ s e ]] :Q= 0 "  :=
+              (QInit s e)
+                 (in custom com at level 0, s  constr at level 0,
+                 e  constr at level 0,
+                   no associativity) : com_scope.
  
 Notation " U  '[[' s e ']]' " :=
          (QUnit_One s e U)
@@ -172,9 +169,9 @@ Fixpoint aeval{s e:nat} (st: state s e)
   | <{a1 - a2}> => (aeval st a1) - (aeval st a2)
   | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
   | AGcd a1 a2 => Nat.gcd (aeval st a1) (aeval st a2)
-  | APow a1 a2 => Nat.pow (aeval st a1) (aeval st a2)
-  | ADiv a1 a2 => (Nat.div (aeval st a1) (aeval st a2))
-  | AMod a1 a2 => (Nat.modulo (aeval st a1) (aeval st a2))
+  |  <{a1 ^ a2}> => Nat.pow (aeval st a1) (aeval st a2)
+  |  <{a1 / a2}> => (Nat.div (aeval st a1) (aeval st a2))
+  |  <{a1 % a2}> => (Nat.modulo (aeval st a1) (aeval st a2))
   | Afun f1 f2 a1 a2 => f1 (f2 (aeval st a1) (aeval st a2))
   end.
 
@@ -191,7 +188,6 @@ match b with
 | <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
 | <{~ b1}>      => negb (beval st b1)
 | <{b1 && b2}>  => andb (beval st b1) (beval st b2)
-| BOr b1 b2 => orb  (beval st b1) (beval st b2)
 end.
 
 
@@ -422,7 +418,6 @@ Fixpoint Free_bexp (b:bexp):CSet:=
     | <{a1 > a2}>   => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{~ b}>       => (Free_bexp b) 
     | <{b1 && b2}>  => NSet.union (Free_bexp b1)  (Free_bexp b2)
-    | BOr b1 b2  => NSet.union (Free_bexp b1)  (Free_bexp b2)
     |_=>NSet.empty
     end.
 
@@ -435,11 +430,11 @@ Fixpoint Free_bexp (b:bexp):CSet:=
              (NSet.union (snd (Var c1)) (snd (Var c2))))
     |<{while b do c end}>
          => (NSet.union (Free_bexp b) (fst (Var c)), (snd (Var c)))
-    |<{ ( s e):Q=0 }>
+    |<{ [[ s e ]] :Q= 0 }>
          => (NSet.empty, Qsys_to_Set s e)
-    | QUnit_One s e U  
+    | <{ U [[s e ]] }>  
          =>(NSet.empty, Qsys_to_Set  s e)
-    | QUnit_Ctrl s0 e0 s1 e1 U  
+    | <{ U [[ s0 e0 ]] [[ s1 e1 ]] }> 
          =>(NSet.empty, NSet.union (Qsys_to_Set s0 e0) (Qsys_to_Set s1 e1))
     |<{ x :=M [[s e]] }>
          => (NSet.add x (NSet.empty), Qsys_to_Set  s e )
@@ -456,7 +451,7 @@ Fixpoint MVar (c:com): (CSet * QSet) :=
              (NSet.union (snd (MVar c1)) (snd (MVar c2))))
     |<{while b do c end}>
          => MVar c
-    |<{ ( s e ):Q=0 }>
+    |<{ [[ s e ]]:Q=0 }>
          => (NSet.empty, Qsys_to_Set  s e)
     | QUnit_One s e U  
          =>(NSet.empty, Qsys_to_Set s e)
@@ -1635,10 +1630,10 @@ Proof.
 Qed.
 
 
-
+Local Open Scope com_scope.
 Lemma ceval_trace_Qinit{s' e'}: forall  (mu mu':list (cstate * qstate s' e')) s e,
 WWF_dstate_aux mu->
-ceval_single <{ QInit s e }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
+ceval_single (QInit s e) mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 
       induction mu; intros.
       
@@ -1651,19 +1646,19 @@ Proof.
       inversion_clear H. apply H1.
        apply IHmu with s e. 
        inversion_clear H. assumption. assumption.
-       apply WF_ceval' with (<{ (s e) :Q= 0 }>) [(sigma, rho)].
+       apply WF_ceval' with (<{ [[ s e ]] :Q= 0 }>) [(sigma, rho)].
        apply WF_cons'. inversion_clear H.  intuition. apply WF_nil'.
        assert(([(sigma, QInit_fun s e rho)]) = StateMap.Raw.map2 (@option_app s' e') ([(sigma, QInit_fun s e rho)]) ([])).
        symmetry. apply map2_nil_r. rewrite H1. apply E_Qinit. intuition.
         apply E_nil.  
-       apply WF_ceval' with  (<{ (s e) :Q= 0 }>) mu. 
+       apply WF_ceval' with  (<{ [[ s e ]] :Q= 0 }>) mu. 
        inversion_clear H.  assumption. assumption.
 Qed.
 
 
 Lemma ceval_trace_QUnit_one{s' e'}: forall  (mu mu':list (cstate * qstate s' e')) s e (U: Square (2 ^ (e - s))),
 WWF_dstate_aux mu->
-ceval_single <{ QUnit_One s e U }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
+ceval_single (QUnit_One s e U) mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 
       induction mu; intros.
       
@@ -1685,14 +1680,14 @@ Proof.
        symmetry. rewrite map2_nil_r. reflexivity.  
        rewrite H1. rewrite Heqp. apply E_Qunit_One. assumption. assumption.
         apply E_nil.  
-       apply WF_ceval' with  (<{ QUnit_One s e U1 }>) mu. 
+       apply WF_ceval' with  (QUnit_One s e U1) mu. 
        inversion_clear H. assumption. assumption.
 Qed.
 
 
 Lemma ceval_trace_QUnit_ctrl{s' e'}: forall (mu mu':list (cstate * qstate s' e')) s0 e0  s1 e1 (U: nat-> Square (2 ^ (e1 - s1))),
 WWF_dstate_aux mu->
-ceval_single <{ QUnit_Ctrl s0 e0 s1 e1 U }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
+ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. 
       induction mu; intros.
       
@@ -1714,7 +1709,7 @@ Proof.
        symmetry. rewrite map2_nil_r. reflexivity.  
        rewrite H1. rewrite Heqp. apply E_QUnit_Ctrl. assumption. assumption.
         apply E_nil.  
-       apply WF_ceval' with  (<{ QUnit_Ctrl s0 e0 s1 e1 U1 }>) mu. 
+       apply WF_ceval' with  (QUnit_Ctrl s0 e0 s1 e1 U1) mu. 
        inversion_clear H. assumption. assumption.
 Qed.
 

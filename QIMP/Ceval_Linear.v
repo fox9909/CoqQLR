@@ -1151,7 +1151,7 @@ Proof. induction c.
     -{induction y; intros mu p Hp H. exists []. split. apply E_nil.
     inversion_clear H. reflexivity. destruct a. inversion H; subst.
     assert(exists y' : list (cstate * qstate s' e'),
-    ceval_single <{ (s e) :Q= 0 }> y y' /\
+    ceval_single <{ [[ s e ]] :Q= 0 }> y y' /\
     mu' =
     StateMap.Raw.map (fun x : qstate s' e' => p .* x)
     y'). apply IHy; try assumption.

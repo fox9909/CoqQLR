@@ -65,21 +65,21 @@ Definition  U_f (i:nat):= exp_U U i.
 Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s/r) * k),  sin (- ((2 * PI)) * (s/r) * k)) .*  Vec (2 ^ L) (x ^ k mod N)) (r) ) .
 Definition  b:nat := 1.
 Definition  z':nat:=2 .
-Definition  b' := (AMod (APow (ANum x) z) ((ANum N))) .
-Definition  P (s:nat): Pure_formula := (BEq z' (ANum (s/r * 2^t))) .
+Definition  b' := (AMod (APow x z ') (N)) .
+Definition  P (s:nat): Pure_formula := (BEq z' ' ((s/r * 2^t))) .
 
 Definition OF :=
-    <{ z := ANum 1 ;
+    <{ z :=  1 ;
        b := b' ;
-       while  b<>ANum 1  do 
-       (0 t) :Q= 0;
-       (t (t+L)) :Q= 0;
-       QUnit_One 0 t (kron_n t hadamard);
-       QUnit_One t (t+L) (U_plus);
-       QUnit_Ctrl 0 t t (t+L) U_f;
-       QUnit_One 0 t (adjoint QFT);
-       QMeas z' 0 t;
-       z := Afun f (Rdiv) z' (ANum (2^t));
+       while  b '<> 1  do 
+       [[ 0 t ]] :Q= 0;
+       [[ t (t+L) ]]:Q= 0;
+       (t ⨂ hadamard) [[ 0 t ]];
+       U_plus [[t (t + L)]];
+       U_f [[0 t]] [[t (t + L)]];
+       (adjoint QFT) [[ 0 t ]];
+       z' :=M [[ 0 t ]];
+       z  := (Afun f (Rdiv) z' ' ((2^t)));
        b := b'
        end }>. 
 
@@ -94,7 +94,6 @@ Proof. unfold Us. rewrite Mscale_Msum_distr_r. rewrite Mscale_assoc.
 Admitted.
 
 
-Lemma IZR_INR_0:IZR 0= INR 0. Proof. rewrite INR_IZR_INZ. f_equal. Qed .
 
 Lemma  simpl_H_Uplus: 
 / √ 2 ^ t .* big_sum (fun z0 : nat => ∣ z0 ⟩_ (t)) (2 ^ t) ⊗ ∣ 1 ⟩_ (L)
@@ -360,24 +359,24 @@ Proof. unfold hoare_triple;
 Qed.
 
 Theorem OF_correctness: 
-{{BEq (ANum (Nat.gcd x N)) (ANum 1) }} OF {{BEq z (ANum r)}}.
+{{BEq ((Nat.gcd x N)) 1 }} OF {{BEq z ' r}}.
 Proof. pose HtL. pose (Qsys_to_Set_min_max t (t+L)). destruct a0; try lia.
                 pose (Qsys_to_Set_min_max 0 t). destruct a0; try lia.   
 unfold OF.
 eapply rule_seq.
 eapply rule_conseq_l'.
-eapply rule_assgn with (P:=(BEq z (ANum 1))).
-eapply implies_trans. apply rule_PT. apply Assn_true. unfold not. simpl. apply In_empty.  
+eapply rule_assgn with (F:=(BEq z ' 1)).
+eapply implies_trans. apply rule_PT. apply Assn_true_F. unfold not. simpl. apply In_empty.  
 eapply rule_seq.
 eapply rule_conseq_l'.
-eapply rule_assgn with (P:=(BAnd (BEq z (ANum 1))  ( BEq b (AMod (APow (ANum x) z) (ANum N))))).
-eapply implies_trans'. apply Assn_conj.  admit.
-eapply rule_Conj_two. apply implies_refl. 
-eapply implies_trans. apply rule_PT. unfold b'. apply Assn_true. admit.
-eapply rule_conseq_l with (P':=( (BNeq z (ANum r) /\ (BNeq b (ANum 1))))).
+eapply rule_assgn with (F:=( (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
+implies_trans_solve 1 Assn_conj_F.  
+eapply rule_Conj_two; try apply implies_refl.
+implies_trans_solve 0  rule_PT.  unfold b'. apply Assn_true_F. admit. admit.
+eapply rule_conseq_l with (P':=( (BNeq z ' r /\p (BNeq b ' 1)))).
 admit.
 eapply rule_conseq.
-eapply rule_while with (F0:= (BNeq z (ANum r))) (F1:= (BEq z (ANum r))).
+eapply rule_while with (F0:= (BNeq z ' r)) (F1:= (BEq z ' r)).
 *eapply rule_seq.
 eapply rule_conseq_l.
 apply rule_PT.
@@ -427,15 +426,14 @@ rewrite simpl_QFT'.
 eapply rule_conseq_l'.
 eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P). lia.
 admit.  unfold P. apply rule_Conj_two. 
-apply implies_refl. eapply implies_trans. 
-apply rule_PT.   
+apply implies_refl. implies_trans_solve 0  rule_PT.   
 admit. 
 *eapply rule_seq. 
 eapply rule_conseq_l. 
 eapply rule_Oplus. rewrite big_pOplus_get_npro.
 eapply rule_conseq_l'.
-eapply rule_assgn with (P:= (BEq z (Afun f (fun r1 r2 : nat => (r1 / r2)%R) z' (ANum (2 ^ t))))).
-eapply implies_trans'. apply Assn_true. simpl.   admit.  admit.
+eapply rule_assgn with (F:= (BEq z '(Afun f (fun r1 r2 : nat => (r1 / r2)%R) z' ' ((2 ^ t))))).
+eapply implies_trans'. apply Assn_true_F. simpl.   admit.   admit.
 eapply rule_conseq_l'. apply rule_Dassgn. 
 eapply implies_trans. apply rule_PT. unfold b'.
 admit.  

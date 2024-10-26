@@ -224,24 +224,28 @@ Proof. split. intros. destruct j. simpl. apply id_unitary.
 Qed.
 
 
+
+
            
 Local Open Scope nat_scope.     
-Local Open Scope com_scope.              
+Local Open Scope com_scope.   
+
+
 Definition HHL :=
-    <{ v := ANum 0;
-       while  v=ANum 0  do 
-       ( 0 n ) :Q= 0;
-       ( n (n+m) ) :Q= 0;
-       ( (n+m) (n+m+1) ) :Q= 0;
-       QUnit_One n (n+m) (U_b);
-       QUnit_One 0 n (n ⨂ hadamard);
-       QUnit_Ctrl 0 n n (n+m) U_f;
-       QUnit_One 0 n (adjoint QFT);
-       QUnit_Ctrl 0 n (n+m) (n+m+1) (U_c);
-       QUnit_One 0 n (QFT);
-       QUnit_Ctrl 0 n n (n+m) (adj_Uf);
-       QUnit_One 0 n (n ⨂ hadamard);
-       QMeas v (n+m) (n+m+1)
+    <{ v := 0;
+       while  v ' = 0  do 
+       [[ 0 n ]] :Q= 0;
+       [[ n (n+m) ]] :Q= 0;
+       [[ (n+m) (n+m+1) ]] :Q= 0;
+       U_b [[ n (n+m) ]];
+       (n ⨂ hadamard) [[ 0 n ]];
+       U_f [[ 0 n ]] [[n (n+m)]];
+       (adjoint QFT) [[0 n]];
+       U_c [[0 n]] [[ (n+m) (n+m+1) ]];
+       QFT [[0 n]];
+       (adj_Uf) [[ 0 n ]] [[n (n+m)]];
+       (n ⨂ hadamard) [[ 0 n ]];
+        v :=M [[ (n+m) (n+m+1) ]]
        end }>.
 
 Ltac type_sovle:= 
@@ -287,7 +291,7 @@ pose HU. destruct a. apply H0. auto_wf. auto_wf.
 Qed .
 
 
-Definition  P (i:nat): Pure_formula := (BEq v (ANum i)) .
+Definition  P (i:nat): Pure_formula := (BEq v ' ( i)) .
 
 Lemma simpl_HB: (1 / √ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (n)) (2 ^ n)
 ⊗ big_sum (fun j : nat => b_n j .* v_n j) (2 ^ m)=
@@ -442,7 +446,8 @@ rewrite H4. rewrite<-H1. unfold phi'. unfold phi. reflexivity.
 apply INR_not_0. 
 rewrite <-H1. apply Rmult_integral_contrapositive_currified.
 rewrite Rdiv_unfold. apply Rmult_integral_contrapositive_currified.
-apply Rmult_integral_contrapositive_currified. apply Hlamda. admit.
+apply Rmult_integral_contrapositive_currified. apply Hlamda.
+pose Ht.  admit.
 apply Rgt_neq_0. apply Rinv_0_lt_compat. apply Rmult_lt_0_compat.
 lra.  apply PI_RGT_0. rewrite pow_IZR.  apply not_0_IZR. lia.
 apply WF_vec. apply H.  apply H. apply Hv_n. intros.
@@ -628,7 +633,7 @@ Proof.
     pose (Qsys_to_Set_min_max (n+m) (n+m+1) ). destruct a0. lia.
 
       eapply rule_seq.
-    {eapply rule_conseq_l'. eapply (rule_assgn (BEq v (ANum 0))). apply Assn_true. simpl. unfold not.  apply (In_empty v). } 
+    {eapply rule_conseq_l'. eapply (rule_assgn (BEq v ' ( 0))). apply Assn_true_F. simpl. unfold not.  apply (In_empty v). } 
       eapply rule_conseq. 
     {eapply (rule_while BTrue (QExp_s 0 (n+m+1) ((Vec (2^n) 0) ⊗ (x) ⊗ (Vec 2 1)))).
         eapply rule_seq.
@@ -694,35 +699,36 @@ Proof.
      {eapply rule_conseq. eapply rule_QMeas with (s:=0) (e:=n+m+1)(P:=P)
       (v:=(big_sum (fun i : nat =>b_n i .* (∣ 0 ⟩_ (n)) ⊗ v_n i
       ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1)  .+ c / phi' i .* ∣ 1 ⟩_ (1))) 
-      (2 ^ m))).  lia. apply big_pOplus'_to_pOplus.    admit. 
+      (2 ^ m))).  lia. apply big_pOplus'_to_pOplus. 
+  admit. 
        rewrite add_sub_eq. unfold P. simpl. 
-      apply rule_Conj_two. apply implies_refl. 
-      eapply implies_trans. apply rule_PT. 
-      apply rule_Conj_two. apply Assn_true. unfold not. simpl. apply In_empty.
-      apply rule_Conj_two. apply Assn_true. unfold not. simpl. apply In_empty.
-      apply implies_refl.
+      apply rule_Conj_two. apply implies_refl.
+      implies_trans_solve 0 rule_PT.  
+      apply rule_Conj_two; try apply rule_Conj_two;try apply rule_PT; try apply Assn_true_P;
+       unfold not; simpl;  apply In_empty.
       rewrite add_sub_eq. unfold P. simpl. 
       eapply implies_trans.  
       eapply  rule_Oplus. simpl.
       eapply rule_OCon'. simpl. econstructor.
-      eapply implies_trans.   apply rule_ConjC.
+      implies_trans_solve 0 rule_ConjC.
         eapply rule_CconjCon. apply rule_PT. apply implies_refl.
-       econstructor. 
-        eapply implies_trans. apply rule_ConjC.
-        eapply rule_CconjCon.  admit.  admit. econstructor. } }
-  {eapply implies_trans.  apply rule_OdotE.
-    eapply implies_trans.  apply rule_OdotO.
-    eapply implies_trans. apply rule_ConjC. admit. }
-  {eapply implies_trans. eapply rule_Conj_split_l.    
-    eapply implies_trans. assert(1=(1 * 1)). lia. destruct H6.
+       econstructor.  implies_trans_solve 0 rule_ConjC.
+        eapply rule_CconjCon.  admit.
+        classic_slove_aux. econstructor. } }
+  { implies_trans_solve 0 rule_OdotE.
+    implies_trans_solve  0 rule_OdotO.
+    implies_trans_solve  0 SAnd_PAnd_eq.
+    implies_trans_solve 0 rule_ConjC.
+   admit. }
+  { implies_trans_solve 0 rule_Conj_split_l.    
+     assert(1=(1 * 1)). lia. destruct H6.
     assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H6. 
     assert(2^(n+m+1-(n+m))=2). assert(2^1=2). simpl. reflexivity.
     rewrite<- H6. rewrite H6 at 1. f_equal. lia. destruct H6.
-      eapply rule_Separ'. lia. admit. admit.  
-      eapply  implies_trans. apply rule_odotT. 
-      eapply  implies_trans. eapply rule_OdotO'. 
-      eapply  implies_trans. eapply rule_Conj_split_l. 
-      eapply  implies_trans. 
+    implies_trans_solve 0 rule_Separ'. lia. admit.  admit.  
+     implies_trans_solve 0 rule_odotT.
+     implies_trans_solve 0 rule_OdotO'.  
+      implies_trans_solve 0 rule_Conj_split_l. 
       assert(2^(n-0)=(2 ^ (n + m + 1 - (n + m))) ^ n).
     rewrite Nat.sub_0_r. f_equal.
     symmetry. assert(2^1=2). simpl. reflexivity.
@@ -730,10 +736,10 @@ Proof.
     f_equal. apply add_sub_eq. destruct H6.
     assert(2^(n+m-n)=(2 ^ (n + m + 1 - (n + m))) ^ m). 
     repeat rewrite add_sub_eq. simpl. reflexivity. destruct H6.
-    eapply rule_Separ'. lia. pose Hx. admit. admit. 
-    eapply  implies_trans.  apply rule_odotT.  
-    eapply  implies_trans. eapply rule_OdotO'. 
-    eapply  implies_trans. apply rule_ConjC.   
+    implies_trans_solve 0  rule_Separ'. lia. pose Hx. admit. admit.
+    implies_trans_solve 0 rule_odotT. 
+    implies_trans_solve 0 rule_OdotO'. 
+    implies_trans_solve 0 rule_ConjC.   
     eapply rule_Conj_split_l.  }
 Admitted.
     

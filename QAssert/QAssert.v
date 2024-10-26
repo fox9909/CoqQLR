@@ -22,9 +22,12 @@ Require Import Par_trace.
 
 Inductive Pure_formula:Type:=
 |PBexp (b:bexp) 
+|Pre (P: nat-> Prop) (a:aexp) 
+|PAnd (P1 P2: Pure_formula)
+|PNeg (P: Pure_formula)
+|POr (P1 P2: Pure_formula)
 |PUniver (i: nat) (P: Pure_formula)
-|PExists (i:nat) ( P:  Pure_formula)
-|Assn_sub_P (i:nat) (a:aexp) (P:Pure_formula). 
+|PAssn (i:nat) (a:aexp) (P:Pure_formula). 
 
 Inductive QExp : Type :=
 |QExp_s (s e:nat) (v: Vector (2^(e-s))): QExp
@@ -34,7 +37,8 @@ Inductive State_formula :Type:=
 |SPure (P:Pure_formula) 
 |SQuan (qs:QExp)
 |SOdot (F1 F2:State_formula)
-|SAnd (F1 F2:State_formula).
+|SAnd (F1 F2:State_formula)
+|SAssn (i:nat) (a:aexp) (F:State_formula).
 (* |SNot (F:State_formula) *)
 
 
@@ -121,14 +125,14 @@ Notation "| v >[ s - e ]" := (QExp_s s e v) (at level 80) :assert_scope.
 Infix " ⊗*  " := (QExp_t)(at level 80) :assert_scope. 
 
 (* Notation "~ F" := (SNot F ) : assert_scope. *)
-Notation "F1 /\ F2" := (SAnd F1  F2) : assert_scope.
+Notation "F1 /\s F2" := (SAnd F1  F2) (at level 80): assert_scope.
 Notation " F1 ⊙ F2" := (SOdot F1 F2)(at level 80):assert_scope.
 (* Notation " F [ X |-> a ] " := (Assn_sub X a F)   (at level 10) : assert_scope. *)
 
 Fixpoint big_Sand (g: nat->  (State_formula )) (n : nat) : State_formula := 
 match n with
 | 0 => BTrue
-| S n' => g n' /\ big_Sand g n'
+| S n' => g n' /\s big_Sand g n'
 end.
 
 
@@ -162,12 +166,16 @@ Definition d_update_cstate {s e:nat} i a (mu:dstate s e) :=
 (*----------------------------------FreeV--------------------------------------*)
 Local Open Scope assert_scope.
 Import QIMP_L.
+
 Fixpoint Free_pure (P: Pure_formula ): CSet :=
   match P with
       | PBexp b=> Free_bexp b
+      | Pre f a => Free_aexp a
+      | PAnd P1 P2 =>  (NSet.union (Free_pure P1) (Free_pure P2))
+      | PNeg P =>  (Free_pure P)
+      | POr P1 P2 =>(NSet.union (Free_pure P1) (Free_pure P2))
       | PUniver a P0 => NSet.remove a (Free_pure (P0))
-      | PExists a P0 => NSet.remove a  (Free_pure (P0))
-      | Assn_sub_P i a P0 => (NSet.union (Free_pure P0) (Free_aexp a))
+      | PAssn i a P0 => (NSet.union (Free_pure P0) (Free_aexp a))
   end.
 
 Fixpoint Free_Qexp (qs: QExp) : QSet :=
@@ -183,6 +191,7 @@ Fixpoint Free_state (F: State_formula) : (CSet * QSet):=
     |SQuan qs=> (NSet.empty, Free_Qexp qs)
     |SOdot F1 F2=> (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
     |SAnd F1 F2 => (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
+    |SAssn i a F => (NSet.union (fst (Free_state F)) (Free_aexp a), snd (Free_state F))
     (* |SNot F'=> Free_state F'
     | Assn_sub X a F => Free_state F *)
   end.
@@ -217,10 +226,13 @@ Local Close Scope assert_scope.
 Local Open Scope nat_scope.
 Fixpoint Pure_eval{s e:nat} (pf:Pure_formula) (st:state s e): Prop :=
   match pf with 
- |PBexp b => if ((beval st b)) then True else False
+ | PBexp b => if ((beval st b)) then True else False
+ | Pre f a => f (aeval st a)
+ | PAnd P1 P2 => Pure_eval P1 st /\ Pure_eval P2 st
+ | PNeg P => ~ Pure_eval P st
+ | POr P1 P2 => Pure_eval P1 st \/ Pure_eval P2 st
  |PUniver i P=> forall a:nat, Pure_eval P (s_update_cstate i a st)
- |PExists i P=> exists a:nat, Pure_eval P (s_update_cstate i a st)
- |Assn_sub_P i a P => Pure_eval P (s_update_cstate i (aeval st a) st)
+ |PAssn i a P => Pure_eval P (s_update_cstate i (aeval st a) st)
  end. 
 
 
@@ -252,6 +264,7 @@ Fixpoint State_eval{s e:nat} (F:State_formula) (st:state s e): Prop:=
 |SOdot F1 F2=>  NSet.Equal (NSet.inter (snd (Free_state F1)) (snd (Free_state F2))) (NSet.empty) /\
 State_eval F1 st /\ State_eval F2 st
 |SAnd F1 F2 => State_eval F1 st /\ State_eval F2 st
+|SAssn i a F => State_eval F (s_update_cstate i (aeval st a) st)
 (* |SNot F => ~(State_eval F st) *)
 end).
 
@@ -590,9 +603,6 @@ Proof.  induction D;  intros;
 Qed.
 
 
-
-From Quan Require Import Ceval_Linear.
-
 Lemma sat_Assert_to_State: forall s e (mu:dstate s e) (F:State_formula),
 sat_Assert mu F <-> sat_State mu F.
 Proof. split; intros. 
@@ -849,6 +859,10 @@ Proof. induction P.
      --intros. apply (bexp_Pure_eq st st' b ).
       rewrite (state_eq_bexp st st' b). reflexivity.
        intuition.
+     - intros. simpl. rewrite (state_eq_aexp st st' a). intuition. assumption. 
+     - intros. simpl. split; intros; split; try eapply IHP1; try eapply IHP2; try apply H; try apply H0.
+     - intros. simpl. split; intros; intro; destruct H0; eapply IHP; try apply H; assumption.
+     - intros. simpl. split; intros; destruct H0;[left|right|left|right]; try eapply IHP1; try eapply IHP2; try apply H; try apply H0.
     --simpl.  destruct st. destruct st'. unfold s_update_cstate.
        intros. split. intros. simpl in H. subst. 
        eapply IHP with  (c_update i a c0, q). simpl. reflexivity.
@@ -856,13 +870,6 @@ Proof. induction P.
        intros. simpl in H. subst. 
        eapply IHP with  (c_update i a c0, q0). simpl. reflexivity.
        apply H0.
-    -simpl.  destruct st. destruct st'. unfold s_update_cstate.
-    intros. split. intros. simpl in H. subst. destruct H0. exists x.  
-    eapply IHP with  (c_update i x c0, q). simpl. reflexivity.
-    apply H.
-    intros. simpl in H. subst. destruct H0. exists x.  
-    eapply IHP with  (c_update i x c0, q0). simpl. reflexivity.
-    apply H.
     - split; intros; destruct st; destruct st'; 
       simpl in *; unfold s_update_cstate in *;
       simpl in H; subst.
@@ -969,6 +976,14 @@ try apply (IHF2 p s e st); try assumption.
 -- split; simpl; intros; destruct H0;
 split; try apply (IHF1 p s e st); try assumption;
 try apply (IHF2 p  s e st); try assumption.
+--intros. split; intros; destruct st; unfold s_scale in *; unfold q_scale in *; simpl in *.
+ rewrite (state_eq_aexp  _ (c,q)). 
+  apply (IHF p s e ((c_update i (aeval (c, q) a) c, q))); try assumption.
+  simpl. reflexivity.
+  rewrite (@state_eq_aexp s e s e _ (c, p .* q)). 
+  rewrite (IHF p s e ((c_update i (aeval (c, p .* q) a) c, q))); try assumption.
+  simpl. reflexivity.
+
 Qed.
 
 Lemma s_seman_scale_c: forall (F:State_formula) (c:C) s e sigma (q:qstate s e),
@@ -1098,7 +1113,10 @@ Proof.
         split. assumption. assumption. assumption.
         assumption.  
       -simpl in *. split. intuition.  split. intuition. intuition. 
-      - simpl in *.  split. intuition. intuition. 
+      - simpl in *.  split. intuition. intuition.
+      -simpl in *.   rewrite (state_eq_aexp _ (c,q)); try reflexivity.
+      rewrite (state_eq_aexp _ (c,q)) in H2; try reflexivity.
+      apply IHF; try assumption. 
 Qed.
 
 

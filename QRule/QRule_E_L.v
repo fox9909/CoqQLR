@@ -75,36 +75,21 @@ Theorem rule_PT: forall F:State_formula,
 F ->> BTrue.
 Proof. rule_solve. Qed.
 
-Lemma rule_Conj_split_l: forall (F1 F2:State_formula), F1 /\ F2 ->> F1 .
+Lemma rule_Conj_split_l: forall (F1 F2:State_formula), F1 /\s F2 ->> F1 .
 Proof.  rule_solve. Qed.
-Lemma rule_Conj_split_r: forall (F1 F2:State_formula), F1 /\ F2 ->> F2 .
+Lemma rule_Conj_split_r: forall (F1 F2:State_formula), F1 /\s F2 ->> F2 .
 Proof.  rule_solve. Qed. 
 
 Theorem rule_ConjC: forall F1 F2:State_formula,
-((F1 /\ F2) ->> (F2 /\ F1))/\
-((F2 /\ F1) ->> (F1 /\ F2)).
+((F1 /\s F2) <<->> (F2 /\s F1)).
 Proof.      rule_solve. Qed.
 
 
 
-Lemma State_eval_conj: forall s e (mu:list (cstate * qstate s e)) (F1 F2:State_formula),
-State_eval_dstate  (F1 /\ F2) mu <->
-State_eval_dstate   F1 mu/\ State_eval_dstate F2 mu .
-Proof.  intros. split; intros; 
-       induction mu; 
-       simpl in H. destruct H.
-       -destruct mu; destruct a; inversion_clear H; simpl;
-        intuition. 
-      -destruct H. destruct H. 
-      -destruct a. destruct mu. simpl. econstructor. 
-       destruct H. inversion_clear H. inversion_clear H0.
-      split; intuition. apply Forall_nil.
-      simpl.  destruct H. inversion_clear H.
-      inversion_clear H0. intuition. 
-Qed.
+From Quan Require Import QRule_Q_L.
        
 Lemma sat_assert_conj: forall s e (mu:dstate s e) (F1 F2:State_formula),
-sat_Assert mu (F1 /\ F2)<->
+sat_Assert mu (F1 /\s F2)<->
 sat_Assert mu F1/\ sat_Assert mu F2 .
 Proof.  split; destruct mu as [mu IHmu]; intros;
       repeat rewrite sat_Assert_to_State in *.
@@ -117,8 +102,8 @@ Proof.  split; destruct mu as [mu IHmu]; intros;
 Qed.
 
 Theorem rule_CconjCon:forall F1 F2 F3 F4:State_formula,
-(F1->>F2) -> (F3 ->> F4) ->
-(F1 /\ F3) ->> (F2 /\ F4).
+(F1 ->>F2) -> (F3 ->> F4) ->
+(F1 /\s F3) ->> (F2 /\s F4).
 Proof. 
  intros.  unfold assert_implies in *.
 intros. rewrite sat_assert_conj in *. intuition.
@@ -205,22 +190,20 @@ Qed.
   
   
   Theorem rule_OdotE: forall F:State_formula,
-    (F ⊙ BTrue ->> F ) /\ (F ->>F ⊙ BTrue).
+    (F ⊙ BTrue <<->> F ) .
   Proof. rule_solve.   
         apply inter_empty. right. reflexivity.
   Qed.
   
    Theorem rule_OdotC: forall F1 F2:State_formula,
-  ((F1 ⊙ F2) ->> (F2 ⊙ F1))/\
-  ((F2 ⊙ F1) ->> (F1 ⊙ F2)).
+  ((F1 ⊙ F2) <<->> (F2 ⊙ F1)).
   Proof.  
            rule_solve; try rewrite inter_comm; try assumption.
   Qed.
   
   
   Theorem rule_OdotA: forall F1 F2 F3:State_formula,
-  ((F1 ⊙ (F2 ⊙ F3) )->>( (F1 ⊙ F2) ⊙ F3) )/\
-  (( (F1 ⊙ F2) ⊙ F3) ->> (F1 ⊙ (F2 ⊙ F3) )).
+  ((F1 ⊙ (F2 ⊙ F3) )<<->>( (F1 ⊙ F2) ⊙ F3) ).
   Proof.     rule_solve; [rewrite inter_comm | | rewrite inter_comm in H3| rewrite inter_comm in H3 ]; 
              try rewrite inter_union_dist in *;
               try rewrite union_empty in *.
@@ -229,31 +212,28 @@ Qed.
               split;[ | rewrite inter_comm];
               intuition. rewrite inter_comm; apply H3. 
   Qed.
+
+  Notation "F1 /\p F2" := (PAnd F1  F2) (at level 80): assert_scope.
+  Notation "F1 \/p F2" := (POr F1  F2) (at level 80): assert_scope.
   
   Theorem rule_OdotO: forall (P1 P2:Pure_formula), 
-   ((P1 ⊙ P2) ->> (P1 /\ P2)) /\
-   ((P1 /\ P2) ->> (P1 ⊙ P2)).
+   ((P1 ⊙ P2) <<->> (P1 /\p P2)) .
   Proof.  rule_solve.  apply inter_empty. intuition.
   Qed.
   
   Theorem rule_OdotOP: forall (P:Pure_formula) (F:State_formula),
-  (P ⊙ F ->> P /\ F)/\
-  (P /\ F ->> P ⊙ F).
+  ((P ⊙ F) <<->> (P /\s F)).
   Proof.   rule_solve. apply inter_empty.  intuition.
   Qed.
   
   Theorem rule_OdotOA: forall (P:Pure_formula) (F1 F2:State_formula),
-  ((P /\ (F1 ⊙ F2)) ->> ((P /\ F1) ⊙ (P /\ F2)))
-  /\
-  (((P /\ F1) ⊙ (P /\ F2))->>(P /\ (F1 ⊙ F2))).
+  ((P /\s (F1 ⊙ F2)) <<->> ((P /\s F1) ⊙ (P /\s F2))).
   Proof.  rule_solve. Qed.
   
   
   
   Theorem rule_OdotOC: forall (F1 F2 F3:State_formula), 
-  ((F1 ⊙(F2 /\ F3)) ->> ((F1 ⊙ F2) /\ (F1 ⊙ F3)))
-  /\
-  (((F1 ⊙ F2) /\ (F1 ⊙ F3))->>(F1 ⊙(F2 /\ F3))).
+  ((F1 ⊙(F2 /\s F3)) <<->> ((F1 ⊙ F2) /\s (F1 ⊙ F3))).
   Proof. rule_solve;[rewrite inter_union_dist in H3;
   rewrite union_empty in H3 | rewrite inter_union_dist in H3;
   rewrite union_empty in H3 | rewrite inter_union_dist ;
@@ -421,8 +401,7 @@ Msimpl. reflexivity.
 Admitted. 
   
 Theorem  rule_odotT: forall qs1 qs2, 
-(((qs1) ⊗* (qs2)) ->> ((qs1)  ⊙ (qs2))) /\
-(((qs1) ⊙ (qs2)) ->> ((qs1)  ⊗* (qs2))).
+(((qs1) ⊗* (qs2)) <<->> ((qs1)  ⊙ (qs2))) .
 Proof. rule_solve.   Qed.
  
 
@@ -793,7 +772,7 @@ apply rule_OCon. intuition. intuition. apply H0. assumption.
 Qed.
 
 Theorem rule_OdotO': forall (F1 F2:State_formula), 
- ((F1 ⊙ F2) ->> (F1 /\ F2)) .
+ ((F1 ⊙ F2) ->> (F1 /\s F2)) .
 Proof.  rule_solve. Qed.
 
 
