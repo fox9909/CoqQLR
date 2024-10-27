@@ -39,7 +39,7 @@ Definition z := p.z.
 Definition r := p.r.
 
 Parameter random: nat -> nat -> nat.
-Hypothesis Hran: forall a b, (a <=? random a b) && (random a b <=? b)=true.
+Hypothesis Hran: forall a b, (a <= random a b) /\ (random a b <= b).
 
 Lemma bool_true: forall (a b:nat),
 a=b-> (a=? b =true).
@@ -69,6 +69,7 @@ Qed.
 
 Definition y:nat := 3.
 
+
 Definition Shor :=
   let N2 := (N mod 2) in
   let b2 (x:nat) :=(BAnd (BEq (AMod z ' 2) 0 )  (BNeq (((AMod (APow x (ADiv z ' 2)) N))) 1)) in
@@ -95,25 +96,280 @@ Definition Shor :=
       end 
   }>.
 
+  Import Sorted.
 
 Theorem rule_while_classic: forall F (b:bexp) (c:com),
          {{F /\p b}} c {{ F}}
       -> {{F}}
          while b do c end
          {{ (F /\p (BNot b)) }}.
-Proof. Admitted.
+Proof.  
+unfold hoare_triple. 
+intros F b c. intros H.
+intros s e (mu,IHmu) (mu', IHmu'). intros.
+inversion_clear H0. simpl in *.
+
+remember <{while b do c end}> as original_command eqn:Horig. 
+induction H4;  try inversion Horig; subst.
+
+*intros. apply WF_sat_Assert in H1. intuition.
+
+* 
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+[(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu1). apply ceval_sorted with (c) [(sigma, rho)] . 
+assumption.  assumption.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu'). apply ceval_sorted with (<{ while b do c end }>) mu1 .
+assumption. assumption. 
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu''). apply ceval_sorted with (<{ while b do c end }>) mu. 
+inversion_clear IHmu. assumption. assumption. 
+assert(WF_dstate_aux [(sigma, rho)]).
+inversion_clear H2. apply WF_cons. assumption.
+apply WF_nil.  apply WF_dstate_in01_aux in H9.
+simpl in *. rewrite Rplus_0_r. 
+apply Rplus_le_reg_pos_r  with ( d_trace_aux mu)%R .
+intuition. intuition. 
+
+destruct mu. simpl in *. inversion H4_; subst.
+remember (StateMap.Raw.map2 option_app mu' []).
+rewrite map2_nil_r in Heqt. subst.
+apply IHceval_single3 with H5. 
+apply H with (StateMap.Build_slist H4).
+econstructor. intuition. apply WF_ceval with c [(sigma, rho)].
+assumption. intuition. assumption.
+
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+econstructor. assumption. inversion_clear H10.
+ econstructor. split. assumption.  simpl. rewrite H0.
+ intuition. econstructor. 
+apply WF_ceval with c [(sigma, rho)].
+assumption. intuition. 
+apply WF_ceval with (<{ while b do c end }>) mu1.
+apply WF_ceval with c [(sigma, rho)].
+assumption. intuition.  assumption.  intuition.
+
+assert(sat_State (d_app (StateMap.Build_slist H6) (StateMap.Build_slist H7)) (F /\p (BNot b))).
+apply (d_seman_app' _ _ _ (StateMap.Build_slist H6) (StateMap.Build_slist H7)). 
+rewrite <-sat_Assert_to_State. 
+apply IHceval_single3 with H5. 
+apply H with (StateMap.Build_slist H4).
+econstructor. intuition. apply WF_ceval with c [(sigma, rho)].
+assumption. intuition. assumption.
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+econstructor. assumption. inversion_clear H10.
+ econstructor. split. assumption.  simpl. rewrite H0.
+ intuition. econstructor.
+apply WF_ceval with c [(sigma, rho)].
+assumption. intuition. 
+apply WF_ceval with (<{ while b do c end }>) mu1.
+apply WF_ceval with c [(sigma, rho)].
+assumption. intuition.  assumption.  intuition.
+
+inversion_clear IHmu.
+rewrite<- sat_Assert_to_State.
+apply IHceval_single1 with (H9).
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+econstructor. inversion_clear H11. assumption.
+inversion_clear H12. assumption.
+ inversion_clear H2. assumption.
+apply WF_ceval with (<{ while b do c end }>) (p :: mu).
+inversion_clear H2. assumption. assumption. reflexivity.
+
+apply WF_ceval with (<{ while b do c end }>) ((sigma, rho) :: (p :: mu)).
+intuition. simpl. apply E_While_true with mu1.
+assumption. assumption. assumption. assumption.
+unfold d_app in H9. unfold StateMap.map2 in H9. simpl in H9.
+inversion_clear H9. rewrite sat_Assert_to_State. 
+econstructor.   intuition.
+apply H11. 
+
+*assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+[(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu'). apply ceval_sorted with (<{ while b do c end }>) mu. 
+inversion_clear IHmu. assumption. assumption.
+
+destruct mu. simpl in *. inversion H4; subst.
+
+rewrite sat_Assert_to_State in *. 
+inversion_clear H1. inversion_clear H8.
+econstructor. assumption. econstructor. 
+split. assumption.
+assert((@pair StateMap.Raw.key (qstate s e) sigma rho)=
+(sigma, rho)). reflexivity. rewrite H8.
+simpl. rewrite H0. simpl. auto. econstructor.
+
+rewrite sat_Assert_to_State. 
+assert(sat_State (d_app (StateMap.Build_slist H5) (StateMap.Build_slist H6)) (F /\p (BNot b))).
+apply (d_seman_app' _ _ _ (StateMap.Build_slist H5) (StateMap.Build_slist H6)).
+rewrite <-sat_Assert_to_State.
+
+rewrite sat_Assert_to_State in *. 
+inversion_clear H1. inversion_clear H8.
+econstructor. inversion_clear H7.
+unfold WF_dstate. simpl.
+rewrite <-WF_state_dstate_aux.  assumption. econstructor. 
+split. assumption.
+simpl. rewrite H0. simpl. auto. econstructor.
+
+inversion_clear IHmu.
+rewrite <-sat_Assert_to_State. 
+apply IHceval_single with H7.
+rewrite sat_Assert_to_State in *. 
+inversion_clear H1. inversion_clear H10.
+econstructor. inversion_clear H9. assumption.
+assumption.  
+ inversion_clear H2. intuition. 
+apply WF_ceval with (<{ while b do c end }>) (p::mu).
+inversion_clear H2. assumption. intuition. reflexivity.
+apply WF_ceval with (<{ while b do c end }>) ((sigma, rho) :: (p::mu)).
+intuition. apply E_While_false. assumption. intuition.
+inversion_clear H7. econstructor. intuition. intuition.
+Qed.
 
 Theorem rule_cond_classic: forall (P1 P2: Pure_formula) (c1 c2:com) (b:bexp),
         ({{P1 /\p (b)}} c1 {{P2 }} /\ {{P1 /\p ((BNot b) )}} c2 {{P2 }})
      -> ({{P1 }}
         if b then c1 else c2 end
         {{P2}}).
-Proof. Admitted.
+Proof. 
+
+unfold hoare_triple. 
+intros F1 F2  c1 c2 b. intros H.
+intros s e (mu,IHmu); induction mu; intros (mu', IHmu'); intros.
+
+*intros. apply WF_sat_Assert in H1. intuition.
+inversion_clear H0. simpl in H4. inversion H4; subst.
+
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+[(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu'0). apply ceval_sorted with (c1) [(sigma, rho)] . 
+assumption.  assumption.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu''). apply ceval_sorted with (<{ if b then c1 else c2 end }>) mu. 
+inversion_clear IHmu. assumption. assumption. 
+assert(WF_dstate_aux [(sigma, rho)]).
+inversion_clear H2. apply WF_cons. assumption.
+apply WF_nil.  apply WF_dstate_in01_aux in H8.
+simpl in *. rewrite Rplus_0_r. 
+apply Rplus_le_reg_pos_r  with ( d_trace_aux mu)%R .
+intuition. intuition. 
+
+destruct mu. simpl in *. inversion H11; subst.
+remember (StateMap.Raw.map2 option_app mu'0 []).
+rewrite map2_nil_r in Heqt. subst. destruct H.
+apply H with (StateMap.Build_slist H0).  
+econstructor. intuition.
+apply WF_ceval with c1 [(sigma, rho)].
+assumption. intuition. simpl. assumption.
+
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+econstructor. assumption. inversion_clear H13.
+econstructor. split. assumption.  simpl. rewrite H10.
+intuition. econstructor. 
+
+assert(sat_State (d_app (StateMap.Build_slist H5) (StateMap.Build_slist H6)) F2).
+apply (d_seman_app' _ _ _ (StateMap.Build_slist H5) (StateMap.Build_slist H6)). 
+rewrite <-sat_Assert_to_State. destruct H.
+apply H with (StateMap.Build_slist H0).
+econstructor. intuition. apply WF_ceval with c1 [(sigma, rho)].
+assumption. intuition. assumption.
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+inversion_clear H13. inversion_clear H14.
+econstructor. assumption. 
+ econstructor. split. assumption.  simpl.
+ rewrite H10. auto. econstructor.
+
+inversion_clear IHmu.
+rewrite<- sat_Assert_to_State.
+apply (IHmu0  (H8)). econstructor.
+inversion_clear H2; assumption. 
+apply WF_ceval with (<{ if b then c1 else c2 end }>) (p :: mu).
+inversion_clear H2. assumption. assumption. 
+simpl. assumption. 
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+inversion_clear H14.
+econstructor. inversion_clear H2. assumption.
+assumption. 
+
+apply WF_ceval with (<{ if b then c1 else c2 end }>) ((sigma, rho) :: (p :: mu)).
+intuition. simpl. apply E_IF_true. assumption.
+assumption. assumption.  rewrite sat_Assert_to_State.
+econstructor.   intuition. inversion_clear H8.
+apply H13. 
+
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+[(sigma, rho)]).  apply Sorted_cons. apply Sorted_nil. apply HdRel_nil.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu'0). apply ceval_sorted with (c2) [(sigma, rho)] . 
+assumption.  assumption.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+mu''). apply ceval_sorted with (<{ if b then c1 else c2 end }>) mu. 
+inversion_clear IHmu. assumption. assumption. 
+assert(WF_dstate_aux [(sigma, rho)]).
+inversion_clear H2. apply WF_cons. assumption.
+apply WF_nil.  apply WF_dstate_in01_aux in H8.
+simpl in *. rewrite Rplus_0_r. 
+apply Rplus_le_reg_pos_r  with ( d_trace_aux mu)%R .
+intuition. intuition. 
+
+destruct mu. simpl in *. inversion H11; subst.
+remember (StateMap.Raw.map2 option_app mu'0 []).
+rewrite map2_nil_r in Heqt. subst. destruct H.
+apply H8 with (StateMap.Build_slist H0).  
+econstructor. intuition.
+apply WF_ceval with c2 [(sigma, rho)].
+assumption. intuition. simpl. assumption.
+
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+econstructor. assumption. inversion_clear H13.
+econstructor. split. assumption.  simpl. rewrite H10.
+intuition. econstructor. econstructor. 
+
+assert(sat_State (d_app (StateMap.Build_slist H5) (StateMap.Build_slist H6)) F2).
+apply (d_seman_app' _ _ _ (StateMap.Build_slist H5) (StateMap.Build_slist H6)). 
+rewrite <-sat_Assert_to_State. destruct H.
+apply H8 with (StateMap.Build_slist H0).
+econstructor. intuition. apply WF_ceval with c2 [(sigma, rho)].
+assumption. intuition. assumption.
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+inversion_clear H13. inversion_clear H14.
+econstructor. assumption. 
+ econstructor. split. assumption.  simpl.
+ rewrite H10. auto. econstructor. econstructor.
+
+inversion_clear IHmu.
+rewrite<- sat_Assert_to_State.
+apply (IHmu0  (H8)). econstructor.
+inversion_clear H2; assumption. 
+apply WF_ceval with (<{ if b then c1 else c2 end }>) (p :: mu).
+inversion_clear H2. assumption. assumption. 
+simpl. assumption. 
+rewrite sat_Assert_to_State in *. inversion_clear H1.
+inversion_clear H14.
+econstructor. inversion_clear H2. assumption.
+assumption. 
+
+apply WF_ceval with (<{ if b then c1 else c2 end }>) ((sigma, rho) :: (p :: mu)).
+intuition. simpl. apply E_IF_false. assumption.
+assumption. assumption.  rewrite sat_Assert_to_State.
+econstructor.   intuition. inversion_clear H8.
+apply H13. 
+Qed.
 
 Theorem rule_qframe'': forall (P1 P2 P3: Pure_formula) c,
-         ({{P1}} c {{P2}}) /\  (NSet.inter (fst (Free_state P3)) (fst (MVar c)) =NSet.empty) 
-         /\ (NSet.Equal (NSet.inter (snd (Free_state P3)) (snd (MVar c))) NSet.empty) 
-         ->  {{P3 /\p P1}} c {{P3 /\p P2}}. Admitted.
+         ({{P1}} c {{P2}}) /\  (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 
+         ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
+Proof. 
+intros. eapply rule_conseq; try apply rule_OdotO.
+eapply rule_qframe'. simpl. auto. 
+split. apply H. split. apply H.
+simpl. right. lia. 
+Qed.
 
 Theorem rule_conseq_r' : forall (P Q Q' : Assertion) c,
 {{P}} c {{Q'}} ->
@@ -135,6 +391,15 @@ Definition F_2(y x N:nat): Pure_formula :=  ((BEq y ' (((Nat.gcd (x ^ (r / 2) + 
 
 Definition F_3(y x N:nat): Pure_formula := ((BEq y ' (Nat.gcd x N)) /\p (BNeq y ' N)) .
 
+
+Definition Big_hypose (x z N:nat): Pure_formula:= 
+  (BAnd (BNeq (AGcd  (AMinus (APow x (ADiv z ' 2)) 1) N) N)  
+  (BNeq (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) 1)) \/p 
+  (BAnd (BNeq (AGcd  (APlus (APow x (ADiv z ' 2)) 1) N) N)  
+  (BNeq (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) 1)).
+
+
+
 Definition a :=4 .
 
 Lemma rule_AndT: forall (F:State_formula),
@@ -143,8 +408,15 @@ Proof. rule_solve.
   
 Qed.
 
+Lemma BAnd_split: forall (b1 b2:bool),
+(if (b1&&b2) then True else False) ->
+((if (b1) then True else False) /\
+(if (b2) then True else False)).
+Proof. intros. destruct (b1); destruct b2; simpl in *; try destruct H. intuition. 
+Qed.
 
-Ltac classic_slove_aux:=
+
+Ltac seman_sovle:=
   unfold assert_implies;
   intros; 
   rewrite sat_Assert_to_State in *;
@@ -158,32 +430,80 @@ Ltac classic_slove_aux:=
    try  match goal with 
    H1:  forall x:cstate, d_find x ?mu <> Zero ->?Q,
    H2: d_find ?x ?mu <> Zero
-   |- _ => apply H1 in H2
+   |- _ => apply H1 in H2; clear H1
    end;
    unfold State_eval in *;
-   unfold Pure_eval in *;
-   unfold beval in *;
    try repeat match goal with 
-   H :?P /\ ?Q |- _  => destruct H end;
-   try repeat match goal with 
-   H: _ |- ?P1 /\ ?P2 => try split end;
-   try assumption;
-   try repeat match goal with 
-   H : if (aeval (?x, d_find ?x ?mu) ?v ' =? aeval (?x, d_find ?x ?mu) ?y)
-       then True else False 
-   |- _ => bdestruct (aeval (x, d_find x mu) v '=? aeval (x, d_find x mu) y) end;
-   try unfold s_update_cstate; try unfold aeval in *;
-   try unfold fst in *; try rewrite c_update_find_eq;  
-   try repeat match goal with 
-   H': c_find ?v2 ?x = ?y 
-   |-_=> rewrite H'
-   end; try match goal with 
-   H: False |-_ => destruct H end.
+  H: Pure_eval (?P /\p ?Q) ?st |-_ => destruct H
+  end;
+  try repeat match goal with 
+  H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
+  try assumption.
+
+Ltac Pure_eval_solve:=
+  try unfold F_1 in *; try unfold F_2 in * ; try unfold F_3 in *;
+  try repeat match goal with 
+  H: Pure_eval (?P \/p ?Q) ?st |-_ => destruct H
+  end;
+  try repeat match goal with 
+  H: Pure_eval (?P /\p ?Q) ?st |-_ => destruct H
+  end; try assumption;
+  try repeat match goal with 
+  H: _ |- Pure_eval (PAssn ?y ?x (?P /\p ?Q)) ?st => try split end;
+  try assumption;
+  try repeat match goal with 
+  H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
+  try assumption.
+
+Ltac classic_slove_aux:=
+  unfold Pure_eval in *;
+  unfold beval in *; try unfold s_update_cstate;unfold aeval in *;
+  unfold fst in *; try rewrite c_update_find_eq;
+  try match goal with 
+  H1: if (¬ c_find ?y ?x0 =? ?x) then True else False,
+  H: if (c_find ?y ?x0 =? ?x) then True else False 
+  |- _ => bdestruct (c_find y x0 =? x);
+  simpl in H1; destruct H1  end;
+  try repeat match goal with 
+  H : if (?y =? ?x) then True else False 
+  |- _ => bdestruct (y =? x) end;
+  try repeat match goal with 
+  H: if (?b1 && ?b2) then True else False 
+  |- _ => apply BAnd_split in H; destruct H; try assumption end;
+  try repeat match goal with 
+  H': c_find ?v2 ?x = ?y 
+  |-_=> try rewrite H'
+  end;
+  try match goal with 
+  H:_ |- if ?y =? ?y  then True else False => assert(y=y); try reflexivity
+  end;
+  try match goal with 
+  H: ?y = ?y |- if ?y =? ?y  then True else False =>
+  rewrite <-Nat.eqb_eq in H; rewrite H; simpl; auto end;
+  try repeat match goal with 
+H': c_find ?v2 ?x = ?y 
+|-_=> try rewrite <-H'; rewrite<- Nat.eqb_eq  in H'
+end;
+try match goal with 
+ H:_ |- if ?y =? ?y  then True else False => assert(y=y); try reflexivity
+end;
+try match goal with 
+H: ?y = ?y |- if ?y =? ?y  then True else False =>
+rewrite <-Nat.eqb_eq in H; rewrite H; simpl; auto end;
+try match goal with 
+H: False |-_ => destruct H end.
+
+Ltac classic_slove_1:=
+       seman_sovle; classic_slove_aux.
+
+Ltac classic_slove_2:=
+  seman_sovle; 
+  Pure_eval_solve;
+  classic_slove_aux.
 
 
 Theorem Shor_correctness:
-{{(Pre Cop N)}} Shor  {{  (BEq ((AMod N y ')) 0) /\p (BNeq y 
- 1) /\p (BNeq y ' (N))}} .
+{{(Pre Cop N)}} Shor  {{  (BEq ((AMod N y ')) 0) /\p (BNeq y ' 1) /\p (BNeq y ' (N))}} .
 Proof. unfold Shor. 
        eapply rule_cond_classic. split.
        {eapply rule_conseq_l with (((Pre Cop N) /\p (BEq ((N mod 2)) 0)) /\p (PAssn y 2 (BEq y ' 2))).
@@ -192,154 +512,194 @@ Proof. unfold Shor.
 
        eapply rule_conseq_r'.
        eapply rule_qframe''.
-       split.  apply QRule_I_L.rule_assgn. simpl.  admit.
+       split.  apply QRule_I_L.rule_assgn.
+       
+       simpl. apply inter_empty. left.
+       apply union_empty; split; try reflexivity;
+      apply union_empty; split; try reflexivity.
+    
         }
        eapply rule_seq with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) (0))) 
-       /\p (( BAnd (BLe (2) x) (BLe (x) ((ANum (N-1))))))). 
+       /\p ((  (BLe (2) x) /\p (BLe (x) ((ANum (N-1))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.
           eapply rule_qframe''. 
-          split.   eapply rule_Clet. admit.
+          split.   eapply rule_Clet. 
+          
+          simpl. apply inter_empty. left.
+          apply union_empty; split; try reflexivity;
+         apply union_empty; split; try reflexivity.
+         
           implies_trans_solve 0 SAnd_PAnd_eq. implies_trans_solve 1 SAnd_PAnd_eq. 
           apply rule_CconjCon. apply implies_refl.
-         
-          classic_slove_aux. 
-        bdestruct (x =? random 2 (N - 1)).
-        rewrite H0. 
-        rewrite Hran. intuition. destruct H. 
+        classic_slove_1;
+        pose (Hran 2 (N-1)); try rewrite <-H0 in a0; destruct a0;
+        rewrite <-Nat.leb_le in *; try rewrite H1; try rewrite H2; auto. 
         }
-          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (BAnd (BLe 2 x ) (BLe x ((N-1)))))
+          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x ((N-1)))))
           /\p ((F_1 y x N) \/p (F_2 y x N) \/p F_3 y x N)).
-          {eapply rule_conseq_l with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ((BAnd (BLe 2 x ) (BLe x ((N-1))))) 
+          {eapply rule_conseq_l with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (( (BLe 2 x ) /\p (BLe x ((N-1))))) 
           /\p (PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N))))).
           implies_trans_solve 1 SAnd_PAnd_eq.
-          apply rule_ConjE. split. apply rule_PT. apply Assn_true_P. simpl. unfold not. admit.
+          apply rule_ConjE. split. apply rule_PT. apply Assn_true_P.
+
+          simpl;intro; try repeat match goal with 
+          H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+          destruct H end;
+          try match goal with 
+          H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+          try discriminate end;
+          try match goal with 
+          H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
           eapply rule_qframe''.
-          split.  apply QRule_I_L.rule_assgn.  admit.
+          split.  apply QRule_I_L.rule_assgn.
+          
+          simpl. apply inter_empty. left.
+          apply union_empty; split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity.
           }
           eapply rule_conseq_r'.
           apply rule_while_classic.
-           eapply rule_seq with (((Pre Cop N)/\p  (BNot (BEq (N mod 2) 0)) /\p (BAnd (BLe 2 x ) (BLe x (N-1))))
+           eapply rule_seq with (((Pre Cop N)/\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x (N-1))))
            /\p (BEq z ' r)). 
            eapply rule_conseq_l with 
-           ((((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (BAnd (BLe 2 x ) (BLe x  (N-1))))
-           /\p (BEq ((Nat.gcd x N)) 1))). 
-           intros. unfold assert_implies.
-          intros.  rewrite sat_Assert_to_State in *.
-          rewrite seman_find in *.
-          split.  intuition.
-          split. intuition.
-          intros. split.  
-          split. apply H. assumption. 
-         apply H. assumption. destruct H. destruct H1. 
-         apply H2 in H0. destruct H0. destruct H0.
-          admit.
+           ((((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x  (N-1))))
+           /\p (BEq ((Nat.gcd x N)) 1))).
+           classic_slove_2.
+
+
+           
+        
            apply rule_qframe''. 
            split.  
-           apply OF.OF_correctness.   admit.
+           apply OF.OF_correctness. 
+           simpl. apply inter_empty. left.
+          apply union_empty; split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity.
            apply rule_cond_classic. split.
-           eapply rule_conseq_l with ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p (BAnd (BLe 2 x ) (BLe x ((N-1)))))
-           /\p ( BEq z ' r) /\p ( (F_1 y x N) \/p (F_2 y x N)))).
+           eapply rule_conseq_l with ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLe 2 x ) /\p (BLe x ((N-1)))))
+           /\p ( BEq z ' r) /\p (Big_hypose x z N))). 
+           implies_trans_solve 1 SAnd_PAnd_eq.
+           implies_trans_solve 0 SAnd_PAnd_eq.
+           apply rule_CconjCon; try apply implies_refl.
            (*这是那个大假设*) 
             admit.
            apply rule_cond_classic. split.
            eapply rule_conseq_l with 
-           ( (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p (BAnd (BLe 2 x ) (BLe x ( (N-1))))) 
-           /\p ( (F_1 y x N) \/p (F_2 y x N))) /\p 
-           (PAssn y (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) (BEq y ' ( (Nat.gcd ((x^ (r / 2)) -1) N))))).
-            { classic_slove_aux.  
-               admit. 
+           ( (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLe 2 x ) /\p (BLe x ( (N-1))))) 
+           )/\p (
+           (PAssn y (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) ((F_1 y x N) /\p (BEq y ' ( (Nat.gcd ((x^ (r / 2)) -1) N))))))).
+            { classic_slove_2.  
+
+          
              } 
             eapply rule_conseq_r'.
+           
+
           eapply rule_qframe''.
           split.  apply QRule_I_L.rule_assgn.
-          admit. 
+         
+          
+          simpl. apply inter_empty. left.
+          apply union_empty; split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity.
+         try apply union_empty; try split; try reflexivity.
+          
           intros. unfold assert_implies.
           intros.  rewrite sat_Assert_to_State in *.
           rewrite seman_find in *.
            split.  intuition.
            split. intuition. 
            intros. econstructor. apply H. assumption.
-            unfold State_eval. unfold Pure_eval. left.
+           try 
+         left. left.
             apply H. assumption.
 
           eapply rule_conseq_l with 
-          ( ((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p (BAnd (BLe 2 x ) (BLe x (ANum (N-1)))) /\p (F_1 y x N \/p F_2 y x N)) 
-          /\p (PAssn y (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) (BEq y ' (ANum (Nat.gcd (x^ (r / 2) + 1) N))))).
-          classic_slove_aux.  
-          admit. 
+          ( ((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLe 2 x ) /\p (BLe x (ANum (N-1)))) ) 
+          /\p (PAssn y (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) ((F_2 y x N) /\p BEq y ' (ANum (Nat.gcd (x^ (r / 2) + 1) N))))).
+          unfold Big_hypose.
+          classic_slove_2;
+          bdestruct ((Nat.gcd (x ^ (c_find z x0 / 2) - 1) N =? N) ); simpl in H1;
+          destruct H1;
+          bdestruct (Nat.gcd (x ^ (c_find z x0 / 2) - 1) N =? 1); simpl in H7;
+          destruct H7; simpl in H0; destruct H0.
+
          eapply rule_conseq_r'.
          eapply rule_qframe''.
          split.  apply QRule_I_L.rule_assgn.
-         admit.
+         
+
+         simpl. apply inter_empty. left.
+         apply union_empty; split; try reflexivity;
+        try apply union_empty; try split; try reflexivity;
+        try apply union_empty; try split; try reflexivity;
+        try apply union_empty; try split; try reflexivity.
+
+
          intros. unfold assert_implies.
          intros.  rewrite sat_Assert_to_State in *.
          rewrite seman_find in *.
           split.  intuition.
           split. intuition. 
           intros. econstructor. apply H. assumption.
-           unfold State_eval.  left.
+           unfold State_eval.  left. right.
            apply H. assumption.
          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) (0)))) 
-       /\p ((BAnd (BLe (2) x)  (BLe (x) ((ANum (N-1))))))). 
+       /\p (( (BLe (2) x) /\p (BLe (x) ((ANum (N-1))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.  
           eapply rule_qframe''. 
-          split.   eapply rule_Clet.  admit.
-          classic_slove_aux.
+          split.   eapply rule_Clet. 
+          
+          simpl. apply inter_empty. right.
+         reflexivity.
+          classic_slove_1.
         }
-        {eapply rule_conseq_l with ((((Pre Cop N) /\p  (BNot (BEq ((ANum ((N mod 2)))) 0)) /\p ((BAnd (BLe 2 x ) (BLe x (ANum (N-1))))))) 
+        {eapply rule_conseq_l with ((((Pre Cop N) /\p  (BNot (BEq ((ANum ((N mod 2)))) 0)) /\p (( (BLe 2 x )/\p (BLe x (ANum (N-1))))))) 
         /\p PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N)))).
-          intros. unfold assert_implies.
-          intros.  rewrite sat_Assert_to_State in *.
-          rewrite seman_find in *.
-          split.  intuition.
-          split. intuition.
-          intros. split.  
-          split. apply H. assumption.
-         apply H. assumption.
-          unfold State_eval. unfold Pure_eval.
-          unfold s_update_cstate.  
-          unfold beval. unfold aeval. unfold fst.
-          rewrite c_update_find_eq.
-          induction (Nat.gcd x N);
-         simpl; intuition. 
+        implies_trans_solve 1 SAnd_PAnd_eq.
+        apply rule_ConjE; split. apply rule_PT. apply Assn_true_P.
+       
+
+        simpl;intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
           eapply rule_qframe''.
-          split.  apply QRule_I_L.rule_assgn. admit.
-          intros. unfold assert_implies.
-          intros.  rewrite sat_Assert_to_State in *.
-          rewrite seman_find in *.
-           split.  intuition.
-           split. intuition. 
-           intros. econstructor. apply H. assumption.
-           right. unfold F_3. split. apply H. assumption.  
+          split.  apply QRule_I_L.rule_assgn. 
+
+          simpl. apply inter_empty. left.
+          apply union_empty; split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity;
+         try apply union_empty; try split; try reflexivity.
+
+
+         seman_sovle. right. unfold F_3. split; try assumption.
+         classic_slove_aux. apply Nat.eqb_eq in H4.
+         rewrite H4. assert( Nat.gcd x N < N). 
           admit.
-          } 
-          unfold assert_implies.
-          intros.  rewrite sat_Assert_to_State in *.
-          rewrite seman_find in *.
-           split.  intuition.
-           split. intuition. 
-           intros. econstructor. split. 
-          destruct H. destruct H1. 
-          apply H2 in H0.  unfold State_eval in *.
-          destruct H0. destruct H0. 
-          unfold F_1 in *. unfold F_2 in *. unfold F_3 in *.
-          destruct H4. destruct H4. 
-          destruct H4. destruct H4.
-          destruct H0. destruct H0. 
-          unfold Pure_eval in *. 
-          unfold beval in *. 
-          unfold aeval in *.
-       
-           bdestruct (c_find y (fst (x0, d_find x0 mu)) =?
-           Nat.gcd (x ^ (r / 2) - 1) N).
-           rewrite H9. admit.
-           destruct H4.
+          }
+          
+       classic_slove_2; try rewrite Nat.eqb_eq in H7; try
+       rewrite H7.
+          admit. admit. try rewrite Nat.eqb_eq in H6. rewrite H6.
+            admit.
+
+
 Admitted.
 
 End Shor.

@@ -623,6 +623,12 @@ rewrite Mscale_mult_dist_r. f_equal. apply Had_N.
 auto_wf. apply Hv_n.   auto_wf. 
 Qed.
 
+Lemma Qsys_to_Set_not_empty:forall s e, 
+s<e-> ~ (NSet.Equal (Qsys_to_Set s e) (NSet.empty)).
+Proof. intros.  unfold NSet.Equal. intro.
+       eapply In_empty. apply H0. apply (In_Qsys e s s); lia.
+Qed.
+
 
 
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
@@ -674,8 +680,9 @@ Proof.
       simpl. split. apply inter_empty. left. reflexivity.
       left. pose (max_union (Qsys_to_Set 0 n) (Qsys_to_Set n (n + m))). destruct a0.
       destruct H7. clear H6.  clear H7. rewrite H8. 
-       rewrite H1. rewrite H3. rewrite max_r; try lia. 
-       admit. admit. } 
+       rewrite H1. rewrite H3. rewrite max_r; try lia.
+       apply Qsys_to_Set_not_empty. lia.
+       apply Qsys_to_Set_not_empty. lia.   } 
        rewrite simpl_Uf. eapply rule_seq.
       {apply rule_qframe. simpl. lia. 
       split. apply rule_QUnit_One'. lia. simpl. 
@@ -719,6 +726,44 @@ Proof.
     implies_trans_solve  0 rule_OdotO.
     implies_trans_solve  0 SAnd_PAnd_eq.
     implies_trans_solve 0 rule_ConjC.
+
+
+
+unfold assert_implies. intros.
+rewrite sat_Assert_to_State in *.
+econstructor. 
+assert(Datatypes.length [1%R;0%R] =
+Datatypes.length
+[<{ true }> /\s <{ (v) ' = 0 }>;
+   (| ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 >[ 0, n + m + 1]) /\s
+   <{ ~ (v) ' = 0 }>] ). reflexivity.
+apply H7. simpl. econstructor. eapply WF_sat_State.
+apply H6. unfold distribution_formula.  simpl. split. 
+econstructor. lra. econstructor. lra. econstructor.
+repeat rewrite sum_over_list_cons. rewrite sum_over_list_nil.
+repeat rewrite Rplus_0_r. reflexivity.
+apply (npro_formula_cons  _ ((| ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 >[ 0, n + m + 1]) /\s
+<{ ~ (v) ' = 0 }>)) in H6.
+assumption. 
+assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
+ [(([1]), d_trace (mu) .* (Mmult (∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1) (adjoint (∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1))))]).
+apply Sorted.Sorted_cons. apply Sorted.Sorted_nil.
+apply Sorted.HdRel_nil.
+exists (StateMap.Build_slist H7).
+split. unfold d_trace. simpl. unfold s_trace.
+unfold q_trace.  simpl. rewrite Rplus_0_r.
+admit.
+econstructor. admit.
+econstructor. simpl. 
+split. split.   admit.
+
+econstructor. apply rule_Conj_split_l.
+
+
+
+
+
+
    admit. }
   { implies_trans_solve 0 rule_Conj_split_l.    
      assert(1=(1 * 1)). lia. destruct H6.

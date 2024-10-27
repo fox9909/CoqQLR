@@ -93,7 +93,7 @@ Definition P2_0 (i:nat):Pure_formula :=  (P1 0) /\p (BEq (v2 ') i).
 Definition P2_1 (i:nat):Pure_formula  :=  (P1 1) /\p (BEq (v2 ') i).
 
 
-Ltac classic_slove_aux:=
+Ltac seman_sovle:=
   unfold assert_implies;
   intros; 
   rewrite sat_Assert_to_State in *;
@@ -107,30 +107,32 @@ Ltac classic_slove_aux:=
    try  match goal with 
    H1:  forall x:cstate, d_find x ?mu <> Zero ->?Q,
    H2: d_find ?x ?mu <> Zero
-   |- _ => apply H1 in H2
+   |- _ => apply H1 in H2; clear H1
    end;
    unfold State_eval in *;
-   unfold Pure_eval in *;
-   unfold beval in *;
    try repeat match goal with 
-   H :?P /\ ?Q |- _  => destruct H end;
-   try repeat match goal with 
-   H: _ |- ?P1 /\ ?P2 => try split end;
-   try assumption;
-   try repeat match goal with 
-   H : if (aeval (?x, d_find ?x ?mu) ?v ' =? aeval (?x, d_find ?x ?mu) ?y)
-       then True else False 
-   |- _ => bdestruct (aeval (x, d_find x mu) v '=? aeval (x, d_find x mu) y) end;
-   try unfold s_update_cstate; try unfold aeval in *;
-   try unfold fst in *; try rewrite c_update_find_eq;  
-   try repeat match goal with 
-   H': c_find ?v2 ?x = ?y 
-   |-_=> rewrite H'
-   end; try match goal with 
-   H: False |-_ => destruct H end; simpl ; intuition.
+  H: Pure_eval (?P /\p ?Q) ?st |-_ => destruct H
+  end;try repeat match goal with 
+  H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
+  try assumption.
 
 
-Ltac classic_slove := 
+Ltac classic_slove_aux:=
+seman_sovle;
+unfold Pure_eval in *;
+unfold beval in *;
+try unfold s_update_cstate;unfold aeval in *;
+unfold fst in *; try rewrite c_update_find_eq;
+try repeat match goal with 
+H : if (?y =? ?x) then True else False 
+|- _ => bdestruct (y =? x) end;
+try repeat match goal with 
+H': c_find ?v2 ?x = ?y 
+|-_=>  rewrite H'
+end;try match goal with 
+H: False |-_ => destruct H end; simpl ; intuition.
+
+    Ltac classic_slove:= 
     repeat (match goal with 
     H: _ |- Forall_two.Forall_two ?f ?F1 ?F2 => 
     econstructor; try (classic_slove_aux);
@@ -345,7 +347,13 @@ try apply rule_PT;
 implies_trans_solve 1 (Assn_conj_P);
 try implies_trans_solve 1 (SAnd_PAnd_eq);
 try apply rule_ConjE; try split; try apply rule_PT; try apply Assn_true_P;
-simpl; unfold not; try apply In_empty. admit. admit.
+simpl; unfold not; try apply In_empty. intro. apply NSet.union_1 in H0. 
+destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
+ discriminate. eapply In_empty. apply H0.  
+ intro. apply NSet.union_1 in H0. 
+destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
+ discriminate. eapply In_empty. apply H0. 
+
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
@@ -397,7 +405,14 @@ try apply rule_PT;
 implies_trans_solve 1 (Assn_conj_P);
 try implies_trans_solve 1 (SAnd_PAnd_eq);
 try apply rule_ConjE; try split; try apply rule_PT; try apply Assn_true_P;
-simpl; unfold not; try apply In_empty. admit. admit.
+simpl; unfold not; try apply In_empty. intro. apply NSet.union_1 in H0. 
+destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
+ discriminate. eapply In_empty. apply H0.
+ intro. apply NSet.union_1 in H0. 
+destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
+ discriminate. eapply In_empty. apply H0. 
+ 
+
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
@@ -470,6 +485,8 @@ implies_trans_solve 1 Assn_comm;
 implies_trans_solve 1 Assn_conj_F; simpl; try unfold not; try apply In_empty;
 implies_trans_solve 1 rule_ConjC;
 eapply rule_CconjCon; try apply implies_refl;
+
+
 classic_slove_aux.
 
 rewrite Heqpre. simpl. apply implies_refl.

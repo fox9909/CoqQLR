@@ -34,7 +34,7 @@ Parameter x:nat.
 Parameter N:nat. 
 Definition z:nat := 0.
 Definition r:= ord x N.
-Hypothesis H: r>0 /\ 0<x < N.
+Hypothesis H: r>0 /\ 2 <= x <= N-1.
 End Param.
 
 Module OF (p: Param).
@@ -341,6 +341,30 @@ auto_wf. apply sqrt_neq_0_compat. lra.
 apply sqrt_neq_0_compat. lra. 
 Qed.
 
+
+Ltac seman_sovle:=
+  unfold assert_implies;
+  intros; 
+  rewrite sat_Assert_to_State in *;
+   rewrite seman_find in *;
+   try match goal with 
+   H: WF_dstate ?mu /\ StateMap.this ?mu <> [] /\ 
+        (forall x:cstate, d_find x ?mu <> Zero ->?Q)
+   |-_ => destruct H as [H11 H12]; destruct H12 as [H21 H22];
+   split; try assumption; split; try assumption; intros
+   end;
+   try  match goal with 
+   H1:  forall x:cstate, d_find x ?mu <> Zero ->?Q,
+   H2: d_find ?x ?mu <> Zero
+   |- _ => apply H1 in H2; clear H1
+   end;
+   unfold State_eval in *;
+   try repeat match goal with 
+  H: Pure_eval (?P /\p ?Q) ?st |-_ => destruct H
+  end;try repeat match goal with 
+  H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
+  try assumption.
+
 Theorem rule_Dassgn: forall (D:Assertion) (i:nat) ( a:aexp),
              {{Assn_sub i a D}} i := a {{D}}.
 Proof. unfold hoare_triple;
@@ -358,6 +382,75 @@ Proof. unfold hoare_triple;
        simpl in H0. assumption.
 Qed.
 
+
+Lemma Assn_impl:forall i a D1 D2,
+D1 ->> D2 ->
+Assn_sub i a D1 ->> Assn_sub i a D2 .
+Proof. intros. unfold assert_implies in *. intros.
+inversion_clear H1.
+econstructor. assumption. 
+apply H0. assumption.   
+Qed.
+
+
+Lemma app_fix_2{s e:nat} : forall c (q:qstate s e) i a (mu:list (cstate * qstate s e)),
+((fix map2_aux (m' : StateMap.Raw.t (qstate s e)) :
+        StateMap.Raw.t (qstate s e) :=
+      match m' with
+      | [] => [(c_update i (aeval (c, q) a) c, q)]
+      | p :: l' =>
+          let (k', e') := p in
+          match
+            Cstate_as_OT.compare (c_update i (aeval (c, q) a) c) k'
+          with
+          | OrderedType.LT _ =>
+              (c_update i (aeval (c, q) a) c, q)
+              :: StateMap.Raw.map2_r option_app m'
+          | OrderedType.EQ _ =>
+              (c_update i (aeval (c, q) a) c, q_plus q e')
+              :: StateMap.Raw.map2_r option_app l'
+          | OrderedType.GT _ => (k', e') :: map2_aux l'
+          end
+      end) (d_update_cstate_aux i a mu))=
+ StateMap.Raw.map2  option_app  ([(c_update i (aeval (c, q) a) c, q)]) (d_update_cstate_aux i a mu)     .
+Proof. intros. reflexivity. 
+       
+Qed.
+
+
+Lemma Assn_true: forall i a D, ~NSet.In i (Free_aexp a) ->
+(D ->> Assn_sub i a (BEq (i ') a)).
+Proof. unfold assert_implies. intros.
+apply WF_sat_Assert in H1. destruct H1.
+econstructor. assumption.
+rewrite sat_Assert_to_State.  
+econstructor. apply WF_d_update_cstate. assumption.
+destruct mu as (mu, IHmu). simpl in *.
+induction mu. destruct H1. reflexivity.
+
+destruct a0. 
+assert(State_eval <{ (i) ' = a }> (c_update i (aeval (c, q) a) c, q)).
+simpl.  rewrite c_update_find_eq. 
+rewrite <-(c_update_aeval_eq i _  ((aeval (c, q) a))).
+assert(aeval (c, q) a = aeval (c, q) a).
+reflexivity. apply Nat.eqb_eq in H3. rewrite H3.
+auto. assumption. 
+
+destruct mu. econstructor. assumption. econstructor.
+remember (p :: mu).
+simpl.  rewrite app_fix_2. apply d_seman_app_aux. 
+apply WF_state_dstate_aux. 
+apply WF_state_eq with (c,q). reflexivity.
+inversion_clear H2. assumption.
+apply WF_d_update_cstate. inversion_clear H2.
+assumption.  econstructor. assumption. econstructor.
+
+subst.
+inversion_clear IHmu. apply (IHmu0  H4).
+discriminate. inversion_clear H2. assumption.
+Qed.
+
+
 Theorem OF_correctness: 
 {{BEq ((Nat.gcd x N)) 1 }} OF {{BEq z ' r}}.
 Proof. pose HtL. pose (Qsys_to_Set_min_max t (t+L)). destruct a0; try lia.
@@ -372,9 +465,44 @@ eapply rule_conseq_l'.
 eapply rule_assgn with (F:=( (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
 implies_trans_solve 1 Assn_conj_F.  
 eapply rule_Conj_two; try apply implies_refl.
-implies_trans_solve 0  rule_PT.  unfold b'. apply Assn_true_F. admit. admit.
+implies_trans_solve 0  rule_PT.  unfold b'. apply Assn_true_F.
+
+
+simpl; intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+
+simpl;intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+
 eapply rule_conseq_l with (P':=( (BNeq z ' r /\p (BNeq b ' 1)))).
-admit.
+assert(1<>r). admit.
+
+
+seman_sovle; destruct H5; unfold Pure_eval in *;
+unfold beval in *; unfold aeval in *; unfold fst in *;
+bdestruct (c_find z x0 =? 1).
+try rewrite H7;
+try apply Nat.eqb_neq in H4; try rewrite H4;  try auto.
+destruct H5. 
+bdestruct(c_find b x0 =? x ^ c_find z x0 mod N).
+rewrite H8.  rewrite H7. simpl. rewrite Nat.mul_1_r.
+
+rewrite Nat.mod_small. bdestruct (x=?1). 
+pose H. unfold x in H9. lia. auto. pose H. unfold x.
+unfold N. lia.    
+ destruct H6. destruct H5.
 eapply rule_conseq.
 eapply rule_while with (F0:= (BNeq z ' r)) (F1:= (BEq z ' r)).
 *eapply rule_seq.
@@ -433,13 +561,70 @@ eapply rule_conseq_l.
 eapply rule_Oplus. rewrite big_pOplus_get_npro.
 eapply rule_conseq_l'.
 eapply rule_assgn with (F:= (BEq z '(Afun f (fun r1 r2 : nat => (r1 / r2)%R) z' ' ((2 ^ t))))).
-eapply implies_trans'. apply Assn_true_F. simpl.   admit.   admit.
+eapply implies_trans'. apply Assn_true_F. simpl.  
+
+intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+  admit.
 eapply rule_conseq_l'. apply rule_Dassgn. 
 eapply implies_trans. apply rule_PT. unfold b'.
-admit.  
+
+eapply implies_trans'. apply (Assn_impl b  <{ x ^ (z) ' % N }>
+(BEq b ' (<{ x ^ (z) ' % N }>))). 
+
+unfold assert_implies. intros.
+rewrite sat_Assert_to_State in *. 
+admit.
+apply Assn_true. simpl. 
+intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end. 
 assert(L=t+L-t). lia. destruct H4. 
-apply a0.    
-admit. apply rule_Conj_split_l. 
+apply a0.
+
+implies_trans_solve 0 SAnd_PAnd_eq. 
+unfold assert_implies. intros.
+rewrite sat_Assert_to_State in *.
+econstructor. 
+assert(Datatypes.length [1%R;0%R] =
+Datatypes.length
+[<{ (z) ' <> r }> /\s <{ (b) ' <> 1 }>;
+<{ (z) ' = r }> /\s <{ ~ (b) ' <> 1 }>] ). reflexivity.
+apply H5. simpl. econstructor. eapply WF_sat_State.
+apply H4. unfold distribution_formula.  simpl. split. 
+econstructor. lra. econstructor. lra. econstructor.
+repeat rewrite sum_over_list_cons. rewrite sum_over_list_nil.
+repeat rewrite Rplus_0_r. reflexivity.
+apply (npro_formula_cons  _ (<{ (z) ' = r }> /\s <{ ~ (b) ' <> 1 }>)) in H4.
+assumption. 
+assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) [(([r;1]), d_trace (mu) .* (Mmult (Vec  (2^(e-s)) 0) (adjoint (Vec  (2^(e-s)) 0))))]).
+apply Sorted.Sorted_cons. apply Sorted.Sorted_nil.
+apply Sorted.HdRel_nil.
+exists (StateMap.Build_slist H5).
+split. unfold d_trace. simpl. unfold s_trace.
+unfold q_trace.  simpl. rewrite Rplus_0_r.
+rewrite trace_mult_dist. rewrite Cmod_mult.
+rewrite Cmod_R. rewrite Rabs_right.
+rewrite trace_mult'. rewrite Vec_inner_1. 
+unfold c_to_Vector1. Msimpl. rewrite trace_I.
+rewrite Cmod_1. rewrite Rmult_1_r. reflexivity.
+apply pow_gt_0.
+apply WF_sat_State in H4. destruct H4.
+apply WF_dstate_in01_aux in H6. lra.
+econstructor. admit.
+econstructor. simpl.  admit.
+econstructor. apply rule_Conj_split_l. 
 Admitted.
 End OF.
 
