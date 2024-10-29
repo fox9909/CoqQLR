@@ -46,6 +46,7 @@ Definition pro_formula := list (R * State_formula).
 Definition npro_formula := list (State_formula).
 
 
+
 Fixpoint big_pOplus (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) : pro_formula := 
 match n_0 with
 | 0 => []
@@ -66,17 +67,8 @@ match n_0 with
 | S n' =>(big_Oplus g n') ++ [(g n')]  
 end.
 
-Fixpoint get_pro_formula (pF:pro_formula): list R:=
-  match pF with 
-  |[] => []
-  |(p, F)::pF' => p:: (get_pro_formula pF')
-  end. 
-
-Fixpoint pro_to_npro_formula (pF:pro_formula ): npro_formula:=
-  match pF with 
-  |[] => [] 
-  |(p, F) :: pF'=> F:: (pro_to_npro_formula pF')
-  end.
+Definition get_pro_formula (pF:pro_formula): list R:=map (fun i=> fst i) pF.
+Definition pro_to_npro_formula (pF:pro_formula): npro_formula:=map (fun i=> snd i) pF.
 
 Fixpoint npro_to_pro_formula (nF:npro_formula ) (p_n: list R): pro_formula:=
   match nF, p_n with 
@@ -285,8 +277,7 @@ Inductive sat_Pro {s e:nat}: (dstate s e)-> (pro_formula)-> Prop:=
 |sat_pro: forall (mu mu':dstate s e) pF (mu_n: list (dstate s e)),
                             big_dapp' (get_pro_formula pF) mu_n mu'
                             -> dstate_eq mu mu'
-                            -> (Forall_two (fun mu_i nF_i => sat_State mu_i nF_i) mu_n (pro_to_npro_formula pF)) 
-                            -> Forall (fun mu_i => d_trace  mu_i =d_trace mu) mu_n
+                            -> Forall_two (fun mu_i pF_i => (0<fst (pF_i))%R ->sat_State mu_i (snd (pF_i)) /\ d_trace mu_i =d_trace mu) mu_n pF
                             -> sat_Pro mu pF.
 
 Inductive sat_Assert {s e:nat}: (dstate s e)-> (Assertion)-> Prop:=
@@ -304,16 +295,15 @@ Inductive sat_Assert {s e:nat}: (dstate s e)-> (Assertion)-> Prop:=
 
 
 (*--------------------------------------------------------------*)
+
 Lemma get_pro_formula_length: forall pF, 
 length (get_pro_formula pF) = length pF .
-Proof. induction pF. simpl. reflexivity. destruct a. simpl.
-     f_equal. apply IHpF. 
+Proof. intros. unfold get_pro_formula. rewrite map_length. reflexivity. 
 Qed.
 
 Lemma pro_to_npro_formula_length: forall pF, 
 length (pro_to_npro_formula  pF) = length pF .
-Proof. induction pF. simpl. reflexivity. destruct a. simpl.
-     f_equal. apply IHpF. 
+Proof. intros. unfold pro_to_npro_formula. rewrite map_length. reflexivity. 
 Qed.
 
 Lemma npro_to_pro_formula_length: forall pF p_n, 
@@ -331,7 +321,7 @@ length nF1 =length p_n ->
 length nF2 =length p_n->
 (get_pro_formula (npro_to_pro_formula nF2 p_n))=
 (get_pro_formula (npro_to_pro_formula nF1 p_n)) .
-Proof. induction nF1; induction nF2; intros.
+Proof.  induction nF1; induction nF2; intros.
        simpl. reflexivity.
        rewrite<-H in H0. discriminate H0.
        rewrite <-H0 in H. discriminate H.
@@ -541,6 +531,16 @@ Proof. intros s e(mu, IHmu1) (mu', IHmu'). unfold dstate_eq. simpl. intros.
       simpl in *. rewrite <-H. assumption.
 Qed.
 
+Lemma Forall_two_impli{A B:Type }:forall (P Q : A -> B -> Prop) (f:list A) (g:list B),
+(forall i j, P i j -> Q i j)-> 
+(Forall_two P f g) ->(Forall_two Q f g).
+Proof. induction f; intros; destruct g. econstructor. 
+       inversion_clear H0. inversion_clear H0. 
+       inversion_clear H0.
+      econstructor; try assumption. apply H; try assumption.
+       apply IHf. apply H. assumption.
+Qed.
+
 Lemma  sat_Pro_dstate_eq: forall s e (D:pro_formula) (mu mu': dstate s e),
 dstate_eq mu mu'->
 sat_Assert mu D-> sat_Assert mu' D.
@@ -557,9 +557,8 @@ Proof.  induction D; intros.
         econstructor. 
         apply H0. 
         apply dstate_eq_trans with mu. apply dstate_eq_sym.
-        assumption. assumption. 
-        assumption. rewrite <-(d_trace_eq  mu _ H).
-        apply H6. 
+        assumption. assumption.
+        rewrite <-(d_trace_eq  mu _ H). assumption.
 Qed.
 
 
@@ -615,7 +614,7 @@ unfold distribution_formula in H2.
 destruct H2. simpl in H3. rewrite sum_over_list_cons in H3.
  rewrite sum_over_list_nil in H3.
 rewrite Rplus_0_r in H3. rewrite H3 in H1.
-inversion H1; subst; inversion H13; subst. 
+inversion H1; subst; inversion H12; subst. 
 simpl in *.   
 assert(dstate_eq mu d). 
 apply (dstate_eq_trans _ _ _ _ _ H4).
@@ -625,14 +624,14 @@ apply dstate_eq_refl.
 apply dstate_eq_trans with ((d_app (d_empty s e) d)).
 apply d_app_comm.  apply d_app_empty_l.
 apply sat_State_dstate_eq with d. apply dstate_eq_sym.
-assumption. inversion_clear H5. intuition.
+assumption. inversion_clear H5. simpl in H6. apply H6.  intuition.
 discriminate H0.
 
 econstructor. assert(length [1] = length [F]). reflexivity.
 apply H0.  econstructor.
 inversion_clear H. intuition.
 simpl. unfold distribution_formula. 
-split.  econstructor. lra. intuition.
+split.  econstructor. simpl. lra. intuition.
 simpl. rewrite sum_over_list_cons.
  rewrite sum_over_list_nil. lra.
 simpl. assert( exists mu', d_scale 1 mu mu').
@@ -649,7 +648,7 @@ apply d_app_comm. simpl.
 apply d_app_eq. apply dstate_eq_sym.
 apply d_scale_1_l. assumption. apply dstate_eq_refl.
 simpl. econstructor. intuition. 
-econstructor. econstructor. reflexivity.  apply Forall_nil. 
+econstructor. 
 Qed.
 
 Lemma WF_sat_State{s e:nat}: forall  (mu:dstate s e) (F:State_formula), 
@@ -661,16 +660,31 @@ Proof. intros.
       split. discriminate. intuition.
 Qed.
 
-Lemma big_and_not_nil{s e:nat}: forall (mu_n : list (dstate s e)) nF,
-(Forall_two (fun mu_i nF_i => sat_State mu_i nF_i) mu_n nF)->
-nF <> []->
-exists i, (i<length nF)%nat /\ StateMap.this (nth i mu_n (d_empty s e)) <> [] .
-Proof. induction mu_n; destruct nF; intros; 
+Lemma n_th_eq{A:Type}: forall (mu_n:list A) (a default: A) (x:nat),
+(nth x mu_n default)=nth (x+1) (a::mu_n) default.
+Proof. induction mu_n; intros; destruct x.  simpl. reflexivity. destruct x.  simpl. reflexivity. simpl.
+       reflexivity.
+       simpl. reflexivity. simpl. apply IHmu_n. 
+Qed.
+
+
+Lemma big_and_not_nil{s e:nat}: forall (mu_n : list (dstate s e)) pF,
+(Forall_two (fun mu_i pF_i =>0< fst pF_i  -> 
+sat_State mu_i (snd pF_i)) mu_n pF)->
+pF <> [] /\ sum_over_list (get_pro_formula pF) >0->
+(Forall (fun x => 0<= (x)) (get_pro_formula pF))->
+exists i, (i<length pF)%nat /\ StateMap.this (nth i mu_n (d_empty s e)) <> [] .
+Proof. induction mu_n; destruct pF; intros;
         inversion_clear H.
-        destruct H0. reflexivity.  
-   
-exists 0%nat. simpl in * . split. lia. 
-apply WF_sat_State in H1. intuition.
+        destruct H0. destruct H. reflexivity.
+        
+        destruct p. destruct (Req_dec r 0). rewrite H in *.  pose (IHmu_n pF).
+        destruct e0. assumption. simpl in *. rewrite sum_over_list_cons in *.
+        rewrite Rplus_0_l in *.  split. intro. rewrite H4 in *. simpl in *.
+        rewrite sum_over_list_nil in *. lra. apply H0. simpl in H1. inversion_clear H1. assumption.
+        exists (x+1)%nat. split. simpl in *. lia. rewrite <-n_th_eq. apply H4.
+exists 0%nat. simpl in * . split. lia.   
+apply WF_sat_State in H2. intuition.  destruct H0. inversion_clear H1. lra. 
 Qed.
 
 
@@ -688,13 +702,13 @@ Proof. intros s e(mu,IHmu) (mu',IHmu').
 Qed.
 
 
-Lemma WF_big_and{s e:nat}: forall (mu_n : list (dstate s e)) nF,
-(Forall_two (fun mu_i nF_i => sat_State mu_i nF_i) mu_n nF)->
-Forall (fun x : dstate s e => WF_dstate x) mu_n.
-Proof. induction mu_n; destruct nF; intros; inversion_clear H;
-   try econstructor.
-   apply WF_sat_State in H0. intuition.
-   apply IHmu_n with nF.  intuition.
+Lemma WF_big_and{s e:nat}: forall (mu_n : list (dstate s e)) pF,
+(Forall_two (fun mu_i pF_i =>0< fst (pF_i)-> sat_State mu_i (snd(pF_i))) mu_n pF)->
+Forall_two (fun mu_i  pF_i =>0< fst (pF_i)-> WF_dstate mu_i) mu_n pF.
+Proof. induction mu_n; destruct pF; intros; inversion_clear H;
+   try econstructor. intros.
+   apply WF_sat_State in H0. intuition. assumption. 
+   apply IHmu_n.  intuition.
 Qed.
 
 
@@ -702,7 +716,7 @@ Lemma big_dapp_nil1: forall {s e : nat} (pF:pro_formula)
 (f : list (dstate s e)) (mu':dstate s e),
 (Forall (fun x => 0<= (x)) (get_pro_formula pF))->
 0<sum_over_list ((get_pro_formula pF)) <=1->
-(Forall_two (fun f_i nF_i => sat_State f_i nF_i) f (pro_to_npro_formula pF))->
+(Forall_two (fun f_i pF_i =>0< fst pF_i ->  sat_State f_i (snd pF_i)) f (pF))->
 big_dapp' (get_pro_formula pF) f mu'->
 StateMap.this mu' <> [].
 Proof.  induction pF; intros. simpl in *.
@@ -724,7 +738,18 @@ apply d_app_not_nil.
 left. inversion  H8; subst.  lra. 
 apply d_scale_not_nil .   
  inversion_clear H1. 
- apply WF_sat_State in H4. intuition.
+ apply WF_sat_State in H4. intuition. inversion_clear H. simpl in *. lra. 
+Qed.
+
+
+Lemma Forall_two_map{A B C:Type }:forall (P : A -> B -> Prop) (Q:A->C->Prop) (f:list A) (g:list B)  (f2: B -> C),
+(forall i j, P i j -> Q i (f2 j))-> 
+(Forall_two P f g) ->(Forall_two Q f (map (fun i=> f2 i) g)).
+Proof. induction f; intros; destruct g; simpl. econstructor. 
+       inversion_clear H0. inversion_clear H0. 
+       inversion_clear H0.
+      econstructor; try assumption. apply H; try assumption.
+       apply IHf. apply H. assumption.
 Qed.
 
 Lemma WF_sat_Pro{s e:nat}: forall   (pF:pro_formula) (mu:dstate s e), 
@@ -736,12 +761,16 @@ Proof.  intros.
      
       apply big_dapp_nil1 with pF mu_n.
       destruct H1. assumption. destruct H1. rewrite H2.
-       lra. assumption. assumption.
+       lra. eapply Forall_two_impli; try apply H4.
+       intros. simpl in H2. apply H2. assumption. 
+       assumption.
       apply WF_dstate_eq with mu'. apply dstate_eq_sym.
       assumption. 
       apply WF_dstate_big_dapp with  (get_pro_formula pF) mu_n.
-      apply WF_big_and with ((pro_to_npro_formula pF)).
-      assumption.  assumption. inversion_clear H1. assumption.
+      unfold get_pro_formula.
+      eapply Forall_two_map ; try apply WF_big_and. simpl. auto. 
+      eapply Forall_two_impli; try apply H4. simpl. intros. apply H2.  auto.
+     assumption.  inversion_clear H1. assumption.
       inversion_clear H1. intuition.
 Qed.
        

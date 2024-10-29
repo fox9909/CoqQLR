@@ -1225,9 +1225,9 @@ Proof. induction mu_n; simpl in*; split; intros; try econstructor; inversion_cle
        apply IHmu_n. apply H1.
 Qed.
 
-
+From Quan Require Import Forall_two.
 Lemma WWF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
-Forall (fun x=> WWF_dstate x) mu_n ->
+Forall_two (fun x y=> 0<y -> WWF_dstate x) mu_n p_n->
 big_dapp' (p_n) mu_n mu->
 (Forall (fun x => 0<= (x) ) p_n)-> 
 WWF_dstate mu.
@@ -1235,11 +1235,13 @@ Proof. induction p_n. intros. inversion_clear H0.
     apply WWF_dstate_empty.
     intros. simpl in *.
     inversion H0; subst. 
-    apply WWF_d_app.  
+    apply WWF_d_app. 
+    destruct (Req_dec a 0). rewrite H2 in *. inversion_clear H4.
+     apply WWF_dstate_empty. lra.  
     apply WWF_d_scale with hd a. 
     inversion_clear H1. intuition.
-    assumption. inversion_clear H.
-    assumption. apply IHp_n with td.
+    assumption. inversion_clear H. apply H3. inversion_clear H1. lra.  
+   apply IHp_n with td.
       inversion_clear H. assumption.
      assumption. inversion_clear H1. assumption.
 Qed.
@@ -1272,9 +1274,19 @@ Proof.  intros. inversion_clear H1.
        rewrite Rmult_1_r. lra. lra.  
 Qed.
 
+Lemma Forall_two_impli{A B:Type }:forall (P Q : A -> B -> Prop) (f:list A) (g:list B),
+(forall i j, P i j -> Q i j)-> 
+(Forall_two P f g) ->(Forall_two Q f g).
+Proof. induction f; intros; destruct g. econstructor. 
+       inversion_clear H0. inversion_clear H0. 
+       inversion_clear H0.
+      econstructor; try assumption. apply H; try assumption.
+       apply IHf. apply H. assumption.
+Qed.
+
 
 Lemma d_trace_le_1_big_dapp{s e:nat}: forall (p_n:list  R) (mu_n:list (dstate s e)) (mu:dstate s e), 
-Forall (fun x=> WF_dstate x) mu_n ->
+Forall_two (fun x y=> 0<y -> WF_dstate x) mu_n p_n->
 big_dapp' (p_n) mu_n mu->
 (Forall (fun x =>0<=  (x) ) p_n)->
 d_trace mu <= sum_over_list p_n.
@@ -1286,33 +1298,42 @@ Proof. induction p_n. intros. inversion_clear H0.
          inversion H0; subst.
          rewrite d_trace_app.
          rewrite sum_over_list_cons.
-         apply Rplus_le_compat.
+         apply Rplus_le_compat. 
+         destruct (Req_dec a 0). rewrite H2 in *. inversion_clear H4.
+         unfold d_trace. simpl. lra. lra.  
           apply d_scale_trace_le with hd.
           inversion_clear H1. assumption.
-           inversion_clear H.
-          assumption. simpl. assumption.
+           inversion_clear H. apply H3. inversion_clear H1. lra. 
+         simpl. assumption.
          apply IHp_n with td. inversion_clear H.
          assumption. assumption.
          inversion_clear H1. assumption.
+         destruct (Req_dec a 0). rewrite H2 in *. inversion_clear H4.
+         apply WWF_dstate_empty. lra. 
          apply WWF_d_scale with  hd a. 
          inversion_clear H1. intuition.
          assumption. inversion_clear H.
-         apply WWF_dstate_to_WF_dstate. assumption.
+         apply WWF_dstate_to_WF_dstate. apply H3.
+         inversion_clear H1. lra.
          apply WWF_dstate_big_dapp with p_n td.
-        apply Forall_WWF_WF. inversion_clear H. assumption.
-          assumption. inversion_clear H1. assumption.
+         inversion_clear H. eapply Forall_two_impli; try apply H3.
+         simpl.  intros. apply WWF_dstate_to_WF_dstate. apply H. assumption.
+         inversion_clear H. assumption. 
+  inversion_clear H1. assumption.
 Qed.
 
 
 Lemma WF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
-Forall (fun x=> WF_dstate x) mu_n ->
+Forall_two (fun x y=> 0<y -> WF_dstate x) mu_n p_n->
 big_dapp' p_n mu_n mu->
 (Forall (fun x => 0<= (x)) p_n)->
 sum_over_list p_n<=1->
 WF_dstate mu.
 Proof. intros. apply WWF_dstate_to_WF_dstate.
 split. apply WWF_dstate_big_dapp with p_n mu_n .
-apply Forall_WWF_WF.  assumption. assumption. assumption.
+eapply Forall_two_impli; try apply H.
+ simpl.  intros. apply WWF_dstate_to_WF_dstate. auto.
+assumption. assumption. 
 apply Rle_trans with (sum_over_list p_n).
 apply d_trace_le_1_big_dapp with mu_n. 
 assumption. assumption. assumption.

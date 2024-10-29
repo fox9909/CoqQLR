@@ -1404,7 +1404,7 @@ Qed.
 Lemma ceval_big_dapp{s e:nat}: forall (p_n :list R) (mu_n:list (dstate s e)) (mu mu':dstate s e)   c,
 Forall (fun x : R => 0 < x) p_n ->
 sum_over_list p_n <=1 -> 
-Forall (fun x : dstate s e => WF_dstate x) mu_n ->
+Forall_two (fun x y=> 0<y -> WF_dstate x) mu_n p_n->
 length p_n =length mu_n->
 dstate_eq mu (big_dapp p_n mu_n)->
 ceval c mu mu' ->
@@ -1428,7 +1428,8 @@ Proof. induction  p_n; intros mu_n mu mu' c Hp Hs Hw; intros; destruct mu_n.
        destruct p_n. rewrite sum_over_list_nil in Hs. 
        rewrite Rplus_0_r in Hs. assumption.
        inversion_clear Hp. apply sum_over_list_gt_0 in H3.
-       lra. discriminate. inversion_clear Hw. assumption. 
+       lra. discriminate.
+       inversion_clear Hw. apply H2.  inversion_clear Hp. assumption. 
        apply WF_dstate_big_dapp with p_n mu_n.  inversion_clear Hw. assumption.
        apply big_dapp'_to_app. injection H. intuition.
          inversion_clear Hp. assumption. 
@@ -1442,7 +1443,7 @@ Proof. induction  p_n; intros mu_n mu mu' c Hp Hs Hw; intros; destruct mu_n.
        assert(exists y, (and (ceval c d y)
        (dstate_eq x (d_scale_not_0 a y)))).
        apply ceval_scale with ((d_scale_not_0 a d)).
-       inversion_clear Hw. assumption. 
+       inversion_clear Hw. apply H4. inversion_clear Hp.  assumption. 
        inversion_clear Hp. lra.
        unfold dstate_eq. reflexivity.
        assumption. destruct H4. 

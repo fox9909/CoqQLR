@@ -296,7 +296,7 @@ f_equal. f_equal.  rewrite sqrt_pow. reflexivity. lra.
 apply sqrt_neq_0_compat. apply pow_lt. lra. 
 apply pow_nonzero. apply sqrt2_neq_0.
 apply big_sum_eq_bounded. intros.
-f_equal. f_equal; f_equal; f_equal. pose Ht. admit.
+f_equal. f_equal; f_equal; f_equal. pose Ht. Set Printing All. admit.
 admit. 
 apply WF_adjoint. apply HQFT.
 Admitted.
@@ -553,7 +553,7 @@ rewrite simpl_QFT'.
 * eapply rule_seq. 
 eapply rule_conseq_l'.
 eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P). lia.
-admit.  unfold P. apply rule_Conj_two. 
+ unfold P. apply rule_Conj_two. 
 apply implies_refl. implies_trans_solve 0  rule_PT.   
 admit. 
 *eapply rule_seq. 
@@ -595,36 +595,8 @@ apply a0.
 
 implies_trans_solve 0 SAnd_PAnd_eq. 
 unfold assert_implies. intros.
-rewrite sat_Assert_to_State in *.
-econstructor. 
-assert(Datatypes.length [1%R;0%R] =
-Datatypes.length
-[<{ (z) ' <> r }> /\s <{ (b) ' <> 1 }>;
-<{ (z) ' = r }> /\s <{ ~ (b) ' <> 1 }>] ). reflexivity.
-apply H5. simpl. econstructor. eapply WF_sat_State.
-apply H4. unfold distribution_formula.  simpl. split. 
-econstructor. lra. econstructor. lra. econstructor.
-repeat rewrite sum_over_list_cons. rewrite sum_over_list_nil.
-repeat rewrite Rplus_0_r. reflexivity.
-apply (npro_formula_cons  _ (<{ (z) ' = r }> /\s <{ ~ (b) ' <> 1 }>)) in H4.
-assumption. 
-assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) [(([r;1]), d_trace (mu) .* (Mmult (Vec  (2^(e-s)) 0) (adjoint (Vec  (2^(e-s)) 0))))]).
-apply Sorted.Sorted_cons. apply Sorted.Sorted_nil.
-apply Sorted.HdRel_nil.
-exists (StateMap.Build_slist H5).
-split. unfold d_trace. simpl. unfold s_trace.
-unfold q_trace.  simpl. rewrite Rplus_0_r.
-rewrite trace_mult_dist. rewrite Cmod_mult.
-rewrite Cmod_R. rewrite Rabs_right.
-rewrite trace_mult'. rewrite Vec_inner_1. 
-unfold c_to_Vector1. Msimpl. rewrite trace_I.
-rewrite Cmod_1. rewrite Rmult_1_r. reflexivity.
-apply pow_gt_0.
-apply WF_sat_State in H4. destruct H4.
-apply WF_dstate_in01_aux in H6. lra.
-econstructor. admit.
-econstructor. simpl.  admit.
-econstructor. apply rule_Conj_split_l. 
+apply sat_NPro_State. assumption.
+ apply rule_Conj_split_l. 
 Admitted.
 End OF.
 

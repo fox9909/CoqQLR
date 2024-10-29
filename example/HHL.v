@@ -630,6 +630,85 @@ Proof. intros.  unfold NSet.Equal. intro.
 Qed.
 
 
+Lemma norm_vec_1: forall n x, (x<2^n) ->norm (Vec (2^n) x)=1 .
+Proof. intros.  unfold norm.   rewrite <-inner_trace'. rewrite Vec_inner_1.
+       unfold c_to_Vector1. Msimpl. 
+       rewrite trace_I. simpl. rewrite sqrt_1. reflexivity. assumption.
+Qed.
+
+Lemma pure_vector_vec: forall n x, (x<2^n) -> Pure_State_Vector (Vec (2^n) x) .
+Proof. intros. econstructor. auto_wf. rewrite Vec_inner_1. unfold c_to_Vector1. Msimpl.
+       reflexivity. assumption. 
+Qed.
+
+
+
+Lemma simpl_QMeas:((/
+norm
+  (@U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1) (Vec 2 1 × (Vec 2 1) †)
+     (@big_sum (Matrix
+        (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m))
+           (S (S O))) (S O)) _ 
+        (fun i : nat =>
+        @kron (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) (S O) (S (S O)) (S O) (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i)
+          (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Vec 2 0 .+ c / phi' i .* Vec 2 1))
+        (2 ^ m))))%R
+.* @U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1) (Vec 2 1 × (Vec 2 1) †)
+    (@big_sum
+    (Matrix (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m))
+          (S (S O))) (S O)) _
+       (fun i : nat =>
+       @kron (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) (S O) (S (S O)) (S O)
+       (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i)
+         (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Vec 2 0 .+ c / phi' i .* Vec 2 1)) 
+       (2 ^ m)))= ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 .
+Proof. 
+unfold U_v. type_sovle. pose Hmn. 
+assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity. 
+destruct H.  assert(2 ^ (n + m) * 2 ^ 1 = 2 ^ (n + m + 1)). rewrite <-Nat.pow_add_r. reflexivity.
+destruct H. rewrite Mmult_Msum_distr_l.
+rewrite (big_sum_eq_bounded _  ((fun i : nat => (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i ⊗ (c / phi' i .* Vec 2 1))) )). 
+unfold phi'. unfold phi.
+rewrite (big_sum_eq_bounded _ ((fun i : nat => (((c * (2 * PI) * 2 ^ n /t))%R.* (∣ 0 ⟩_ (n) ⊗ ((b_n i/ lamda_n i ) .* v_n i) ⊗ ( Vec 2 1)))) )). 
+assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity.
+destruct H. 
+         
+rewrite Mscale_Msum_distr_r.  rewrite norm_scale. 
+assert(2^n*2^m=2^(n+m)). type_sovle'. destruct H.
+assert(2=2^1). simpl. reflexivity. destruct H. 
+rewrite <-kron_Msum_distr_r.  rewrite <-kron_Msum_distr_l. 
+
+rewrite Cmod_R. rewrite Rabs_right.   repeat rewrite norm_kron.
+assert(norm (Vec 2 1)= norm (Vec (2^1) 1)). reflexivity. rewrite H.
+repeat rewrite norm_vec_1.  rewrite Rmult_1_r. rewrite Rmult_1_l. 
+rewrite Rinv_mult_distr_depr.  rewrite Mscale_assoc. rewrite RtoC_mult. 
+rewrite Rmult_assoc. rewrite Rmult_comm. rewrite Rmult_assoc.
+rewrite Rinv_r. rewrite Rmult_1_r. 
+rewrite <-Mscale_kron_dist_l.  rewrite <-Mscale_kron_dist_r.
+f_equal. f_equal.  admit. admit. admit. admit.
+simpl. lia. apply pow_gt_0.
+admit. 
+
+intros. repeat rewrite Mscale_kron_dist_r.  repeat rewrite Mscale_kron_dist_l.
+repeat rewrite Mscale_assoc. f_equal.   repeat rewrite Rdiv_unfold. 
+admit. 
+
+intros.
+remember ((√ (1 - c * (c * 1) / (phi' x0 * (phi' x0 * 1))) .* Vec 2 0 .+ c / phi' x0 .* Vec 2 1)).
+assert(2^n*2^m=2^(n+m)). type_sovle'. destruct H0. rewrite <-id_kron.
+assert(2=2^1). simpl. reflexivity. destruct H0. 
+apply eq_trans with (I (2 ^ n) ⊗ I (2 ^ m) ⊗ (Vec 2 1 × (Vec 2 1) †) × (b_n x0 .* ∣ 0 ⟩_ (n) ⊗ v_n x0 ⊗ m0)).
+f_equal. repeat  rewrite kron_mixed_product. rewrite Heqm0. Msimpl.
+f_equal. f_equal.  rewrite Mmult_plus_distr_l;
+repeat rewrite Mscale_mult_dist_r.  repeat rewrite Mmult_assoc. 
+repeat rewrite <-Vec_qubit0. rewrite<- Vec_qubit1.
+assert((Vec 2 1) † × Vec 2 0=(Vec (2^1) 1) † × (Vec (2^1) 0)). reflexivity. rewrite H0.
+assert((Vec 2 1) † × Vec 2 1=(Vec (2^1) 1) † × (Vec (2^1) 1)). reflexivity. rewrite H1.
+rewrite Vec_inner_1. rewrite Vec_inner_0. unfold c_to_Vector1. Msimpl.  reflexivity.
+lia. simpl. lia. simpl. lia. simpl. lia. apply Hv_n. assert(0<2^n). apply pow_gt_0.
+auto_wf. 
+Admitted.
+
 
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
 Proof. 
@@ -703,11 +782,7 @@ Proof.
      {apply rule_QUnit_One'. lia. }  rewrite simpl_QFT. eapply rule_seq.
      {eapply rule_QUnit_Ctrl. lia. }  rewrite simpl_Uf'. eapply rule_seq.
      {apply rule_QUnit_One'. lia. } rewrite simpl_H.
-     {eapply rule_conseq. eapply rule_QMeas with (s:=0) (e:=n+m+1)(P:=P)
-      (v:=(big_sum (fun i : nat =>b_n i .* (∣ 0 ⟩_ (n)) ⊗ v_n i
-      ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1)  .+ c / phi' i .* ∣ 1 ⟩_ (1))) 
-      (2 ^ m))).  lia. apply big_pOplus'_to_pOplus. 
-  admit. 
+     {eapply rule_conseq. eapply rule_QMeas with (s:=0) (e:=n+m+1)(P:=P).  lia. 
        rewrite add_sub_eq. unfold P. simpl. 
       apply rule_Conj_two. apply implies_refl.
       implies_trans_solve 0 rule_PT.  
@@ -720,7 +795,8 @@ Proof.
       implies_trans_solve 0 rule_ConjC.
         eapply rule_CconjCon. apply rule_PT. apply implies_refl.
        econstructor.  implies_trans_solve 0 rule_ConjC.
-        eapply rule_CconjCon.  admit.
+        eapply rule_CconjCon.     rewrite simpl_QMeas.
+    apply implies_refl.
         classic_slove_aux. econstructor. } }
   { implies_trans_solve 0 rule_OdotE.
     implies_trans_solve  0 rule_OdotO.
@@ -737,40 +813,23 @@ Datatypes.length
 [<{ true }> /\s <{ (v) ' = 0 }>;
    (| ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 >[ 0, n + m + 1]) /\s
    <{ ~ (v) ' = 0 }>] ). reflexivity.
-apply H7. simpl. econstructor. eapply WF_sat_State.
-apply H6. unfold distribution_formula.  simpl. split. 
-econstructor. lra. econstructor. lra. econstructor.
-repeat rewrite sum_over_list_cons. rewrite sum_over_list_nil.
-repeat rewrite Rplus_0_r. reflexivity.
-apply (npro_formula_cons  _ ((| ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 >[ 0, n + m + 1]) /\s
-<{ ~ (v) ' = 0 }>)) in H6.
-assumption. 
-assert(Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e))
- [(([1]), d_trace (mu) .* (Mmult (∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1) (adjoint (∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1))))]).
-apply Sorted.Sorted_cons. apply Sorted.Sorted_nil.
-apply Sorted.HdRel_nil.
-exists (StateMap.Build_slist H7).
-split. unfold d_trace. simpl. unfold s_trace.
-unfold q_trace.  simpl. rewrite Rplus_0_r.
-admit.
-econstructor. admit.
-econstructor. simpl. 
-split. split.   admit.
-
-econstructor. apply rule_Conj_split_l.
-
-
-
-
-
-
-   admit. }
+apply H7. simpl. 
+remember ((SQuan (QExp_s 0 ((n+m)+1) (@kron (2^n*2^m) 1 2 1 (@kron (2^n) (S O) (2^m) (S O) (∣ 0 ⟩_ (n)) x) (Vec 2 1))))).
+assert([(1%R, <{ true }> /\s <{ (v) ' = 0 }>);
+(0%R, s0 /\s <{ ~ (v) ' = 0 }>)]=
+swap_list [(0%R, s0 /\s <{ ~ (v) ' = 0 }>); (1%R, <{ true }> /\s <{ (v) ' = 0 }>)] 0 ).
+reflexivity. rewrite H7. apply rule_POplusC. apply sat_Pro_State'.
+rewrite sat_Assert_to_State. assumption. }
   { implies_trans_solve 0 rule_Conj_split_l.    
      assert(1=(1 * 1)). lia. destruct H6.
     assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H6. 
     assert(2^(n+m+1-(n+m))=2). assert(2^1=2). simpl. reflexivity.
     rewrite<- H6. rewrite H6 at 1. f_equal. lia. destruct H6.
-    implies_trans_solve 0 rule_Separ'. lia. admit.  admit.  
+    implies_trans_solve 0 rule_Separ'. lia. apply pure_vector_vec.  admit. 
+    type_sovle.
+    assert(2 ^ n * 2 ^ m=2^(n+m)). type_sovle'. destruct H6. 
+    apply ParDensityO.pure_state_vector_kron. apply pure_vector_vec. apply pow_gt_0.
+     admit.  
      implies_trans_solve 0 rule_odotT.
      implies_trans_solve 0 rule_OdotO'.  
       implies_trans_solve 0 rule_Conj_split_l. 
@@ -781,7 +840,7 @@ econstructor. apply rule_Conj_split_l.
     f_equal. apply add_sub_eq. destruct H6.
     assert(2^(n+m-n)=(2 ^ (n + m + 1 - (n + m))) ^ m). 
     repeat rewrite add_sub_eq. simpl. reflexivity. destruct H6.
-    implies_trans_solve 0  rule_Separ'. lia. pose Hx. admit. admit.
+    implies_trans_solve 0  rule_Separ'. lia. pose Hx.  admit. apply pure_vector_vec. apply pow_gt_0.
     implies_trans_solve 0 rule_odotT. 
     implies_trans_solve 0 rule_OdotO'. 
     implies_trans_solve 0 rule_ConjC.   

@@ -307,9 +307,6 @@ apply rule_Conj_two.  apply Assn_true_P. simpl. unfold not. apply In_empty.
 apply rule_PT.
 
 eapply rule_QMeas ; try lia; auto_wf.
-apply big_pOplus'_to_pOplus.  intros. 
-unfold U_v.  simpl. rewrite (H i). Msimpl.   
-admit.
 unfold U_v. simpl.
 rewrite (H 0). rewrite (H 1).
 Msimpl.   
@@ -357,9 +354,6 @@ destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
-apply big_pOplus'_to_pOplus.  intros. 
-unfold U_v.  simpl. 
-admit.
 unfold U_v. simpl.
 assert (forall i:nat,( ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (Vec 2 i × (Vec 2 i) †))
            (I (1))) (∣0⟩ ⊗ ∣+⟩))) ) =
@@ -416,9 +410,6 @@ destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
-apply big_pOplus'_to_pOplus.  intros. 
-unfold U_v.  simpl. 
-admit.
 unfold U_v. simpl.
 assert (forall i:nat,(
   ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (Vec 2 i × (Vec 2 i) †))
@@ -522,5 +513,5 @@ apply Rinv_neq_0_compat.
 
 apply sqrt_neq_0_compat. lra. 
 rewrite <-sqrt_inv. assert((0<=√ (/ 2))%R). apply sqrt_pos. lra.
-Admitted.
+Qed.
 
