@@ -28,6 +28,7 @@ Local Open Scope nat_scope.
 Local Open Scope matrix_scope.
 Local Open Scope rule_scope.  
 
+Require Import Arith.
 
 Module Type Param.
 Parameter x:nat.
@@ -296,7 +297,7 @@ f_equal. f_equal.  rewrite sqrt_pow. reflexivity. lra.
 apply sqrt_neq_0_compat. apply pow_lt. lra. 
 apply pow_nonzero. apply sqrt2_neq_0.
 apply big_sum_eq_bounded. intros.
-f_equal. f_equal; f_equal; f_equal. pose Ht. Set Printing All. admit.
+f_equal. f_equal; f_equal; f_equal. pose Ht. admit.
 admit. 
 apply WF_adjoint. apply HQFT.
 Admitted.
@@ -487,7 +488,7 @@ try match goal with
 H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
 
 eapply rule_conseq_l with (P':=( (BNeq z ' r /\p (BNeq b ' 1)))).
-assert(1<>r). admit.
+assert(1<>r).  admit.
 
 
 seman_sovle; destruct H5; unfold Pure_eval in *;

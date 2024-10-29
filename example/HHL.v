@@ -825,7 +825,7 @@ rewrite sat_Assert_to_State. assumption. }
     assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H6. 
     assert(2^(n+m+1-(n+m))=2). assert(2^1=2). simpl. reflexivity.
     rewrite<- H6. rewrite H6 at 1. f_equal. lia. destruct H6.
-    implies_trans_solve 0 rule_Separ'. lia. apply pure_vector_vec.  admit. 
+    implies_trans_solve 0 rule_Separ'. lia. apply pure_vector_vec. type_sovle. simpl. lia. 
     type_sovle.
     assert(2 ^ n * 2 ^ m=2^(n+m)). type_sovle'. destruct H6. 
     apply ParDensityO.pure_state_vector_kron. apply pure_vector_vec. apply pow_gt_0.

@@ -255,7 +255,9 @@ Proof. unfold Shor.
        
        simpl. apply inter_empty. left.
        apply union_empty; split; try reflexivity;
-      apply union_empty; split; try reflexivity.
+      apply union_empty; split; try reflexivity. 
+      classic_slove_1;  rewrite Nat.eqb_eq in H2. rewrite H2. apply Nat.eqb_eq in H3. 
+      rewrite H3. auto. rewrite H2. simpl. auto. rewrite H2.  admit.
     
         }
        eapply rule_seq with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) (0))) 
@@ -299,6 +301,7 @@ Proof. unfold Shor.
           apply union_empty; split; try reflexivity;
          try apply union_empty; try split; try reflexivity;
          try apply union_empty; try split; try reflexivity.
+         classic_slove_2. right.  split. auto. rewrite Nat.eqb_eq in H4. rewrite H4. admit. 
           }
           eapply rule_conseq_r'.
           apply rule_while_classic.
@@ -430,7 +433,7 @@ H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
          seman_sovle. right. unfold F_3. split; try assumption.
          classic_slove_aux. apply Nat.eqb_eq in H4.
          rewrite H4. assert( Nat.gcd x N < N). 
-          admit.
+          admit.  admit.
           }
           
        classic_slove_2; try rewrite Nat.eqb_eq in H7; try
