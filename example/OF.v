@@ -579,9 +579,21 @@ eapply implies_trans. apply rule_PT. unfold b'.
 eapply implies_trans'. apply (Assn_impl b  <{ x ^ (z) ' % N }>
 (BEq b ' (<{ x ^ (z) ' % N }>))). 
 
-unfold assert_implies. intros.
-rewrite sat_Assert_to_State in *. 
+unfold assert_implies. intros. 
+
+apply sat_State_Npro. eapply WF_sat_Assert. apply H6.
+eapply WF_sat_Assert. apply H6.
+
+rule_solve. unfold State_eval in *.  unfold Pure_eval in *.
+unfold beval in *. unfold aeval in *. unfold fst in *.
+bdestruct ( c_find z x0 =? r). 
+right. apply H9 in H7. rewrite H12 in H7. 
+assert(x ^ r mod N=1). admit. rewrite H13 in *.
+bdestruct (c_find b x0 =? 1). simpl. auto.
+destruct H7. 
+left. 
 admit.
+
 apply Assn_true. simpl. 
 intro; try repeat match goal with 
 H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
