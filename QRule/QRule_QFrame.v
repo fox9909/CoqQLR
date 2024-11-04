@@ -1450,11 +1450,10 @@ Qed.
 
 Lemma dstate_qstate_eq_Separ{s e:nat}:forall (mu1 mu2: list(cstate * qstate s e))
 s0 e0 s1 e1,
-s<=s1<=e->
 dstate_qstate_eq mu1 mu2 ->
 dstate_Separ mu1 s0 e0 s1 e1->
 dstate_Separ mu2 s0 e0 s1 e1.
-Proof. induction mu1; intros mu2 s0 e0 s1 e1 Hs; intros. destruct mu2. intuition.
+Proof. induction mu1; intros mu2 s0 e0 s1 e1 ; intros. destruct mu2. intuition.
        destruct H. 
        destruct mu2. destruct a. destruct H.
        destruct a. destruct p. 
@@ -1463,14 +1462,14 @@ Proof. induction mu1; intros mu2 s0 e0 s1 e1 Hs; intros. destruct mu2. intuition
        econstructor; try reflexivity.
        apply H7. apply H8.
        apply IHmu1. assumption.
-       assumption. intuition.
+       assumption. 
 Qed.
 
 Import ParDensityO.
 Local Open Scope nat_scope.
-Lemma dstate_Separ_Qinit{s e:nat}: forall c (q:qstate s e) s0 e0 s1 e1 s' e',
+Lemma dstate_Separ_Qinit_r{s e:nat}: forall c (q:qstate s e) s0 e0 s1 e1 s' e',
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
-s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0<=s1 /\ s1<=e1 /\
 e1=e->
 @dstate_Separ s e [(c, QInit_fun s' e' q)] s0 e0 s1 e1.
 Proof.
@@ -1491,15 +1490,36 @@ rewrite (@QInit_fun_sum s e).
 subst. 
 apply big_sum_eq_bounded. 
 intros.
-  apply (@QInit_fun_kron s s1 e).
+  apply (@QInit_fun_kron_r s s1 e).
   pose (H8 x). destruct o. apply WF_Mixed.  
   apply H2. rewrite H2. auto_wf. 
-intuition.
-intuition. econstructor; try reflexivity. 
+intuition. apply (@dstate_Separ_nil s e). 
+Qed.
+
+Lemma dstate_Separ_Qinit_l{s e:nat}: forall c (q:qstate s e) s0 e0 s1 e1 s' e',
+dstate_Separ [(c, q)] s0 e0 s1 e1 ->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<=s' /\ s'<=e' /\ e'<=e1 /\
+e1=e->
+@dstate_Separ s e [(c, QInit_fun s' e' q)] s0 e0 s1 e1.
+Proof.
+intros.  inversion H; subst. clear H14. 
+econstructor; try reflexivity. 
+apply H7.
+assert(forall i : nat, WF_qstate  ((fun i=> QInit_fun s' e' (q1_i i)) i) \/
+((fun i=> QInit_fun s' e' (q1_i i)) i)= Zero).
+intros. pose (H8 i). destruct o. 
+left. apply WF_qstate_init. lia.  apply H1.
+right. rewrite H1. apply (@QInit_Zero s1 e). apply H1. 
+rewrite (@QInit_fun_sum s e). subst. 
+apply big_sum_eq_bounded. intros.
+apply (@QInit_fun_kron_l s s1 e).
+pose (H7 x). destruct o. apply WF_Mixed.  
+apply H2. rewrite H2. auto_wf. 
+intuition. apply (@dstate_Separ_nil s e). 
 Qed.
 
 
-Lemma dstate_Separ_QUnit_One{s e:nat}: forall c (q:qstate s e) U s0 e0 s1 e1 s' e',
+Lemma dstate_Separ_QUnit_One_r{s e:nat}: forall c (q:qstate s e) U s0 e0 s1 e1 s' e',
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
 s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
@@ -1519,16 +1539,42 @@ apply H2. apply H9.
 rewrite (@QUnit_One_fun_sum s e).
 subst. 
 apply big_sum_eq_bounded.
-intros.   apply (@QUnit_One_fun_kron s s1 e).
+intros.   apply (@QUnit_One_fun_kron_r s s1 e).
 apply H1. pose (H9 x). destruct o. apply WF_Mixed. apply H3.
 rewrite H3. auto_wf. 
 intuition. 
-intuition.
 econstructor; try reflexivity.
 Qed.
 
 
-Lemma dstate_Separ_QUnit_Ctrl{s e:nat}: forall c (q:qstate s e)  
+
+Lemma dstate_Separ_QUnit_One_l{s e:nat}: forall c (q:qstate s e) U s0 e0 s1 e1 s' e',
+dstate_Separ [(c, q)] s0 e0 s1 e1 ->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<=s' /\ s'<=e' /\ e'<=e1 /\
+e1=e->
+@WF_Unitary (2^(e'-s')) U->
+@dstate_Separ s e [(c, QUnit_One_fun s' e' U q)] s0 e0 s1 e1.
+Proof.
+intros.  inversion H; subst. clear H15. 
+econstructor; try reflexivity.
+apply H8. 
+assert(forall i : nat, @WF_qstate s1 e ((fun i=>QUnit_One_fun s' e' U (q1_i i)) i)\/
+((fun i=>QUnit_One_fun s' e' U (q1_i i)) i) = Zero).
+intros.   pose (H9 i). destruct o. 
+left.
+ apply WF_qstate_QUnit_One. lia. assumption.   apply H2.
+ right.   rewrite H2. apply (@QUnit_One_Zero s1 e).
+apply H2.
+rewrite (@QUnit_One_fun_sum s e).
+subst. 
+apply big_sum_eq_bounded.
+intros.   apply (@QUnit_One_fun_kron_l s s1 e).
+apply H1. pose (H8 x). destruct o. apply WF_Mixed. apply H3.
+rewrite H3. auto_wf. 
+intuition. econstructor. 
+Qed.
+
+Lemma dstate_Separ_QUnit_Ctrl_r{s e:nat}: forall c (q:qstate s e)  
 s0 e0 s1 e1 s0' e0' s1' e1' (U: nat -> Square (2 ^ (e1' - s1'))),
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
 (forall j, WF_Unitary (U j))->
@@ -1548,19 +1594,46 @@ apply H2. apply H9.
 rewrite (@QUnit_Ctrl_fun_sum s e).
 subst. 
 apply big_sum_eq_bounded.
-intros. apply (@QUnit_Ctrl_fun_kron s s1 e).
+intros. apply (@QUnit_Ctrl_fun_kron_r s s1 e).
 intros. apply H0. pose (H9 x). destruct o. 
  apply WF_Mixed. apply H3. rewrite H3. auto_wf. 
-lia. lia.  
+lia. 
 econstructor; try reflexivity.
 Qed.
 
 
-Lemma dstate_Separ_QMeas{s e:nat}: forall c (q:qstate s e)  
+
+Lemma dstate_Separ_QUnit_Ctrl_l{s e:nat}: forall c (q:qstate s e)  
+s0 e0 s1 e1 s0' e0' s1' e1' (U: nat -> Square (2 ^ (e1' - s1'))),
+dstate_Separ [(c, q)] s0 e0 s1 e1 ->
+(forall j, WF_Unitary (U j))->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<= s0' /\ s0'<=e0' /\e0'<=s1' /\ s1'<=e1' /\ e1'<=e1 /\
+e1=e->
+@dstate_Separ s e [(c, QUnit_Ctrl_fun s0' e0' s1' e1' U q)] s0 e0 s1 e1.
+Proof.
+intros.  inversion H; subst. clear H15. 
+econstructor; try reflexivity. apply H8.
+assert(forall i : nat, @WF_qstate s1 e ((fun i=>QUnit_Ctrl_fun s0' e0' s1' e1' U (q1_i i)) i)
+\/ ((fun i=>QUnit_Ctrl_fun s0' e0' s1' e1' U (q1_i i)) i) = Zero).
+intros. pose (H9 i). destruct o. 
+left. apply (WF_qstate_QUnit_Ctrl); try assumption. lia.
+right. rewrite H2. apply QUnit_Ctrl_Zero. 
+apply H2. 
+rewrite (@QUnit_Ctrl_fun_sum s e).
+subst. 
+apply big_sum_eq_bounded.
+intros. apply (@QUnit_Ctrl_fun_kron_l s s1 e).
+intros. apply H0. pose (H8 x). destruct o. 
+ apply WF_Mixed. apply H3. rewrite H3. auto_wf. 
+lia. 
+econstructor; try reflexivity.
+Qed.
+
+Lemma dstate_Separ_QMeas_r{s e:nat}: forall c (q:qstate s e)  
 s0 e0 s1 e1 s' e' j,
 QMeas_fun s' e' j q <> Zero->
 dstate_Separ [(c, q)] s0 e0 s1 e1 ->
-s=s0 /\ s0<=s' /\ s'<=e' /\e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=s' /\ s'<=e' /\e'<=e0 /\ e0<=s1 /\ s1<=e1 /\
 e1=e->
 (j<(2^(e'-s')))->
 @dstate_Separ s e [(c, QMeas_fun s' e' j q)] s0 e0 s1 e1.
@@ -1583,16 +1656,50 @@ destruct H3. reflexivity.
 apply H3. apply H10.
 apply big_sum_eq_bounded.
 intros. 
-apply (@QMeas_fun_kron s s1 e).
+apply (@QMeas_fun_kron_r s s1 e).
 assumption. 
 pose (H10 x). destruct o.  
 apply WF_Mixed. 
 apply H4. rewrite H4. auto_wf.
 
 intuition. econstructor; reflexivity.
-intuition. intuition.
 Qed.
 
+
+Lemma dstate_Separ_QMeas_l{s e:nat}: forall c (q:qstate s e)  
+s0 e0 s1 e1 s' e' j,
+QMeas_fun s' e' j q <> Zero->
+dstate_Separ [(c, q)] s0 e0 s1 e1 ->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<=s' /\ s'<=e' /\ e'<=e1 /\
+e1=e->
+(j<(2^(e'-s')))->
+@dstate_Separ s e [(c, QMeas_fun s' e' j q)] s0 e0 s1 e1.
+Proof.
+intros. inversion H0; subst. clear H16.
+rewrite (@QMeas_fun_sum  s e) in *.
+econstructor; try reflexivity. apply H9.
+assert(forall i : nat, @WF_qstate s1 e ((fun i=>QMeas_fun s' e' j (q1_i i)) i)\/
+((fun i=>QMeas_fun s' e' j (q1_i i)) i) = Zero). 
+intros. pose (H10 i). 
+assert(QMeas_fun s' e' j (q1_i i) = Zero \/
+QMeas_fun s' e' j (q1_i i) <> Zero).
+apply Classical_Prop.classic. 
+destruct H3. right. assumption. left.
+apply WF_qstate_QMeas. intuition. intuition. lia.
+assumption. assumption. destruct o. assumption.
+rewrite H4 in H3. unfold QMeas_fun in H3.
+unfold q_update in H3. rewrite super_0 in H3.
+destruct H3. reflexivity.  
+apply H3. 
+apply big_sum_eq_bounded.
+intros. 
+apply (@QMeas_fun_kron_l s s1 e).
+assumption. 
+pose (H9 x). destruct o.  
+apply WF_Mixed. 
+apply H4. rewrite H4. auto_wf. lia. 
+ econstructor; reflexivity.
+Qed.
 
 Lemma dstate_Separ_big_app{s e:nat}: forall (f: nat -> list(cstate *qstate s e)) n s0 e0 s1 e1 ,
  s<=s1<=e-> 
@@ -1624,7 +1731,7 @@ Qed.
 
 
 
-Lemma PMpar_trace_QInit{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
+Lemma PMpar_trace_QInit_r{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
 s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e->
@@ -1633,7 +1740,7 @@ PMpar_trace q s1 e1.
 Proof. intros. simpl in H. inversion H; subst.
 clear H.
 rewrite  (@QInit_fun_sum s e ).
-repeat rewrite (big_sum_par_trace).
+repeat rewrite (big_sum_par_trace); try lia. 
 apply big_sum_eq_bounded.
 intros.  destruct H0.
  destruct H1.
@@ -1641,46 +1748,91 @@ intros.  destruct H0.
 destruct H3. destruct H4.
 destruct H5.
 subst. 
-rewrite (@QInit_fun_kron s s1 e); auto_wf.
+rewrite (@QInit_fun_kron_r s s1 e); auto_wf; try lia. 
 
 repeat rewrite PMpar_trace_R; try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ ((QInit_fun s' e' (q0_i x))) (q1_i x)); try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
-rewrite QInit_trace; auto_wf. reflexivity. 
-intuition. 
- intuition. intuition. intuition.
- intuition.
+rewrite QInit_trace; auto_wf; try lia.  reflexivity. 
 Qed.
 
 
-Lemma PMpar_trace_QUnit_one{ s e:nat}: forall c (q:qstate s e)  s' e' (U:Square (2^(e'-s'))) s0 e0 s1 e1,
+Lemma PMpar_trace_QInit_l{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
-s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0=s1 /\ s1<=e1 /\
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<=s' /\ s'<=e' /\ e'<=e1 /\
+e1=e->
+@PMpar_trace s e (QInit_fun s' e' q) s0 e0=
+PMpar_trace q s0 e0.
+Proof. intros. simpl in H. inversion H; subst.
+clear H.
+rewrite  (@QInit_fun_sum s e ).
+repeat rewrite (big_sum_par_trace); try lia. 
+apply big_sum_eq_bounded.
+intros.  destruct H0.
+ destruct H1.
+ destruct H2.
+destruct H3. destruct H4.
+destruct H5.
+subst. 
+rewrite (@QInit_fun_kron_l s s1 e); auto_wf; try lia. 
+
+repeat rewrite PMpar_trace_L; try reflexivity; auto_wf; try lia. 
+rewrite (PMpar_trace_l _  (q0_i x) ((QInit_fun s' e' (q1_i x)))); try reflexivity; auto_wf.
+rewrite (PMpar_trace_l _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
+rewrite QInit_trace; auto_wf; try lia.  reflexivity. 
+Qed.
+
+Lemma PMpar_trace_QUnit_one_r{ s e:nat}: forall c (q:qstate s e)  s' e' (U:Square (2^(e'-s'))) s0 e0 s1 e1,
+dstate_Separ [(c, q)] s0 e0 s1 e1->
+s=s0 /\ s0<=s' /\ s'<=e'/\ e'<=e0 /\ e0<=s1 /\ s1<=e1 /\
 e1=e->
 WF_Unitary U->
 @PMpar_trace s e (QUnit_One_fun s' e' U q) s1 e1=
 PMpar_trace q s1 e1.
 Proof. intros. inversion H; subst. clear H.
 rewrite  (@QUnit_One_fun_sum s e ).
-repeat rewrite (big_sum_par_trace).
+repeat rewrite (big_sum_par_trace); try lia.
 apply big_sum_eq_bounded.
 intros.  destruct H0.
 destruct H2. destruct H3.
 destruct H4. destruct H5.
 destruct H6. 
 subst. 
-rewrite (@QUnit_One_fun_kron s s1 e); auto_wf.
+rewrite (@QUnit_One_fun_kron_r s s1 e); auto_wf; try lia.
 repeat rewrite PMpar_trace_R; try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ ((QUnit_One_fun s' e' U (q0_i x))) (q1_i x)); try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
-rewrite QUnit_One_trace; auto_wf. reflexivity.
-intuition. intuition. apply H1.
- intuition. intuition. intuition.
- intuition.
+rewrite QUnit_One_trace; auto_wf; try lia.  reflexivity. assumption.
+apply H1.
 Qed.
 
 
-Lemma PMpar_trace_QUnit_Ctrl{ s e:nat}: forall c (q:qstate s e)  s0' e0' s1' e1' (U:nat -> Square (2^(e1'-s1'))) s0 e0 s1 e1,
+Lemma PMpar_trace_QUnit_one_l{ s e:nat}: forall c (q:qstate s e)  s' e' (U:Square (2^(e'-s'))) s0 e0 s1 e1,
+dstate_Separ [(c, q)] s0 e0 s1 e1->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<=s' /\ s'<=e' /\ e'<=e1 /\
+e1=e->
+WF_Unitary U->
+@PMpar_trace s e (QUnit_One_fun s' e' U q) s0 e0=
+PMpar_trace q s0 e0.
+Proof. intros. inversion H; subst. clear H.
+rewrite  (@QUnit_One_fun_sum s e ).
+repeat rewrite (big_sum_par_trace); try lia.
+apply big_sum_eq_bounded.
+intros.  destruct H0.
+destruct H2. destruct H3.
+destruct H4. destruct H5.
+destruct H6. 
+subst. 
+rewrite (@QUnit_One_fun_kron_l s s1 e); auto_wf; try lia; auto_wf.
+repeat rewrite PMpar_trace_L; try reflexivity; auto_wf; try lia. 
+rewrite (PMpar_trace_l _ (q0_i x) ((QUnit_One_fun s' e' U (q1_i x))) ); try reflexivity; auto_wf.
+rewrite (PMpar_trace_l _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
+rewrite QUnit_One_trace; auto_wf; try lia.  reflexivity. assumption.
+apply H1.
+Qed.
+
+
+Lemma PMpar_trace_QUnit_Ctrl_r{ s e:nat}: forall c (q:qstate s e)  s0' e0' s1' e1' (U:nat -> Square (2^(e1'-s1'))) s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
 s=s0 /\ s0<=s0' /\ s0'<=e0'/\ e0'<= s1' /\ s1'<=e1' /\e1'<=e0 /\ e0=s1 /\ s1<=e1 /\
 e1=e ->
@@ -1690,7 +1842,7 @@ PMpar_trace q s1 e1.
 Proof. intros. 
 inversion H; subst. clear H.
 rewrite  (@QUnit_Ctrl_fun_sum s e ).
-repeat rewrite (big_sum_par_trace).
+repeat rewrite (big_sum_par_trace); try lia.
 apply big_sum_eq_bounded.
 intros.  destruct H0.
 destruct H2. destruct H3.
@@ -1698,29 +1850,58 @@ destruct H4. destruct H5.
 destruct H6. destruct H7.
 destruct H10. 
 subst.    
-rewrite (@QUnit_Ctrl_fun_kron s s1 e); auto_wf.
+rewrite (@QUnit_Ctrl_fun_kron_r s s1 e); auto_wf; try lia.
 repeat rewrite PMpar_trace_R; try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ ((QUnit_Ctrl_fun s0' e0' s1' e1' U (q0_i x))) (q1_i x)); try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
-rewrite QUnit_Ctrl_trace; auto_wf. reflexivity.
-intuition. intuition. assumption.
-apply H1. 
-lia. lia. lia. lia.    
+rewrite QUnit_Ctrl_trace; auto_wf; try lia. reflexivity. assumption. 
+
+apply H1.    
+Qed.
+
+
+
+Lemma PMpar_trace_QUnit_Ctrl_l{ s e:nat}: forall c (q:qstate s e)  s0' e0' s1' e1' (U:nat -> Square (2^(e1'-s1'))) s0 e0 s1 e1,
+dstate_Separ [(c, q)] s0 e0 s1 e1->
+s=s0 /\ s0<=e0 /\ e0<=s1/\ s1<= s0' /\ s0'<=e0' /\e0'<=s1' /\ s1'<=e1' /\ e1'<=e1 /\
+e1=e->
+(forall j, WF_Unitary (U j))->
+@PMpar_trace s e (QUnit_Ctrl_fun s0' e0' s1' e1' U q) s0 e0=
+PMpar_trace q s0 e0.
+Proof. intros. 
+inversion H; subst. clear H.
+rewrite  (@QUnit_Ctrl_fun_sum s e ).
+repeat rewrite (big_sum_par_trace); try lia.
+apply big_sum_eq_bounded.
+intros.  destruct H0.
+destruct H2. destruct H3.
+destruct H4. destruct H5.
+destruct H6. destruct H7.
+destruct H10. 
+subst.    
+rewrite (@QUnit_Ctrl_fun_kron_l s s1 e); auto_wf; try lia.
+repeat rewrite PMpar_trace_L; try reflexivity; auto_wf; try lia.
+rewrite (PMpar_trace_l _  (q0_i x) ((QUnit_Ctrl_fun s0' e0' s1' e1' U (q1_i x)))); try reflexivity; auto_wf.
+rewrite (PMpar_trace_l _ (q0_i x) (q1_i x)); try reflexivity; auto_wf.
+rewrite QUnit_Ctrl_trace; auto_wf; try lia. reflexivity. assumption. 
+
+apply H1.    
 Qed.
 
 Lemma r3{s e:nat}: forall c s0 e0 s1 e1
 (mu mu':list (cstate *qstate s e)) F ,
-s<=s1<=e-> 
+s<=s1<=e->
 ceval_single c mu mu'-> 
 dstate_Separ mu s0 e0 s1 e1->
 NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty)  ->
-NSet.Subset (snd (MVar c)) (Qsys_to_Set s0 e0) ->
+NSet.Subset (snd (MVar c)) (Qsys_to_Set s0 e0) \/
+NSet.Subset (snd (MVar c)) (Qsys_to_Set s1 e1) ->
 dstate_Separ mu' s0 e0 s1 e1 .
 Proof.
 induction c. 
--- {intros s0 e0 s1 e1 mu mu' F Hs . intros. apply ceval_skip_1 in H. subst. intuition. }
+-- {intros s0 e0 s1 e1 mu mu' F Hs. intros. apply ceval_skip_1 in H. subst. intuition. }
 -- admit.
--- induction mu; intros mu' F Hs ; intros.
+-- induction mu; intros mu' F  Hs; intros.
   {inversion  H; subst. intuition.  }
    {destruct a0. inversion H; subst. clear H.
    apply dstate_Separ_map2. intuition. 
@@ -1728,8 +1909,10 @@ induction c.
    intuition.
    simpl. intuition.
    inversion H0; subst.
-   econstructor; try reflexivity. 
-   assumption. assumption. econstructor; try reflexivity.
+   econstructor; try reflexivity.
+   inversion_clear H0.  
+   econstructor; try reflexivity; try assumption.
+   apply H5. apply H6. apply H7. econstructor.
    apply IHmu with F. assumption. 
    assumption.
    inversion H0; subst. assumption.
@@ -1743,11 +1926,13 @@ induction c.
     assumption. assumption. 
     simpl in H1. rewrite inter_union_dist in H1.
     rewrite union_empty in H1. intuition.
-    simpl in H2. apply subset_union in H2.
+    destruct H2;  [left|right];
+    simpl in H2; apply subset_union in H2;
     intuition.
     simpl in H1. rewrite inter_union_dist in H1.
     rewrite union_empty in H1. intuition.
-    simpl in H2. apply subset_union in H2.
+    destruct H2;  [left|right];
+    simpl in H2; apply subset_union in H2;
     intuition.
    }
 --{ induction mu; intros mu' F Hs; intros. inversion_clear H. intuition.
@@ -1760,7 +1945,8 @@ induction c.
     assumption. assumption. econstructor; try reflexivity.
     simpl in H1. rewrite inter_union_dist in H1.
     rewrite union_empty in H1. intuition.
-    simpl in H2. apply subset_union in H2.
+    destruct H2;  [left|right];
+    simpl in H2; apply subset_union in H2;
     intuition.
     apply IHmu with F. assumption.
     assumption. 
@@ -1774,7 +1960,8 @@ induction c.
     assumption. assumption. econstructor; try reflexivity.
     simpl in H1. rewrite inter_union_dist in H1.
     rewrite union_empty in H1. intuition.
-    simpl in H2. apply subset_union in H2.
+    destruct H2;  [left|right];
+    simpl in H2; apply subset_union in H2;
     intuition.
     apply IHmu with F. 
     assumption. assumption.
@@ -1785,15 +1972,16 @@ induction c.
 -- induction mu; intros mu' F Hs ; intros.
 {inversion  H; subst. intuition.  }
  {destruct a. inversion H; subst. clear H.
- apply dstate_Separ_map2. assumption. 
- simpl in H2.
- apply dstate_Separ_Qinit.
- inversion H0; subst.
-    econstructor; try reflexivity.
-    assumption. assumption. econstructor.
-    inversion_clear H0.
-     apply subset_Qsys in H2.
-     lia.  lia. 
+ apply dstate_Separ_map2. assumption.
+ destruct H2 as [H2|H2];
+ simpl in H2; 
+ [apply dstate_Separ_Qinit_r| apply dstate_Separ_Qinit_l];
+ inversion H0; subst;
+    econstructor; try reflexivity; try
+    assumption; try apply dstate_Separ_nil; 
+    inversion_clear H0;
+     apply subset_Qsys in H2;
+     try lia; try  lia. 
  apply IHmu with F. assumption. assumption.
  inversion H0; subst. intuition.
  assumption. assumption. }
@@ -1803,14 +1991,15 @@ induction c.
   apply inj_pair2_eq_dec in H5.
   apply inj_pair2_eq_dec in H5.
   destruct H5.
- apply dstate_Separ_map2. assumption. 
- apply dstate_Separ_QUnit_One.
- inversion H0; subst.
-    econstructor; try reflexivity.
-    assumption. assumption. econstructor.
-    inversion_clear H0.
-     apply subset_Qsys in H2.
-     lia. lia.  apply H11.
+ apply dstate_Separ_map2. assumption.
+ destruct H2 as[ H2| H2];  
+ [apply dstate_Separ_QUnit_One_r| apply dstate_Separ_QUnit_One_l];
+ inversion H0; subst;
+    econstructor; try reflexivity; try 
+    assumption; try apply dstate_Separ_nil;
+    inversion_clear H0;
+     apply subset_Qsys in H2;
+     try lia; try apply H11. 
  apply IHmu with F. assumption. 
  assumption.
  inversion H0; subst. intuition.
@@ -1824,17 +2013,16 @@ induction c.
    apply inj_pair2_eq_dec in H8.
    apply inj_pair2_eq_dec in H8.
    destruct H8.
-  apply dstate_Separ_map2. assumption. 
-  apply dstate_Separ_QUnit_Ctrl.
-  inversion H0; subst.
-  econstructor; try reflexivity.
-  assumption. assumption. econstructor.
-  assumption.
-  inversion_clear H0. simpl in H2.
-  apply subset_union in H2. destruct H2.
-     apply subset_Qsys in H0.
-     apply subset_Qsys in H2.
-     lia. lia. lia.     
+   apply dstate_Separ_map2. assumption.
+   destruct H2 as[ H2| H2]; simpl in H2;
+   [apply dstate_Separ_QUnit_Ctrl_r| apply dstate_Separ_QUnit_Ctrl_l];
+   inversion H0; subst;
+      econstructor; try reflexivity; try 
+      assumption; try apply dstate_Separ_nil;
+      inversion_clear H0; 
+      apply subset_union in H2; destruct H2 as [H2 H2'];
+       apply subset_Qsys in H2;apply subset_Qsys in H2';
+       try lia; try apply H13. 
   apply IHmu with F. assumption.
   assumption.
   inversion H0; subst. intuition.
@@ -1848,15 +2036,16 @@ induction c.
    apply dstate_Separ_map2. assumption.
    eapply (dstate_Separ_big_app'  (fun j : nat =>
    (c_update i j c, QMeas_fun s0 e0 j q)) (2 ^ (e0 - s0))) . lia.  
-   intros.  apply dstate_Separ_QMeas. simpl in H3.
-   assumption.  
-   inversion H0; subst.
-  econstructor; try reflexivity.
-  assumption. assumption. econstructor.
-  inversion_clear H0. simpl in H2.
-     apply subset_Qsys in H2.
-     lia.    
-   lia.  assumption. assumption.
+   intros. 
+   destruct H2 as [H2|H2]; simpl in H2;
+   [apply dstate_Separ_QMeas_r | apply dstate_Separ_QMeas_l];
+    simpl in H3 ; try assumption;
+   inversion H0; subst;
+  econstructor; try reflexivity; try 
+  assumption; try   econstructor;
+  inversion_clear H0; 
+     apply subset_Qsys in H2;
+     lia.     assumption. 
    apply IHmu with F. 
    assumption. assumption.
    inversion H0; subst.  intuition.
@@ -1927,7 +2116,6 @@ Proof. intros. destruct H. destruct H0.
        assumption. rewrite H in *. rewrite H0 in *.
        rewrite Mplus_0_l in H1. destruct H1.
        reflexivity.
-  
 Qed.
 
 
@@ -2447,13 +2635,13 @@ apply WF_qstate_kron; assumption.
 simpl in *.
 rewrite PMpar_trace_R in *; try reflexivity; auto_wf.
 rewrite (PMpar_trace_r _ (q0_i j0 )  (q1_i j0)) in H7 ; try reflexivity; auto_wf.
-rewrite QMeas_fun_kron; auto_wf.
+rewrite QMeas_fun_kron_r; auto_wf.
 rewrite (PMpar_trace_r _ (QMeas_fun s0 e0 j (q0_i j0))  (q1_i j0)) ;try reflexivity; auto_wf.
 apply s_seman_scale_c. 
 assert (@Mixed_State (2^(s2-s)) (QMeas_fun s0 e0 j (q0_i j0))).
 apply WF_qstate_QMeas. intuition. intuition.
 lia.  
-rewrite (@QMeas_fun_kron s s2 e) in H4.
+rewrite (@QMeas_fun_kron_r s s2 e) in H4.
 intro. rewrite H8 in H4. rewrite kron_0_l in H4.
 destruct H4. reflexivity. assumption. auto_wf.
 lia. lia. assumption.
@@ -2497,7 +2685,133 @@ apply WF_qstate_QMeas.
 intuition. intuition. lia.
 assumption. assumption. 
 assumption. 
-lia. lia. lia. lia. lia.     
+lia. lia. lia. 
+Qed.
+
+
+Lemma r10'{ s e:nat}: forall c (q: qstate s e) s0 e0 s1 e1 s2 e2 i j F,
+s1 <= e1 /\ s2 <= s0 /\ s0 <= e0 /\ e0 <= e2 ->
+j < (2^(e0-s0))->
+QMeas_fun s0 e0 j (q) <> Zero ->
+WF_qstate q->
+dstate_Separ [(c, q)] s1 e1 s2 e2 ->
+NSet.Subset (Qsys_to_Set s0 e0) (Qsys_to_Set s2 e2)->
+NSet.Equal
+(NSet.inter (fst (Free_state F))
+(fst (MVar <{ i :=M [[s0 e0]] }>))) NSet.empty ->
+State_eval F (c, PMpar_trace q s1 e1)->
+State_eval F (c_update i j c, PMpar_trace (QMeas_fun s0 e0 j q) s1 e1).
+Proof. intros c q s0 e0 s1 e1 s2 e2 i j F Hj Hq Hw. intros.  
+simpl in *. 
+inversion H0; subst.
+clear H0. clear H17.
+rewrite big_sum_par_trace in *; try lia. 
+rewrite (@QMeas_fun_sum s e).
+rewrite big_sum_par_trace.
+destruct n. simpl in H.
+destruct H. 
+apply Mixed_not_Zero in H.
+destruct H. reflexivity.
+apply State_eval_sum.
+intros.
+pose (H10 j0). pose(H11 j0).
+assert(@QMeas_fun s e s0 e0 j ((@kron (2 ^ (s2 - s)) (2 ^ (s2 - s)) (2 ^ (e - s2)) (2 ^ (e - s2)) 
+(q0_i j0)  (q1_i j0))) = Zero 
+\/ @QMeas_fun s e s0 e0 j ((@kron (2 ^ (s2 - s)) (2 ^ (s2 - s)) (2 ^ (e - s2)) (2 ^ (e - s2)) 
+(q0_i j0)  (q1_i j0))) <> Zero).
+apply Classical_Prop.classic.  destruct H4.
+right. 
+rewrite H4.
+apply Par_trace_Zero. 
+destruct o. destruct o0.  
+left. split.
+apply Mixed_State_aux_to_Mix_State.
+apply Mix_par_trace. lia. 
+apply WF_qstate_QMeas. intuition.
+intuition. lia. assumption. assumption.
+apply WF_qstate_kron; assumption.
+assert(@State_eval s s2 F
+(c, ((fun i : nat => 
+@PMpar_trace s e
+(@kron (2 ^ (s2 - s)) (2 ^ (s2 - s)) (2 ^ (e - s2)) (2 ^ (e - s2)) 
+(q0_i i)  (q1_i i)) s s2) j0))).
+eapply (@State_eval_sub_sum s s2 (S n) c 
+((fun i : nat => 
+@PMpar_trace s e
+(@kron (2 ^ (s2 - s)) (2 ^ (s2 - s)) (2 ^ (e - s2)) (2 ^ (e - s2)) 
+(q0_i i)  (q1_i i)) s s2))).
+intros.
+rewrite PMpar_trace_L ; try lia. 
+rewrite (PMpar_trace_l _ (q0_i i0) (q1_i i0)); auto_wf.
+pose (H10 i0). 
+pose (H11 i0).
+destruct o.  destruct o0.
+left. econstructor.
+ apply Mixed_State_scale_c.
+ apply H8. apply mixed_state_trace_in01.
+ apply H9. apply mixed_state_trace_real.
+ apply H9. lia. 
+right. rewrite H9. rewrite Zero_trace. rewrite Mscale_0_l.
+reflexivity. rewrite H8.
+right.  rewrite Mscale_0_r.
+reflexivity. reflexivity.  auto_wf. 
+rewrite <-(@big_sum_par_trace s e  _  _ s  s2).
+apply Mix_par_trace. lia. assumption.
+lia.  assumption. lia. 
+apply Mix_par_trace. lia.
+apply WF_qstate_kron; assumption.
+simpl in *.
+rewrite PMpar_trace_L in *; try reflexivity; auto_wf; try lia. 
+rewrite (PMpar_trace_l _ (q0_i j0 )  (q1_i j0)) in H7 ; try reflexivity; auto_wf.
+rewrite QMeas_fun_kron_l; auto_wf.
+rewrite (PMpar_trace_l _ (q0_i j0) (QMeas_fun s0 e0 j (q1_i j0))  ) ;try reflexivity; auto_wf.
+apply s_seman_scale_c. 
+assert (@Mixed_State (2^(e-s2)) (QMeas_fun s0 e0 j (q1_i j0))).
+apply WF_qstate_QMeas. intuition. intuition.
+lia.  
+rewrite (@QMeas_fun_kron_l s s2 e) in H4.
+intro. rewrite H8 in H4. rewrite kron_0_r in H4.
+destruct H4. reflexivity. assumption. auto_wf.
+lia. lia. assumption.
+split.   
+apply mixed_state_trace_in01. assumption. 
+apply mixed_state_trace_real. assumption. 
+rewrite <-s_seman_scale_c in H7.
+apply cstate_eq_F with c.
+   simpl in H1. 
+   unfold cstate_eq.
+   intros. rewrite c_update_find_not.
+   reflexivity.
+   unfold not.
+   intros. rewrite<-H9 in *.
+   apply (In_inter_empty _ _ i) in H2.
+   destruct H2. assumption. 
+   apply NSet.add_1. reflexivity. 
+   assumption.
+split.
+apply mixed_state_trace_gt0. apply H6.
+apply mixed_state_trace_real. apply H6.
+unfold QMeas_fun. unfold q_update.
+apply WF_super. auto_wf.  auto_wf.
+unfold QMeas_fun. unfold q_update.
+unfold super. auto_wf. lia. lia.  
+unfold QMeas_fun. unfold q_update.
+apply WF_super. auto_wf. auto_wf.
+right. rewrite H6. rewrite kron_0_r.
+rewrite QMeas_Zero. apply Par_trace_Zero.
+right. rewrite H5. rewrite kron_0_l.
+rewrite QMeas_Zero. apply Par_trace_Zero.
+apply (@big_sum_not_0 (2^(e-s2))). 
+rewrite <-(@big_sum_par_trace s e  _  _ s s2).
+apply (@WF_qstate_not_Zero s s2).   
+apply (Mix_par_trace ).
+lia.
+rewrite <-(@QMeas_fun_sum s  e).
+apply WF_qstate_QMeas.
+intuition. intuition. lia.
+assumption. assumption. 
+assumption. 
+lia. lia. 
 Qed.
 
 Lemma d_par_trace_not_nil{s e:nat}: forall s' e' (mu: list (state s e)) (mu':list (state s' e')),
@@ -2709,7 +3023,7 @@ destruct p. simpl. assumption. }
  destruct mu. inversion_clear H11.
  simpl.
  econstructor. 
- rewrite (PMpar_trace_QInit c _ _ _ s1 e1).
+ rewrite (PMpar_trace_QInit_r c _ _ _ s1 e1).
  assumption. assumption. 
  simpl in H2. apply subset_Qsys in H2.
  inversion_clear H0. 
@@ -2727,7 +3041,7 @@ destruct p. simpl. assumption. }
  assumption. assumption.
 
  simpl. econstructor. 
- rewrite (PMpar_trace_QInit c _ _ _ s1 e1).
+ rewrite (PMpar_trace_QInit_r c _ _ _ s1 e1).
  assumption. inversion H0; subst. econstructor; try reflexivity.
  assumption. assumption. econstructor.
  inversion_clear H0. 
@@ -2751,7 +3065,7 @@ destruct p. simpl. assumption. }  }
  destruct mu. inversion_clear H13.
  simpl.
  econstructor. 
- rewrite (PMpar_trace_QUnit_one c _ _ _ _ s1 e1).
+ rewrite (PMpar_trace_QUnit_one_r c _ _ _ _ s1 e1).
  assumption. assumption. 
  simpl in H2. apply subset_Qsys in H2.
  inversion_clear H0.
@@ -2769,7 +3083,7 @@ destruct p. simpl. assumption. }  }
  inversion_clear Hw.
  assumption. assumption.
  simpl. econstructor. 
- rewrite (PMpar_trace_QUnit_one c _ _ _ _ s1 e1).
+ rewrite (PMpar_trace_QUnit_one_r c _ _ _ _ s1 e1).
  assumption. inversion H0; subst. econstructor; try reflexivity.
  assumption. assumption. econstructor. 
  simpl in H2. apply subset_Qsys in H2.
@@ -2796,7 +3110,7 @@ apply Nat.eq_dec. apply Nat.eq_dec. }  }
  destruct mu. inversion_clear H15.
  simpl.
  econstructor. 
- rewrite (PMpar_trace_QUnit_Ctrl c _ _ _ _ _ _  s2 e2).
+ rewrite (PMpar_trace_QUnit_Ctrl_r c _ _ _ _ _ _  s2 e2).
  assumption. assumption.
  simpl in H2. apply subset_union in H2.
  destruct H2.  apply subset_Qsys in H2.
@@ -2816,7 +3130,7 @@ apply Nat.eq_dec. apply Nat.eq_dec. }  }
  inversion_clear Hw.
  assumption. assumption. 
  simpl. econstructor.  
- rewrite (PMpar_trace_QUnit_Ctrl c _ _ _ _ _ _ s2 e2).
+ rewrite (PMpar_trace_QUnit_Ctrl_r c _ _ _ _ _ _ s2 e2).
  assumption. inversion H0; subst. econstructor; try reflexivity.
  assumption. assumption. econstructor. 
  simpl in H2. apply subset_union in H2.
@@ -2957,6 +3271,10 @@ assumption. assumption.
 destruct p. simpl. assumption.
  }  }
 Admitted.
+
+
+
+
 
 
 Lemma seman_eq_two'''{s e:nat}: forall F r c (q:qstate s e),
@@ -3171,7 +3489,7 @@ Qed.
 
 Lemma r4'{s e:nat}: forall c s0 e0 s1 e1
 (mu mu':list (cstate *qstate s e)) F ,
-s <= s1 /\ s1 <= e1 <= e->
+s <= s0 /\ s0 <= e0 <= e->
 WF_dstate_aux mu ->
 ceval_single c mu mu'-> 
 dstate_Separ mu s0 e0 s1 e1->
@@ -3179,7 +3497,444 @@ NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty)  ->
 (NSet.Subset (snd (MVar c)) (Qsys_to_Set s1 e1)) ->
 State_eval_dstate F (d_par_trace mu s0 e0) ->
 State_eval_dstate F (d_par_trace mu' s0 e0).
-Proof. Admitted.
+Proof. induction c. 
+-- {intros s0 e0 s1 e1 mu mu' F Hs Hw. intros. apply ceval_skip_1 in H. subst. intuition. }
+-- admit.
+-- induction mu; intros mu' F Hs Hw; intros. 
+  {inversion  H; subst. intuition.  }
+   {destruct a0. inversion H; subst. clear H.
+   rewrite d_par_trace_map2.
+   inversion_clear H3.
+   destruct mu. inversion_clear H10.
+   simpl.
+   econstructor. 
+   apply cstate_eq_F with c.
+   simpl in H1. 
+   unfold cstate_eq.
+   intros. rewrite c_update_find_not.
+   reflexivity.
+   unfold not.
+   intros. rewrite<-H5 in *.
+   apply (In_inter_empty _ _ i) in H1.
+   destruct H1. assumption. 
+   apply NSet.add_1. reflexivity.
+    assumption. 
+   econstructor.
+   apply d_seman_app_aux.
+   apply WF_d_par_trace. lia. 
+    apply WF_state_dstate_aux.
+   apply WF_state_eq with (c, q).
+   reflexivity. inversion_clear Hw. assumption.
+   apply WF_d_par_trace. lia. 
+    apply WF_ceval with <{ i := a }> (p :: mu).
+   inversion_clear Hw. assumption.
+   assumption. 
+   simpl. econstructor.
+   apply cstate_eq_F with c.
+   simpl in H1. 
+   unfold cstate_eq.
+   intros. rewrite c_update_find_not.
+   reflexivity. intro. rewrite H5 in *.
+   apply (In_inter_empty _ _ j) in H1.
+   destruct H1. assumption. 
+   apply NSet.add_1. reflexivity.
+    assumption. econstructor.
+apply IHmu. assumption. inversion_clear Hw. assumption.
+assumption. 
+inversion H0; subst.   intuition.
+assumption. assumption.
+destruct p. simpl. assumption. } 
+-- admit.
+--{ intros s0 e0 s1 e1 mu mu'  F Hs  Hw. intros. inversion H; subst. intuition.
+    (* assert(State_eval_dstate F (d_par_trace mu1 s1 e1) ).
+    apply IHc1 with s0 e0 ((sigma, rho) :: mu0).
+    assumption. assumption.
+    admit. admit.
+    assumption. *)
+   apply IHc2 with s1 e1 mu1. assumption.
+   apply WF_ceval with c1 ((sigma, rho) :: mu0).
+   assumption. assumption. 
+   assumption. 
+   apply r3 with c1 ((sigma, rho) :: mu0)  F. inversion_clear H0.
+   lia. 
+   assumption. assumption.
+   simpl in H1. 
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition. simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   apply IHc1 with s1 e1  ((sigma, rho) :: mu0).
+   assumption.
+   assumption.
+   assumption. 
+   assumption.
+   simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   assumption.
+   }
+   {induction mu; intros mu' F Hs Hw; intros. inversion_clear H. intuition.
+   destruct a. inversion H; subst; clear H;
+   rewrite d_par_trace_map2;
+   inversion_clear H3.
+   destruct mu. inversion H12;subst.
+   simpl. repeat rewrite map2_nil_r.
+   apply IHc1 with s1 e1 [(c,q)].
+   assumption.
+   assumption. assumption. assumption.
+   simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   simpl. econstructor. assumption. 
+   econstructor.  
+   apply d_seman_app_aux.
+   apply WF_d_par_trace.
+   lia.  apply WF_ceval  with c1 [(c, q)].
+   apply WF_state_dstate_aux.
+   inversion_clear Hw. assumption.
+   assumption.
+   apply WF_d_par_trace. lia.  
+   apply WF_ceval with <{ if b then c1 else c2 end }> (p :: mu).
+   inversion_clear Hw.
+   assumption. assumption.
+   apply IHc1 with s1 e1 [(c,q)].
+   assumption.
+   apply WF_state_dstate_aux. 
+   inversion_clear Hw. intuition. 
+   assumption. inversion_clear H0; subst.
+   econstructor; try reflexivity. assumption.
+   assumption. econstructor.
+   simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   simpl. econstructor. assumption.
+   econstructor.
+   apply IHmu. assumption. inversion_clear Hw; intuition.
+   assumption. inversion_clear H0. assumption.
+   assumption.
+   assumption.
+   destruct p. 
+   simpl. assumption.
+
+   destruct mu. inversion H12;subst.
+   simpl. repeat rewrite map2_nil_r.
+   apply IHc2 with s1 e1 [(c,q)].
+   assumption.
+   assumption. assumption.
+   assumption. 
+   simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   simpl. econstructor. assumption. 
+   econstructor.  
+   apply d_seman_app_aux. 
+   apply WF_d_par_trace. lia. 
+    apply WF_ceval  with c2 [(c, q)].
+   apply WF_state_dstate_aux.
+   inversion_clear Hw. assumption.
+   assumption.
+   apply WF_d_par_trace. lia. 
+   apply WF_ceval with <{ if b then c1 else c2 end }> (p :: mu).
+   inversion_clear Hw.
+   assumption. assumption.
+   apply IHc2 with s1 e1 [(c,q)].
+   lia. 
+   apply WF_state_dstate_aux. 
+   inversion_clear Hw. intuition. 
+   assumption.
+   inversion_clear H0; subst.
+   econstructor; try reflexivity. assumption.
+   assumption. econstructor. 
+   simpl in H1.
+   rewrite inter_union_dist in H1.
+   rewrite union_empty in H1. intuition.
+   simpl in H2. 
+   apply subset_union in H2.
+   intuition.
+   simpl. econstructor. assumption.
+   econstructor.
+   apply IHmu. assumption. inversion_clear Hw.
+   assumption. assumption.
+   inversion_clear H0. assumption. 
+   assumption.
+   assumption.
+   destruct p. 
+   simpl. assumption. }
+{ admit. }
+{induction mu; intros mu' F Hs Hw; intros.
+{inversion  H; subst. intuition.  }
+ {destruct a. inversion H; subst. clear H.
+ rewrite d_par_trace_map2.
+ inversion_clear H3.
+ destruct mu. inversion_clear H11.
+ simpl.
+ econstructor. 
+ rewrite (PMpar_trace_QInit_l c _ _ _ _ _ s2 e2).
+ assumption. assumption. 
+ simpl in H2. apply subset_Qsys in H2.
+ inversion_clear H0. 
+ lia. lia.  
+ econstructor.
+ apply d_seman_app_aux.
+ apply WF_d_par_trace. lia.  
+ apply WF_ceval  with <{ [[ s0 e0 ]] :Q= 0 }>  [(c, q)]. 
+ apply WF_state_dstate_aux.
+ inversion_clear Hw. assumption.
+ apply ceval_Qinit. assumption.
+ apply WF_d_par_trace. lia. 
+ apply WF_ceval with <{ [[ s0 e0 ]] :Q= 0 }> (p :: mu).
+ inversion_clear Hw.
+ assumption. assumption.
+
+ simpl. econstructor. 
+ rewrite (PMpar_trace_QInit_l c _ _ _ _ _ s2 e2).
+ assumption. inversion H0; subst. econstructor; try reflexivity.
+ assumption. assumption. econstructor.
+ inversion_clear H0. 
+ simpl in H2. apply subset_Qsys in H2.
+ lia. lia.  
+ econstructor.
+apply IHmu. assumption. inversion_clear Hw. assumption. 
+assumption. 
+inversion H0; subst.  intuition.
+assumption. assumption.
+destruct p. simpl. assumption. }  }
+
+{induction mu; intros mu' F Hs Hw; intros.
+{inversion  H; subst. intuition.  }
+ {destruct a. inversion H; subst. clear H.
+ apply inj_pair2_eq_dec in H6.
+ apply inj_pair2_eq_dec in H6.
+ destruct H6.
+ rewrite d_par_trace_map2.
+ inversion_clear H3.
+ destruct mu. inversion_clear H13.
+ simpl.
+ econstructor. 
+ rewrite (PMpar_trace_QUnit_one_l c _ _ _ _ _ _ s2 e2).
+ assumption. assumption. 
+ simpl in H2. apply subset_Qsys in H2.
+ inversion_clear H0.
+ lia. lia.    
+ assumption. 
+ econstructor.
+ apply d_seman_app_aux.
+ apply WF_d_par_trace. lia. 
+  apply WF_ceval  with (QUnit_One s0 e0 U1)  [(c, q)]. 
+ apply WF_state_dstate_aux.
+ inversion_clear Hw. assumption.
+ apply ceval_QUnit_One. assumption. assumption.
+ apply WF_d_par_trace. lia. 
+ apply WF_ceval with (QUnit_One s0 e0 U1) (p :: mu).
+ inversion_clear Hw.
+ assumption. assumption.
+ simpl. econstructor. 
+ rewrite (PMpar_trace_QUnit_one_l c _ _ _ _ _ _ s2 e2).
+ assumption. inversion H0; subst. econstructor; try reflexivity.
+ assumption. assumption. econstructor. 
+ simpl in H2. apply subset_Qsys in H2.
+ inversion_clear H0.
+ lia. lia.
+ assumption.
+ econstructor. 
+apply IHmu. assumption. inversion_clear Hw. assumption.
+assumption. 
+inversion H0; subst. intuition.
+assumption. assumption.
+destruct p. simpl. assumption.
+apply Nat.eq_dec. apply Nat.eq_dec. }  }
+
+
+{induction mu; intros mu' F Hs Hw; intros.
+{inversion  H; subst. intuition.  }
+ {destruct a. inversion H; subst. clear H.
+ apply inj_pair2_eq_dec in H9.
+ apply inj_pair2_eq_dec in H9.
+ destruct H9.
+ rewrite d_par_trace_map2.
+ inversion_clear H3.
+ destruct mu. inversion_clear H15.
+ simpl.
+ econstructor. 
+ rewrite (PMpar_trace_QUnit_Ctrl_l c _ _ _ _ _ _  _ _ s3 e3).
+ assumption. assumption.
+ simpl in H2. apply subset_union in H2.
+ destruct H2.  apply subset_Qsys in H2.
+ apply subset_Qsys in H3.
+ inversion_clear H0.  lia. 
+  lia. lia.  
+ assumption. econstructor.
+ apply d_seman_app_aux.
+ apply WF_d_par_trace. lia. 
+  apply WF_ceval  with (QUnit_Ctrl s0 e0 s1 e1 U1)  [(c, q)]. 
+ apply WF_state_dstate_aux.
+ inversion_clear Hw. assumption.
+ apply ceval_QUnit_Ctrl. assumption.
+ assumption. 
+ apply WF_d_par_trace. lia.  
+ apply WF_ceval with (QUnit_Ctrl s0 e0 s1 e1 U1) (p :: mu).
+ inversion_clear Hw.
+ assumption. assumption. 
+ simpl. econstructor.  
+ rewrite (PMpar_trace_QUnit_Ctrl_l c _ _ _ _ _ _  _ _ s3 e3).
+ assumption. inversion H0; subst. econstructor; try reflexivity.
+ assumption. assumption. econstructor. 
+ simpl in H2. apply subset_union in H2.
+ destruct H2.  apply subset_Qsys in H2.
+ apply subset_Qsys in H3.
+ inversion_clear H0.  lia. 
+  lia. lia.  
+ assumption.
+ econstructor.
+apply IHmu. lia.  inversion_clear Hw; assumption.
+assumption. 
+inversion H0; subst. intuition.
+assumption. assumption.
+destruct p. simpl. assumption.
+apply Nat.eq_dec. apply Nat.eq_dec. }  }
+
+{induction mu; intros mu' F Hs Hw; intros.
+{inversion  H; subst. intuition.  }
+ {destruct a. inversion H; subst. clear H.
+ rewrite d_par_trace_map2.
+ inversion_clear H3.
+ destruct mu. inversion_clear H12.
+ simpl. rewrite map2_nil_r. pose H13.
+ apply (d_par_trace_app' _ s1 e1) in b.
+ destruct b. destruct H3. rewrite H5.
+ simpl in H3. 
+ eapply (big_app_seman ((2 ^ (e0 - s0))) (fun j : nat =>
+ (c_update i j c,
+  PMpar_trace (QMeas_fun s0 e0 j q) s1 e1))); try assumption. 
+ intros. split.
+ assert([(c_update i j c,
+ PMpar_trace (QMeas_fun s0 e0 j q) s1 e1)] 
+ = d_par_trace  [(c_update i j c, (QMeas_fun s0 e0 j q))] s1 e1).
+ reflexivity. rewrite H8.
+ apply WF_d_par_trace. lia.
+ apply WF_state_dstate_aux.
+ unfold WF_state. simpl. 
+ apply WF_qstate_QMeas. intuition.
+ intuition. lia. simpl in H7. intro.
+ rewrite H9 in H7. rewrite Par_trace_Zero in H7.
+ destruct H7. reflexivity. assumption.
+ inversion_clear Hw. assumption.
+ simpl. econstructor.
+ apply r10' with s2 e2. 
+ simpl in H2. apply subset_Qsys in H2.
+ inversion_clear H0.  
+ lia. lia. assumption. simpl in H7.
+ intro.
+ rewrite H8 in H7. rewrite Par_trace_Zero in H7.
+ destruct H7. reflexivity. 
+  inversion_clear Hw. intuition.
+   assumption. 
+ simpl in *. assumption.
+ assumption. assumption.
+  econstructor. 
+  rewrite <-H5. apply WF_d_par_trace. lia.
+  eapply (WF_qstate_QMeas_app s0 e0 q c i (2 ^ (e0 - s0)) ). lia.  
+ lia.    inversion_clear Hw. assumption.  assumption.
+   apply pow_gt_0. apply d_par_trace_not_nil with mu''.
+   assumption. intro. assert(d_trace_aux mu'' =0%R).
+   rewrite H6. reflexivity. 
+   assert(d_trace_aux mu'' =  (s_trace (c,q))).
+   apply QMeas_trace' with s0 e0 i. intuition.
+   lia. apply WWF_qstate_to_WF_qstate.
+   inversion_clear Hw. apply H8. assumption.
+   assert(s_trace (c,q)>0)%R. unfold  s_trace.
+   simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+   apply H9. rewrite<- H8 in H9. rewrite H7 in H9.
+   lra. lia. simpl. intros. apply mixed_super_ge_0; try lia.
+   auto_wf. 
+   apply Mixed_State_aux_to_Mix_State. inversion_clear Hw.
+   apply H5. 
+ apply d_seman_app_aux.
+ apply WF_d_par_trace. lia.  
+ apply WF_ceval  with <{ i :=M [[s0 e0]] }>  [(c, q)]. 
+ apply WF_state_dstate_aux.
+ inversion_clear Hw. assumption.
+ apply ceval_QMeas. assumption. assumption. 
+ apply WF_d_par_trace. lia.  
+ apply WF_ceval with <{ i :=M [[s0 e0]] }> (p :: mu).
+ inversion_clear Hw.
+ assumption. assumption.  pose H13.
+ apply (d_par_trace_app' _ s1 e1) in b.
+ destruct b. destruct H3. rewrite H5.
+ eapply (big_app_seman ((2 ^ (e0 - s0))) (fun j : nat =>
+ (c_update i j c,
+  PMpar_trace (QMeas_fun s0 e0 j q) s1 e1))); try assumption. 
+ intros. split.
+ assert([(c_update i j c,
+ PMpar_trace (QMeas_fun s0 e0 j q) s1 e1)] 
+ = d_par_trace  [(c_update i j c, (QMeas_fun s0 e0 j q))] s1 e1).
+ reflexivity. rewrite H8.
+ apply WF_d_par_trace. lia.   
+ apply WF_state_dstate_aux.
+ unfold WF_state. simpl. 
+ apply WF_qstate_QMeas. intuition.
+ intuition. lia. simpl in H7. intro.
+ rewrite H9 in H7. rewrite Par_trace_Zero in H7.
+ destruct H7. reflexivity. assumption.
+ inversion_clear Hw. assumption.
+ simpl. econstructor.
+ apply r10' with s2 e2. 
+ simpl in H2. apply subset_Qsys in H2.
+ inversion_clear H0.
+ lia. lia. assumption. simpl in H7.
+ intro.
+ rewrite H8 in H7. rewrite Par_trace_Zero in H7.
+ destruct H7. reflexivity.  
+  inversion_clear Hw. intuition.
+   inversion_clear H0; subst.
+ econstructor; try reflexivity.
+ assumption. assumption. econstructor. 
+ simpl in *. assumption.
+ assumption. assumption. 
+econstructor. rewrite <-H5.
+apply WF_d_par_trace. lia.    
+eapply (WF_qstate_QMeas_app s0 e0 q c i (2 ^ (e0 - s0)) ). lia.  
+lia.  inversion_clear Hw.
+assumption. assumption. 
+ apply pow_gt_0. apply d_par_trace_not_nil with mu''.
+ assumption. intro. assert(d_trace_aux mu'' =0%R).
+ rewrite H6. reflexivity. 
+ assert(d_trace_aux mu'' =  (s_trace (c,q))).
+ apply QMeas_trace' with s0 e0 i. intuition.
+ lia. apply WWF_qstate_to_WF_qstate.
+ inversion_clear Hw. apply H8. assumption.
+ assert(s_trace (c,q)>0)%R. unfold  s_trace.
+ simpl. apply mixed_state_Cmod_1. inversion_clear Hw.
+ apply H9. rewrite<- H8 in H9. rewrite H7 in H9.
+ lra. lia. simpl. intros.
+  apply mixed_super_ge_0; try lia. auto_wf.  
+   apply Mixed_State_aux_to_Mix_State. inversion_clear Hw.
+   apply H5. 
+apply IHmu. lia.  inversion_clear Hw. assumption.
+assumption. 
+inversion  H0; subst. intuition.
+assumption. assumption.
+destruct p. simpl. assumption.
+ }  }
+Admitted.
 
 
 Lemma subset_trans:
@@ -4108,7 +4863,7 @@ inversion H0; subst.   intuition. }
  inversion_clear Hw.
  assumption. assumption.
  simpl. econstructor. 
- apply (@Pure_free_eval' s e) with q; try assumption.
+ apply (@Pure_free_eval' s e s e) with q; try assumption.
  inversion_clear H0. assumption.
  econstructor.
 apply IHmu1; try  assumption. inversion_clear Hw. assumption. 
@@ -4321,3 +5076,5 @@ Proof. intros.
  apply rule_OdotC.
  apply rule_OdotC.
 Qed.
+
+

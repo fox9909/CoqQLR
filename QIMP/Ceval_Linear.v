@@ -786,7 +786,7 @@ Proof.  induction c.
       rewrite (map2_assoc _ _ _ _ ((x0 +l x1))).
       f_equal. simpl. unfold Cstate_as_OT.eq in e1.
       rewrite e1.  MC.elim_comp. unfold q_plus.
-      rewrite <-QInit_fun_plus. reflexivity. lia.
+      rewrite <-QInit_fun_plus. reflexivity.
       inversion_clear Hx. assumption. 
       inversion_clear Hy. assumption.  
 
@@ -1160,7 +1160,7 @@ Proof. induction c.
     split.  apply E_Qinit. intuition. intuition.
     rewrite H1.  
     assert ([(c, @QInit_fun s' e' s e (p .* q))]=  StateMap.Raw.map (fun x0 : qstate s' e' => p .* x0) [(c, QInit_fun s e q)]).
-    simpl. rewrite QInit_fun_scale. reflexivity. lia.
+    simpl. rewrite QInit_fun_scale. reflexivity. 
     rewrite H2. apply map_map2_distr. }
 
   -{induction y; intros mu p Hp H. exists []. split. apply E_nil.
