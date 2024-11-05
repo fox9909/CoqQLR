@@ -1714,40 +1714,6 @@ Proof. intros. inversion_clear H.  inversion_clear H4.
           simpl. intros. split; apply H11; try assumption.
           simpl. intros. split; apply H11; try assumption.
 Qed.
-
-
-Lemma sat_dapp_npro{s e:nat}: forall (mu1 mu2: (dstate s e)) (F1 F2:State_formula),
-sat_Assert (mu1) (ANpro [F1;F2]) ->
-sat_Assert (mu2)  (ANpro [F1;F2]) ->
-WF_dstate (d_app mu1 mu2)->
-sat_Assert (d_app mu1 mu2)  (ANpro [F1;F2]) .
-Proof. intros. inversion_clear H. inversion_clear H0. 
-       destruct p_n; destruct p_n0; try discriminate H2; try discriminate H.
-       destruct p_n; destruct p_n0; try discriminate H2; try discriminate H.
-       destruct p_n; destruct p_n0; try discriminate H2; try discriminate H.
-       econstructor.
-       assert(length ([((r+r0)%R/(r+r1+r0+r2))%R;((r1+r2)%R/(r+r1+r0+r2))%R]) = length [F1; F2])%nat. reflexivity.
-       apply H0. simpl. inversion_clear H3. inversion_clear H4.
-       inversion_clear H6. inversion_clear H8.
-       econstructor. apply WF_d_app. assumption. assumption. 
-       admit. inversion_clear H5. inversion_clear H7. simpl in *.
-       repeat rewrite sum_over_list_cons in *. rewrite sum_over_list_nil in *.
-       rewrite Rplus_0_r in *. 
-       inversion_clear H8. inversion_clear H5. inversion_clear H15. inversion_clear H16.    
-       econstructor. simpl. 
-       econstructor; [|econstructor]; try apply Rcomplements.Rdiv_le_0_compat;try
-       apply Rplus_le_le_0_compat; try assumption; try
-       rewrite H13; try rewrite Rplus_assoc; try rewrite H14;
-       lra. simpl.    repeat rewrite sum_over_list_cons in *. rewrite sum_over_list_nil in *.
-       rewrite Rplus_0_r in *.  repeat rewrite Rdiv_unfold. 
-       rewrite <-Rmult_plus_distr_r. rewrite <-Rplus_assoc. 
-       rewrite (Rplus_assoc _ r0 _). rewrite (Rplus_comm  r0 _). rewrite <-Rplus_assoc.
-       apply Rinv_r. rewrite H13. rewrite Rplus_assoc. rewrite H14. lra.
-       
-       (* econstructor. simpl in *. 
-       assert(big_dapp' [((r + r0) / (r + r1 + r0 + r2))%R; ((r1 + r2) / (r + r1 + r0 + r2))%R]
-       d_sc(((r + r0) / (r + r1 + r0 + r2))%R .* (r .* mu_n )))  *)
-Admitted.
        
 
 

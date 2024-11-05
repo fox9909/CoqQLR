@@ -287,14 +287,14 @@ Proof. induction n; intros. inversion_clear H1.
 Qed.
 
 Definition QInit_fun{s0 e0:nat} (s e:nat) (rho:(qstate s0 e0)):=
-  big_sum (fun i:nat=>  
+  @big_sum (Matrix (2^(e0-s0)) (2^(e0-s0))) _ (fun i:nat=>  
   q_update (((I (2^(s-s0))) ⊗ ((Vec (2^(e-s)) 0) × (Vec (2^(e-s)) i )†) ⊗ (I (2^(e0-e)))))  rho) (2^(e-s)) .
 
 Definition QUnit_One_fun{s0 e0:nat} (s e:nat)(U: Square (2^(e-s)))  (rho:qstate s0 e0):= 
   q_update ((I (2^(s-s0)) ⊗ U ⊗ (I (2^(e0-e))))) rho .
 
 Definition QUnit_Ctrl_fun{s' e':nat} (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))) (rho:qstate s' e') :=
-  q_update  ((big_sum (fun i:nat => @Mmult (2^(e'-s')) (2^(e'-s')) (2^(e'-s'))
+  q_update  ((@big_sum (Matrix (2^(e'-s')) (2^(e'-s'))) _ (fun i:nat => @Mmult (2^(e'-s')) (2^(e'-s')) (2^(e'-s'))
                 (I (2^(s0-s')) ⊗ (∣ i ⟩_ (e0-s0) × ⟨ i ∣_ (e0-s0) ) ⊗ (I (2^(e'-e0)))) 
                  (I (2^(s1-s')) ⊗ (U i) ⊗ (I (2^(e'-e1))))) (2^(e0 -s0)))) rho.
 
@@ -481,9 +481,8 @@ Lemma WF_QInit{s' e'}: forall s e (rho:qstate s' e'),
 s'<=s/\s<=e/\ e<=e'-> 
 @WF_Matrix (2^(e'-s'))  (2^(e'-s')) rho-> 
 @WF_Matrix (2^(e'-s'))  (2^(e'-s')) (QInit_fun s e rho).
-Proof. intros. unfold QInit_fun. unfold q_update.
-apply (@WF_Msum (2^(e'-s')) (2^(e'-s'))). intros.
-apply (WF_super (2^(e'-s')) (2^(e'-s'))).
+Proof. intros. unfold QInit_fun. unfold q_update. 
+apply WF_Msum.  intros. apply WF_super. 
 apply WF_kron; type_sovle'. apply WF_kron; type_sovle'.
 auto_wf. apply WF_mult. apply WF_vec. apply pow_gt_0.
  auto_wf. auto_wf. assumption.
@@ -525,7 +524,7 @@ Qed.
 
 Lemma QInit_Zero{ s' e':nat}: forall s e ,
 (@QInit_fun s' e' s e Zero) = @Zero s' e'.
-Proof.  intros.  unfold QInit_fun. unfold q_update.
+Proof.  intros.  unfold QInit_fun. unfold q_update. 
 apply (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
 intros. apply super_0. 
 Qed. 
@@ -533,7 +532,7 @@ Qed.
 
 Lemma QUnit_One_Zero{s' e'}: forall s e (U:Square (2^(e'-s'))),
  (@QUnit_One_fun s' e' s e U Zero) = Zero.
-Proof. intros. unfold QUnit_One_fun. unfold q_update.
+Proof. intros. unfold QUnit_One_fun. unfold q_update. 
 apply (@super_0 (2^(e'-s'))). 
 Qed.
 
@@ -567,16 +566,10 @@ Qed.
 
 
 Lemma QInit_fun_plus{s' e':nat}: forall s e (q q0: qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
 @Mplus (2^(e'-s')) (2^(e'-s')) (QInit_fun s e q) (QInit_fun s e q0)=
 @QInit_fun s' e' s e (q .+ q0) .
 Proof. unfold QInit_fun. unfold q_update.
-intros.  unfold qstate.  
-assert(2^(s-s') * 2^(e-s) * 2^(e'-e)= 2^(e'-s'))%nat.
-type_sovle'. destruct H0. 
-rewrite <-(@Msum_plus (2 ^ (e - s)) 
-((2 ^ (s - s') * 2 ^ (e - s) * 2 ^ (e' - e)))
-((2 ^ (s - s') * 2 ^ (e - s) * 2 ^ (e' - e)))).
+intros. rewrite <-Msum_plus. 
 apply big_sum_eq_bounded. intros. 
 rewrite super_plus. reflexivity.  
 Qed.
@@ -589,20 +582,15 @@ Proof. unfold super. intros. rewrite Mscale_mult_dist_r.
 Qed.
 
 Lemma QInit_fun_scale{s' e':nat}: forall s e p (q : qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
 @QInit_fun s' e' s e (p .* q) =
 p .* (QInit_fun s e q) .
 Proof. unfold QInit_fun. unfold q_update.  intros.
-assert(2^(s-s') * 2^(e-s) * 2^(e'-e)= 2^(e'-s'))%nat.
-type_sovle'. destruct H0.
-rewrite <-(@Mscale_Msum_distr_r 
-((2 ^ (s - s') * 2 ^ (e - s) * 2 ^ (e' - e)))
-((2 ^ (s - s') * 2 ^ (e - s) * 2 ^ (e' - e))) (2 ^ (e - s)) ). 
+rewrite <-(@Mscale_Msum_distr_r ). 
 apply big_sum_eq_bounded. intros.
 rewrite super_scale. reflexivity.
 Qed.
 
-Lemma  super_kron{s0 e0 s e x:nat}: forall (A: Square (2^(e-s))) (p: qstate s0 x ) (q:qstate x e0),
+Lemma  super_kron_r{s0 e0 s e x:nat}: forall (A: Square (2^(e-s))) (p: qstate s0 x ) (q:qstate x e0),
 s0 <= s /\ s <= e /\ e <= x <= e0 -> WF_Matrix A-> 
 @WF_Matrix (2^(e0-x)) (2^(e0-x)) q->
 @super (2^(e0-s0)) (2^(e0-s0)) (I (2 ^ (s - s0)) ⊗ A  ⊗ I (2 ^ (e0 - e))) 
@@ -631,30 +619,52 @@ reflexivity.
 Qed.
 
 
-Lemma QInit_fun_kron{s0 x e0:nat}: forall s e (p : qstate s0 x)
+Lemma  super_kron_l{s0 e0 s e x:nat}: forall (A: Square (2^(e-s))) (p: qstate s0 x ) (q:qstate x e0),
+s0 <= x /\ x <= s /\ s <= e <= e0 -> WF_Matrix A-> 
+@WF_Matrix (2^(x-s0)) (2^(x-s0)) p->
+@super (2^(e0-s0)) (2^(e0-s0)) (I (2 ^ (s - s0)) ⊗ A  ⊗ I (2 ^ (e0 - e))) 
+(@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))(2^(e0-x)) p q) =
+@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x))  p (@super (2^(e0-x)) (2^(e0-x)) (I (2 ^ (s - x)) ⊗ A  ⊗ I (2 ^ (e0- e))) q).
+Proof. intros. unfold super. 
+assert(2 ^ (s - x) * 2 ^ (e - s) * 2 ^ (e0 - e)= 2^(e0-x))%nat.
+type_sovle'. destruct H2.
+assert(2 ^ (s - s0) * 2 ^ (e - s) * 2 ^ (e0 - e)= 2^(e0-s0))%nat.
+type_sovle'. destruct H2.
+repeat rewrite kron_adjoint.
+repeat rewrite id_adjoint_eq. 
+apply Logic.eq_trans with ((I (2 ^ (x - s0)) ⊗ (I (2 ^ (s - x)) ⊗ A ⊗ I (2 ^ (e0-e)))) × (p ⊗ q)
+× (( I (2 ^ (x - s0)) ⊗ (I (2 ^ (s - x)) ⊗ (A) † ⊗ I (2 ^ (e0 - e))))) ).
+
+f_equal; type_sovle'. f_equal; type_sovle'. 
+repeat rewrite <-kron_assoc; auto_wf.  f_equal; type_sovle'. 
+f_equal; type_sovle'.
+rewrite id_kron. f_equal; type_sovle'.
+repeat rewrite <-kron_assoc; auto_wf. 
+f_equal; type_sovle'. 
+rewrite id_kron. f_equal; type_sovle'. f_equal; type_sovle'.
+repeat rewrite kron_mixed_product.
+ rewrite Mmult_1_l; auto_wf.  rewrite Mmult_1_r; auto_wf.  
+reflexivity. 
+Qed.
+
+
+Lemma QInit_fun_kron_r{s0 x e0:nat}: forall s e (p : qstate s0 x)
 (q: qstate x e0), 
 @WF_Matrix (2^(e0-x)) (2^(e0-x)) q->
 s0<=s/\s<=e/\e<=x/\x<=e0->
-@QInit_fun s0 e0  s e (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
-(2^(e0-x)) p q) =
-@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
-(2^(e0-x)) (QInit_fun s e p) q.
+@QInit_fun s0 e0  s e (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x)) (2^(e0-x)) p q) =
+@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x)) (2^(e0-x)) (QInit_fun s e p) q.
 Proof. unfold QInit_fun. unfold q_update.  intros.
-assert(2 ^ (s - s0) * 2 ^ (e - s) * 2 ^ (x - e)= 2^(x-s0))%nat.
-type_sovle'. destruct H1.
 rewrite (@kron_Msum_distr_r 
-(2 ^ (s - s0) * 2 ^ (e - s) * 2 ^ (x - e))
-(2 ^ (s - s0) * 2 ^ (e - s) * 2 ^ (x - e))
-(2^(e0-x)) (2^(e0-x))). apply big_sum_eq_bounded.
+_ _ (2^(e0-x)) (2^(e0-x))). apply big_sum_eq_bounded.
 intros.  
-assert( 2^(x-s0) =2 ^ (s - s0) * 2 ^ (e - s) * 2 ^ (x - e))%nat.
-type_sovle'. destruct H2.
-rewrite (@super_kron s0 e0 s  e x); try lia; auto_wf.
+rewrite (@super_kron_r s0 e0 s  e x); try lia; auto_wf.
 reflexivity. 
 apply WF_mult. apply WF_vec. apply pow_gt_0. auto_wf.
 Qed. 
 
-Lemma QUnit_One_fun_kron{s0 x e0:nat}: forall s e U (p : qstate s0 x)
+Lemma QUnit_One_fun_kron_r{s0 x e0:nat}: forall s e U (p : qstate s0 x)
 (q: qstate x e0), 
 WF_Matrix U->
 @WF_Matrix (2^(e0-x)) (2^(e0-x)) q->
@@ -664,7 +674,37 @@ s0<=s/\s<=e/\e<=x/\x<=e0->
 @kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
 (2^(e0-x)) (QUnit_One_fun s e U p) q.
 Proof. unfold QUnit_One_fun.  intros. unfold q_update.
-apply super_kron; try assumption.
+apply super_kron_r; try assumption.
+Qed.
+
+Lemma QInit_fun_kron_l{s0 x e0:nat}: forall s e (p : qstate s0 x)
+(q: qstate x e0), 
+@WF_Matrix (2^(x-s0)) (2^(x-s0)) p->
+s0<=x/\x<=s/\s<=e/\e<=e0->
+@QInit_fun s0 e0 s e (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x)) p q) =
+@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x))  p (QInit_fun s e q).
+Proof. unfold QInit_fun. unfold q_update.  intros.
+rewrite (@kron_Msum_distr_l  (2^(e0-x))
+(2^(e0-x)) (2^(x-s0)) (2^(x-s0))). apply big_sum_eq_bounded.
+intros.  
+rewrite (@super_kron_l s0 e0 s  e x); try lia; auto_wf.
+reflexivity. 
+apply WF_mult. apply WF_vec. apply pow_gt_0. auto_wf.
+Qed. 
+
+Lemma QUnit_One_fun_kron_l{s0 x e0:nat}: forall s e U (p : qstate s0 x)
+(q: qstate x e0), 
+WF_Matrix U->
+@WF_Matrix (2^(x-s0)) (2^(x-s0)) p->
+s0<=x/\x<=s/\s<=e/\e<=e0->
+@QUnit_One_fun s0 e0  s e U (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x)) p q) =
+@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x)) p (QUnit_One_fun s e U q) .
+Proof. unfold QUnit_One_fun.  intros. unfold q_update.
+apply super_kron_l; try assumption.
 Qed.
 
 
@@ -698,7 +738,7 @@ Proof. unfold QUnit_Ctrl_fun.  intros.
 unfold q_update.  rewrite super_scale. reflexivity. 
 Qed.
 
-Lemma QUnit_Ctrl_fun_kron{s x e:nat}: forall s0 e0 s1 e1 (U:nat-> Square (2^(e1-s1))) (p : qstate s x)
+Lemma QUnit_Ctrl_fun_kron_r{s x e:nat}: forall s0 e0 s1 e1 (U:nat-> Square (2^(e1-s1))) (p : qstate s x)
 (q: qstate x e), 
 (forall j, WF_Matrix (U j))->
 @WF_Matrix (2^(e-x)) (2^(e-x)) q->
@@ -708,13 +748,81 @@ s<=s0/\s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=x /\ x<=e->
 @kron  (2^(x-s)) (2^(x-s)) (2^(e-x))
 (2^(e-x)) (QUnit_Ctrl_fun s0 e0 s1 e1 U p) q.
 Proof. unfold QUnit_Ctrl_fun.  intros. unfold q_update.
- repeat rewrite Msum_adjoint.
-assert(2^(e-s)=2^(s1-s) * 2^(e1-s1) * 2^(e-e1))%nat.
-type_sovle'. destruct H2.
-assert(2^(e-s)=2^(s0-s) * 2^(e0-s0) * 2^(e-e0))%nat.
-type_sovle'. destruct H2.
-Admitted.
+rewrite (@big_sum_eq_bounded (Matrix (2^(e-s)) (2^(e-s))) _ _ 
+((fun i:nat=>(I (2^(s0-s)))  ⊗ ((∣ i ⟩_ (e0 - s0) × ⟨ i ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ U i) ⊗ (I (2^(e-e1))) ) )) at 1.
+rewrite <-kron_Msum_distr_r. 
+rewrite <-kron_Msum_distr_l. 
+ assert(2^(e1-s0)= 2 ^ (e0 - s0) * 2 ^ (s1 - e0) * 2 ^ (e1 - s1)).
+ type_sovle'. destruct H2.  
+rewrite (@super_kron_r s e s0 e1 x ); try lia; try auto_wf.
+f_equal. f_equal. 
+rewrite kron_Msum_distr_l. 
+rewrite kron_Msum_distr_r. apply  big_sum_eq_bounded.
+intros.
+apply Logic.eq_trans with 
+(I (2 ^ (s0 - s)) ⊗ (∣ x0 ⟩_ (e0 - s0) × ⟨ x0 ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ I (2 ^ (e1- s1)) ⊗ I (2 ^ (x - e1))
+× (I (2 ^ (s0 - s)) ⊗ I (2 ^ (e0 - s0)) ⊗I (2 ^ (s1 - e0)) ⊗ U x0 ⊗ I (2 ^ (x - e1)))).
+repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+rewrite Mmult_1_l; auto_wf. f_equal; type_sovle'.  repeat rewrite kron_assoc; auto_wf.
+f_equal; type_sovle'. repeat rewrite id_kron. repeat rewrite kron_assoc; auto_wf.
+repeat rewrite id_kron; auto_wf. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. 
+intros.
+apply Logic.eq_trans with 
+(I (2 ^ (s0 - s)) ⊗ (∣ x0 ⟩_ (e0 - s0) × ⟨ x0 ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ I (2 ^ (e1- s1)) ⊗ I (2 ^ (e - e1))
+× (I (2 ^ (s0 - s)) ⊗ I (2 ^ (e0 - s0)) ⊗I (2 ^ (s1 - e0)) ⊗ U x0 ⊗ I (2 ^ (e - e1)))).
+repeat rewrite id_kron. repeat rewrite kron_assoc; auto_wf.
+repeat rewrite id_kron; auto_wf. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. 
+repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+rewrite Mmult_1_l; auto_wf. f_equal; type_sovle'.  repeat rewrite kron_assoc; auto_wf.
+f_equal; type_sovle'. 
+Qed.
 
+Lemma QUnit_Ctrl_fun_kron_l{s x e:nat}: forall s0 e0 s1 e1 (U:nat-> Square (2^(e1-s1))) (p : qstate s x)
+(q: qstate x e), 
+(forall j, WF_Matrix (U j))->
+@WF_Matrix (2^(x-s)) (2^(x-s)) p->
+s<=x/\x<=s0 /\s0<=e0 /\ e0<=s1/\s1<=e1/\e1<=e->
+@QUnit_Ctrl_fun s e  s0 e0 s1 e1 U (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))
+(2^(e-x)) p q) =
+@kron  (2^(x-s)) (2^(x-s)) (2^(e-x))
+(2^(e-x)) p (QUnit_Ctrl_fun s0 e0 s1 e1 U q).
+Proof. unfold QUnit_Ctrl_fun.  intros. unfold q_update.
+rewrite (@big_sum_eq_bounded (Matrix (2^(e-s)) (2^(e-s))) _ _ 
+((fun i:nat=>(I (2^(s0-s)))  ⊗ ((∣ i ⟩_ (e0 - s0) × ⟨ i ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ U i) ⊗ (I (2^(e-e1))) ) )) at 1.
+rewrite <-kron_Msum_distr_r. 
+rewrite <-kron_Msum_distr_l. 
+assert(2^(e1-s0)= 2 ^ (e0 - s0) * 2 ^ (s1 - e0) * 2 ^ (e1 - s1)).
+type_sovle'. destruct H2.  
+rewrite (@super_kron_l s e s0 e1 x ); try lia; try auto_wf.
+f_equal. f_equal. 
+rewrite kron_Msum_distr_l. 
+rewrite kron_Msum_distr_r. apply  big_sum_eq_bounded.
+intros.
+apply Logic.eq_trans with 
+(I (2 ^ (s0 - x)) ⊗ (∣ x0 ⟩_ (e0 - s0) × ⟨ x0 ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ I (2 ^ (e1- s1)) ⊗ I (2 ^ (e - e1))
+× (I (2 ^ (s0 -x)) ⊗ I (2 ^ (e0 - s0)) ⊗I (2 ^ (s1 - e0)) ⊗ U x0 ⊗ I (2 ^ (e - e1)))).
+repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+rewrite Mmult_1_l; auto_wf. f_equal; type_sovle'.  repeat rewrite kron_assoc; auto_wf.
+f_equal; type_sovle'. repeat rewrite id_kron. repeat rewrite kron_assoc; auto_wf.
+repeat rewrite id_kron; auto_wf. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. 
+intros.
+apply Logic.eq_trans with 
+(I (2 ^ (s0 - s)) ⊗ (∣ x0 ⟩_ (e0 - s0) × ⟨ x0 ∣_ (e0 - s0)) ⊗ I (2 ^ (s1 - e0)) ⊗ I (2 ^ (e1- s1)) ⊗ I (2 ^ (e - e1))
+× (I (2 ^ (s0 - s)) ⊗ I (2 ^ (e0 - s0)) ⊗I (2 ^ (s1 - e0)) ⊗ U x0 ⊗ I (2 ^ (e - e1)))).
+repeat rewrite id_kron. repeat rewrite kron_assoc; auto_wf.
+repeat rewrite id_kron; auto_wf. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. f_equal; type_sovle'. f_equal; type_sovle'.
+f_equal; type_sovle'. 
+repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_r; auto_wf.
+rewrite Mmult_1_l; auto_wf. f_equal; type_sovle'.  repeat rewrite kron_assoc; auto_wf.
+f_equal; type_sovle'. 
+Qed.
 
 Lemma QUnit_Ctrl_unitary{s e:nat}: forall (s0 e0 s1 e1:nat) (U: nat -> Square (2^(e1-s1))) ,
 s<=s0/\s0<=e0/\ e0<=s1->s1<=e1/\ e1<=e->
@@ -803,7 +911,7 @@ Qed.
 
 
 
-Lemma QMeas_fun_kron{s0 x e0:nat}: forall s e i (p : qstate s0 x)
+Lemma QMeas_fun_kron_r{s0 x e0:nat}: forall s e i (p : qstate s0 x)
 (q: qstate x e0), 
 i<(2^(e-s))%nat->
 @WF_Matrix (2^(e0-x)) (2^(e0-x)) q->
@@ -813,7 +921,21 @@ s0<=s/\s<=e/\e<=x/\x<=e0->
 @kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
 (2^(e0-x)) (QMeas_fun s e i p) q.
 Proof. unfold QMeas_fun.  intros. unfold q_update.
-apply super_kron; try assumption; auto_wf.
+apply super_kron_r; try assumption; auto_wf.
+Qed.
+
+
+Lemma QMeas_fun_kron_l{s0 x e0:nat}: forall s e i (p : qstate s0 x)
+(q: qstate x e0), 
+i<(2^(e-s))%nat->
+@WF_Matrix (2^(x-s0)) (2^(x-s0)) p->
+s0<=x/\ x<= s/\s<=e/\e<=e0->
+@QMeas_fun s0 e0 s e i (@kron (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x)) p q) =
+@kron  (2^(x-s0)) (2^(x-s0)) (2^(e0-x))
+(2^(e0-x))  p (QMeas_fun s e i q).
+Proof. unfold QMeas_fun.  intros. unfold q_update.
+apply super_kron_l; try assumption; auto_wf.
 Qed.
 
 
@@ -1075,7 +1197,6 @@ Qed.
 
 
 Lemma QInit_fun_sum{s' e':nat}: forall n s e (q: nat-> qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
 QInit_fun s e (@big_sum (Matrix (2^(e'-s')) (2^(e'-s'))) _ q n) =
 @big_sum  (Matrix (2^(e'-s')) (2^(e'-s'))) _ (fun i => QInit_fun s e (q i)) n .
 Proof. 
@@ -1083,12 +1204,10 @@ Proof.
 simpl. rewrite QInit_Zero. reflexivity.    
 simpl.  rewrite <-IHn.
 rewrite <-QInit_fun_plus. f_equal.
-assumption. assumption.
 Qed.
 
 
 Lemma QUnit_One_fun_sum{s' e':nat}: forall n s e U (q: nat-> qstate s' e'), 
-s'<=s/\s<=e/\e<=e'->
 QUnit_One_fun s e U (big_sum q n) =
 big_sum (fun i => QUnit_One_fun s e U (q i)) n .
 Proof. intros. unfold QUnit_One_fun. unfold q_update.
@@ -1099,7 +1218,6 @@ Qed.
 
 
 Lemma QUnit_Ctrl_fun_sum{s' e':nat}: forall n s0 e0 s1 e1 U (q: nat-> qstate s' e'), 
-s'<=s0/\ s0<=e0 /\ e0<=s1 /\ s1 <= e1 /\ e1 <=e'->
 QUnit_Ctrl_fun s0 e0 s1 e1  U (big_sum q n) =
 big_sum (fun i => QUnit_Ctrl_fun s0 e0 s1 e1  U (q i)) n .
 Proof. intros. unfold QUnit_Ctrl_fun. unfold q_update.
@@ -1107,7 +1225,6 @@ rewrite <-(@super_sum (2 ^ (e' - s'))). reflexivity.
 Qed.
 
 Lemma QMeas_fun_sum{s' e':nat}: forall n s e j (q: nat-> qstate s' e'), 
-s'<=s /\ s<=e /\ e <=e'->
 QMeas_fun s e j (big_sum q n) =
 big_sum (fun i => QMeas_fun s e j (q i)) n .
 Proof. intros.  unfold QMeas_fun . unfold q_update.
@@ -1578,11 +1695,10 @@ Proof. induction c.
  apply IHceval_single. inversion_clear H. assumption.  intuition. 
 
 -induction mu; intros; inversion H0;subst.  apply WF_nil'. 
-apply WWF_d_app_aux. unfold QInit_fun. apply WF_cons'.
-unfold WWF_state. simpl. split.
-apply WWF_qstate_init.  intuition.  inversion_clear H.
-unfold WWF_state in H1. simpl in *. intuition. lia.
-econstructor.  
+apply WWF_d_app_aux. econstructor. 
+unfold WWF_state. simpl. 
+apply WWF_qstate_init. lia.   inversion_clear H. apply H1.
+apply (@WF_nil' s e). 
 apply IHmu.  inversion_clear H. assumption.  intuition.
 -induction mu; intros; inversion H0;subst. apply WF_nil'. 
 apply WWF_d_app_aux. apply WF_cons'.
@@ -1594,9 +1710,8 @@ apply inj_pair2_eq_dec in H3. apply inj_pair2_eq_dec in H3.
 destruct H3. intuition.  apply Nat.eq_dec. apply Nat.eq_dec.
 -induction mu; intros; inversion H0;subst. apply WF_nil'. 
 apply WWF_d_app_aux. apply WF_cons'.
-unfold WWF_state. unfold WWF_qstate.  simpl.
-split. apply WWF_qstate_QUnit_Ctrl ; try assumption. lia. 
-  inversion_clear H. apply H1. lia. econstructor. 
+unfold WWF_state.  apply WWF_qstate_QUnit_Ctrl ; try assumption. lia. 
+  inversion_clear H. apply H1.  econstructor. 
 apply IHmu.  inversion_clear H. assumption.
 apply inj_pair2_eq_dec in H6. apply inj_pair2_eq_dec in H6.
 destruct H6.
