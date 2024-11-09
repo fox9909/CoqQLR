@@ -157,14 +157,7 @@ Qed.
     intros. inversion_clear H1. 
   Qed. 
   
-  Lemma union_empty_refl:forall x ,
-  NSet.Equal (NSet.union (NSet.empty) x) x.
-  Proof. unfold NSet.Equal. intros.
-        split. intros. 
-        apply NSet.union_1 in H. destruct H. inversion_clear H.
-        assumption. intros.
-        apply NSet.union_3. assumption.
-  Qed. 
+
   
   Lemma inter_empty:forall x y ,
   NSet.Equal x NSet.empty \/ NSet.Equal y NSet.empty->
@@ -353,7 +346,11 @@ intros. rewrite sat_Assert_to_State in *.
 rewrite seman_find in *. split. intuition.
 split. intuition. intros. pose H3. 
 apply H2 in n. simpl in *.
-split. admit.
+split. unfold NSet.Equal.  intros. split. 
+intros. pose H4. apply NSet.inter_1 in i. 
+apply NSet.inter_2 in H4. apply In_Qsys in H4; try lia.  
+apply In_Qsys in i; try lia.  intros. 
+apply In_empty in H4. destruct H4. 
 remember (((R1 / Cmod (trace (d_find x0 mu)))%R .* d_find x0 mu)).
 remember (PMpar_trace m s e).
 assert( WF_qstate (d_find x0 mu)). apply WF_dstate_per_state; try assumption.
@@ -398,7 +395,7 @@ rewrite PMpar_trace_R; try lia; try assumption; auto_wf.
 rewrite (PMpar_trace_r _ (v × (v) †) ((u × (u) †))); try lia; try assumption;  auto_wf.
 rewrite trace_mult'.  rewrite H15. rewrite trace_I.
 Msimpl. reflexivity.
-Admitted. 
+Qed. 
   
 Theorem  rule_odotT: forall qs1 qs2, 
 (((qs1) ⊗* (qs2)) <<->> ((qs1)  ⊙ (qs2))) .

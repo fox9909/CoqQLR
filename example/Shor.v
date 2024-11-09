@@ -57,9 +57,9 @@ Proof. unfold hoare_triple. intros.
        destruct mu' as [mu' IHmu'].
        rewrite sat_Assert_to_State in *.
        inversion_clear H. simpl in *.
-       inversion H3; subst.
-       inversion_clear H0. simpl in H4. 
-       destruct H4. unfold x0.
+       inversion H2; subst.
+       inversion_clear H0. simpl in H3. 
+       destruct H3. unfold x0.
        rewrite seman_find. split.
        assumption. split. discriminate.
        intros. simpl.

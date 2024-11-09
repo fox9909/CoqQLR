@@ -62,10 +62,10 @@ Theorem rule_assgn: forall (F:State_formula) (i:nat) ( a:aexp),
 Proof. unfold hoare_triple;
        intros F X a s e (mu,IHmu) (mu', IHmu').
        intros. 
-       inversion_clear H; simpl in H3.
+       inversion_clear H; simpl in H2.
        rewrite sat_Assert_to_State in *.
        inversion_clear H0.
-       apply sat_F. intuition.
+       apply sat_F. eapply WF_ceval. apply H1. apply H2. 
        apply rule_asgn_aux with X a mu.
        intuition. intuition. assumption. 
 Qed. 
@@ -237,11 +237,7 @@ Proof. induction n; intros. simpl. econstructor.
 Qed.
 
 
-Lemma SAnd_PAnd_eq: forall (P1 P2:Pure_formula),
-(P1 /\p P2) <<->> (P1 /\s P2).
-Proof. rule_solve.
-  
-Qed.
+
 
 Lemma IZR_INR_0:IZR 0= INR 0. Proof. rewrite INR_IZR_INZ. f_equal. Qed .
 

@@ -371,8 +371,8 @@ Theorem rule_Dassgn: forall (D:Assertion) (i:nat) ( a:aexp),
 Proof. unfold hoare_triple;
        intros F X a s e (mu,IHmu) (mu', IHmu').
        intros. 
-       inversion_clear H0; simpl in H4.
-       apply ceval_single_1 in H4.
+       inversion_clear H0; simpl in H3.
+       apply ceval_single_1 in H3.
        apply sat_Assert_dstate_eq with 
        ({|
         StateMap.this := d_update_cstate_aux X a mu;
