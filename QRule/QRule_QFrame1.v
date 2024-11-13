@@ -892,6 +892,8 @@ Proof. induction F; intros.
        rewrite e. destruct a0. destruct H4. apply H4 in  E1. rewrite E1. 
        apply IHF1. assumption.
 
+       
+
        rewrite H0 in *. simpl in *. apply IHF2. 
        assumption.
        apply option_eqb_neq in H0. rewrite H0 in *.

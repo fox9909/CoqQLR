@@ -594,8 +594,20 @@ Proof.  induction c.
       rewrite H4. rewrite (map2_comm ([(c_update i (aeval (c0, q0) a) c0, q0)]) x1).
       rewrite (map2_assoc _ _ x0). apply map2_comm.
       assumption. inversion_clear H0. assumption. }
-    --admit.
-
+    --   induction x; induction y; intros. 
+    exists []. exists []. split. econstructor. 
+    split. econstructor. simpl in *. inversion_clear H1. reflexivity.
+    destruct a0.  simpl in *. rewrite map2_r_refl in *. 
+    exists []. exists mu. split. econstructor. 
+    split. assumption. simpl. rewrite map2_r_refl. reflexivity.
+     exists mu. exists [].  rewrite map2_nil_r in *. 
+    split. assumption. split.  econstructor. reflexivity. 
+    destruct a0. destruct a1.  
+    simpl in H1. destruct (Cstate_as_OT.compare c c0);
+     inversion H1; subst;
+     exists ((c, q) :: x); exists ((c0, q0) :: y); 
+     split; try econstructor; try assumption; try   econstructor; try assumption;
+     simpl; try MC.elim_comp; try reflexivity. 
     -{intros x y mu Hx Hy; intros. inversion H; subst.
       apply map2_app_nil in H2. destruct H2.
       subst. exists nil. exists nil.
@@ -1040,7 +1052,7 @@ Proof.  induction c.
       rewrite H2. rewrite (map2_comm mu''  x1).
       rewrite (map2_assoc _ _ x0). apply map2_comm.
       assumption. inversion_clear Hy. assumption. }
-Admitted.
+Qed.
 
  
 Lemma ceval_dscale_aux{s' e':nat}:  forall c  (y mu: list (cstate *qstate s' e')) (p:R),
@@ -1065,7 +1077,12 @@ Proof. induction c.
      simpl StateMap.Raw.map.  
      rewrite (state_eq_aexp (c, p .* q)  (c, q)).
     reflexivity. reflexivity. }
-    -{ admit. }
+    -{   induction y; intros. 
+    exists [].  split. econstructor.  
+    simpl in *. inversion_clear H0. reflexivity.
+    destruct a0.   simpl in *. inversion H0; subst.
+    exists ((c, q) :: y). split. econstructor. assumption. 
+    simpl. reflexivity.  }
     -{ destruct y; intros mu p0 Hp; intros. inversion H; subst.
     exists []. split. apply E_nil. reflexivity.
     destruct p. inversion H; subst. 
@@ -1234,7 +1251,7 @@ Proof. induction c.
     reflexivity.  } 
     
    
-Admitted.
+Qed.
 
 
 
