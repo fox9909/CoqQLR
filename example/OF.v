@@ -33,9 +33,10 @@ Require Import Arith.
 Module Type Param.
 Parameter x:nat.
 Parameter N:nat. 
-Definition z:nat := 0.
-Definition r:= ord x N.
+Parameter r:nat.
+Hypothesis Hr: x ^ r mod N =1 /\ (forall j, x ^ j mod N =1 -> r<=j).
 Hypothesis H: r>0 /\ 2 <= x <= N-1.
+Definition z:nat := 0.
 End Param.
 
 Module OF (p: Param).
@@ -62,6 +63,7 @@ Hypothesis (Ht: forall j s:nat, and ((delt_n j < 2^t)%nat /\ (s < r)%nat) ((s/r 
 Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) (x * j mod N))) /\ 
                                (forall j:nat, j>=N /\ j<(2^L)-> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) j)).
 Definition  H := p.H .
+Definition  Hr := p.Hr .
 Definition  U_f (i:nat):= exp_U U i.
 Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s/r) * k),  sin (- ((2 * PI)) * (s/r) * k)) .*  Vec (2 ^ L) (x ^ k mod N)) (r) ) .
 Definition  b:nat := 1.
@@ -84,15 +86,148 @@ Definition OF :=
        b := b'
        end }>. 
 
+Lemma sum_pro: forall n (q:C), 
+q<>C1->
+big_sum (fun s=>Cpow q s) n = ((C1-(Cpow q n))/(C1-q))%C.
+Proof. induction n; intros. simpl.  rewrite Cminus_diag; try reflexivity.
+       rewrite Cdiv_unfold. Csimpl. reflexivity.
+       simpl. rewrite IHn; try assumption. 
+       assert((Cpow q n)=(C1 - q)*(Cpow q n)/(C1 - q))%C.
+       rewrite Cdiv_unfold. rewrite Cmult_comm. rewrite Cmult_assoc.
+       rewrite Cinv_l; Csimpl; try reflexivity.
+       intro. apply Cminus_eq_0 in H1. destruct H0. rewrite H1. reflexivity.
+       rewrite H1 at 2.
+       repeat rewrite Cdiv_unfold.
+       rewrite <-Cmult_plus_distr_r. 
+       f_equal. repeat rewrite Cminus_unfold.
+       rewrite Cmult_plus_distr_r.  rewrite Cplus_assoc.
+       Csimpl. rewrite <-(Cplus_assoc C1 _ _ ).
+       rewrite (Cplus_comm _ (Cpow q n)). rewrite <-Cminus_unfold.
+       rewrite Cminus_diag; try reflexivity. rewrite Cplus_0_r.
+       rewrite Copp_mult_distr_l.
+       reflexivity.
+  
+Qed.
+
+Lemma cons_sin_plus_mult: forall i j, 
+(cos (i + j ), sin (i +j ))=((cos i, sin i) * (cos j , sin j))%C.
+Proof. intros. rewrite cos_plus. rewrite sin_plus. 
+       unfold Cmult. simpl. f_equal. rewrite Rplus_comm.
+       reflexivity.
+Qed.
+
+Lemma cons_sin_pow: forall i n, 
+Cpow (cos (i), sin (i)) n=((cos (i*n), sin (i*n)))%C.
+Proof. induction n; intros. simpl. rewrite Rmult_0_r. rewrite cos_0.
+        rewrite sin_0. reflexivity. 
+        simpl Cpow. rewrite IHn.
+        rewrite <-cons_sin_plus_mult.
+        rewrite S_INR. rewrite Rmult_plus_distr_l.
+        rewrite Rmult_1_r. rewrite Rplus_comm. reflexivity.
+Qed.
+
+
+
+Lemma times_1_n: forall n,
+times_n C1 n = n.
+Proof. induction n; intros. reflexivity.
+        rewrite S_INR. simpl. 
+       rewrite IHn. rewrite Rplus_comm. 
+       rewrite RtoC_plus. reflexivity.
+Qed.
+
 Lemma HU_s: 
   / √ r .*  (big_sum (fun s:nat=> Us s) (r) ) =(∣ 1 ⟩_ (L)).
-Proof. unfold Us. rewrite Mscale_Msum_distr_r. rewrite Mscale_assoc. 
+Proof. pose H. assert(0<r)%R. rewrite IZR_INR_0. 
+      apply lt_INR. apply a. 
+      assert(0<x)%R. rewrite IZR_INR_0. 
+      apply lt_INR. unfold x. lia. pose Hr.  
+      unfold Us. rewrite Mscale_Msum_distr_r. rewrite Mscale_assoc. 
        rewrite big_sum_swap_order. 
        rewrite (big_sum_eq_bounded _ ((fun i : nat =>
        (@big_sum C _ (fun j : nat =>
           (cos (- (2 * PI) * (j / r) * i), sin (- (2 * PI) * (j / r) * i))) r)
           .* ∣ x ^ i mod N ⟩_ (L)))).
-Admitted.
+        rewrite (big_sum_unique  (r .* ∣ x ^ r mod N ⟩_ (L) )).
+        repeat rewrite Mscale_assoc.
+        assert(√ r<>0).  
+        apply sqrt_neq_0_compat; try assumption.
+        rewrite <-RtoC_inv; try assumption. 
+        rewrite RtoC_mult. 
+        rewrite <-Rinv_mult_distr_depr; try assumption.
+        rewrite sqrt_sqrt. rewrite RtoC_mult. 
+        rewrite Rinv_l. Msimpl. destruct a0. unfold x.
+        unfold r. unfold N.    rewrite H3.
+        reflexivity. apply Rgt_neq_0. assumption. lra. 
+        exists 0. split. apply H. 
+        split. f_equal. 
+        rewrite (@big_sum_eq_bounded  C C_is_monoid _ (fun j=>1%R)).  
+        rewrite big_sum_constant. apply times_1_n. 
+        intros. rewrite Rmult_0_r. rewrite cos_0. 
+        rewrite sin_0. reflexivity. 
+        destruct a0. unfold x.
+        unfold r. unfold N.  rewrite H2. simpl. 
+        rewrite Nat.mod_small. reflexivity. unfold N. lia.  
+        intros. 
+        rewrite (@big_sum_eq_bounded  C C_is_monoid 
+        _ (fun j : nat =>
+        Cpow (cos (- (2 * PI) * (x' / r) ),
+         sin (- (2 * PI) * (x' / r) )) j)).
+        rewrite sum_pro. rewrite cons_sin_pow. 
+        repeat rewrite Rdiv_unfold. 
+        rewrite <-Rmult_assoc. rewrite Rmult_assoc.
+        rewrite Rinv_l.
+          rewrite Rmult_1_r. rewrite Cdiv_unfold.  
+        rewrite <-Ropp_mult_distr_l. 
+        rewrite cos_neg. rewrite sin_neg. 
+        rewrite Rmult_assoc. rewrite (Rmult_comm PI ).
+        rewrite <-Rmult_assoc.
+         rewrite <-(Rplus_0_l (2 * x' * PI)). rewrite cos_period.
+         rewrite sin_period. rewrite cos_0. rewrite sin_0.
+        rewrite Ropp_0. rewrite Cminus_diag; try reflexivity.
+        Csimpl. Msimpl. reflexivity. apply Rgt_neq_0. lra. 
+        intro. injection H4; intros.  assert(0<x')%R.  
+        rewrite IZR_INR_0. apply lt_INR. lia.  
+        rewrite <-Ropp_mult_distr_l in H6. 
+        rewrite cos_neg in H6.
+        assert((x' / r) <=1/2 \/ ~((x' / r) <=1/2))%R. 
+        apply Classical_Prop.classic. destruct H8.
+        rewrite <-cos_0 in H6. apply cos_inj in H6.
+        assert((2 * PI * (x' / r))<>0)%R.  
+        apply Rmult_integral_contrapositive. split.
+        apply Rmult_integral_contrapositive. split; try lra.
+        apply PI_neq0.  apply Rgt_neq_0.
+        apply Rdiv_lt_0_compat; try lra . destruct H9; try assumption. 
+        split. apply Rmult_le_pos. apply Rmult_le_pos.
+        lra.  pose PI_RGT_0. lra.  
+        rewrite Rdiv_unfold. apply Rmult_le_pos; try lra. 
+        pose (Rinv_0_lt_compat r H0). lra.  
+        rewrite Rmult_assoc. rewrite Rmult_comm. rewrite Rmult_assoc.
+        rewrite <-Rmult_1_r.
+         apply Rmult_le_compat_l.  pose PI_RGT_0. lra.
+         lra.  pose PI_RGT_0. lra.   
+        rewrite <-cos_2PI in H4. 
+        assert((x' / r > 1 / 2)%R). lra. 
+        assert((x' / r) <1)%R. 
+        apply (Rcomplements.Rdiv_lt_1 x' r). lra. 
+        apply lt_INR. assumption. 
+         apply (Rmult_lt_compat_l  (2*PI)%R) in H10. 
+        apply cos_increasing_1 in H10; try lra.  rewrite Rmult_1_r in H10.
+        rewrite <-cos_2PI in H6.
+        lra. rewrite Rmult_comm. rewrite <-Rmult_assoc.
+        rewrite <-Rmult_1_l at 1. apply Rmult_le_compat_r; try lra. 
+        pose (PI_RGT_0). lra.  rewrite Rmult_1_r. rewrite <-Rmult_1_l at 1.
+        apply Rmult_le_compat_r; try lra. 
+        pose (PI_RGT_0). lra. apply Rmult_gt_0_compat; try lra.
+        apply PI_RGT_0.         
+         intros. rewrite cons_sin_pow.
+          repeat rewrite Rdiv_unfold. 
+          repeat rewrite Rmult_assoc. 
+          rewrite (Rmult_comm x0). rewrite (Rmult_comm x').
+          repeat rewrite Rmult_assoc. rewrite (Rmult_comm x').
+          reflexivity.  
+        intros. rewrite Mscale_Msum_distr_l. reflexivity.
+Qed.
 
 
 
@@ -126,11 +261,16 @@ Qed.
 
 #[export] Hint Resolve WF_Us:wf_db.
 
-Lemma cons_sin_plus_mult: forall i j, 
-(cos (i + j ), sin (i +j ))=((cos i, sin i) * (cos j , sin j))%C.
-Proof. intros. rewrite cos_plus. rewrite sin_plus. 
-       unfold Cmult. simpl. f_equal. rewrite Rplus_comm.
-       reflexivity.
+Lemma big_sum_move_r:forall {G : Type} `{Monoid G} `{H0 : Comm_Group G} (f: nat-> G) n, 
+f(0)=f(n)->
+big_sum f n= big_sum (fun i=> f (i+1)) n.
+Proof.  induction n;  intros. simpl. reflexivity.
+       rewrite <-big_sum_extend_l. 
+       simpl. rewrite H4.
+        rewrite Gplus_comm.  rewrite S_add_1.
+        f_equal. apply big_sum_eq. 
+        apply functional_extensionality.
+        intros. rewrite S_add_1. reflexivity.
 Qed.
 
 
@@ -142,12 +282,32 @@ Proof. intros. pose HU. pose HNL. pose H. unfold Us. rewrite Mscale_mult_dist_r.
        rewrite Mmult_Msum_distr_l. 
        rewrite <-Mscale_Msum_distr_r.
        rewrite (big_sum_eq_bounded _ 
-       ((fun i : nat =>  ((cos (- (2 * PI ) * (s / r) * i), sin (- (2 * PI ) * (s / r) * i)) .* ∣ x ^ (i+1) mod N ⟩_ (L))))).
+       ((fun i : nat =>  ((cos (- (2 * PI ) * (s / r) * (i))%R, sin (- (2 * PI ) * (s / r) * (i))%R)) .* ∣ x ^ (i+1) mod N ⟩_ (L)))).
        rewrite (big_sum_eq_bounded ((fun i : nat =>
        (cos (2 * PI * (s / r)), sin (2 * PI * (s / r))) .* ((cos (- (2 * PI) * (s / r) * i),
             sin (- (2 * PI) * (s / r) * i)).* ∣ x ^ i mod N ⟩_ (L)))) 
-       ((fun i : nat =>  ((cos (-(2 * PI ) * (s / r) * (i-1)), sin (-(2 * PI) * (s / r) * (i-1))) .* ∣ x ^ i mod N ⟩_ (L))))).
-       admit.
+       ((fun i : nat =>  ((cos (-(2 * PI ) * (s / r) * (i-1%nat)), sin (-(2 * PI) * (s / r) * (i-1%nat))) .* ∣ x ^ i mod N ⟩_ (L))))).
+       rewrite (big_sum_move_r ((fun i : nat =>
+       (cos (- (2 * PI) * (s / r) * (i - 1%nat)),
+        sin (- (2 * PI) * (s / r) * (i - 1%nat)))
+       .* ∣ x ^ i mod N ⟩_ (L)))).  apply big_sum_eq_bounded.
+       intros.    rewrite plus_INR. rewrite Rminus_unfold.
+       rewrite Rplus_assoc. rewrite Rplus_opp_r. rewrite Rplus_0_r.
+       reflexivity. 
+      repeat rewrite Rminus_unfold. repeat rewrite Rmult_plus_distr_l.
+       repeat rewrite cons_sin_plus_mult.  
+       f_equal. f_equal. rewrite Rmult_0_r. rewrite cos_0. rewrite sin_0.
+       repeat rewrite <-Ropp_mult_distr_l. rewrite cos_neg.
+       rewrite sin_neg. rewrite Rdiv_unfold. rewrite Rmult_assoc.
+       rewrite (Rmult_assoc s). rewrite Rinv_l. 
+       rewrite Rmult_1_r. rewrite <-(Rplus_0_l ((2 * PI * s))).
+       rewrite Rmult_assoc. rewrite (Rmult_comm PI).
+       rewrite <-Rmult_assoc.
+       rewrite cos_period. rewrite sin_period. 
+       rewrite cos_0. rewrite sin_0. rewrite Ropp_0. reflexivity.
+       apply Rgt_neq_0. rewrite IZR_INR_0. apply lt_INR. unfold r.
+       lia.  pose Hr.  destruct a1. unfold x. unfold r. unfold N.
+       simpl. rewrite H0. rewrite Nat.mod_small. reflexivity. lia.     
        intros. rewrite Mscale_assoc. f_equal. 
        rewrite<-cons_sin_plus_mult.  f_equal; f_equal;
        repeat rewrite <-Ropp_mult_distr_l;
@@ -165,7 +325,7 @@ Proof. intros. pose HU. pose HNL. pose H. unfold Us. rewrite Mscale_mult_dist_r.
        f_equal. f_equal. rewrite Nat.pow_add_r. simpl.
        rewrite Nat.mul_1_r. reflexivity.  
        apply Nat.mod_upper_bound. unfold N. lia.   
-Admitted.
+Qed.
 
 
 Lemma simpl_expU: forall j s,
@@ -297,7 +457,8 @@ f_equal. f_equal.  rewrite sqrt_pow. reflexivity. lra.
 apply sqrt_neq_0_compat. apply pow_lt. lra. 
 apply pow_nonzero. apply sqrt2_neq_0.
 apply big_sum_eq_bounded. intros.
-f_equal. f_equal; f_equal; f_equal. pose Ht. admit.
+f_equal. f_equal; f_equal; f_equal. pose Ht. 
+ admit.
 admit. 
 apply WF_adjoint. apply HQFT.
 Admitted.
@@ -488,8 +649,10 @@ try match goal with
 H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
 
 eapply rule_conseq_l with (P':=( (BNeq z ' r /\p (BNeq b ' 1)))).
-assert(1<>r).  admit.
-
+assert(1<>r). pose H. pose Hr. unfold r.
+intro. rewrite <-H4 in *. simpl in *.  destruct a1.
+rewrite Nat.mod_small in H5; try rewrite Nat.mul_1_r in *; try lra.
+rewrite H5 in *. lia. lia.   
 
 seman_sovle; destruct H5; unfold Pure_eval in *;
 unfold beval in *; unfold aeval in *; unfold fst in *;
@@ -554,8 +717,8 @@ rewrite simpl_QFT'.
 * eapply rule_seq. 
 eapply rule_conseq_l'.
 eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P). lia.
- unfold P. apply rule_Conj_two. 
-apply implies_refl. implies_trans_solve 0  rule_PT.   
+  apply rule_Conj_two. 
+apply implies_refl. implies_trans_solve 0  rule_PT.    
 admit. 
 *eapply rule_seq. 
 eapply rule_conseq_l. 
@@ -580,15 +743,16 @@ eapply implies_trans'. apply (Assn_impl b  <{ x ^ (z) ' % N }>
 (BEq b ' (<{ x ^ (z) ' % N }>))). 
 
 unfold assert_implies. intros. 
-
+ 
 apply sat_State_Npro. eapply WF_sat_Assert. apply H6.
 eapply WF_sat_Assert. apply H6.
 
 rule_solve. unfold State_eval in *.  unfold Pure_eval in *.
 unfold beval in *. unfold aeval in *. unfold fst in *.
 bdestruct ( c_find z x0 =? r). 
-right. apply H9 in H7. rewrite H12 in H7. 
-assert(x ^ r mod N=1). admit. rewrite H13 in *.
+right. apply H9 in H7. rewrite H12 in H7.
+pose Hr.  destruct a. unfold x in *. unfold r in *.
+unfold N in *.   rewrite H13 in *.
 bdestruct (c_find b x0 =? 1). simpl. auto.
 destruct H7. 
 left. 
