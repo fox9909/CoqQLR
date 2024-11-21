@@ -29,6 +29,12 @@ Local Open Scope matrix_scope.
 Local Open Scope rule_scope.  
 
 
+Require Import Coq.Arith.Arith.
+Require Import Coq.Arith.Arith.
+Require Import Coq.Bool.Bool.
+Require Import Coq.Arith.Arith.
+
+
 Module Shor (p:Param).
 
 Module OF:=OF(p).
@@ -37,6 +43,9 @@ Definition x := p.x.
 Definition N := p.N.
 Definition z := p.z.
 Definition r := p.r.
+Definition Hx := p.H.
+Definition Hr:= p.Hr.
+
 
 Parameter random: nat -> nat -> nat.
 Hypothesis Hran: forall a b, (a <= random a b) /\ (random a b <= b).
@@ -72,7 +81,7 @@ Definition y:nat := 3.
 
 Definition Shor :=
   let N2 := (N mod 2) in
-  let b2 (x:nat) :=(BAnd (BEq (AMod z ' 2) 0 )  (BNeq (((AMod (APow x (ADiv z ' 2)) N))) 1)) in
+  let b2 (x:nat) :=(BAnd (BEq (AMod z ' 2) 0 )  (BNeq ((APlus (AMod (APow x (ADiv z ' 2)) N) 1)) 0)) in
   let b3 (x:nat) :=(BAnd (BNeq (AGcd  (AMinus (APow x (ADiv z ' 2)) 1) N) N)  
                           (BNeq (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) 1)  ) in
   <{  if  (BEq N2 0) then
@@ -138,21 +147,12 @@ Definition Big_hypose (x z N:nat): Pure_formula:=
   (BNeq (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) 1)).
 
 
-
-Definition a :=4 .
-
-Lemma rule_AndT: forall (F:State_formula),
-F ->> F /\s BTrue .
-Proof. rule_solve. 
-  
-Qed.
-
-Lemma BAnd_split: forall (b1 b2:bool),
-(if (b1&&b2) then True else False) ->
-((if (b1) then True else False) /\
-(if (b2) then True else False)).
-Proof. intros. destruct (b1); destruct b2; simpl in *; try destruct H. intuition. 
-Qed.
+Lemma pow_sub: forall x y:nat, (y<=x) -> (x)^2 -(y^2)= (x+y)*(x-y).
+Proof. induction x0; destruct y0;  intros; simpl in *; try rewrite Nat.mul_0_r;
+try rewrite Nat.add_0_r; try repeat rewrite Nat.mul_1_r in * ; try  reflexivity.
+pose(IHx0 (S y0)). rewrite Nat.mul_1_r in *. 
+ rewrite S_add_1. 
+Admitted.
 
 
 Ltac seman_sovle:=
@@ -179,7 +179,7 @@ Ltac seman_sovle:=
   H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
   try assumption.
 
-Ltac Pure_eval_solve:=
+  Ltac Pure_eval_solve:=
   try unfold F_1 in *; try unfold F_2 in * ; try unfold F_3 in *;
   try repeat match goal with 
   H: Pure_eval (?P \/p ?Q) ?st |-_ => destruct H
@@ -193,6 +193,111 @@ Ltac Pure_eval_solve:=
   try repeat match goal with 
   H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
   try assumption.
+
+Lemma Big_hypose_sovle: 
+ BAnd (BEq (z) '  r ) (BAnd (BEq (AMod z ' 2) 0 )  (BNeq (( (AMod (APlus (APow x (ADiv z ' 2)) 1) N) )) 0))
+->> Big_hypose x z N.
+Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
+       unfold beval in *. unfold aeval in *. simpl fst in *. 
+       pose Hr. pose Hx.   
+       destruct a.  bdestruct (c_find z x0 =? r). 
+       rewrite H2 in *. 
+       bdestruct ((r mod 2 =? 0)). 
+       assert(p.x ^ p.r mod p.N -1 =0).
+       rewrite H0. rewrite Nat.sub_diag. reflexivity.
+       assert(1= 1 mod p.N). rewrite Nat.mod_small. reflexivity. 
+       lia. rewrite H5 in H4.   
+       assert(p.r = (r/2)*2).
+       admit.
+       rewrite H6 in H4.  rewrite Nat.pow_mul_r in H4.
+       assert(1=1^2). simpl. lia. rewrite H7 in H4 at 3.
+       assert (((p.x ^ (r / 2)) ^ 2 - 1 ^ 2)mod N =0). 
+       admit.
+       rewrite pow_sub in H8. rewrite Nat.mod_divide in H8; try lia. 
+       apply Nat.divide_mul_split in H8.
+       destruct H8. destruct H8.  destruct H8. 
+       destruct H9.
+       assert(exists c:nat, p.N=  x1 * c).
+       exists x2. assumption.  
+       assert(exists c:nat, p.N=  x2 * c).
+       exists x1. rewrite Nat.mul_comm. assumption. 
+       rewrite <-Nat.mod_divides in H12.
+       rewrite <-Nat.mod_divides in H13.
+       rewrite Nat.mod_divide in H12.
+       rewrite Nat.mod_divide in H13.
+       assert(Nat.divide x1 (Nat.gcd ((p.x ^ (r / 2) + 1)) (p.N))).
+       apply Nat.gcd_divide_iff. split; try assumption.
+       apply Nat.divide_pos_le in H14. 
+       assert(Nat.divide x2 (Nat.gcd ((p.x ^ (r / 2) - 1)) (p.N))).
+       apply Nat.gcd_divide_iff. split; try assumption.
+       apply Nat.divide_pos_le in H15. 
+       destruct ((¬ (x ^ (r / 2) + 1) mod N =? 0)) eqn:E.
+       assert(Nat.gcd (p.x ^ (r / 2) + 1) p.N <> N).
+       intro. rewrite Nat.gcd_comm in H16.
+       apply Nat.divide_gcd_iff in H16. 
+       rewrite <-Nat.mod_divide in H16.
+       unfold x in *. unfold N in *. rewrite H16 in E.  
+       simpl in E.  auto. unfold N. lia. unfold N. lia.
+       apply Nat.eqb_neq in H16. unfold x. unfold N in *.  rewrite H16.
+       assert(1<x1 \/ ~(1<x1 )).
+       apply Classical_Prop.classic. destruct H17. 
+       assert(Nat.gcd (p.x ^ (r / 2) + 1) p.N <> 1).
+       lia. apply Nat.eqb_neq in H18. rewrite H18. 
+       right. simpl. auto.
+       assert(x1<>0). intro. rewrite H18 in H8. simpl in H8. lia.   
+       assert(x1=1). lia. rewrite H19 in *. rewrite Nat.mul_1_l in H8.
+       rewrite<-H8 in H15.      
+       assert(Nat.gcd (p.x ^ (r / 2) - 1) p.N <> p.N).
+       intro. rewrite Nat.gcd_comm in H20.
+       apply Nat.divide_gcd_iff in H20. 
+       rewrite <-Nat.mod_divide in H20.
+       assert((p.x ^ (r / 2) ) mod p.N = 1). admit.
+       assert(p.r<=(r / 2)). 
+       apply H1. assumption. unfold r in H23. 
+       admit. lia. lia.
+       apply Nat.eqb_neq in H20. rewrite H20. 
+       assert(Nat.gcd (p.x ^ (r / 2) - 1) p.N <>1). lia.
+       apply Nat.eqb_neq in H22. rewrite H22. 
+       left. simpl. auto.
+       simpl in H. destruct H.
+        admit. admit. 
+        intro. rewrite H14 in *.  rewrite Nat.mul_0_r in H8.
+        unfold N in *. 
+        lia.   
+        intro. rewrite H14 in *.  rewrite Nat.mul_0_l in H8.
+        unfold N in *. 
+        lia.
+        intro. rewrite H14 in *.  rewrite Nat.mul_0_r in H8.
+        unfold N in *. 
+        lia.
+        intro. rewrite H14 in *.  rewrite Nat.mul_0_l in H8.
+        unfold N in *. 
+        lia.      unfold N in *. 
+        lia. unfold N in *. 
+        lia. admit.
+        simpl in H. destruct H. simpl in H. destruct H. 
+Admitted.
+
+
+Definition a :=4 .
+
+Lemma rule_AndT: forall (F:State_formula),
+F ->> F /\s BTrue .
+Proof. rule_solve. 
+  
+Qed.
+
+Lemma BAnd_split: forall (b1 b2:bool),
+(if (b1&&b2) then True else False) ->
+((if (b1) then True else False) /\
+(if (b2) then True else False)).
+Proof. intros. destruct (b1); destruct b2; simpl in *; try destruct H. intuition. 
+Qed.
+
+
+
+
+
 
 Ltac classic_slove_aux:=
   unfold Pure_eval in *;
