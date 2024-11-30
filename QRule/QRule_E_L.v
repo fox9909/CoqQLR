@@ -75,6 +75,10 @@ Theorem rule_PT: forall F:State_formula,
 F ->> BTrue.
 Proof. rule_solve. Qed.
 
+Lemma rule_AndT: forall (F:State_formula),
+F ->> F /\s BTrue .
+Proof. rule_solve.  Qed.
+
 Lemma rule_Conj_split_l: forall (F1 F2:State_formula), F1 /\s F2 ->> F1 .
 Proof.  rule_solve. Qed.
 Lemma rule_Conj_split_r: forall (F1 F2:State_formula), F1 /\s F2 ->> F2 .

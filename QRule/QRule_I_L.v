@@ -51,6 +51,33 @@ Proof. unfold hoare_triple;
 Qed. 
 
 
+Lemma bool_true: forall (a b:nat),
+a=b-> (a =? b =true).
+Proof. induction a; induction b; intros.
+       simpl. intuition. intuition. intuition.
+       simpl. injection H. intuition. 
+Qed.
+
+Theorem rule_Clet: forall (a b:nat),
+{{BTrue}}
+(Clet a b)
+{{ BEq (ANum a) (ANum b) }} .
+Proof. unfold hoare_triple. intros.
+       destruct mu as [mu IHmu].
+       destruct mu' as [mu' IHmu'].
+       rewrite sat_Assert_to_State in *.
+       inversion_clear H. simpl in *.
+       inversion H2; subst.
+       inversion_clear H0. simpl in H3. 
+       destruct H3. unfold x0.
+       rewrite seman_find. split.
+       assumption. split. discriminate.
+       intros. simpl.
+       rewrite bool_true. intuition.
+       reflexivity.
+Qed.
+
+
 Theorem rule_seq : forall (P Q R:Assertion) c1 c2,
               {{P}} c1 {{Q}} ->
               {{Q}} c2 {{R}} ->
@@ -118,6 +145,7 @@ Theorem rule_conseq_r' : forall (P Q Q' : Assertion) c,
 {{P}} c {{Q}}.
 Proof. intros. eapply rule_conseq. apply H. 
 apply implies_refl. assumption. Qed.   
+
 
 Theorem rule_conj: forall (F1 F1' F2 F2': State_formula) c,
              {{F1}} c {{F1'}} 

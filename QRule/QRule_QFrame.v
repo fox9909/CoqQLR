@@ -4934,3 +4934,14 @@ Proof. intros.
 Qed.
 
 
+Theorem rule_qframe'': forall (P1 P2 P3: Pure_formula) c,
+         ({{P1}} c {{P2}}) /\  (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 
+         ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
+Proof. 
+intros. eapply rule_conseq; try apply rule_OdotO.
+eapply rule_qframe'. simpl. auto. 
+split. apply H. split. apply H.
+simpl. right. lia. 
+Qed.
+
+

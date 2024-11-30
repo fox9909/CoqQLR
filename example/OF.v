@@ -54,23 +54,27 @@ Parameter f: R-> nat.
 Parameter QFT: Square (2^t).
 Parameter delt_n:nat->nat.
 
+
 Hypothesis HtL: and (t>0)%nat (L>0)%nat.
 Hypothesis HNL:  (N < (2^L))%nat. 
 Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ t) =
- / √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k),  sin (((2 * PI)/(2^t)) * j * k)) .*  (∣ j ⟩_ t)) (2 ^ t)).
+ / √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ t)) (2 ^ t)).
 Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ L) = (∣ 1 ⟩_ L)).
-Hypothesis (Ht: forall j s:nat, and ((delt_n j < 2^t)%nat /\ (s < r)%nat) ((s/r * 2^t) = delt_n j)).
+Hypothesis (Ht: forall s:nat,  s < r-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)).
 Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) (x * j mod N))) /\ 
                                (forall j:nat, j>=N /\ j<(2^L)-> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) j)).
+
 Definition  H := p.H .
 Definition  Hr := p.Hr .
 Definition  U_f (i:nat):= exp_U U i.
-Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s/r) * k),  sin (- ((2 * PI)) * (s/r) * k)) .*  Vec (2 ^ L) (x ^ k mod N)) (r) ) .
+Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s /r) * k)%R,  sin (- ((2 * PI)) * ( s / r) * k)%R) .*  Vec (2 ^ L) (x ^ k mod N)) (r) ) .
 Definition  b:nat := 1.
 Definition  z':nat:=2 .
 Definition  b' := (AMod (APow x z ') (N)) .
-Definition  P (s:nat): Pure_formula := (BEq z' ' ((s/r * 2^t))) .
+Definition  P (s:nat): Pure_formula := (BEq z' ' ((s * 2^t) /r )%nat).
 
+
+Local Open Scope nat_scope.
 Definition OF :=
     <{ z :=  1 ;
        b := b' ;
@@ -106,7 +110,6 @@ Proof. induction n; intros. simpl.  rewrite Cminus_diag; try reflexivity.
        rewrite Cminus_diag; try reflexivity. rewrite Cplus_0_r.
        rewrite Copp_mult_distr_l.
        reflexivity.
-  
 Qed.
 
 Lemma cons_sin_plus_mult: forall i j, 
@@ -431,12 +434,38 @@ rewrite <-H2. rewrite <-Mmult_assoc. rewrite H3.
 rewrite Mmult_1_l. reflexivity. assumption.
 Qed.
 
+Lemma real_div_mul : forall x y z : R,
+  y <> 0%R ->
+  (x / y = z)%R ->
+  (x = z * y)%R.
+Proof.
+  intros x y z Hneq Heq.
+  rewrite <-Heq. rewrite Rdiv_unfold.
+  rewrite Rmult_assoc. rewrite Rinv_l. 
+  rewrite (Rmult_1_r). reflexivity.
+  assumption.
+Qed.
+
+Lemma div_INR: forall (x y z:nat), 
+y<>0->
+(Rdiv (INR x)  (INR y)) =z ->
+(Rdiv (INR x)  (INR y)) =INR (x/y).
+Proof. intros. simpl. rewrite H1.
+apply real_div_mul in H1.
+rewrite <-mult_INR in H1.
+apply INR_eq in H1. rewrite H1. 
+rewrite Nat.div_mul. reflexivity.
+assumption. 
+apply not_0_INR. assumption.
+Qed.
+
+
 Lemma  simpl_QFT': 
 @U_v t (t+L) 0 t 0 (t + L) (QFT) †
 (/ √ r .* big_sum (fun s : nat =>  / √ (2 ^ t) .* big_sum  (fun j : nat =>
              (cos (2 * PI / 2 ^ t * j * (s / r * 2 ^ t)), sin (2 * PI / 2 ^ t * j * (s / r * 2 ^ t))) 
              .* ∣ j ⟩_ (t)) (2 ^ t) ⊗ Us s) r)
- =( / √ r .* big_sum  (fun s : nat =>   (Vec (2^t) (s/r * 2^t)) ⊗  Us s) r) .
+ =( / √ r .* big_sum  (fun s : nat =>   (Vec (2^t) (s * (2^t) / r )) ⊗  Us s) r).
 Proof. 
 unfold U_v. type_sovle. pose H.
 assert(2^t=1* 2^t). lia. destruct H0.
@@ -447,21 +476,30 @@ apply big_sum_eq_bounded.  intros.
 rewrite kron_mixed_product. Msimpl.
 f_equal. pose HQFT. 
 apply unitary_trans. intuition.
-apply WF_vec. rewrite <-(Nat.mul_1_l (2 ^ t)) at 2.
-apply Nat.mul_lt_mono_pos_r. apply pow_gt_0. 
-apply Nat.div_lt_upper_bound. unfold r. lia.
-rewrite Nat.mul_1_r. assumption. 
+apply WF_vec. apply Nat.div_lt_upper_bound. unfold r. lia.
+apply Nat.mul_lt_mono_pos_r. apply pow_gt_0.  assumption. 
 destruct a0. rewrite H2.  
 f_equal. repeat rewrite RtoC_pow. repeat rewrite <-RtoC_inv. 
 f_equal. f_equal.  rewrite sqrt_pow. reflexivity. lra.
 apply sqrt_neq_0_compat. apply pow_lt. lra. 
 apply pow_nonzero. apply sqrt2_neq_0.
 apply big_sum_eq_bounded. intros.
-f_equal. f_equal; f_equal; f_equal. pose Ht. 
- admit.
-admit. 
+f_equal. f_equal; f_equal; f_equal;
+pose (Ht x0); destruct e; try assumption;
+destruct H4;
+unfold Rdiv in *; try rewrite Rmult_assoc in *; 
+rewrite (Rmult_comm _ (2^t)) in *; 
+rewrite <-Rmult_assoc in *;
+rewrite <-Rdiv_unfold in *;
+assert(INR(Init.Nat.mul x0 (Nat.pow (S (S O)) t))=
+(Rmult (INR x0) (pow (IZR (Zpos (xO xH))) t)));
+try rewrite  mult_INR; try f_equal; try     
+rewrite pow_INR;  
+f_equal; rewrite <-H6 in *;
+rewrite (div_INR _ _  x2); try reflexivity;
+unfold r; try lia; try assumption.  
 apply WF_adjoint. apply HQFT.
-Admitted.
+Qed.
 
 
 Lemma Had_N: forall n:nat, 
