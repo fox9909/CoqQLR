@@ -488,12 +488,6 @@ Proof. induction n_0; intros. inversion_clear H. inversion_clear H0.
 Qed.
 
 
-Lemma big_pOplus_get_npro: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat),
-  pro_to_npro_formula (big_pOplus f g n_0) = fun_to_list g n_0.
-  Proof. induction n_0. simpl. reflexivity.
-         simpl. rewrite pro_to_npro_formula_app.  rewrite IHn_0. 
-         simpl. intuition.
-  Qed. 
 
 
   Lemma big_pOplus_get_npro': forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) pF F_n,

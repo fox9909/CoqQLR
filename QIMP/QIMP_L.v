@@ -42,7 +42,7 @@ Inductive bexp : Type :=
   | BFalse
   | BEq (a1 a2 : aexp)
   | BNeq (a1 a2 : aexp)
-  | BLe (a1 a2 : aexp)
+  | BLt (a1 a2 : aexp)
   | BGt (a1 a2 : aexp)
   | BNot (b : bexp)
   | BAnd (b1 b2 : bexp).
@@ -64,7 +64,7 @@ Notation "x ^ y"   := (APow x y) (in custom com at level 30, left associativity)
 Notation "'true'"  := BTrue (in custom com at level 0).
 (*Notation "'false'" := false (at level 1).*)
 Notation "'false'" := BFalse (in custom com at level 0).
-Notation "x <= y"  := (BLe x y) (in custom com at level 70, no associativity).
+Notation "x < y"  := (BLt x y) (in custom com at level 70, no associativity).
 Notation "x > y"   := (BGt x y) (in custom com at level 70, no associativity).
 Notation "x = y"   := (BEq x y) (in custom com at level 70, no associativity).
 Notation "x <> y"  := (BNeq x y) (in custom com at level 70, no associativity).
@@ -157,7 +157,7 @@ Fixpoint Free_bexp (b:bexp):CSet:=
   match b with
     | <{a1 = a2}>   => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{a1 <> a2}>  => NSet.union (Free_aexp a1)  (Free_aexp a2)
-    | <{a1 <= a2}>  => NSet.union (Free_aexp a1)  (Free_aexp a2)
+    | <{a1 < a2}>  => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{a1 > a2}>   => NSet.union (Free_aexp a1)  (Free_aexp a2)
     | <{~ b}>       => (Free_bexp b) 
     | <{b1 && b2}>  => NSet.union (Free_bexp b1)  (Free_bexp b2)
@@ -251,7 +251,7 @@ match b with
 | <{false}>     => false
 | <{a1 = a2}>   => (aeval st a1) =? (aeval st a2)
 | <{a1 <> a2}>  => negb ((aeval st a1) =? (aeval st a2))
-| <{a1 <= a2}>  => (aeval st a1) <=? (aeval st a2)
+| <{a1 < a2}>  => (aeval st a1) <? (aeval st a2)
 | <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
 | <{~ b1}>      => negb (beval st b1)
 | <{b1 && b2}>  => andb (beval st b1) (beval st b2)

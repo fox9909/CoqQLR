@@ -61,6 +61,7 @@ Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ t) =
  / √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ t)) (2 ^ t)).
 Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ L) = (∣ 1 ⟩_ L)).
 Hypothesis (Ht: forall s:nat,  s < r-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)).
+(* Hypothesis (Ht': forall j:nat,  j < (2^t)-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)). *)
 Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) (x * j mod N))) /\ 
                                (forall j:nat, j>=N /\ j<(2^L)-> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) j)).
 
@@ -71,7 +72,8 @@ Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * 
 Definition  b:nat := 1.
 Definition  z':nat:=2 .
 Definition  b' := (AMod (APow x z ') (N)) .
-Definition  P (s:nat): Pure_formula := (BEq z' ' ((s * 2^t) /r )%nat).
+Definition  P (i:nat): Pure_formula := (BEq z' ' i%nat).
+Definition  P' (s:nat): Pure_formula := (BEq z' ' (s * 2 ^ t / r)%nat).
 
 
 Local Open Scope nat_scope.
@@ -650,168 +652,1004 @@ inversion_clear IHmu. apply (IHmu0  H4).
 discriminate. inversion_clear H2. assumption.
 Qed.
 
+Lemma BTrue_true{s e:nat}: forall (mu:dstate s e),
+WF_dstate mu /\ (StateMap.this mu <> [])->
+sat_State mu <{ true }> .
+Proof. intros. econstructor. apply H0.  
+destruct mu as [mu IHmu]. 
+induction mu; simpl in *. destruct H0. 
+destruct H1. reflexivity. destruct mu. 
+econstructor.  auto. econstructor.
+econstructor.  auto. destruct H0.
+inversion_clear IHmu. 
+simpl in IHmu0. eapply IHmu0 with H2. 
+split. 
+inversion_clear H0. apply H5.
+discriminate.
+Qed.
+
+
+Lemma rule_DT: forall D,
+D->> <{ true }> .
+Proof. unfold assert_implies. intros. rewrite sat_Assert_to_State in *.
+apply BTrue_true.  apply WF_sat_Assert in H0. split; apply H0.
+Qed.
+
+
+Lemma Big_Sand_forall{s e:nat}: forall (mu:dstate s e) (f:nat-> State_formula) n,
+(forall i,  sat_Assert mu (f i))->
+sat_Assert mu (big_Sand f n).
+Proof. induction n; intros. simpl. rewrite sat_Assert_to_State in *.
+apply BTrue_true. pose(H0 1). 
+apply WF_sat_Assert in s0.
+split; apply s0.
+simpl. apply sat_assert_conj. 
+split. 
+apply H0. apply IHn. assumption.
+Qed.
+
+Lemma big_Sand_Assn_true: forall a D n, 
+(forall i:nat, ~NSet.In a (Free_aexp i)) ->
+D ->> big_Sand (fun i : nat => PAssn a i (BEq (a ') i)) n.
+Proof. unfold assert_implies. intros.  
+apply Big_Sand_forall.
+intros. apply Assn_true_P.
+apply H0. 
+eapply rule_DT. apply H1.
+Qed.
+
+Lemma fun_to_list_inv{A:Type}: forall(mu_n:list A)  (a: A)  (default: A),
+fun_to_list (fun i : nat => match i with
+                            | 0 => a
+                            | S m => nth m mu_n default
+                            end) (Datatypes.length mu_n) ++
+[match Datatypes.length mu_n with
+ | 0 => a
+ | S m => nth m mu_n default
+ end] = a :: fun_to_list (fun i : nat => nth i mu_n default) (Datatypes.length mu_n) .
+Proof. intros. 
+induction (Datatypes.length mu_n). simpl. reflexivity.
+simpl. rewrite IHn. reflexivity. 
+Qed.
+
+
+Lemma n_th_fun_to_list_inv{A:Type}: forall (mu_n:list A) (default: A),
+(fun_to_list (fun i : nat => nth i mu_n default) (length (mu_n)))=mu_n.
+Proof. induction mu_n; intros; simpl in *. reflexivity.
+      rewrite <-(IHmu_n default) at 3. apply fun_to_list_inv. 
+Qed.
+
+
+Lemma Forall_two_nth{A B : Type}: forall  (P : A -> B -> Prop) 
+(f : list A) (g : list  B) (fdefault:A) (gdefault:B),
+Forall_two P f g <-> 
+((length f) = (length g) /\ forall i, i< (length f) -> P (nth i f  fdefault) 
+(nth i g gdefault)) .
+Proof. induction f0; destruct g; intros; simpl in *. split; intros. split; lia. econstructor.
+       split; intros. inversion_clear H0. lia.
+       split; intros.   
+       inversion_clear H0. lia.
+       split; intros.  inversion_clear H0. split. apply Forall_two_length_eq in H2.
+       rewrite H2. reflexivity.   
+       intros. destruct i. assumption. apply IHf0. assumption. lia.
+       destruct H0.  econstructor.  apply (H1 0). lia.
+       rewrite (IHf0 _ fdefault gdefault). split. injection H0. auto.
+       intros. pose( H1 ( S i)). simpl in p.  apply p. lia.      
+Qed.
+
+
+Lemma fst_nth_big_pOplus: forall n p_n F_n i, 
+i<n->
+fst (nth i (big_pOplus p_n F_n n) ((1%R, SPure (PBexp <{BTrue}>))))%R = p_n i.
+Proof. induction n; intros. lia. simpl. 
+       assert(i=n \/ i<> n). apply Classical_Prop.classic.
+       destruct H1. rewrite H1. 
+       rewrite app_nth2; rewrite  big_pOplus_length.  
+       rewrite Nat.sub_diag. simpl. reflexivity. lia. 
+       rewrite app_nth1; try rewrite  big_pOplus_length.
+       apply IHn. lia. lia.    
+Qed.
+
+
+Lemma snd_nth_big_pOplus: forall n p_n F_n i, 
+i<n->
+snd (nth i (big_pOplus p_n F_n n) ((1%R, SPure (PBexp <{BTrue}>))))%R = F_n i.
+Proof. induction n; intros. lia. simpl. 
+       assert(i=n \/ i<> n). apply Classical_Prop.classic.
+       destruct H1. rewrite H1. 
+       rewrite app_nth2; rewrite  big_pOplus_length.  
+       rewrite Nat.sub_diag. simpl. reflexivity. lia. 
+       rewrite app_nth1; try rewrite  big_pOplus_length.
+       apply IHn. lia. lia.    
+Qed.
+
+
+
+Lemma big_pOplus_sat'{s e:nat}: forall n (p_n:nat-> R) (F_n:nat-> State_formula) (mu_n:nat-> (dstate s e)) mu,
+sat_Pro mu (big_pOplus p_n F_n n)->
+(exists (mu_n:nat-> (dstate s e)) mu',
+ big_dapp' (fun_to_list p_n n) (fun_to_list mu_n n) mu' 
+/\ dstate_eq mu mu' 
+/\(forall i, i<n -> (0<(p_n i))%R -> sat_State (mu_n i) (F_n i) /\ d_trace (mu_n i) = d_trace mu)).
+Proof. intros.  inversion_clear H0.  exists (fun i=> nth  i (mu_n0) (d_empty s e)).
+      rewrite big_pOplus_get_pro in *.
+      assert( n= length mu_n0). 
+      rewrite <-(fun_to_list_length  p_n n). eapply big_dapp'_length. apply H1.
+      exists mu'.  split. 
+      rewrite H0.
+      rewrite n_th_fun_to_list_inv. rewrite <-H0. assumption. 
+       split. assumption.
+      intros. rewrite H0 in H4.  
+      eapply (Forall_two_nth _ mu_n0  (big_pOplus p_n F_n n) (d_empty s e) ((1%R, SPure (PBexp <{BTrue}>)))) in H3; try apply H4.
+      destruct H3. pose(H6 i H4).
+      rewrite fst_nth_big_pOplus in a; try lia.  
+      rewrite snd_nth_big_pOplus in a;try lia.
+      apply a. assumption.
+Qed.
+
+
+Lemma big_pOplus_get_npro: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat),
+  pro_to_npro_formula (big_pOplus f g n_0) = big_Oplus g n_0.
+  Proof. induction n_0. simpl. reflexivity.
+         simpl. rewrite pro_to_npro_formula_app.  rewrite IHn_0. 
+         simpl. intuition.
+  Qed. 
+
+Fixpoint  list_to_fun{A:Type} (mu: list A) (default: A):  nat-> A:= 
+  match mu with 
+  |[]=> (fun i:nat => default)
+  |a::mu=> (fun i:nat => if i=?0 then a else ((list_to_fun mu default) i))
+  end.
+
+Lemma big_dapp'_out_empty{s e:nat}: forall  (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e),
+(Forall (fun i => ( i = 0%R)%R) p_n)->
+big_dapp' p_n mu_n mu->
+dstate_eq mu (d_empty s e).
+Proof. induction p_n;destruct mu_n; intros; simpl in *. inversion_clear H1. reflexivity.
+     inversion_clear H1.  
+     inversion H1;subst.
+         inversion H1; subst. inversion_clear H0.
+          pose (IHp_n _ _ H3 H8). 
+          apply dstate_eq_trans with ((d_app r0 (d_empty s e))).
+          apply d_app_eq. reflexivity. assumption.
+          inversion H7; subst.  
+          apply d_app_empty_l.
+          lra.
+Qed.
+
+
+Lemma map_1_1: forall n2 f0,
+(forall i j : nat, i < n2 -> j < n2 -> i < j -> f0 i < f0 j)->
+(forall i : nat, i < n2 -> f0 i < n2)->
+(forall i, i< n2-> f0 i =i) .
+Proof. induction n2; intros. lia. destruct n2. 
+       assert( i=0).  lia. subst. pose(H1 0 H2).  lia.  
+       assert((forall i j : nat, i < S n2 -> j <S n2 -> i < j -> f0 i < f0 j)).
+       intros. apply H0; try lia.
+       assert(forall i : nat, i < S n2 -> f0 i < S n2).
+       intros. assert(f0 i0 <> S n2).  intro.  
+       apply H0 in H4; try lia.  rewrite H5 in H4. 
+       assert( f0 (S n2) < S (S n2)). apply H1. lia. lia.  
+       assert( f0 i0 < S (S n2)). apply H1. lia. lia.   
+       pose(IHn2 f0 H3 H4). 
+       assert( i=S n2\/ ~(i=S n2)). 
+       apply Classical_Prop.classic.
+       destruct H5.      subst. 
+       assert( f0 (S n2) < S (S n2)). apply H1. lia.
+       assert( f0 (S n2-1) <f0 (S n2)). apply H0; try lia.
+       assert(f0 (S n2-1) = (S n2-1)). apply e. lia. 
+       lia. apply e. lia.  
+Qed.
+
+Import Classical_Prop.
+Lemma le_n2_n1: forall n1 n2 f0  (p_n:nat->R), 
+ S n1 >=n2->
+ (forall i j : nat, i < n2 -> j < n2 -> i < j -> f0 i < f0 j)->
+ (forall i : nat, i <  S n1 -> (exists s : nat, s < n2 /\ f0 s = i) -> p_n i <> 0)->
+ (forall i : nat, i < n2 -> f0 i < S n1)->
+ p_n (n1) =0->
+ S n1>n2 .
+Proof. intros. assert (~(S n1=n2)). intro. subst.  
+       assert ( forall i, i < S n1 -> f0 i = i).
+       apply map_1_1; try assumption.  
+       pose( H2 n1). destruct n; try lia; try assumption.
+       exists n1. split. lia. apply H5. lia.
+       lia.         
+Qed.
+
+
+
+Lemma big_dapp'_app{s e:nat}:forall (p1 p2 : list R) (mu_n1 mu_n2 : list (dstate s e)) mu1 mu2 mu3,
+big_dapp' p1 mu_n1 mu1->
+big_dapp' p2 mu_n2 mu2->
+big_dapp' (p1++p2) (mu_n1++mu_n2) mu3->
+dstate_eq mu3 (d_app mu1 mu2).
+Proof. induction p1; destruct mu_n1;  intros. simpl in *. 
+       inversion_clear H0. 
+       eapply dstate_eq_trans with mu2. 
+       eapply big_dapp_eq. apply H2. apply H1.
+       apply dstate_eq_sym. apply d_app_empty_l.
+       inversion_clear H0. inversion_clear H0.
+       simpl in *. 
+       inversion H0; subst. 
+       inversion H2; subst. 
+       eapply IHp1 in H11; try apply H9; try apply H1.
+       apply dstate_eq_trans with (d_app r0 (d_app d0 mu2)).
+       apply d_app_eq. 
+       eapply d_scale_eq; try apply H8; try apply H10.
+       reflexivity. assumption. apply dstate_eq_sym.
+       apply d_app_assoc'.
+Qed.
+
+
+  Lemma r111{s e:nat}: forall n1 n2 (x0:nat-> (dstate s e)) (x1 x2:dstate s e) (p_n:nat->R) f ,
+   n1>=n2 ->
+  (forall i j, i<n2-> j<n2-> i<j -> f i < f j ) ->
+  (forall i, i<n1-> (exists s, s<n2 /\ f s = i) -> p_n i <>0 )->
+  (forall i, i<n1-> ~(exists s, s < n2 /\ f s = i) -> p_n i =0 )->
+  ((forall i, i<n2 -> f i < n1))->
+  big_dapp' (fun_to_list p_n n1) (fun_to_list x0 n1) x1->
+  big_dapp' (fun_to_list (fun i : nat => p_n (f i)) n2) (fun_to_list (fun i : nat => x0 (f i)) n2) x2->
+  dstate_eq x1 x2.
+  Proof. induction n1; intros. 
+         destruct n2; intros; simpl in *. 
+         eapply big_dapp_eq; try apply H5; try apply H6.  try lia.
+         simpl in H5.  assert(p_n n1=0 \/ p_n n1<>0).
+         apply Classical_Prop.classic. 
+         destruct H7.
+         assert(S n1 > n2). apply le_n2_n1 with f0 p_n; try assumption.
+         pose(big_dapp_exsist (fun_to_list p_n n1) (fun_to_list x0 n1)). 
+         destruct e0.  repeat rewrite fun_to_list_length. 
+         reflexivity. 
+         apply dstate_eq_trans with x3. 
+         pose(big_dapp_exsist [0%R] [x0 n1]). destruct e0. 
+         repeat rewrite fun_to_list_length. 
+         reflexivity. rewrite H7 in *.
+         assert(dstate_eq x1 (d_app x3 x4)).
+         eapply big_dapp'_app; try apply H9; try apply H10; try apply H5.
+         inversion H10; subst. inversion H18; subst. 
+         inversion H17; subst. 
+         apply dstate_eq_trans with ((d_app x3 (d_app (d_empty s e) (d_empty s e)))).
+         assumption.  
+         apply dstate_eq_trans with ((d_app x3 ((d_empty s e) ))).
+         apply d_app_eq. reflexivity. apply d_app_empty_l.
+         apply d_app_empty_r. lra.  
+         
+         apply IHn1 with n2 x0 p_n f0; try assumption. lia. 
+         intros. apply H2. lia. assumption. 
+         intros. apply H3. lia. assumption. 
+         simpl in *. rewrite H7 in *. 
+         intros. assert(f0 i <> n1). 
+         intro. pose(H2 n1). destruct n. lia. 
+         exists i. auto. assumption. apply H4 in H10. 
+         lia. 
+
+         destruct n2. pose (H3 n1). destruct H7. 
+         apply e0. lia.    apply Classical_Pred_Type.all_not_not_ex.
+         intros. apply Classical_Prop.or_not_and. left. lia. 
+         simpl in *.
+
+         assert(f0 n2 <S n1). apply H4. lia.
+         assert((exists s : nat, s < S n2 /\ f0 s = n1)).
+         apply Classical_Prop.NNPP. intro. apply H3 in H9. 
+         destruct H7. assumption. lia. 
+         destruct H9.   
+         assert( ~(f0 n2<n1)). intro. destruct H9.
+         rewrite <-H11 in H10. 
+         assert(~(n2=x3)). intro. subst. lia.
+         assert(~(x3<n2)). intro. apply H1 in H13; try lia. 
+         assert(n2<x3). lia. lia.   
+         assert(f0 n2=n1). lia.  rewrite H11 in *.
+         pose (big_dapp_exsist (fun_to_list p_n n1 ) (fun_to_list x0 n1 )).
+         destruct e0. repeat rewrite fun_to_list_length. 
+         reflexivity. 
+         pose (big_dapp_exsist (fun_to_list (fun i : nat => p_n (f0 i)) n2) 
+         (fun_to_list (fun i : nat => x0 (f0 i) ) n2)). 
+         destruct e0. repeat rewrite fun_to_list_length. 
+         reflexivity. 
+         assert( dstate_eq x4 x5). 
+         apply (IHn1 n2 x0 _ _ p_n f0); try lia; try assumption.
+         intros. apply H1. lia. lia. assumption.
+         intros. apply H2. lia. destruct H15. 
+         exists x6. split. lia. apply H15. 
+         intros. apply H3. lia.
+         assert(forall n:nat, ~ (n <  n2 /\ f0 n = i)).
+         apply Classical_Pred_Type.not_ex_all_not . apply H15.
+         apply   Classical_Pred_Type.all_not_not_ex.
+         intros. apply Classical_Prop.or_not_and. 
+         pose (H16 n).   apply Classical_Prop.not_and_or in n0. 
+         destruct n0. assert(n=n2\/ n<> n2). apply Classical_Prop.classic.
+         destruct H18. right. rewrite H18. rewrite H11. lia.   left. lia.
+         right. assumption.    
+         intros. rewrite <-H11. apply H1; try lia.
+         pose(big_dapp_exsist [p_n n1] [x0 n1]). destruct e0. 
+         repeat rewrite fun_to_list_length. 
+         reflexivity. 
+         assert( dstate_eq x1 (d_app x4 x6)). eapply big_dapp'_app;
+         try apply H12; try apply H15; try apply H5.
+         assert( dstate_eq x2 (d_app x5 x6)). eapply big_dapp'_app;
+         try apply H6; try apply H15; try apply H13.
+         eapply dstate_eq_trans. apply H16. 
+         apply dstate_eq_sym. eapply dstate_eq_trans. apply H17.
+         apply d_app_eq; try apply dstate_eq_sym; try assumption; try reflexivity.
+Qed.
+
+
+  
+
+  Lemma big_Oplus_solve:  forall (p_n:nat->R) F_n n1 n2 f , 
+  n1>=n2 ->
+  (forall i j, i<n2-> j<n2-> i<j -> f i < f j ) ->
+  (forall i, i<n1-> (exists s, s<n2 /\ f s = i) -> p_n i <>0 )->
+  (forall i, i<n1-> ~(exists s, s < n2 /\ f s = i) -> p_n i =0 )->
+  ((forall i, i<n2 -> f i < n1))->
+  distribution_formula (big_pOplus (fun i : nat => p_n (f i)) (fun i : nat => F_n (f i)) n2)->
+  big_pOplus p_n F_n n1->>
+  big_pOplus (fun i=> p_n (f i)) (fun i=> F_n (f i)) n2.
+  Proof. intros. unfold assert_implies. intros. 
+         inversion_clear H6. apply big_pOplus_sat' in H9. 
+         destruct H9. destruct H6. destruct H6. 
+         destruct H9. econstructor. assumption. assumption.
+         pose(big_dapp_exsist (fun_to_list (fun i : nat => p_n (f0 i)) n2) 
+         (fun_to_list (fun i : nat => x0 (f0 i)) n2)).
+         destruct e0. repeat rewrite fun_to_list_length. reflexivity.
+         eapply big_pOplus_sat. 
+         apply H11. 
+         apply dstate_eq_trans with x1. assumption.
+         apply r111 with n1 n2 x0 p_n f0; try assumption. 
+         intros. 
+         split. 
+         apply H10; try assumption. apply H4. assumption.
+         apply H10; try assumption. apply H4. assumption.
+         auto.
+Qed.
+
+Lemma big_dapp_eq_bound{s e:nat}: forall p_n q_n (mu_n: list (dstate s e)) mu,
+Forall_two (fun i j: R=> i=j) p_n q_n->
+big_dapp' p_n mu_n mu->
+big_dapp' q_n mu_n mu .
+Proof. induction p_n; intros; destruct mu_n; destruct q_n; inversion_clear H1; try econstructor;
+        try inversion_clear H0. rewrite H1 in *. assumption. auto.
+Qed.
+
+
+Lemma big_pOplus_p_eq_bound: forall p_n q_n F_n n,
+(forall i, i< n -> p_n i= q_n i)->
+(big_pOplus p_n  F_n n->> big_pOplus q_n F_n n).
+Proof. intros. unfold assert_implies. intros. inversion_clear H1.
+        inversion_clear H4. econstructor. assumption.
+        inversion_clear H3. econstructor.
+        rewrite big_pOplus_get_pro in *.
+        rewrite  <-Forall_fun_to_list in *. intros. rewrite<- H0; try assumption.
+        apply H4. assumption. 
+        rewrite sum_over_list_big_pOplus in *. 
+        rewrite (big_sum_eq_bounded _ p_n); try assumption. 
+        intros. symmetry. apply H0. assumption.   
+        econstructor. rewrite big_pOplus_get_pro in *.
+        apply (big_dapp_eq_bound  _ (fun_to_list q_n n)) in H1.
+        apply H1. apply Forall_two_forall. assumption.
+        assumption.  
+        rewrite (Forall_two_nth  _ _ _ (d_empty s e) (1%R, SPure (PBexp <{BTrue}>))).
+        rewrite (Forall_two_nth  _ _ _ (d_empty s e) (1%R, SPure (PBexp <{BTrue}>))) in H6.
+        destruct H6. split. rewrite big_pOplus_length in *. assumption.
+        rewrite big_pOplus_length in *.
+        intros.  pose( H6 i H7). split; 
+        try rewrite snd_nth_big_pOplus in *;
+        try rewrite fst_nth_big_pOplus in *; try lia; 
+        try apply a; try rewrite H0; try lia; try assumption. 
+Qed.
+
+
+Theorem  rule_OCon'': forall (pF1 pF2:pro_formula),
+(get_pro_formula pF1 = get_pro_formula pF2)->
+(Forall_two (fun (f_i g_i: State_formula) => f_i ->> g_i) (pro_to_npro_formula pF1) (pro_to_npro_formula pF2))->
+(pF1 ->> pF2).
+Proof. intros.    unfold assert_implies. intros. 
+inversion_clear H2. inversion_clear H5.
+econstructor. intuition. inversion_clear H4.
+econstructor; rewrite <-H0; assumption.  
+econstructor. rewrite<-H0. apply H2. assumption. 
+Admitted.
+
+Lemma fun_to_list_big_Oplus_eq: forall n F_n,
+fun_to_list F_n n = big_Oplus F_n n.
+Proof. induction n; intros; simpl; try f_equal; auto.
+Qed.
+
+Lemma norm_vec_1: forall n x, (x<2^n) ->norm (Vec (2^n) x)=1 .
+Proof. intros.  unfold norm.   rewrite <-inner_trace'. rewrite Vec_inner_1.
+       unfold c_to_Vector1. Msimpl. 
+       rewrite trace_I. simpl. rewrite sqrt_1. reflexivity. assumption.
+Qed.
+
+(* Lemma Cmult_pow: forall c , 
+c * c= c² .
+Proof.
+  
+Qed. *)
+
+Lemma s_r_t_relation: forall i, 
+i< r -> i*(2^t) /r < (2^t).
+Proof. intros. pose H.  
+apply Nat.div_lt_upper_bound. unfold r. lia.
+apply Nat.mul_lt_mono_pos_r. apply pow_gt_0.
+assumption.   
+Qed.
+
+Lemma i_j_le: forall i j, 
+i< r-> j<r->
+i< j -> i*(2^t) /r < j*(2^t) /r.
+Proof. intros. apply INR_lt. pose Ht.  pose H.
+pose (e  i H0). pose (e j H1). 
+destruct e0. destruct e1. 
+unfold Rdiv in *. rewrite (Rmult_comm  _ (/r)) in H3.
+rewrite (Rmult_comm  _ (/r)) in H4. 
+rewrite Rmult_assoc in H3.
+rewrite Rmult_assoc in H4.
+rewrite (Rmult_comm   (/r)) in H3.
+rewrite (Rmult_comm  (/r)) in H4.
+destruct H3. destruct H4.
+rewrite <-(div_INR _ _ x0).
+rewrite <-(div_INR _ _ x1). unfold Rdiv.
+apply Rmult_lt_compat_r. apply Rinv_0_lt_compat.
+rewrite IZR_INR_0.
+apply lt_INR. unfold r. lia.  
+ apply lt_INR. apply Nat.mul_lt_mono_pos_r.
+apply pow_gt_0. assumption. unfold r. lia.
+unfold Rdiv in *.
+rewrite <-H6. f_equal. rewrite mult_INR. f_equal.
+rewrite pow_INR. f_equal. unfold r. lia.
+unfold Rdiv in *.
+rewrite <-H5. f_equal. rewrite mult_INR. f_equal.
+rewrite pow_INR. f_equal. 
+Qed.
+
+Lemma i_j_neq: forall i j, 
+i< r-> j<r->
+i<> j -> i*(2^t) /r <> j*(2^t) /r.
+Proof. intros. intro. 
+assert(INR (i * 2 ^ t / r) = INR (j * 2 ^ t / r )).
+rewrite H3. reflexivity. 
+pose Ht.  pose H.
+pose (e  i H0). pose (e j H1). 
+destruct e0. destruct e1. 
+unfold Rdiv in *.
+ rewrite (Rmult_comm  _ (/r)) in H5.
+rewrite (Rmult_comm  _ (/r)) in H6. 
+rewrite Rmult_assoc in H5.
+rewrite Rmult_assoc in H6.
+rewrite (Rmult_comm   (/r)) in H5.
+rewrite (Rmult_comm  (/r)) in H6.
+destruct H5. destruct H6.
+rewrite <-(div_INR _ _ x0) in H4.
+rewrite <-(div_INR _ _ x1) in H4.
+unfold Rdiv in *. 
+apply Rmult_eq_reg_r in H4.
+apply INR_eq in H4.  
+apply Nat.mul_cancel_r in H4. 
+lia. lia. apply Rinv_neq_0_compat.
+ rewrite IZR_INR_0. unfold r. intro.  apply INR_eq in H9.
+ lia. lia.   
+unfold Rdiv in *.
+rewrite <-H8. f_equal. rewrite mult_INR. f_equal.
+rewrite pow_INR. f_equal. unfold r. lia.
+unfold Rdiv in *.
+rewrite <-H7. f_equal. rewrite mult_INR. f_equal.
+rewrite pow_INR. f_equal. 
+Qed.
+
+
+
+Lemma  norm_Us: forall i, i< r -> norm (Us i) =1 .
+Proof. 
+intros. unfold Us. pose H.
+rewrite norm_scale.
+unfold norm. rewrite <-inner_trace' . 
+rewrite Msum_adjoint. rewrite Mmult_Msum_distr_l. 
+rewrite big_sum_trace.  
+rewrite (big_sum_eq_bounded _ (fun i0 : nat =>
+ ( Cmult ((cos (- (2 * PI) * (i / r) * i0),
+    sin (- (2 * PI) * (i / r) * i0))^*)  (cos (- (2 * PI) * (i / r) * i0),
+    sin (- (2 * PI) * (i / r) * i0)) ))).
+ rewrite (big_sum_eq_bounded _ (fun i0 : nat => C1)).
+ rewrite big_sum_constant. rewrite times_1_n. simpl. 
+rewrite Cmod_inv. rewrite Cmod_R. rewrite Rabs_right. 
+simpl. rewrite Rinv_l. reflexivity.
+apply sqrt_neq_0_compat.  unfold r.
+rewrite IZR_INR_0.   apply lt_INR. lia. 
+apply Rgt_ge. apply sqrt_lt_R0. unfold r.
+rewrite IZR_INR_0.   apply lt_INR. lia.
+apply RtoC_neq.
+apply sqrt_neq_0_compat.  unfold r.
+rewrite IZR_INR_0.   apply lt_INR. lia. 
+intros. rewrite <-Cmod_sqr. unfold Cmod. simpl fst. simpl snd.
+repeat rewrite <-Rsqr_pow2. rewrite Rplus_comm. rewrite sin2_cos2.
+simpl. Csimpl. rewrite RtoC_mult. rewrite sqrt_sqrt. reflexivity.
+lra.  intros. rewrite Mmult_Msum_distr_r.  rewrite big_sum_trace.
+erewrite (@big_sum_unique C C_is_monoid _ ). reflexivity.
+exists x0. split. assumption. rewrite Mscale_mult_dist_r.
+rewrite Mscale_adj.
+repeat rewrite Mscale_mult_dist_l.
+rewrite Vec_inner_1. unfold c_to_Vector1. split.  
+Msimpl. rewrite Mscale_assoc. rewrite trace_mult_dist.
+rewrite trace_I. Csimpl. rewrite Cmult_comm. reflexivity.
+intros.  rewrite Mscale_mult_dist_r.
+rewrite Mscale_adj.
+repeat rewrite Mscale_mult_dist_l.
+rewrite Vec_inner_0. unfold c_to_Vector1.
+Msimpl. rewrite Zero_trace. reflexivity. 
+
+Admitted.
+
+Lemma times_n_R: forall (r:R) (n:nat), 
+times_n r n = Rmult r n.
+Proof. induction n; intros. simpl. rewrite Rmult_0_r. reflexivity.
+       simpl times_n. 
+        rewrite IHn. rewrite S_O_plus_INR. rewrite Rmult_plus_distr_l.
+        rewrite Rmult_1_r. reflexivity.
+Qed.
+
+
+  Lemma big_Oplus_solve': 
+  big_pOplus
+  (fun i : nat =>
+   (norm
+      (@U_v (Nat.sub t O)
+      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
+         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)) ^ 2)%R)
+  (fun i : nat =>
+   P i /\s
+   (| (/
+       norm
+         (@U_v (Nat.sub t O)
+         (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
+            (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)))%R
+      .* @U_v (Nat.sub t O)
+      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
+           (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r) >[ 0, t + L])) 
+  (2 ^ (t - 0)) ->> big_pOplus (fun _ : nat => (/ r)%R) (fun s : nat => P' s) r .
+Proof.   pose Hr. pose HtL. pose H. 
+         assert(forall i j x0, ∣ i ⟩_ (t) × ⟨ i ∣_ (t) ⊗ I (2 ^ L) × (∣ j ⟩_ (t) ⊗ Us x0)=
+         (@Mmult ((2^t) * ((2^L))) ((2^t) * ((2^L)))  1 
+         (∣ i ⟩_ (t) × ⟨ i ∣_ (t) ⊗ I (2 ^ L)) (∣ j ⟩_ (t) ⊗ Us x0) ) ).
+         reflexivity.  
+
+         assert(forall i, i< r->(norm
+         (@U_v t (Init.Nat.add t L) 0 t 0 (t + L)  (∣ i * 2 ^ t / r ⟩_ (t) × ⟨ i * 2 ^ t / r ∣_ (t))
+         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)))= (/ √ r)%R).
+         intros. unfold U_v. type_sovle. 
+         rewrite <-Mscale_Msum_distr_r.
+         repeat rewrite Nat.mul_1_l.
+         rewrite Mmult_Msum_distr_l. 
+         rewrite (@big_sum_unique (Matrix ((2^t) * ((2^L))) 1) (M_is_monoid ((2^t) * ((2^L))) 1) (/ √ r .* (∣ i * 2 ^ t / r ⟩_ (t) ⊗ Us i)) 
+          ). 
+          assert(2^(t)* 2^L= 2^(t+L)). type_sovle'. destruct H2.
+          rewrite norm_scale.
+          rewrite norm_kron. rewrite norm_vec_1. rewrite norm_Us. rewrite Rmult_1_r. rewrite Rmult_1_r.
+          rewrite Cmod_inv.  rewrite Cmod_R. rewrite Rabs_right. reflexivity.
+          apply Rgt_ge. apply sqrt_lt_R0. unfold r.
+          rewrite IZR_INR_0.   apply lt_INR. lia. apply RtoC_neq.  apply sqrt_neq_0_compat. unfold r.
+          rewrite IZR_INR_0.   apply lt_INR. lia. assumption.
+          apply s_r_t_relation. assumption.
+
+         exists i.  
+         split. assumption.  split.
+         rewrite Mscale_mult_dist_r. rewrite <-H0. 
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_1.
+         unfold c_to_Vector1. Msimpl.  reflexivity. apply WF_vec.
+            apply s_r_t_relation. assumption.
+            apply s_r_t_relation. assumption.
+         intros. rewrite Mscale_mult_dist_r. rewrite <-H0.  
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_0.
+         unfold c_to_Vector1. Msimpl. reflexivity. apply i_j_neq; try assumption.
+         apply s_r_t_relation. assumption.   apply s_r_t_relation. assumption. 
+         apply WF_mult; try apply WF_adjoint;
+         apply WF_vec.   apply s_r_t_relation. assumption. 
+         apply s_r_t_relation. assumption.
+         
+         eapply implies_trans. type_sovle. 
+         eapply (big_Oplus_solve _ _ _ r  (fun s=> (s * 2^t/r))). admit.
+         intros. apply i_j_le; try assumption.  
+         intros. destruct H3. destruct H3. rewrite<-H4. rewrite Nat.sub_0_r in H1.  
+         rewrite (H1 x0). apply Rgt_neq_0. rewrite <-Rsqr_pow2. apply Rlt_0_sqr.
+         apply Rinv_neq_0_compat. apply sqrt_neq_0_compat.  unfold r.
+         rewrite IZR_INR_0.   apply lt_INR. lia.  assumption. 
+
+         intros. unfold U_v. type_sovle. 
+         rewrite <-Mscale_Msum_distr_r.
+         repeat rewrite Nat.mul_1_l.
+         rewrite Mmult_Msum_distr_l. 
+         rewrite big_sum_0_bounded. simpl. rewrite Rmult_1_r. 
+         apply Rmult_eq_0_compat_l.
+         apply norm_zero_iff_zero; try reflexivity. 
+         assert(2^(t)* 2^L= 2^(t+L)). type_sovle'. destruct H4. auto_wf.
+         
+         intros. rewrite Mscale_mult_dist_r. rewrite <-H0. 
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_0.
+         unfold c_to_Vector1. Msimpl. reflexivity.  
+         intro. destruct H3. exists x0. split. assumption. auto. assumption.
+         apply s_r_t_relation. assumption.  
+         intros.   apply s_r_t_relation. assumption. 
+
+         simpl.
+         econstructor. try rewrite big_pOplus_get_pro. 
+         apply Forall_fun_to_list. intros. apply pow2_ge_0.
+         rewrite sum_over_list_big_pOplus.   
+         rewrite (@big_sum_eq_bounded R (R_is_monoid) _ (fun i:nat => (/r)%R)).
+         rewrite big_sum_constant. rewrite times_n_R. rewrite Rinv_l. reflexivity. 
+         apply not_0_INR. unfold r. lia.  
+         intros. rewrite Nat.sub_0_r in H1.   rewrite H1. rewrite Rmult_1_r. 
+         rewrite <-Rinv_mult_distr_depr. rewrite sqrt_sqrt. reflexivity.   unfold r.
+         rewrite IZR_INR_0.   apply le_INR. lia. apply sqrt_neq_0_compat.
+         rewrite IZR_INR_0.   apply lt_INR. lia.
+         apply sqrt_neq_0_compat. rewrite IZR_INR_0.   apply lt_INR. lia.
+         assumption. 
+         
+
+          unfold P. unfold P'.  eapply implies_trans.
+          eapply (big_pOplus_p_eq_bound _ (fun _ : nat => (/ r)%R)).
+          intros. rewrite Nat.sub_0_r in H1.   rewrite (H1 i).  
+          rewrite<- Rsqr_pow2. rewrite Rsqr_inv_depr. rewrite Rsqr_pow2.
+          simpl. rewrite Rmult_1_r.  rewrite sqrt_sqrt. reflexivity.   unfold r.
+         rewrite IZR_INR_0.   apply le_INR. lia. apply sqrt_neq_0_compat.
+         rewrite IZR_INR_0.   apply lt_INR. lia.   assumption. 
+          apply rule_OCon''. repeat  rewrite big_pOplus_get_pro. reflexivity.
+          repeat rewrite big_pOplus_get_npro. repeat rewrite <-fun_to_list_big_Oplus_eq.
+          apply Forall_two_forall. intros. apply rule_Conj_split_l.
+Admitted.
+
+Fixpoint d_update_cstate_list{ s e:nat} i a (mu_n:list (dstate s e)) :=
+  match mu_n with 
+  | nil => [] 
+  |mu::mu_n' => (d_update_cstate i a mu) :: (d_update_cstate_list  i a mu_n')
+  end. 
+
+Lemma d_update_cstate_empty{s e:nat}: forall i a, 
+dstate_eq  (d_update_cstate i a (d_empty s e)) (d_empty s e).
+Proof. unfold dstate_eq. intros. simpl in *. reflexivity.
+  
+Qed.
+
+
+Lemma d_update_cstate_map2_aux{s e:nat}: forall i a (mu1 mu2:list (state s e)), 
+ (d_update_cstate_aux i a (StateMap.Raw.map2 option_app mu1  mu2)) =
+ ( StateMap.Raw.map2 option_app (d_update_cstate_aux i a mu1 ) 
+(d_update_cstate_aux i a mu2 )).
+Proof.  induction mu1; intros . simpl in *.
+repeat rewrite map2_r_refl. reflexivity. destruct a0.   
+induction mu2.  repeat rewrite map2_nil_r.  reflexivity.
+destruct a0. simpl. 
+destruct (Cstate_as_OT.compare c c0). simpl.
+rewrite app_fix_2. rewrite app_fix_2. rewrite app_fix_2.   
+rewrite IHmu1.  remember ([(c_update i (aeval (c, q) a) c, q)]).  
+remember ((d_update_cstate_aux i a mu1)).
+remember ([(c_update i (aeval (c0, q0) a) c0, q0)]). 
+simpl. rewrite app_fix_2. rewrite <-Heql2.  
+remember ((d_update_cstate_aux i a mu2)).
+remember ((StateMap.Raw.map2 option_app l2 l3)).
+rewrite map2_assoc. reflexivity.
+simpl. rewrite app_fix_2. rewrite app_fix_2. rewrite app_fix_2.
+rewrite IHmu1.   rewrite map2_assoc. rewrite map2_assoc.  
+remember ((d_update_cstate_aux i a mu1)).
+remember ((d_update_cstate_aux i a mu2)). f_equal.  
+rewrite <-map2_assoc.  rewrite (map2_comm l ). 
+rewrite map2_assoc. f_equal.  
+unfold Cstate_as_OT.eq in e0.
+rewrite e0.
+simpl. rewrite (state_eq_aexp ((c0, q) ) ((c0, q0) )); try reflexivity.
+MC.elim_comp. 
+rewrite (state_eq_aexp _  ((c0, q0) )); try reflexivity. 
+simpl. 
+rewrite app_fix_2.  rewrite app_fix_2. rewrite app_fix_2.    
+rewrite app_fix. unfold state in IHmu2.  
+rewrite IHmu2. simpl d_update_cstate_aux. 
+rewrite app_fix_2.   
+rewrite map2_assoc. rewrite map2_assoc. 
+ rewrite (map2_comm 
+([(c_update i (aeval (c0, q0) a) c0, q0)])). 
+rewrite <-map2_assoc.  rewrite <-map2_assoc.
+rewrite <-map2_assoc.
+f_equal.    rewrite map2_assoc. rewrite map2_assoc.
+rewrite (map2_comm ([(c_update i (aeval (c0, q0) a) c0, q0)])).
+reflexivity. 
+Qed.
+
+Lemma d_update_cstate_dapp{s e:nat}: forall i a (mu1 mu2:dstate s e), 
+dstate_eq  (d_update_cstate i a (d_app mu1 mu2)) (d_app (d_update_cstate i a mu1 )
+(d_update_cstate i a mu2 )).
+Proof. intros i a (mu1, IHmu1)  (mu2, IHmu2). unfold dstate_eq. unfold d_app. unfold  StateMap.map2.
+simpl StateMap.this. apply d_update_cstate_map2_aux. 
+Qed.
+
+
+Lemma map_update{s e:nat}: forall i a (r:R) (mu1 :list (state s e)),
+StateMap.Raw.map (fun x0 : qstate s e => q_scale r x0)
+(d_update_cstate_aux i a mu1) = 
+d_update_cstate_aux i a (StateMap.Raw.map (fun x0 : qstate s e => q_scale r x0) mu1).
+Proof. induction mu1. simpl. reflexivity. destruct a0.  
+      simpl.  rewrite app_fix_2. rewrite app_fix_2.   
+      pose (@map_map2_distr s e ([(c_update i (aeval (c, q) a) c, q)]) 
+      ((d_update_cstate_aux i a mu1)) r0).  
+      unfold q_scale in *.  unfold qstate in *. 
+      rewrite <-e0. simpl StateMap.Raw.map. f_equal. 
+      rewrite (state_eq_aexp _  ((c, r0.*q) )); try reflexivity. 
+      rewrite IHmu1. reflexivity.
+Qed.   
+
+Lemma d_scale_not_0_update{s e:nat}: forall i a r (mu1 :dstate s e),
+dstate_eq (d_scale_not_0 r (d_update_cstate i a mu1))
+  (d_update_cstate i a (d_scale_not_0 r mu1)).
+Proof. intros i a r (mu1, IHmu1). unfold dstate_eq. simpl in *.
+    apply map_update.
+Qed. 
+
+
+Lemma d_scale_update{s e:nat}: forall i a r (mu1 mu2 mu3:dstate s e),
+d_scale r mu1 mu2->
+d_scale r (d_update_cstate i a mu1) mu3->
+dstate_eq mu3 (d_update_cstate i a mu2).
+Proof. intros. inversion H0; subst. inversion_clear H0. inversion_clear H1. 
+apply dstate_eq_sym. apply d_update_cstate_empty. lra. lra.
+inversion H1; subst. lra.  apply d_scale_not_0_update.
+Qed.
+
+  
+Lemma big_dapp'_update{s e:nat}: forall p_n (mu_n:list (dstate s e)) mu1 mu2 i a, 
+big_dapp' p_n mu_n mu1->
+big_dapp' p_n (d_update_cstate_list i a mu_n) mu2->
+dstate_eq mu2 (d_update_cstate i a mu1).
+Proof. induction p_n; intros. inversion_clear H0. inversion_clear H1.
+       apply dstate_eq_sym. apply d_update_cstate_empty.
+       inversion H0; subst. inversion H1; subst.  
+       eapply dstate_eq_trans with (d_app (d_update_cstate i a0 r0) (d_update_cstate i a0 d)); try  
+       apply dstate_eq_sym; try
+       apply d_update_cstate_dapp. 
+       apply d_app_eq. apply dstate_eq_sym. eapply d_scale_update.
+       apply H4. apply H9. 
+       apply dstate_eq_sym.
+       eapply IHp_n. apply H7. assumption.
+Qed.
+
+Lemma d_update_cstate_length{s e:nat}: forall i a (mu_n:list (dstate s e)),
+length (d_update_cstate_list i a mu_n) = length mu_n.
+Proof. intros. induction mu_n. simpl. reflexivity. simpl. f_equal. auto.
+  
+Qed.
+
+
+Lemma d_update_cstate_eq{s e:nat}: forall i a (mu1 mu2: (dstate s e)),
+dstate_eq mu1 mu2->
+dstate_eq (d_update_cstate i a mu1) (d_update_cstate i a mu2).
+Proof. intros i a (mu1, IHmu1) (mu2, IHmu2). unfold dstate_eq. unfold d_update_cstate. simpl. 
+intros. subst.  auto. 
+Qed.
+
+Lemma snd_nth_npro_to_pro_formula: forall nF p_n i,
+length nF=length p_n->
+(snd (nth i (npro_to_pro_formula nF p_n) (1%R, SPure (PBexp <{BTrue}>))))=
+nth i nF <{true}>.
+Proof. induction nF; intros. simpl. destruct p_n. simpl. destruct i. simpl. reflexivity. 
+reflexivity. simpl. destruct i; reflexivity.
+ destruct p_n. simpl in *. lia.   simpl. destruct i. reflexivity.
+ rewrite IHnF. reflexivity. injection H0. auto.     
+Qed.
+
+
+Lemma fst_nth_npro_to_pro_formula: forall nF p_n i,
+length nF=length p_n->
+(fst (nth i (npro_to_pro_formula nF p_n) (1%R, SPure (PBexp <{BTrue}>))))=
+nth i p_n (1%R).
+Proof. induction nF; intros. simpl. destruct p_n. simpl. destruct i. simpl. reflexivity. 
+reflexivity. simpl in *. lia. 
+ destruct p_n. simpl in *. lia.   simpl. destruct i. reflexivity.
+ rewrite IHnF. reflexivity. injection H0. auto.     
+Qed.
+
+
+
+Lemma Assn_sub_Plus: forall (nF1 nF2: npro_formula) i a,
+Forall_two (fun (F1 F2: State_formula) => F1 ->> SAssn i a F2) nF1 nF2->
+((ANpro nF1)->> Assn_sub i a (ANpro nF2)). 
+Proof. intros. unfold assert_implies. intros. inversion_clear H1. 
+inversion_clear H3. inversion_clear H5. rewrite get_pro_formula_p_n in H3; 
+try symmetry; try assumption. 
+econstructor. assumption. econstructor. erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0. apply H2. 
+simpl in *. econstructor. apply WF_d_update_cstate. assumption.
+symmetry in H2.
+inversion_clear H4. econstructor; rewrite get_pro_formula_p_n in * ;try assumption.
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0. apply H2.
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0. apply H2.  
+pose(big_dapp_exsist p_n (d_update_cstate_list i a mu_n)) .
+symmetry in H2.
+destruct e0. rewrite d_update_cstate_length. eapply big_dapp'_length. apply H3. 
+econstructor. simpl in *. rewrite get_pro_formula_p_n in *. apply H5. 
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0.  apply H2.  
+apply dstate_eq_trans with (d_update_cstate i a mu'). 
+apply d_update_cstate_eq. assumption.  
+apply dstate_eq_sym. eapply  big_dapp'_update. 
+apply H3. assumption.  
+eapply (Forall_two_nth _ _ _ (d_empty s e) ((1%R, SPure (PBexp <{BTrue}>)))) in H7. 
+eapply (Forall_two_nth _ _ _ (d_empty s e) ((1%R, SPure (PBexp <{BTrue}>)))). 
+destruct H7. split. rewrite d_update_cstate_length.
+rewrite npro_to_pro_formula_length in *. 
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0.  apply H7.
+ assumption. 
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0.   apply H2.
+rewrite d_update_cstate_length. 
+intros. pose (H8 i0 H9).  destruct a0.
+rewrite fst_nth_npro_to_pro_formula in *. assumption.
+erewrite <-(Forall_two_length_eq _ _ nF2); try apply H0.  apply H2.
+ assumption. 
+eapply (Forall_two_nth _ _ _  (( SPure (PBexp <{BTrue}>))) (( SPure (PBexp <{BTrue}>)))) in H0.
+destruct H0.  
+rewrite snd_nth_npro_to_pro_formula. rewrite snd_nth_npro_to_pro_formula in *; try assumption.
+split.  unfold assert_implies in H13. 
+assert(length mu_n= length nF1). unfold dstate. rewrite H7.
+rewrite npro_to_pro_formula_length. reflexivity.  assumption.
+rewrite H14 in H9. 
+pose (H13 i0 H9 s e (nth i0 mu_n (d_empty s e)) ). 
+repeat rewrite sat_Assert_to_State in s0.  
+apply s0 in H11. inversion_clear H11.   simpl in s0. 
+
+
+ pose(H12 )
+
+admit. symmetry. assumption. 
+Admitted.
+
+Ltac not_In_solve:=
+  simpl; intro; try repeat match goal with 
+H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
+destruct H end;
+try match goal with 
+H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
+try discriminate end;
+try match goal with 
+H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
 
 Theorem OF_correctness: 
 {{BEq ((Nat.gcd x N)) 1 }} OF {{BEq z ' r}}.
-Proof. pose HtL. pose (Qsys_to_Set_min_max t (t+L)). destruct a0; try lia.
-                pose (Qsys_to_Set_min_max 0 t). destruct a0; try lia.   
-unfold OF.
-eapply rule_seq.
-eapply rule_conseq_l'.
-eapply rule_assgn with (F:=(BEq z ' 1)).
-eapply implies_trans. apply rule_PT. apply Assn_true_F. unfold not. simpl. apply In_empty.  
-eapply rule_seq.
-eapply rule_conseq_l'.
-eapply rule_assgn with (F:=( (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
-implies_trans_solve 1 Assn_conj_F.  
-eapply rule_Conj_two; try apply implies_refl.
-implies_trans_solve 0  rule_PT.  unfold b'. apply Assn_true_F.
+Proof.
+       pose HtL. pose H. pose Hr. 
+       pose (Qsys_to_Set_min_max t (t+L)). destruct a2; try lia.
+       pose (Qsys_to_Set_min_max 0 t). destruct a2; try lia.   
 
+       unfold OF. 
+       eapply rule_seq.
+       eapply rule_conseq_l; try eapply rule_assgn with (F:=(BEq z ' 1)).
+       implies_trans_solve 0 rule_PT; try apply Assn_true_F; not_In_solve.
 
-simpl; intro; try repeat match goal with 
-H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
-destruct H end;
-try match goal with 
-H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
-try discriminate end;
-try match goal with 
-H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+       eapply rule_seq.
+       eapply rule_conseq_l; try eapply rule_assgn with (F:=( (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
+       implies_trans_solve 1 Assn_conj_F; try eapply rule_Conj_two; try apply implies_refl.
+       implies_trans_solve 0  rule_PT;  unfold b'; apply Assn_true_F. 
+       not_In_solve.  not_In_solve.  
 
-simpl;intro; try repeat match goal with 
-H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
-destruct H end;
-try match goal with 
-H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
-try discriminate end;
-try match goal with 
-H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+       eapply rule_conseq_l with (P':=( (BLt z ' r /\p (BNeq b ' 1)))).
 
-eapply rule_conseq_l with (P':=( (BNeq z ' r /\p (BNeq b ' 1)))).
-assert(1<>r). pose H. pose Hr. unfold r.
-intro. rewrite <-H4 in *. simpl in *.  destruct a1.
-rewrite Nat.mod_small in H5; try rewrite Nat.mul_1_r in *; try lra.
-rewrite H5 in *. lia. lia.   
+       assert(1<>r). unfold r. 
+       intro. rewrite <-H4 in *. simpl in *.  destruct a1.
+       rewrite Nat.mod_small in H5; try rewrite Nat.mul_1_r in *; try lra.
+       rewrite H5 in *. lia. lia. assert(1<r). unfold r in *. lia.     
 
-seman_sovle; destruct H5; unfold Pure_eval in *;
-unfold beval in *; unfold aeval in *; unfold fst in *;
-bdestruct (c_find z x0 =? 1).
-try rewrite H7;
-try apply Nat.eqb_neq in H4; try rewrite H4;  try auto.
-destruct H5. 
-bdestruct(c_find b x0 =? x ^ c_find z x0 mod N).
-rewrite H8.  rewrite H7. simpl. rewrite Nat.mul_1_r.
+      seman_sovle; destruct H6; unfold Pure_eval in *;
+      unfold beval in *; unfold aeval in *; unfold fst in *; 
+      bdestruct (c_find z x0 =? 1).   
+      try rewrite H8.
+      try apply Nat.ltb_lt in H5; try rewrite H5;  try auto.
+      destruct H6.  
+      bdestruct(c_find b x0 =? x ^ c_find z x0 mod N).
+      rewrite H9.  rewrite H8. simpl. rewrite Nat.mul_1_r.
 
-rewrite Nat.mod_small. bdestruct (x=?1). 
-pose H. unfold x in H9. lia. auto. pose H. unfold x.
-unfold N. lia.    
- destruct H6. destruct H5.
-eapply rule_conseq.
-eapply rule_while with (F0:= (BNeq z ' r)) (F1:= (BEq z ' r)).
-*eapply rule_seq.
-eapply rule_conseq_l.
-apply rule_PT.
-apply rule_QInit. 
-*eapply rule_seq.
-eapply rule_conseq_l.
-apply rule_OdotE.
-eapply rule_qframe'. simpl. apply HtL. 
-split. apply rule_QInit. simpl. 
-split. apply inter_empty. left. reflexivity.
-right.  rewrite H0. lia.  
-* eapply rule_seq.
-eapply rule_qframe. simpl. pose HtL. lia.  
-split. apply rule_QUnit_One'. lia. 
-simpl. 
-split. apply inter_empty. left. reflexivity.
-left.  rewrite H3.  lia. 
-unfold U_v. repeat rewrite Nat.sub_diag. rewrite Nat.sub_0_r. simpl.
-rewrite kron_1_l; auto_wf. rewrite kron_1_r; auto_wf. 
-rewrite Had_N.  
-* eapply rule_seq.
-eapply rule_qframe'. simpl. apply HtL. 
-split. apply rule_QUnit_One'. lia. 
-simpl.
-split. apply inter_empty. left. reflexivity.
-right. rewrite H0; lia. 
- unfold U_v. repeat rewrite Nat.sub_diag.
-simpl. pose HU_plus. rewrite kron_1_l; auto_wf. rewrite kron_1_r; auto_wf.
-destruct a0. assert(L=t + L - t). lia. destruct H6.
-rewrite H5.
-* eapply rule_seq.
-eapply rule_conseq_l.
-eapply rule_odotT.
-eapply rule_conseq_l.
-eapply rule_Separ.
-assert(L=t + L - t). lia. destruct H6.
-assert(t=t-0). lia. destruct H6.
-rewrite simpl_H_Uplus.
-eapply rule_QUnit_Ctrl. lia. 
-rewrite simpl_Uf.
-* eapply rule_seq.
-eapply rule_QUnit_One'. lia. 
-assert(t=t-0). lia. destruct H6.
-assert(t+L=t+L-0). lia. destruct H6.
-rewrite simpl_QFT'.
-* eapply rule_seq. 
-eapply rule_conseq_l'.
-eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P). lia.
-  apply rule_Conj_two. 
-apply implies_refl. implies_trans_solve 0  rule_PT.    
-admit. 
-*eapply rule_seq. 
-eapply rule_conseq_l. 
-eapply rule_Oplus. rewrite big_pOplus_get_npro.
-eapply rule_conseq_l'.
-eapply rule_assgn with (F:= (BEq z '(Afun f (fun r1 r2 : nat => (r1 / r2)%R) z' ' ((2 ^ t))))).
-eapply implies_trans'. apply Assn_true_F. simpl.  
+      rewrite Nat.mod_small. bdestruct (x=?1). 
+      pose H. unfold x in H10. lia. auto. pose H. unfold x.
+      unfold N. lia. destruct H7. destruct H6.
 
-intro; try repeat match goal with 
-H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
-destruct H end;
-try match goal with 
-H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
-try discriminate end;
-try match goal with 
-H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
-  admit.
-eapply rule_conseq_l'. apply rule_Dassgn. 
-eapply implies_trans. apply rule_PT. unfold b'.
+      eapply rule_conseq.
+      eapply rule_while with (F0:= (BLt z ' r))  (F1:=  (BEq z ' r)).
 
-eapply implies_trans'. apply (Assn_impl b  <{ x ^ (z) ' % N }>
-(BEq b ' (<{ x ^ (z) ' % N }>))). 
+     *eapply rule_seq. eapply rule_conseq_l;try apply rule_QInit; apply rule_PT.
 
-unfold assert_implies. intros. 
- 
-apply sat_State_Npro. eapply WF_sat_Assert. apply H6.
-eapply WF_sat_Assert. apply H6.
+     *eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
+      eapply rule_qframe'; simpl; try lia. 
+      split. apply rule_QInit. 
+      split. apply inter_empty. left. reflexivity.
+      right.  rewrite H0. lia. 
 
-rule_solve. unfold State_eval in *.  unfold Pure_eval in *.
-unfold beval in *. unfold aeval in *. unfold fst in *.
-bdestruct ( c_find z x0 =? r). 
-right. apply H9 in H7. rewrite H12 in H7.
-pose Hr.  destruct a. unfold x in *. unfold r in *.
-unfold N in *.   rewrite H13 in *.
-bdestruct (c_find b x0 =? 1). simpl. auto.
-destruct H7. 
-left. 
-admit.
+      *eapply rule_seq.
+      eapply rule_qframe; simpl; try lia. 
+      split. apply rule_QUnit_One'; try lia. 
+      split. apply inter_empty. left. reflexivity.
+      left.  rewrite H3.  lia.  
+      unfold U_v; repeat rewrite Nat.sub_diag; rewrite Nat.sub_0_r; simpl;
+      rewrite kron_1_l; auto_wf; rewrite kron_1_r; auto_wf; rewrite Had_N.
 
-apply Assn_true. simpl. 
-intro; try repeat match goal with 
-H:NSet.In ?b (NSet.union ?c1 ?c2)|-_ => apply NSet.union_1 in H;
-destruct H end;
-try match goal with 
-H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
-try discriminate end;
-try match goal with 
-H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end. 
-assert(L=t+L-t). lia. destruct H4. 
-apply a0.
+      *eapply rule_seq.
+      eapply rule_qframe';simpl;try lia. 
+      split. apply rule_QUnit_One'; try lia.
+      split. apply inter_empty. left. reflexivity.
+      right. rewrite H0; lia.  
+      pose HU_plus. destruct a2. assert(L=t + L - t). lia. 
+      unfold U_v; repeat rewrite Nat.sub_diag;
+      simpl; rewrite kron_1_l; auto_wf; try rewrite kron_1_r; auto_wf; destruct H6; try rewrite H5.
 
-implies_trans_solve 0 SAnd_PAnd_eq. 
-unfold assert_implies. intros.
-apply sat_NPro_State. assumption.
- apply rule_Conj_split_l. 
+      *eapply rule_seq.  
+      eapply rule_conseq_l. eapply rule_odotT.
+      eapply rule_conseq_l. eapply rule_Separ.
+      assert(L=t + L - t). lia. destruct H6.
+      assert(t=t-0). lia. destruct H6.
+      rewrite simpl_H_Uplus.
+      eapply rule_QUnit_Ctrl; try lia.  rewrite simpl_Uf.
+
+      * eapply rule_seq.
+      eapply rule_QUnit_One'; try lia. 
+      assert(t=t-0). lia. destruct H6.
+      assert(t+L=t+L-0). lia. destruct H6.
+      rewrite simpl_QFT'.
+
+      * eapply rule_seq. 
+      eapply rule_conseq_l'.
+      eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P); try lia.
+      apply rule_Conj_two. 
+      apply implies_refl. implies_trans_solve 0  rule_PT.
+      rewrite Nat.sub_0_r. unfold P.    
+      apply big_Sand_Assn_true.   
+      intros. simpl. unfold not. apply In_empty.
+
+      *eapply rule_seq. 
+      eapply rule_conseq_l  with (big_pOplus (fun i:nat=>(/  r)%R ) (fun s:nat=> P' s) r).
+      eapply big_Oplus_solve'.
+      eapply rule_conseq_l .  eapply rule_Oplus. rewrite big_pOplus_get_npro. 
+      unfold P'.
+      eapply rule_conseq_l with (Assn_sub z (Afun f (fun r1 r2 : nat => (r1 / r2)%R) z' ' ((2 ^ t))) 
+      (ANpro [ SPure ((BLt (z) '  r )) ; SPure (BEq (z) ' r)])).
+      admit.
+      apply rule_Dassgn.
+      eapply rule_conseq_l'. apply rule_Dassgn. 
+      unfold b'.  simpl. apply Assn_sub_Plus. econstructor. 
+
+      eapply implies_trans with (<{  (z) ' < r }> /\s (SAssn b <{ x ^ (z) ' % N }> <{ (b) ' <> 1 }>)).
+      apply rule_Conj_two. apply implies_refl.
+      rule_solve. intros. apply H8 in H16.
+      unfold State_eval in *.  unfold Pure_eval in *.
+      unfold beval in *. unfold aeval in *. unfold fst in *.
+      unfold s_update_cstate.  rewrite c_update_find_eq.
+      bdestruct (c_find z x0 <? r).   
+      bdestruct (x ^ c_find z x0 mod N =? 1).
+      pose Hr. destruct a. unfold x in *. unfold N in *. unfold r in *. 
+      apply H20 in H18. lia.  auto. simpl in *. destruct H16.
+
+      apply Assn_conj_F. simpl.
+
+      not_In_solve.
+
+      econstructor. 
+
+      eapply implies_trans with (<{  (z) ' = r }> /\s (SAssn b <{ x ^ (z) ' % N }> <{ ~ (b) ' <> 1 }>)).
+      apply rule_Conj_two. apply implies_refl.
+      rule_solve. intros. apply H8 in H16.
+      unfold State_eval in *.  unfold Pure_eval in *.
+      unfold beval in *. unfold aeval in *. unfold fst in *.
+      unfold s_update_cstate.  rewrite c_update_find_eq.
+      bdestruct (c_find z x0 =? r).   
+      bdestruct (x ^ c_find z x0 mod N =? 1). auto. 
+      rewrite H17 in H18. 
+      pose Hr. destruct a. unfold x in *. unfold N in *. unfold r in *. lia.
+      destruct H16.  
+
+      apply Assn_conj_F. simpl.
+
+      not_In_solve.
+
+      econstructor.
+
+      assert(L=t+L-t). lia. destruct H6.    apply H4. 
+
+      implies_trans_solve 0 SAnd_PAnd_eq. 
+      unfold assert_implies; intros;
+      apply sat_NPro_State; assumption.
+
+      apply rule_Conj_split_l. 
 Admitted.
 End OF.
 

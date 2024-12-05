@@ -975,11 +975,16 @@ Qed.
 
 
 Lemma  Forall_fun_to_list{G:Type}: forall (f: G-> Prop) (g:nat->G) n0,
-(forall i, i< n0 -> f (g i))->
+(forall i, i< n0 -> f (g i))<->
 Forall f (fun_to_list g n0) .
-Proof. induction n0; intros. simpl. apply Forall_nil.
+Proof. induction n0; intros.  simpl. split; intros. try apply Forall_nil. lia.
+split; intros. 
  simpl. rewrite Forall_app. split. apply IHn0. intros.
  apply H. lia. econstructor. apply H. lia. apply Forall_nil.
+ simpl in *.  apply Forall_app in H. destruct H.
+  assert( i= n0\/ i<> n0). 
+  apply Classical_Prop.classic. destruct H2. inversion_clear H1.
+  subst. assumption. apply IHn0. assumption. lia. 
 Qed.
 
 
