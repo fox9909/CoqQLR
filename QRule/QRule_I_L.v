@@ -1824,6 +1824,7 @@ Proof. intros. inversion_clear H. inversion_clear H0.
 Qed.
 
 
+
 Lemma sat_State_Npro{s e:nat}:forall (mu:dstate s e) F1 F2,
 WF_dstate mu-> StateMap.this mu <> []->
 (forall x,  (d_find x mu) <> Zero -> State_eval F1 (x, d_find x mu)
@@ -1902,10 +1903,18 @@ Proof. intros (mu, IHmu); simpl in *; intros.
       apply Cstate_as_OT.lt_not_eq in l. intuition.
       apply IHmu0. inversion_clear H. assumption.
       discriminate.
-      intros. destruct p.  
-      admit.
+      intros. destruct p.  pose(H1 x). destruct a.
+      pose H6. 
+      apply dstate_1 with (t:=c0) (q:=q0) in n.
+      assert(d_find x {| StateMap.this := (c0, q0) :: (c, q) :: mu; StateMap.sorted := IHmu |}=
+      d_find x {| StateMap.this := (c, q) :: mu; StateMap.sorted := H3 |}).
+       unfold d_find . 
+      unfold StateMap.find. simpl in *. 
+      MC.elim_comp. reflexivity. 
+      rewrite H7 in *. apply o. assumption. 
+      econstructor. assumption. assumption.    
       eapply WF_dstate_eq. apply H5.  assumption.  
-Admitted.
+Qed.
 
 Lemma sat_Npro_Pro{s e:nat}:forall (mu:dstate s e) F1 F2, 
 sat_Assert mu (ANpro [F1;F2])-> (exists p, 0<=p<=1 /\ sat_Assert mu (APro [(p, F1);(1-p, F2)])).
