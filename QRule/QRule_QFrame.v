@@ -5052,6 +5052,36 @@ Proof. unfold NSet.Equal. intros. split; intros.
        
 Admitted.
 
+
+Lemma d_par_trace_sort{s e:nat}:forall (mu: list (state s e)) l r,
+Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
+Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) (d_par_trace mu l r).
+Proof. induction mu; intros. simpl. econstructor.
+inversion_clear H. 
+destruct a. simpl. econstructor . 
+apply IHmu. assumption.
+destruct mu. simpl in *. econstructor.
+destruct s0. 
+simpl. econstructor.  inversion_clear H1.
+unfold StateMap.Raw.PX.ltk in *. simpl in *.
+assumption.
+Qed.
+
+
+Lemma Pure_free_dstate{s e s' e':nat}:forall  (F: State_formula)  (mu : list (state s e))  l r,
+(Free_State F)= None-> 
+State_eval_dstate F mu -> 
+State_eval_dstate F (d_par_trace mu l r).
+Proof. induction mu; intros. simpl in *.  destruct H0.
+       destruct a.   inversion_clear H0.  destruct mu.
+       simpl in *. econstructor.  
+       eapply Pure_free_eval'. assumption. apply H1.
+       econstructor. destruct s0.   
+       simpl. econstructor.   
+       eapply Pure_free_eval'. assumption. apply H1.
+       apply IHmu. assumption. assumption.
+Qed. 
+
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
 Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3-> 
 ({{F1}} c {{F2}}) 
@@ -5060,10 +5090,13 @@ Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3->
 snd (option_free (Free_State F3)) <= ((option_nat (NSet.min_elt (snd (MVar c))))))
 -> {{F1 ⊙ F3}} c {{F2 ⊙ F3}}. 
 Proof.  unfold hoare_triple.  intros F1 F2 F3 c HF3. intros. destruct H.
+        assert(StateMap.this mu<>[]) as H'. 
+        eapply WF_sat_Assert. apply H1. 
         assert(sat_Assert mu F1 -> sat_Assert mu' F2).
         apply H. assumption. 
         destruct mu as [mu IHmu].
-        destruct mu' as [mu' IHmu'].
+        destruct mu' as [mu' IHmu']. 
+        
         inversion_clear H0. simpl in H5.
         repeat rewrite sat_Assert_to_State in *.
         inversion_clear H1.  simpl in *.
@@ -5097,77 +5130,155 @@ lia. apply H2. apply H2.
 
 assert(forall (s e : nat) (mu mu' : list (state s e)),
 WF_dstate_aux mu->
+Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
 ceval_single c mu mu' -> State_eval_dstate F1 mu -> State_eval_dstate F2 mu').
-admit.
+intros.
+assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s0 e0)) mu'0).
+apply ceval_sorted with c mu0; try assumption.
+assert(ceval c (StateMap.Build_slist H10) (StateMap.Build_slist H13)).
+econstructor. assumption.
+simpl. assumption.   
+assert(sat_Assert (StateMap.Build_slist H10) F1).
+apply sat_Assert_to_State. econstructor.
+assumption. assumption.
+pose (H s0 e0 (StateMap.Build_slist H10) (StateMap.Build_slist H13) H14 H15).
+rewrite sat_Assert_to_State in s1. 
+inversion_clear s1. assumption. 
 
-remember (min (option_nat (NSet.min_elt ((snd (MVar c))))) (fst (option_free (Free_State F1)))) as l.
-remember (max (option_nat (NSet.max_elt ((snd (MVar c))))) (snd (option_free (Free_State F1)))+1) as r.
-pose H1.
-apply State_dstate_free_eval with 
-(s':=l)
-(e':=r) in s0.
+pose(State_eval_dstate_dom mu F1 H1). 
+destruct o.
+assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
+apply Classical_Prop.classic. 
+destruct H11. admit.  
+remember ( (option_nat (NSet.min_elt ((snd (MVar c)))) ) ) as l.
+remember ( (option_nat (NSet.max_elt ((snd (MVar c)))) +1) ) as r.
+assert(l<r). rewrite Heqr. rewrite Heql.  
+pose (min_le_max (snd (MVar c))).   lia.    
+pose (ceval_single_dom c mu mu' H0 H5 H' H11).
+apply Subset_min_max_In in s0; try assumption.  
+assert(s <= l /\ l <= r <= e). 
+rewrite Heql. rewrite Heqr. lia.
+
+pose H1.  
+apply (@Pure_free_dstate s e) with (l:=l) (r:=r) in s1; try assumption.
 pose H5.
-apply Par_trace_ceval_swap with 
-(l:=l)
-(r:=r) in c0.
-apply H9 in c0; try assumption.  
+apply Par_trace_ceval_swap with (l:=l) (r:=r) in c0; try assumption.
+apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
 
-apply subset_inter_empty with 
-(Qsys_to_Set l
-r); try assumption.
-apply Qsys_inter_empty. admit.
-rewrite Heql. 
-apply min_glb_lt_iff. 
-split. lia.  auto.  
+apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
+apply Qsys_inter_empty; try lia.  
+rewrite Heql. rewrite Heqr. 
+destruct H2. destruct H14.
+right.
+rewrite <-Considered_Formula_min; try apply HF3. lia. 
+
+left.   
+rewrite <-Considered_Formula_max; try apply HF3.  admit.
+
+apply State_eval_dstate_dom  in c0.
+destruct c0.   admit. 
+pose (Qsys_to_Set_min_max l r H12). destruct a. 
+apply Subset_min_max_In'; 
+intros; try rewrite H15 in *; try rewrite H16 in *.
+apply In_Qsys; try lia.   
+rewrite <-Considered_Formula_min; try apply HF3. lia. 
+rewrite <-Considered_Formula_max; try apply HF3. lia.
+ 
+pose (Qsys_to_Set_min_max l r H12). destruct a. 
+apply Subset_min_max_In';
+intros; try rewrite H14 in *; try rewrite H15 in *.
+apply In_Qsys; try lia. lia. lia.
 
 
+assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
+apply Classical_Prop.classic. 
+destruct H11. 
+remember ( (fst (option_free (Free_State F1)))) as l.
+remember ( (snd (option_free (Free_State F1)))) as r.
+assert(l<r). rewrite Heqr. rewrite Heql. lia.   
+assert(s <= l /\ l <= r <= e). 
+rewrite Heql. rewrite Heqr. lia.
+
+pose H1.  
+apply State_dstate_free_eval with (s':=l) (e':=r) in s0; try apply (@WF_Mixed_dstate s e); try assumption.
+assert(ceval_single c (d_par_trace mu l r)
+(d_par_trace mu' l r)) as c0. admit. 
+apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
+
+apply subset_inter_empty with (Qsys_to_Set l r); try assumption. 
+rewrite Heql. rewrite Heqr. admit. 
+
+apply State_eval_dstate_dom  in c0.
+destruct c0.   admit. 
+pose (Qsys_to_Set_min_max l r H12). destruct a. 
+apply Subset_min_max_In'; 
+intros; try rewrite H15 in *; try rewrite H16 in *.
+apply In_Qsys; try lia.   
+rewrite <-Considered_Formula_min; try apply HF3. lia. 
+rewrite <-Considered_Formula_max; try apply HF3. lia.
+ 
+rewrite Heql.
+rewrite Heqr. lia.  
+
+remember (min (option_nat (NSet.min_elt ((snd (MVar c)))) ) (fst (option_free (Free_State F1)))) as l.
+remember (max (option_nat (NSet.max_elt ((snd (MVar c)))) +1) (snd (option_free (Free_State F1)))) as r.
 
 
+pose(State_eval_dstate_dom mu F1 H1). 
+destruct o. admit.
+assert(l<r). rewrite Heqr. rewrite Heql. lia.    
+pose (ceval_single_dom c mu mu' H0 H5 H' H11).
+apply Subset_min_max_In in s0; try assumption.  
+assert(s <= l /\ l <= r <= e). 
+rewrite Heql. rewrite Heqr. lia.
 
-
-pose H1.
-assert(Free_State F1= None \/ ~(Free_State F1= None)).
-apply Classical_Prop.classic. destruct H9. admit.  
-assert(Free_State F2= None \/ ~(Free_State F2= None)).
-apply Classical_Prop.classic. destruct H10. admit.  
-apply State_dstate_free_eval with (s':=fst (option_free (Free_State F1)))
-(e':=snd (option_free (Free_State F1))) in s0.
-apply Par_trace_ceval_swap with (l:=fst (option_free (Free_State F1)))
-(r:=snd (option_free (Free_State F1))) in H5. 
-
-pose(H11 ((fst (option_free (Free_State F1)))) (snd (option_free (Free_State F1))) 
-(d_par_trace mu (fst (option_free (Free_State F1)))
-(snd (option_free (Free_State F1))))
-(d_par_trace mu' (fst (option_free (Free_State F1)))
-(snd (option_free (Free_State F1))))).
-assert(State_eval_dstate F2
-(d_par_trace mu' (fst (option_free (Free_State F1)))
-   (snd (option_free (Free_State F1))))).
-   apply s1. 
-   apply WF_d_par_trace. pose (State_eval_dstate_dom mu F1 H1).
-   destruct o. destruct H9. assumption. lia. 
-   assumption.
-   assumption. 
-   assumption.  
-   apply State_eval_dstate_dom in H12.  
-   destruct H12. destruct H10. assumption. 
-   destruct H12.  destruct H13. 
-   rewrite Considered_Formula_min in H12; try apply HF3.
-   rewrite Considered_Formula_min in H12; try apply HF3.
-   apply Subset_min_max_In'. admit.
-   assumption.  
-    rewrite <-Considered_Formula_max; try apply HF3.
-    rewrite <-Considered_Formula_max; try apply HF3; try lia.
-    pose (State_eval_dstate_dom mu F1 H1).
-   destruct o. destruct H9. assumption. lia. 
    
+pose H1.
+apply State_dstate_free_eval with (s':=l) (e':=r) in s1; try apply (@WF_Mixed_dstate s e); try assumption.
+pose H5.
+apply Par_trace_ceval_swap with (l:=l) (r:=r) in c0; try assumption.
+apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
+
+
+apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
+apply Qsys_inter_empty; try lia.  
+rewrite Heql. rewrite Heqr.
+destruct H2. destruct H15.
+right.
+rewrite <-Considered_Formula_min; try apply HF3.
+assert(max (option_nat (NSet.max_elt (snd (MVar c))))
+(snd (option_free (Free_State F1)))  <=
+fst (option_free (Free_State F3))-1).
+apply max_lub_iff.
+split. lia. 
+admit. lia.  
+
+left.  
+apply min_glb_lt_iff. 
+split. 
+rewrite <-Considered_Formula_max; try apply HF3. 
+admit. admit.
+apply State_eval_dstate_dom  in c0.
+destruct c0.  admit. 
+pose (Qsys_to_Set_min_max l r H13). destruct a. 
+apply Subset_min_max_In'; 
+intros; try rewrite H16 in *; try rewrite H17 in *.
+apply In_Qsys; try lia.   
+rewrite <-Considered_Formula_min; try apply HF3. lia. 
+rewrite <-Considered_Formula_max; try apply HF3. lia.
+ 
+pose (Qsys_to_Set_min_max l r H13). destruct a. 
+apply Subset_min_max_In';
+intros; try rewrite H15 in *; try rewrite H16 in *.
+apply In_Qsys; try lia. lia. lia.
+
+rewrite Heql.
+rewrite Heqr. 
+split.  
+apply  le_min_r. 
+apply le_max_r.
+
     
-
-  
-    
-
-
-         admit.
 Admitted.
 
 
