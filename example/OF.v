@@ -1780,22 +1780,22 @@ Proof.
      *eapply rule_seq. eapply rule_conseq_l;try apply rule_QInit; apply rule_PT.
 
      *eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
-      eapply rule_qframe'; simpl; try lia. 
-      split. apply rule_QInit. 
+      eapply rule_qframe'; [|split; try apply rule_QInit].
+      unfold Considered_Formula_F_c; simpl; intuition.
       split. apply inter_empty. left. reflexivity.
-      right.  rewrite H0. lia. 
+      simpl. right.  rewrite H0. lia. 
 
       *eapply rule_seq.
-      eapply rule_qframe; simpl; try lia. 
-      split. apply rule_QUnit_One'; try lia. 
+      eapply rule_qframe; simpl; [|split; try apply rule_QUnit_One'].
+      unfold Considered_Formula_F_c; simpl. intuition. lia.  
       split. apply inter_empty. left. reflexivity.
       left.  rewrite H3.  lia.  
       unfold U_v; repeat rewrite Nat.sub_diag; rewrite Nat.sub_0_r; simpl;
       rewrite kron_1_l; auto_wf; rewrite kron_1_r; auto_wf; rewrite Had_N.
 
       *eapply rule_seq.
-      eapply rule_qframe';simpl;try lia. 
-      split. apply rule_QUnit_One'; try lia.
+      eapply rule_qframe'; simpl; [|split; try apply rule_QUnit_One'].
+      unfold Considered_Formula_F_c ; simpl. intuition. lia.  
       split. apply inter_empty. left. reflexivity.
       right. rewrite H0; lia.  
       pose HU_plus. destruct a2. assert(L=t + L - t). lia. 

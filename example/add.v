@@ -261,12 +261,14 @@ Proof.
 eapply rule_seq. eapply rule_QInit. simpl sub.  
 eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
 eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (1) >[ 1, 2]).
-simpl. intuition. simpl. 
+unfold Considered_Formula_F_c.
+simpl. intuition. simpl.  
 split. eapply rule_QInit. split. apply inter_empty. left.
 reflexivity. lia.  
 
 (*QUnit*)
 eapply rule_seq. eapply rule_qframe with (F2:=QExp_s 0 1 ∣+⟩).
+unfold Considered_Formula_F_c.
 simpl. lia. simpl.  split. 
 eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
@@ -277,6 +279,7 @@ reflexivity. lia.
 
 eapply rule_seq.
 eapply rule_qframe' with (F2:=QExp_s 1 2 ∣+⟩).
+unfold Considered_Formula_F_c.
 simpl. lia. simpl.  
 split. eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
@@ -509,5 +512,5 @@ apply Rinv_neq_0_compat.
 
 apply sqrt_neq_0_compat. lra. 
 rewrite <-sqrt_inv. assert((0<=√ (/ 2))%R). apply sqrt_pos. lra.
-Qed.
+Qed. 
 

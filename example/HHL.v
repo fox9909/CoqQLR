@@ -52,20 +52,23 @@ Parameter QFT: Square (2^n) .
 Parameter t:R. 
 Parameter delt_n:nat->nat.
 
-Hypothesis Hmn: (and (n>0)%nat (m>0)%nat).
+Hypothesis Hmn: ( (n>0)%nat /\ (m>0)%nat).
 Hypothesis HA: WF_Matrix A .
-Hypothesis Hx: WF_Matrix x /\ norm x =1.
 Hypothesis Hb: WF_Matrix b /\ norm b =1.
-Hypothesis HAx: A × x =b.
 Hypothesis Hv_n:forall j, WF_Matrix (v_n j) /\ norm (v_n j)=1.
 Hypothesis (Hlamda: forall j, lamda_n j <> 0).
-Hypothesis (Hc: forall j:nat, Rabs (c / j) <= 1).
 Hypothesis HB_decom: big_sum (fun j=>(b_n j) .* (v_n j)) (2^m)= b.
-Hypothesis HA_decom: big_sum (fun j=>(lamda_n j) .* (v_n j)) (2^m)= A.
+Hypothesis HA_decom: big_sum (fun j=>(lamda_n j) .* Mmult (v_n j) (adjoint (v_n j))) (2^m)= A.
+Hypothesis Hx:WF_Matrix x /\ x=(big_sum (fun i : nat => b_n i / lamda_n i .* v_n i) (2 ^ m))%R /\ norm x =1.
+
+Hypothesis Hc: c> 0 /\ forall j:nat, Rabs (c / j) <= 1.
+Hypothesis Ht': t>0.
+
 Hypothesis HU_b: WF_Unitary U_b /\ ( U_b × (Vec (2^m) 0) = b).
 Hypothesis HU: (WF_Unitary (U) )/\ forall j :nat,  (U) × ( (v_n j))= (cos ((lamda_n j) * t), sin ( (lamda_n j) * t)) .* ( (v_n j)).
 Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ n) =
 1 / √ 2 ^ n .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^n)) * j * k),  sin (((2 * PI)/(2^n)) * j * k)) .*  (∣ j ⟩_ n)) (2 ^ n)).
+
 Hypothesis (Ht: forall j:nat, and (delt_n j < 2^n)%nat  ((lamda_n j * t/ (2*PI))*(2^n) = delt_n j)).
 
 Definition  U_f (i:nat):= exp_U U i.
@@ -95,6 +98,42 @@ Proof. intros. assert(1=1^2). simpl. repeat rewrite Rmult_1_r. reflexivity.
        rewrite H0. repeat rewrite <-Rsqr_pow2. 
       apply Rsqr_le_abs_1. rewrite Rabs_R1. assumption. 
 Qed.
+
+
+Lemma norm_1_pure_vec{n:nat}:  forall (x:Vector n),
+WF_Matrix x ->
+norm x =1 ->
+Pure_State_Vector x.
+Proof. intros. econstructor. assumption. unfold norm in *. 
+       rewrite <-sqrt_1 in H0. apply sqrt_inj in H0. 
+       assert( WF_Matrix (I 1)). auto_wf.
+       unfold WF_Matrix in *.
+       unfold inner_product in H0. unfold I. 
+       prep_matrix_equality. destruct x1. destruct y.
+       simpl. 
+       remember(((x0) † × x0) 0%nat 0%nat).
+       assert(c0= (fst c0, snd c0)). destruct c0. reflexivity.
+       rewrite H2. assert(C1=(1,0)). reflexivity. rewrite H3.
+         f_equal. subst. assumption. subst. 
+       unfold adjoint. unfold Mmult. rewrite big_sum_snd_0.
+       reflexivity. intros. simpl. lra.
+       unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
+       intros.   rewrite H. rewrite Cmult_0_r. reflexivity.
+       destruct y.  lia. lia.
+
+       destruct y;    simpl in *. 
+       unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
+       intros. unfold adjoint. simpl.   rewrite H. rewrite Cconj_0. rewrite Cmult_0_l. reflexivity.
+        lia. assert((S x1 <? 1) = false). apply Nat.ltb_ge. lia.  
+        rewrite H2. simpl. assert((x1 =? y) && false = false).
+        destruct (x1=?y); simpl; reflexivity. rewrite H3.
+        unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
+       intros. unfold adjoint. simpl.   rewrite H. rewrite Cconj_0. rewrite Cmult_0_l. reflexivity.
+       lia. 
+       apply inner_product_ge_0. lra.  
+  
+Qed.
+
 
 
 Local Open Scope nat_scope.
@@ -447,7 +486,7 @@ apply INR_not_0.
 rewrite <-H1. apply Rmult_integral_contrapositive_currified.
 rewrite Rdiv_unfold. apply Rmult_integral_contrapositive_currified.
 apply Rmult_integral_contrapositive_currified. apply Hlamda.
-pose Ht.  admit.
+pose Ht'. apply Rgt_neq_0.  lra.  
 apply Rgt_neq_0. apply Rinv_0_lt_compat. apply Rmult_lt_0_compat.
 lra.  apply PI_RGT_0. rewrite pow_IZR.  apply not_0_IZR. lia.
 apply WF_vec. apply H.  apply H. apply Hv_n. intros.
@@ -458,7 +497,8 @@ rewrite Mmult_assoc.  rewrite Vec_inner_0. unfold c_to_Vector1.
 Msimpl. reflexivity.
 intuition. assumption.
 apply H.
-Admitted.
+Qed. 
+
 
 Lemma simpl_QFT: 
 @U_v (n-0) (n+m+1-0) 0 n 0 (n + m + 1) QFT (big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i
@@ -667,9 +707,11 @@ unfold U_v. type_sovle. pose Hmn.
 assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity. 
 destruct H.  assert(2 ^ (n + m) * 2 ^ 1 = 2 ^ (n + m + 1)). rewrite <-Nat.pow_add_r. reflexivity.
 destruct H. rewrite Mmult_Msum_distr_l.
-rewrite (big_sum_eq_bounded _  ((fun i : nat => (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i ⊗ (c / phi' i .* Vec 2 1))) )). 
+rewrite (big_sum_eq_bounded _  
+((fun i : nat => (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i ⊗ (c / phi' i .* Vec 2 1))) )). 
 unfold phi'. unfold phi.
-rewrite (big_sum_eq_bounded _ ((fun i : nat => (((c * (2 * PI) * 2 ^ n /t))%R.* (∣ 0 ⟩_ (n) ⊗ ((b_n i/ lamda_n i ) .* v_n i) ⊗ ( Vec 2 1)))) )). 
+rewrite (big_sum_eq_bounded _ 
+((fun i : nat => (((c * (2 * PI)  / ( 2 ^ n* t)))%R.* (∣ 0 ⟩_ (n) ⊗ ((b_n i/ lamda_n i ) .* v_n i) ⊗ ( Vec 2 1)))) )). 
 assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity.
 destruct H. 
          
@@ -685,13 +727,59 @@ rewrite Rinv_mult_distr_depr.  rewrite Mscale_assoc. rewrite RtoC_mult.
 rewrite Rmult_assoc. rewrite Rmult_comm. rewrite Rmult_assoc.
 rewrite Rinv_r. rewrite Rmult_1_r. 
 rewrite <-Mscale_kron_dist_l.  rewrite <-Mscale_kron_dist_r.
-f_equal. f_equal.  admit. admit. admit. admit.
+f_equal. f_equal.
+pose Hx. destruct a0. destruct H1.
+ rewrite H1 in *. rewrite H2.
+rewrite Rinv_1.
+rewrite Mscale_1_l. reflexivity.    
+apply Rgt_neq_0. apply Rdiv_lt_0_compat.
+apply Rmult_gt_0_compat.  apply Hc.
+apply Rmult_gt_0_compat. lra. apply PI_RGT_0.
+apply Rmult_gt_0_compat. apply pow_lt. lra.
+apply Ht'.   
+apply Rgt_neq_0. apply Rdiv_lt_0_compat.
+apply Rmult_gt_0_compat.  apply Hc.
+apply Rmult_gt_0_compat. lra. apply PI_RGT_0.
+apply Rmult_gt_0_compat. apply pow_lt. lra.
+apply Ht'.   
+pose Hx. destruct a0. destruct H1.
+ rewrite H1 in *. rewrite H2. lra.  
+
 simpl. lia. apply pow_gt_0.
-admit. 
+assert ((c * (2 * PI) / (2 ^ n * t) > 0)%R).
+apply Rdiv_lt_0_compat.
+apply Rmult_gt_0_compat. apply Hc.
+apply Rmult_gt_0_compat. lra. apply PI_RGT_0.
+apply Rmult_gt_0_compat. apply pow_lt. lra.
+apply Ht'. lra.    
+
 
 intros. repeat rewrite Mscale_kron_dist_r.  repeat rewrite Mscale_kron_dist_l.
-repeat rewrite Mscale_assoc. f_equal.   repeat rewrite Rdiv_unfold. 
-admit. 
+repeat rewrite Mscale_assoc. f_equal.   repeat rewrite Rdiv_unfold.
+
+ repeat rewrite Cdiv_unfold.
+ repeat rewrite <-RtoC_inv; try apply Hlamda; 
+  repeat rewrite Rinv_mult_distr_depr; 
+  try lra; try apply Hlamda; try apply Rinv_neq_0_compat; try apply PI_neq0;
+   try apply Rmult_integral_contrapositive; try split;
+   try apply Rinv_neq_0_compat;
+   try apply Hlamda; try apply PI_neq0;
+   try apply Rmult_integral_contrapositive; try split;
+   try apply Rinv_neq_0_compat;
+   try apply Hlamda; try apply PI_neq0; try lra;
+   try apply Rmult_integral_contrapositive; try split;
+   try apply Rinv_neq_0_compat;
+   try apply Hlamda; try apply PI_neq0; try lra; 
+   try apply pow_nonzero; try lra ; try apply Rgt_neq_0; try apply Ht'.
+  rewrite Rinv_inv. rewrite Rinv_inv.
+  repeat rewrite <-RtoC_mult.  
+  repeat rewrite <-Cmult_assoc. 
+f_equal. rewrite Cmult_comm.  repeat rewrite Cmult_assoc.
+f_equal. f_equal.   
+repeat rewrite <-Cmult_assoc. 
+rewrite Cmult_comm. 
+repeat rewrite Cmult_assoc. reflexivity. 
+
 
 intros.
 remember ((√ (1 - c * (c * 1) / (phi' x0 * (phi' x0 * 1))) .* Vec 2 0 .+ c / phi' x0 .* Vec 2 1)).
@@ -707,7 +795,7 @@ assert((Vec 2 1) † × Vec 2 1=(Vec (2^1) 1) † × (Vec (2^1) 1)). reflexivity
 rewrite Vec_inner_1. rewrite Vec_inner_0. unfold c_to_Vector1. Msimpl.  reflexivity.
 lia. simpl. lia. simpl. lia. simpl. lia. apply Hv_n. assert(0<2^n). apply pow_gt_0.
 auto_wf. 
-Admitted.
+Qed.
 
 
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
@@ -724,38 +812,52 @@ Proof.
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_PT. eapply rule_QInit. }  
         eapply rule_seq.
-      {eapply rule_conseq_l. apply rule_OdotE. apply rule_qframe'.
-       simpl. lia.  split.  eapply rule_QInit. simpl.
+      {eapply rule_conseq_l. apply rule_OdotE.
+       apply rule_qframe'; [ | split; try eapply rule_QInit].
+      unfold Considered_Formula_F_c.
+       simpl. intuition.  simpl.
        split. apply inter_empty. left. reflexivity. right.  
         rewrite H2. lia. } 
         eapply rule_seq.
-      {eapply rule_conseq_l.  apply rule_OdotE. apply rule_qframe'. simpl. lia.  
-       split. eapply rule_QInit. simpl. 
-       split. apply inter_empty. left. apply union_empty.
+      {eapply rule_conseq_l.  apply rule_OdotE. 
+      apply rule_qframe'; [ | split; try eapply rule_QInit].
+      unfold Considered_Formula_F_c. simpl. intuition. 
+       simpl.  split. apply inter_empty. left. apply union_empty.
        split; reflexivity. right. rewrite H4.  rewrite max_r; try lia. }
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
-       eapply rule_qframe'. simpl.  lia. 
-       split.  eapply rule_qframe. simpl. lia. 
-       split. eapply rule_QUnit_One'. lia. 
+       eapply rule_qframe'; 
+       [ | split; [eapply rule_qframe; [| split; try eapply rule_QUnit_One' ] | ] ].
+       unfold Considered_Formula_F_c. simpl.   lia. 
+       unfold Considered_Formula_F_c. simpl.   lia. lia.  
        simpl.  split. apply inter_empty. left. reflexivity.
        left. rewrite H3. lia.  simpl. 
        split. apply inter_empty. left. reflexivity. 
        right. rewrite H2. lia. }
         assert(m=n+m-n). lia. destruct H6.  rewrite U_vb. 
         eapply rule_seq.
-      {eapply rule_qframe. simpl. lia.  
-       split. eapply rule_QUnit_One'. lia. 
+      {eapply rule_qframe;[|split; try eapply rule_QUnit_One'].
+       unfold Considered_Formula_F_c.  simpl. lia. lia.   
        simpl.  split. apply inter_empty. left. apply union_empty.
        split; reflexivity. left. rewrite H1. rewrite min_l; try lia. } 
         assert(n=n-0). lia. destruct H6. rewrite Had_N'. 
         eapply rule_seq.
-      {eapply rule_conseq_l. apply rule_OdotA. eapply rule_qframe. simpl. lia. 
-       split. eapply rule_conseq_l. apply rule_odotT. eapply rule_conseq_l.
-       apply rule_Separ.
-       assert(m=n+m-n). lia. destruct H6.
-       assert(n=n-0). lia. destruct H6.
-       rewrite simpl_HB. apply rule_QUnit_Ctrl. lia.
+      {eapply rule_conseq_l. apply rule_OdotA.
+       eapply rule_qframe;
+       [ |split; [eapply rule_conseq_l; [apply rule_odotT | eapply rule_conseq_l;
+       [apply rule_Separ | assert(m=n+m-n); try lia; destruct H6;
+       assert(n=n-0); try lia; destruct H6;
+       rewrite simpl_HB; apply rule_QUnit_Ctrl ] ] | ] ].
+       unfold Considered_Formula_F_c.  simpl.
+       split. right.  destruct a. 
+       pose (Qsys_to_Set_not_empty 0 n H6). 
+       pose (Qsys_to_Set_not_empty n (n+m) H). 
+       pose (max_union (Qsys_to_Set 0 n)
+       (Qsys_to_Set n (n + m))). destruct a. destruct H9.
+       rewrite H10; try assumption. 
+       pose (min_union (Qsys_to_Set 0 n)
+       (Qsys_to_Set n (n + m))). destruct a. destruct H12.
+       rewrite H13; try assumption. lia. lia. lia.     
       simpl. split. apply inter_empty. left. reflexivity.
       left. pose (max_union (Qsys_to_Set 0 n) (Qsys_to_Set n (n + m))). destruct a0.
       destruct H7. clear H6.  clear H7. rewrite H8. 
@@ -763,10 +865,10 @@ Proof.
        apply Qsys_to_Set_not_empty. lia.
        apply Qsys_to_Set_not_empty. lia.   } 
        rewrite simpl_Uf. eapply rule_seq.
-      {apply rule_qframe. simpl. lia. 
-      split. apply rule_QUnit_One'. lia. simpl. 
-      split. apply inter_empty. left. reflexivity. 
-      left. rewrite H1. lia. } 
+      {apply rule_qframe;[|split; try eapply rule_QUnit_One'].
+      unfold Considered_Formula_F_c. simpl. lia. lia.  
+      split. apply inter_empty. left. reflexivity.
+      simpl. left. rewrite H1. lia. } 
        assert(n=n-0). lia. destruct H6. assert(n+m=n+m-0). lia.
       destruct H6. rewrite simpl_QFT'. eapply rule_seq.
       {eapply rule_conseq_l. apply rule_odotT. 
@@ -829,7 +931,9 @@ rewrite sat_Assert_to_State. assumption. }
     type_sovle.
     assert(2 ^ n * 2 ^ m=2^(n+m)). type_sovle'. destruct H6. 
     apply ParDensityO.pure_state_vector_kron. apply pure_vector_vec. apply pow_gt_0.
-     admit.  
+     apply norm_1_pure_vec; try apply Hx.
+   
+
      implies_trans_solve 0 rule_odotT.
      implies_trans_solve 0 rule_OdotO'.  
       implies_trans_solve 0 rule_Conj_split_l. 
@@ -840,12 +944,14 @@ rewrite sat_Assert_to_State. assumption. }
     f_equal. apply add_sub_eq. destruct H6.
     assert(2^(n+m-n)=(2 ^ (n + m + 1 - (n + m))) ^ m). 
     repeat rewrite add_sub_eq. simpl. reflexivity. destruct H6.
-    implies_trans_solve 0  rule_Separ'. lia. pose Hx.  admit. apply pure_vector_vec. apply pow_gt_0.
+    implies_trans_solve 0  rule_Separ'. lia. 
+    rewrite add_sub_eq.  apply norm_1_pure_vec; try apply Hx.
+   apply pure_vector_vec. apply pow_gt_0.
     implies_trans_solve 0 rule_odotT. 
     implies_trans_solve 0 rule_OdotO'. 
     implies_trans_solve 0 rule_ConjC.   
     eapply rule_Conj_split_l.  }
-Admitted.
+Qed.
     
 End HHL. 
 

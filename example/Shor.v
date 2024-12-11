@@ -48,7 +48,7 @@ Definition Hr:= p.Hr.
 Definition y:nat := 3.
 
 Parameter random: nat -> nat -> nat.
-Hypothesis Hran: forall a b, (a <= random a b) /\ (random a b <= b).
+Hypothesis Hran: forall a b, (a-1 < random a b) /\ (random a b < b+1).
 
 (*Shor程序*)
 Definition Shor :=
@@ -354,7 +354,7 @@ Proof. unfold Shor.
     
         }
        eapply rule_seq with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) (0))) 
-       /\p ((  (BLe (2) x) /\p (BLe (x) ((ANum (N-1))))))). 
+       /\p ((  (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.
@@ -366,14 +366,16 @@ Proof. unfold Shor.
          apply union_empty; split; try reflexivity.
          
           implies_trans_solve 0 SAnd_PAnd_eq. implies_trans_solve 1 SAnd_PAnd_eq. 
-          apply rule_CconjCon. apply implies_refl.
+          apply rule_CconjCon. apply implies_refl. 
         classic_slove_1;
         pose (Hran 2 (N-1)); try rewrite <-H0 in a; destruct a;
-        rewrite <-Nat.leb_le in *; try rewrite H1; try rewrite H2; auto. 
+        rewrite <-Nat.ltb_lt in *; simpl in *; rewrite Nat.sub_add in *;  try rewrite H1; try rewrite H2; auto.
+        pose p.H. unfold N. lia.  pose p.H. unfold N. lia.
+
         }
-          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x ((N-1)))))
+          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x ((N)))))
           /\p ((F_1 y x N) \/p (F_2 y x N) \/p F_3 y x N)).
-          {eapply rule_conseq_l with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (( (BLe 2 x ) /\p (BLe x ((N-1))))) 
+          {eapply rule_conseq_l with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (( (BLt 1 x ) /\p (BLt x ((N))))) 
           /\p (PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N))))).
           implies_trans_solve 1 SAnd_PAnd_eq.
           apply rule_ConjE. split. apply rule_PT. apply Assn_true_P.
@@ -402,10 +404,10 @@ Proof. unfold Shor.
           }
           eapply rule_conseq_r'.
           apply rule_while_classic.
-           eapply rule_seq with (((Pre Cop N)/\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x (N-1))))
+           eapply rule_seq with (((Pre Cop N)/\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x (N))))
            /\p (BEq z ' r)). 
            eapply rule_conseq_l with 
-           ((((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLe 2 x ) /\p (BLe x  (N-1))))
+           ((((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x  (N))))
            /\p (BEq ((Nat.gcd x N)) 1))).
            classic_slove_2.
 
@@ -417,10 +419,10 @@ Proof. unfold Shor.
          try apply union_empty; try split; try reflexivity;
          try apply union_empty; try split; try reflexivity.
            apply rule_cond_classic. split.
-           eapply rule_conseq_l with ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLe 2 x ) /\p (BLe x ((N-1)))))
+           eapply rule_conseq_l with ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLt 1 x ) /\p (BLt x ((N)))))
            /\p ( BEq z ' r) /\p (Big_hypose x z N))).
            eapply implies_trans with 
-           ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLe 2 x ) /\p (BLe x ((N-1)))))
+           ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLt 1 x ) /\p (BLt x ((N)))))
            /\p ( BEq z ' r) /\p (( BEq z ' r) /\p (<{ (z) ' % 2 = 0 && (APlus <{ x ^ (ADiv (z) ' 2) }> 1) % N <> 0 }>)))).
            classic_slove_1.
            implies_trans_solve 1 SAnd_PAnd_eq.
@@ -429,7 +431,7 @@ Proof. unfold Shor.
            apply Big_hypose_sovle.
            apply rule_cond_classic. split.
            eapply rule_conseq_l with 
-           ( (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLe 2 x ) /\p (BLe x ( (N-1))))) 
+           ( (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLt 1 x ) /\p (BLt x ( (N))))) 
            )/\p (
            (PAssn y (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) ((F_1 y x N) /\p (BEq y ' ( (Nat.gcd ((x^ (r / 2)) -1) N))))))).
             { classic_slove_2.  
@@ -461,7 +463,7 @@ Proof. unfold Shor.
             apply H. assumption.
 
           eapply rule_conseq_l with 
-          ( ((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLe 2 x ) /\p (BLe x (ANum (N-1)))) ) 
+          ( ((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLt 1 x ) /\p (BLt x (ANum (N)))) ) 
           /\p (PAssn y (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) ((F_2 y x N) /\p BEq y ' (ANum (Nat.gcd (x^ (r / 2) + 1) N))))).
           unfold Big_hypose.
           classic_slove_2;
@@ -491,7 +493,7 @@ Proof. unfold Shor.
            unfold State_eval.  left. right.
            apply H. assumption.
          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) (0)))) 
-       /\p (( (BLe (2) x) /\p (BLe (x) ((ANum (N-1))))))). 
+       /\p (( (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.  
@@ -502,7 +504,7 @@ Proof. unfold Shor.
          reflexivity.
           classic_slove_1.
         }
-        {eapply rule_conseq_l with ((((Pre Cop N) /\p  (BNot (BEq ((ANum ((N mod 2)))) 0)) /\p (( (BLe 2 x )/\p (BLe x (ANum (N-1))))))) 
+        {eapply rule_conseq_l with ((((Pre Cop N) /\p  (BNot (BEq ((ANum ((N mod 2)))) 0)) /\p (( (BLt 1 x )/\p (BLt x (ANum (N))))))) 
         /\p PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N)))).
         implies_trans_solve 1 SAnd_PAnd_eq.
         apply rule_ConjE; split. apply rule_PT. apply Assn_true_P.
