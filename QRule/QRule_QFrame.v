@@ -4912,64 +4912,26 @@ Proof. unfold NSet.Subset. intros a b H' . intros.
        rewrite H2. simpl. lia. assumption.    
 Qed.
 
-Lemma  Considered_Formula_min: forall F ,
-Considered_Formula F ->
-fst (option_free (Free_State F))=
-option_nat (NSet.min_elt (snd (Free_state F))) .
-Proof. induction F; intros.  simpl. reflexivity. 
-       induction qs; intros. simpl.
-       simpl in H. 
-       apply Qsys_to_Set_min_max in H. destruct H.
-       rewrite H. reflexivity.
-       
-       simpl in H. destruct H. destruct H0. 
-       apply IHqs1 in H. 
-       apply IHqs2 in H0.
-       simpl in *. rewrite H. rewrite H0. 
-       symmetry.
-       apply min_union. admit. admit.
-       
-       simpl in *.
-       destruct (option_beq (Free_State F1) None) eqn:E. 
-       apply IHF2 in H. 
-       rewrite H. symmetry.
-       apply min_union.  admit. 
 
-       destruct (option_beq (Free_State F2) None) eqn:E1. 
-       apply IHF1 in H. 
-       rewrite H. symmetry.
-       apply min_union.   admit.
+Lemma QExp_not_empty: forall qs,
+Considered_QExp qs->
+~ NSet.Equal (Free_Qexp qs) NSet.empty.
+Proof. induction qs; intros; simpl in *. 
+       apply Qsys_to_Set_not_empty; lia. 
+       destruct H. intro.
+       apply union_empty in H1. 
+       destruct H1. destruct IHqs1; try assumption.       
+Qed.
 
-       destruct H. destruct H0. 
-       apply IHF1 in H. 
-       apply IHF2 in H0.
-       simpl in *. rewrite H. rewrite H0. 
-       symmetry.
-       apply min_union. admit. admit. 
+Lemma add_sub_eq_nz': forall m n p, 
+m>=n->
+m-n=p->p+n=m.
+Proof. destruct p; intros. simpl. lia. apply add_sub_eq_nz in H0. lia. lia.     
+Qed.
 
-       simpl in *.
-       destruct (option_beq (Free_State F1) None) eqn:E. 
-       apply IHF2 in H. 
-       rewrite H. symmetry.
-       apply min_union.  admit. 
-
-       destruct (option_beq (Free_State F2) None) eqn:E1. 
-       apply IHF1 in H. 
-       rewrite H. symmetry.
-       apply min_union.  admit.
-
-       destruct H. destruct H0. 
-       apply IHF1 in H. 
-       apply IHF2 in H0.
-       simpl in *. rewrite H. rewrite H0. 
-       symmetry.
-       apply min_union. admit. admit. 
-
-       simpl in *. auto.  
-Admitted.
 
 Lemma max_add_sub: forall a b,
-max (1+a) (1+b) -1= max a b .
+max (a+1) (b+1) -1= max a b .
 Proof. intros. assert(a<=b\/ ~(a<=b)). 
       apply Classical_Prop.classic. 
       destruct H. 
@@ -4977,80 +4939,663 @@ Proof. intros. assert(a<=b\/ ~(a<=b)).
       rewrite max_l; try lia. 
 Qed.
 
+Lemma Free_Qexp_snd_gt_0: forall qs,  
+Considered_QExp qs->
+(snd ( (Free_QExp' qs))) >= 1.
+Proof. induction qs; intros; simpl in *. lia.
+      destruct H. destruct H0. apply IHqs1 in H.
+      apply IHqs2 in H0. lia.
+Qed.  
+          
+
+Lemma Free_State_snd_gt_0: forall F,  
+Considered_Formula F->(Free_State F)<> None->
+ (snd (option_free (Free_State F))) >= 1.
+Proof. induction F; intros; simpl in *. destruct H0. reflexivity.  
+        apply Free_Qexp_snd_gt_0. assumption. 
+
+        destruct (option_beq (Free_State F1) None) eqn:E.
+        apply IHF2; try assumption. 
+        destruct (option_beq (Free_State F2) None) eqn:E1.
+        apply IHF1; try assumption.
+        simpl in *.  
+        destruct H. destruct H1.
+        apply IHF1 in H. 
+        apply IHF2 in H1. lia. 
+        apply option_eqb_neq; try assumption.    
+        apply option_eqb_neq; try assumption.
+        
+        destruct (option_beq (Free_State F1) None) eqn:E.
+        apply IHF2; try assumption. 
+        destruct (option_beq (Free_State F2) None) eqn:E1.
+        apply IHF1; try assumption.
+        simpl in *.  
+        destruct H. destruct H1.
+        apply IHF1 in H. 
+        apply IHF2 in H1. lia. 
+        apply option_eqb_neq; try assumption.    
+        apply option_eqb_neq; try assumption.
+
+        apply IHF; try assumption.
+Qed.
+
+Lemma  Considered_Qexp_max: forall qs ,
+Considered_QExp qs ->
+snd ( (Free_QExp' qs))-1=
+option_nat (NSet.max_elt ( (Free_Qexp qs))).
+Proof.
+induction qs; intros. simpl.
+simpl in H. 
+apply Qsys_to_Set_min_max in H. destruct H.
+rewrite H0. reflexivity.
+
+simpl in H. destruct H. destruct H0.   
+pose( IHqs1 H). 
+pose(IHqs2 H0).
+simpl in *. apply add_sub_eq_nz' in e.  
+apply add_sub_eq_nz' in e0. rewrite <-e. rewrite<- e0.
+rewrite max_add_sub. 
+symmetry.
+apply max_union. apply QExp_not_empty; try assumption.
+apply QExp_not_empty; try assumption. 
+apply Free_Qexp_snd_gt_0. assumption.
+apply Free_Qexp_snd_gt_0. assumption.  
+Qed. 
+
+
+Lemma  Considered_Qexp_min: forall qs ,
+Considered_QExp qs ->
+fst ( (Free_QExp' qs)) =
+option_nat (NSet.min_elt ( (Free_Qexp qs))).
+Proof.
+induction qs; intros. simpl.
+simpl in H. 
+apply Qsys_to_Set_min_max in H. destruct H.
+rewrite H. reflexivity.
+
+simpl in H. destruct H. destruct H0.   
+pose( IHqs1 H). 
+pose(IHqs2 H0).
+simpl in *.  rewrite e. rewrite e0.
+symmetry.
+apply min_union. apply QExp_not_empty; try assumption.
+apply QExp_not_empty; try assumption. 
+Qed.
+
+
+
+Lemma Free_State_None_empty: forall F,
+option_beq (Free_State F) None = true ->
+NSet.Equal (snd (Free_state F)) NSet.empty.
+Proof. induction F;  intros; simpl in *. reflexivity. 
+       induction qs; intros. simpl in *. intuition. 
+       simpl in *. intuition. 
+
+       destruct (option_beq (Free_State F1) None) eqn :E.
+       destruct (option_beq (Free_State F2) None) eqn :E1.
+    apply union_empty. split; auto. intuition.
+    destruct (option_beq (Free_State F2) None) eqn :E1. rewrite H in E. 
+    intuition.  simpl in *. intuition. 
+
+    destruct (option_beq (Free_State F1) None) eqn :E.
+       destruct (option_beq (Free_State F2) None) eqn :E1.
+    apply union_empty. split; auto. intuition.
+    destruct (option_beq (Free_State F2) None) eqn :E1. rewrite H in E. 
+    intuition.  simpl in *. intuition. 
+
+    apply IHF. assumption.
+Qed.
+
+
+Lemma Free_State_not_empty: forall F,
+Considered_Formula F->
+option_beq (Free_State F) None = false ->
+~ NSet.Equal (snd (Free_state F)) NSet.empty.
+Proof. induction F; intros; simpl in *. intuition.   
+      apply QExp_not_empty. assumption.
+      
+      destruct (option_beq (Free_State F1) None) eqn :E.
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF2 in H0. destruct H0. assumption. assumption.
+      
+      destruct (option_beq (Free_State F2) None) eqn :E1.
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF1 in H1. destruct H1. assumption. reflexivity.
+
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF1 in H1. destruct H1. apply H. reflexivity.
+
+      destruct (option_beq (Free_State F1) None) eqn :E.
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF2 in H0. destruct H0. assumption. assumption.
+      
+      destruct (option_beq (Free_State F2) None) eqn :E1.
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF1 in H1. destruct H1. assumption. reflexivity.
+
+      intro. apply union_empty in H1.  destruct H1.
+      apply IHF1 in H1. destruct H1. apply H. reflexivity.
+
+  
+   intuition.  Qed.
+
+Lemma  Considered_Formula_min: forall F ,
+Considered_Formula F ->
+fst (option_free (Free_State F))=
+option_nat (NSet.min_elt (snd (Free_state F))) .
+Proof. induction F; intros.  simpl. reflexivity.
+       apply Considered_Qexp_min. assumption. 
+       
+       simpl in *.
+       destruct (option_beq (Free_State F1) None) eqn:E. 
+       apply IHF2 in H. 
+       rewrite H. symmetry.
+       apply min_union. apply Free_State_None_empty. assumption. 
+
+       destruct (option_beq (Free_State F2) None) eqn:E1. 
+       apply IHF1 in H. 
+       rewrite H. symmetry.
+       apply min_union.  apply Free_State_None_empty. assumption. 
+
+       destruct H. destruct H0. pose H. pose H0. 
+       apply IHF1 in c. 
+       apply IHF2 in c0.
+       simpl in *. rewrite c. rewrite c0. 
+       symmetry.
+       apply min_union.  apply Free_State_not_empty; try  assumption. 
+       apply Free_State_not_empty; try assumption. 
+
+       simpl in *.
+       destruct (option_beq (Free_State F1) None) eqn:E. pose H. 
+       apply IHF2 in c. 
+       rewrite c. symmetry.
+       apply min_union.  apply Free_State_None_empty; try assumption. 
+
+       simpl in *.
+       destruct (option_beq (Free_State F2) None) eqn:E1. pose H. 
+       apply IHF1 in c. 
+       rewrite c. symmetry.
+       apply min_union.  apply Free_State_None_empty; try assumption. 
+
+       destruct H. destruct H0. pose H. pose H0. 
+       apply IHF1 in c. 
+       apply IHF2 in c0.
+       simpl in *. rewrite c. rewrite c0. 
+       symmetry.
+       apply min_union.  apply Free_State_not_empty; try  assumption. 
+       apply Free_State_not_empty; try assumption. 
+
+       simpl in *. auto.  
+Qed.
+
+
+
 
 Lemma  Considered_Formula_max: forall F ,
 Considered_Formula F ->
 snd (option_free (Free_State F))-1=
 option_nat (NSet.max_elt (snd (Free_state F))).
 Proof. induction F; intros.  simpl. reflexivity. 
-       induction qs; intros. simpl.
-       simpl in H. 
-       apply Qsys_to_Set_min_max in H. destruct H.
-       rewrite H0. reflexivity.
-       
-       simpl in H. destruct H. destruct H0.  
-       apply IHqs1 in H. 
-       apply IHqs2 in H0.
-       simpl in *. apply add_sub_eq_nz in H.  
-       apply add_sub_eq_nz in H0. rewrite <-H. rewrite<- H0.
-       rewrite max_add_sub.
-       symmetry.
-       apply max_union. admit. admit. admit. admit.   
+        
+      apply Considered_Qexp_max. assumption.
        
        simpl in *.
-       destruct (option_beq (Free_State F1) None) eqn:E. 
-       apply IHF2 in H.  apply add_sub_eq_nz in H.  
-       rewrite <-H. rewrite add_comm. rewrite add_sub. symmetry.
-       apply max_union.  admit. admit. 
+       destruct (option_beq (Free_State F1) None) eqn:E. pose H.
+       assert(Free_State F2=None\/ ~(Free_State F2=None)).
+       apply Classical_Prop.classic. destruct H0. rewrite H0.
+       assert(option_beq (Free_State F2) None = true).
+       rewrite H0. reflexivity. 
+       apply Free_State_None_empty in H1.  
+       eapply (max_union  ((snd (Free_state F1)))) in H1.
+       rewrite H1.   rewrite  max_empty. simpl. reflexivity. 
+       rewrite <-empty_Empty. apply Free_State_None_empty. assumption. 
+       apply IHF2 in c.  apply add_sub_eq_nz' in c.  
+       rewrite <-c.  rewrite add_sub. symmetry.
+       apply max_union. apply Free_State_None_empty. assumption.
+       apply Free_State_snd_gt_0; try assumption. 
+      
+       destruct (option_beq (Free_State F2) None) eqn:E1. pose H. 
+       apply IHF1 in c.  apply add_sub_eq_nz' in c.  
+       rewrite <-c.  rewrite add_sub. symmetry.
+       apply max_union. apply Free_State_None_empty. 
+       assumption. apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
+     
 
-       destruct (option_beq (Free_State F2) None) eqn:E1. 
-       apply IHF1 in H.  apply add_sub_eq_nz in H.  
-       rewrite <-H. rewrite add_comm. rewrite add_sub. symmetry.
-       apply max_union.  admit. admit.
-
-       destruct H. destruct H0. 
-       apply IHF1 in H. 
-       apply IHF2 in H0.
+       destruct H. destruct H0.  
+       pose (IHF1  H). 
+       pose( IHF2  H0).
        simpl in *. 
-       apply add_sub_eq_nz in H.  
-       apply add_sub_eq_nz in H0. rewrite <-H. rewrite<- H0.
+       apply add_sub_eq_nz' in e.  
+       apply add_sub_eq_nz' in e0. rewrite <-e. rewrite<- e0.
        rewrite max_add_sub.
        symmetry.
-       apply max_union. admit. admit. admit. admit.   
+       apply max_union.
+       apply Free_State_not_empty;try
+       assumption.  apply Free_State_not_empty; try 
+       assumption.
+       apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
+       apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
 
        simpl in *.
-       destruct (option_beq (Free_State F1) None) eqn:E. 
-       apply IHF2 in H.  apply add_sub_eq_nz in H.  
-       rewrite <-H. rewrite add_comm. rewrite add_sub. symmetry.
-       apply max_union.  admit. admit. 
+       destruct (option_beq (Free_State F1) None) eqn:E. pose H.
+       assert(Free_State F2=None\/ ~(Free_State F2=None)).
+       apply Classical_Prop.classic. destruct H0. rewrite H0.
+       assert(option_beq (Free_State F2) None = true).
+       rewrite H0. reflexivity. 
+       apply Free_State_None_empty in H1.  
+       eapply (max_union  ((snd (Free_state F1)))) in H1.
+       rewrite H1.   rewrite  max_empty. simpl. reflexivity. 
+       rewrite <-empty_Empty. apply Free_State_None_empty. assumption. 
+       apply IHF2 in c.  apply add_sub_eq_nz' in c.  
+       rewrite <-c.  rewrite add_sub. symmetry.
+       apply max_union. apply Free_State_None_empty. assumption.
+       apply Free_State_snd_gt_0; try assumption. 
+      
+       destruct (option_beq (Free_State F2) None) eqn:E1. pose H. 
+       apply IHF1 in c.  apply add_sub_eq_nz' in c.  
+       rewrite <-c.  rewrite add_sub. symmetry.
+       apply max_union. apply Free_State_None_empty. 
+       assumption. apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
+     
 
-       destruct (option_beq (Free_State F2) None) eqn:E1. 
-       apply IHF1 in H.  apply add_sub_eq_nz in H.  
-       rewrite <-H. rewrite add_comm. rewrite add_sub. symmetry.
-       apply max_union.  admit. admit.
-
-       destruct H. destruct H0. 
-       apply IHF1 in H. 
-       apply IHF2 in H0.
+       destruct H. destruct H0.  
+       pose (IHF1  H). 
+       pose( IHF2  H0).
        simpl in *. 
-       apply add_sub_eq_nz in H.  
-       apply add_sub_eq_nz in H0. rewrite <-H. rewrite<- H0.
+       apply add_sub_eq_nz' in e.  
+       apply add_sub_eq_nz' in e0. rewrite <-e. rewrite<- e0.
        rewrite max_add_sub.
        symmetry.
-       apply max_union. admit. admit. admit. admit. 
+       apply max_union.
+       apply Free_State_not_empty; try
+       assumption.
+       apply Free_State_not_empty; try
+       assumption.  
+       apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
+       apply Free_State_snd_gt_0. assumption.
+       apply option_eqb_neq. assumption.
 
        simpl in *. auto.  
-Admitted.
+Qed.
 
 
 Lemma Qsys_inter_empty: forall s e x, 
 s<e->
 (option_nat (NSet.max_elt x) <s) \/
-(e<=option_nat (NSet.min_elt x))->
+(e<=option_nat (NSet.min_elt x)) ->
 NSet.Equal (NSet.inter (Qsys_to_Set s e) x ) NSet.empty.
-Proof. unfold NSet.Equal. intros. split; intros.
+Proof. intros. assert(NSet.Empty x \/ ~(NSet.Empty x)).
+       apply Classical_Prop.classic. 
+       destruct H1. apply inter_empty. right. rewrite empty_Empty. assumption.
+       unfold NSet.Equal in *. intros. split; intros.
+       pose H1.  apply min_not_empty in n. 
+       apply max_not_empty in H1. destruct n. destruct H1.
+       rewrite H1 in *. rewrite H3 in *. simpl in *. 
+       apply (@NSet.max_elt_2 _ _ a)in H1.
+       apply (@NSet.min_elt_2 _ _ a)in H3.
+       apply NSet.inter_1 in H2. 
+       apply In_Qsys in H2; try lia.   
+       apply NSet.inter_2 in H2. assumption. 
+       apply NSet.inter_2 in H2. assumption.
+       apply In_empty in H2. destruct H2. 
+Qed.
+
+
+
+
+
+
+
+
+
+Lemma Considered_Qexp_set: forall qs,
+Considered_QExp qs->
+(forall i, option_nat (NSet.min_elt ( (Free_Qexp qs)))<= i 
+/\ i <= option_nat (NSet.max_elt ( (Free_Qexp qs))) ->
+NSet.In i (( (Free_Qexp qs)))).
+Proof.  induction qs; simpl in *; intros. 
+      pose(Qsys_to_Set_min_max s e H). destruct a.
+     rewrite H1 in H0. rewrite H2 in H0. 
+      apply In_Qsys; try lia. 
+      destruct H. destruct H1.
+      pose (QExp_not_empty qs1 H).
+      pose (QExp_not_empty qs2 H1).
+      pose n0. pose n0.
+      eapply (min_union) in n1; try apply n. 
+      eapply (max_union) in n2; try apply n. 
+      rewrite n1 in *. rewrite n2 in *. 
+       rewrite Considered_Qexp_min in H2; try assumption.
+       rewrite Considered_Qexp_min in H2; try assumption.
+       pose( Considered_Qexp_max qs1 H).
+      apply add_sub_eq_nz' in e. rewrite <-e in H2.  
+      pose( Considered_Qexp_max qs2 H1).
+      apply add_sub_eq_nz' in e0. rewrite <-e0 in H2. 
+      destruct H2. 
+      rewrite  <-H2 in H0. apply add_sub_eq_r in H2.
+      rewrite <-H2 in H0 at 2. 
+      rewrite min_l in H0.  rewrite max_r in H0. 
+      assert((i<=option_nat (NSet.max_elt (Free_Qexp qs1)))\/
+       ~((i<=option_nat (NSet.max_elt (Free_Qexp qs1))))).
+       apply Classical_Prop.classic. 
+       destruct H3. 
+       apply NSet.union_2. apply IHqs1; try lia; try assumption.
+       apply NSet.union_3. apply IHqs2; try lia; try assumption.
+       pose (min_le_max (Free_Qexp qs2)). lia.
+       pose (min_le_max (Free_Qexp qs1)). lia.  
+
+       rewrite  <-H2 in H0. apply add_sub_eq_r in H2.
+       rewrite <-H2 in H0 at 2. 
+       rewrite min_r in H0.  rewrite max_l in H0. 
+       assert((i<=option_nat (NSet.max_elt (Free_Qexp qs2)))\/
+        ~((i<=option_nat (NSet.max_elt (Free_Qexp qs2))))).
+        apply Classical_Prop.classic. 
+        destruct H3. 
+        apply NSet.union_3. apply IHqs2; try lia; try assumption.
+        apply NSet.union_2. apply IHqs1; try lia; try assumption.
+        pose (min_le_max (Free_Qexp qs1)). lia.
+        pose (min_le_max (Free_Qexp qs2)). lia.
+        apply Free_Qexp_snd_gt_0. assumption.
+        apply Free_Qexp_snd_gt_0. assumption.
+Qed.
+
+
+
+
+
+
+Lemma Considered_Formula_set: forall F,
+Considered_Formula F->(~ NSet.Empty (snd (Free_state F)))->
+(forall i, option_nat (NSet.min_elt (snd (Free_state F)))<= i 
+/\ i <= option_nat (NSet.max_elt (snd (Free_state F))) ->
+NSet.In i ((snd (Free_state F)))). 
+Proof. induction F; intros; simpl in *. destruct H0. apply NSet.empty_1.
+      apply Considered_Qexp_set. assumption. assumption.
+     
+      destruct (option_beq (Free_State F1) None) eqn:E. 
+      rewrite <-empty_Empty in H0. 
+      apply union_not_empty in H0. 
+      destruct H0. apply Free_State_None_empty in E. 
+      destruct H0. assumption. 
+      
+    apply NSet.union_3. apply IHF2; try assumption. intro.
+    rewrite empty_Empty in *. destruct H0. assumption.
+    
+    pose E. apply Free_State_None_empty in e. 
+    eapply (min_union _ (snd (Free_state F2))) in e.
+    apply Free_State_None_empty in E. 
+    eapply (max_union _ (snd (Free_state F2))) in E. 
+    rewrite e in *. rewrite E in *.  assumption. 
+
+    destruct (option_beq (Free_State F2) None) eqn:E1. 
+      rewrite <-empty_Empty in H0. 
+      apply union_not_empty in H0. 
+      destruct H0. apply Free_State_None_empty in E1. 
+    
+    apply NSet.union_2. apply IHF1; try assumption. intro.
+    rewrite empty_Empty in *. destruct H0. assumption.
+    
+    pose E1. 
+    eapply (min_union  (snd (Free_state F1))) in e.
+    eapply (max_union  (snd (Free_state F1))) in E1. 
+    rewrite e in *. rewrite E1 in *.  assumption. 
+    apply Free_State_None_empty in E1. destruct H0. 
+    assumption. 
+
+    destruct H. destruct H2. 
+      pose (Free_State_not_empty  F1 H E).
+      pose (Free_State_not_empty F2 H2 E1).
+      pose n0. pose n0.
+      eapply (min_union) in n1; try apply n. 
+      eapply (max_union) in n2; try apply n. 
+      rewrite n1 in *. rewrite n2 in *. 
+       rewrite Considered_Formula_min in H3; try assumption.
+       rewrite Considered_Formula_min in H3; try assumption.
+       pose( Considered_Formula_max F1 H).
+      apply add_sub_eq_nz' in e. rewrite <-e in H3.  
+      pose( Considered_Formula_max F2 H2).
+      apply add_sub_eq_nz' in e0. rewrite <-e0 in H3. 
+      destruct H3. 
+      rewrite  <-H3 in H1. apply add_sub_eq_r in H3.
+      rewrite <-H3 in H1 at 2. 
+      rewrite min_l in H1.  rewrite max_r in H1. 
+      assert((i<=option_nat (NSet.max_elt (snd (Free_state F1))))\/
+       ~((i<=option_nat (NSet.max_elt (snd (Free_state F1)))))).
+       apply Classical_Prop.classic. 
+       destruct H4. 
+       apply NSet.union_2. apply IHF1; try lia; try assumption. 
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n. assumption.  
+       apply NSet.union_3. apply IHF2; try lia; try assumption.
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n0. assumption.  
+       pose (min_le_max (snd (Free_state F2))). lia.
+       pose (min_le_max (snd (Free_state F1))). lia.  
+
+       rewrite  <-H3 in H1. apply add_sub_eq_r in H3.
+      rewrite <-H3 in H1 at 2. 
+      rewrite min_r in H1.  rewrite max_l in H1. 
+      assert((i<=option_nat (NSet.max_elt (snd (Free_state F2))))\/
+       ~((i<=option_nat (NSet.max_elt (snd (Free_state F2)))))).
+       apply Classical_Prop.classic. 
+       destruct H4.
+       apply NSet.union_3. apply IHF2; try lia; try assumption.
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n0. assumption.
+       apply NSet.union_2. apply IHF1; try lia; try assumption. 
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n. assumption.    
+       pose (min_le_max (snd (Free_state F1))). lia.  
+       pose (min_le_max (snd (Free_state F2))). lia.
+       apply Free_State_snd_gt_0. assumption. 
+       intro. destruct n0. 
+       apply Free_State_None_empty. rewrite H4. reflexivity. 
+       apply Free_State_snd_gt_0. assumption. 
+       intro. destruct n. 
+       apply Free_State_None_empty. rewrite H4. reflexivity. 
+
+
+      destruct (option_beq (Free_State F1) None) eqn:E. 
+      rewrite <-empty_Empty in H0. 
+      apply union_not_empty in H0. 
+      destruct H0. apply Free_State_None_empty in E. 
+      destruct H0. assumption. 
+      
+    apply NSet.union_3. apply IHF2; try assumption. intro.
+    rewrite empty_Empty in *. destruct H0. assumption.
+    
+    pose E. apply Free_State_None_empty in e. 
+    eapply (min_union _ (snd (Free_state F2))) in e.
+    apply Free_State_None_empty in E. 
+    eapply (max_union _ (snd (Free_state F2))) in E. 
+    rewrite e in *. rewrite E in *.  assumption. 
+
+    destruct (option_beq (Free_State F2) None) eqn:E1. 
+      rewrite <-empty_Empty in H0. 
+      apply union_not_empty in H0. 
+      destruct H0. apply Free_State_None_empty in E1. 
+    
+    apply NSet.union_2. apply IHF1; try assumption. intro.
+    rewrite empty_Empty in *. destruct H0. assumption.
+    
+    pose E1. 
+    eapply (min_union  (snd (Free_state F1))) in e.
+    eapply (max_union  (snd (Free_state F1))) in E1. 
+    rewrite e in *. rewrite E1 in *.  assumption. 
+    apply Free_State_None_empty in E1. destruct H0. 
+    assumption. 
+
+    destruct H. destruct H2. 
+      pose (Free_State_not_empty  F1 H E).
+      pose (Free_State_not_empty F2 H2 E1).
+      pose n0. pose n0.
+      eapply (min_union) in n1; try apply n. 
+      eapply (max_union) in n2; try apply n. 
+      rewrite n1 in *. rewrite n2 in *. 
+       rewrite Considered_Formula_min in H3; try assumption.
+       rewrite Considered_Formula_min in H3; try assumption.
+       pose( Considered_Formula_max F1 H).
+      apply add_sub_eq_nz' in e. rewrite <-e in H3.  
+      pose( Considered_Formula_max F2 H2).
+      apply add_sub_eq_nz' in e0. rewrite <-e0 in H3.   
+      destruct H3. destruct H3. 
+      rewrite min_l in H1.  rewrite max_r in H1.     
+      rewrite H3 in H1.  
+      apply NSet.union_3. apply IHF2; try lia; try assumption. 
+      intro. rewrite <-empty_Empty in H5.  
+      destruct n0. assumption. 
+      lia. lia.   
+
+      destruct H3.
+      rewrite  <-H3 in H1. apply add_sub_eq_r in H3.
+      rewrite <-H3 in H1 at 2. 
+      rewrite min_l in H1.  rewrite max_r in H1. 
+      assert((i<=option_nat (NSet.max_elt (snd (Free_state F1))))\/
+       ~((i<=option_nat (NSet.max_elt (snd (Free_state F1)))))).
+       apply Classical_Prop.classic. 
+       destruct H4. 
+       apply NSet.union_2. apply IHF1; try lia; try assumption. 
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n. assumption.  
+       apply NSet.union_3. apply IHF2; try lia; try assumption.
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n0. assumption.  
+       pose (min_le_max (snd (Free_state F2))). lia.
+       pose (min_le_max (snd (Free_state F1))). lia.  
+
+       rewrite  <-H3 in H1. apply add_sub_eq_r in H3.
+      rewrite <-H3 in H1 at 2. 
+      rewrite min_r in H1.  rewrite max_l in H1. 
+      assert((i<=option_nat (NSet.max_elt (snd (Free_state F2))))\/
+       ~((i<=option_nat (NSet.max_elt (snd (Free_state F2)))))).
+       apply Classical_Prop.classic. 
+       destruct H4.
+       apply NSet.union_3. apply IHF2; try lia; try assumption.
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n0. assumption.
+       apply NSet.union_2. apply IHF1; try lia; try assumption. 
+       intro. rewrite <-empty_Empty in H5. 
+       destruct n. assumption.    
+       pose (min_le_max (snd (Free_state F1))). lia.  
+       pose (min_le_max (snd (Free_state F2))). lia.
+       apply Free_State_snd_gt_0. assumption. 
+       intro. destruct n0. 
+       apply Free_State_None_empty. rewrite H4. reflexivity. 
+       apply Free_State_snd_gt_0. assumption. 
+       intro. destruct n. 
+       apply Free_State_None_empty. rewrite H4. reflexivity. 
+
+      apply IHF; try assumption. 
+Qed.
+
+
+Lemma Considered_Formula_set_eq: forall F,
+Considered_Formula F->(~ NSet.Empty (snd (Free_state F)))->
+NSet.Equal (Qsys_to_Set (option_nat (NSet.min_elt (snd (Free_state F)))) 
+(option_nat (NSet.max_elt (snd (Free_state F))) + 1))
+(snd (Free_state F)). 
+Proof. unfold NSet.Equal in *. intros. split; intros. 
+        apply Considered_Formula_set; try assumption. 
+        pose (In_Qsys 
+        (option_nat (NSet.max_elt (snd (Free_state F))) + 1) 
+        (option_nat (NSet.min_elt (snd (Free_state F)))) a).
+        rewrite i in H1. lia. 
+        pose (min_le_max (snd (Free_state F))). lia. 
+
+        apply In_Qsys. 
+        pose (min_le_max (snd (Free_state F))). lia. 
        
+        pose H0.
+        apply max_not_empty  in n. 
+        apply min_not_empty  in H0.
+        destruct n. destruct H0. rewrite H0. rewrite H2.
+        simpl in *.    
+        pose (@NSet.min_elt_2 (snd (Free_state F)) _ a H0 H1). 
+        pose (@NSet.max_elt_2 (snd (Free_state F)) _ a H2 H1). 
+        lia.
+Qed.     
+
+Lemma equal_trans: forall a b c, 
+NSet.Equal a b ->
+NSet.Equal b c ->
+NSet.Equal a c.
+Proof. unfold NSet.Equal in *. intros.  split; intros. 
+apply H0. apply H. assumption.
+apply H. apply H0. assumption.  
+       
+Qed.
+
+Lemma inter_eq: forall a b c d,
+NSet.Equal a b ->
+NSet.Equal c d ->
+NSet.Equal (NSet.inter a c ) (NSet.inter b d ).
+Proof. unfold NSet.Equal. intros. split; intros.  
+      apply NSet.inter_3. apply H. eapply NSet.inter_1.
+      apply H1. apply H0.    eapply NSet.inter_2.
+      apply H1. 
+      apply NSet.inter_3. apply H. eapply NSet.inter_1.
+      apply H1. apply H0.    eapply NSet.inter_2.
+      apply H1.   
+       
+Qed. 
+
+
+Lemma Qsys_inter_empty': forall s e l r, 
+s<e->l<r->
+NSet.Equal (NSet.inter (Qsys_to_Set s e) (Qsys_to_Set l r) ) NSet.empty->
+(e<=l) \/ (r <=s) .
+Proof.
+       unfold NSet.Equal in *. intros.
+       apply Classical_Prop.NNPP. intro. 
+       apply Classical_Prop.not_or_and in H2. destruct H2.
+       assert(l<=s\/~(l<=s)). apply Classical_Prop.classic.
+       destruct H4.  destruct (In_empty s). apply H1. 
+       apply NSet.inter_3. apply In_Qsys. lia. lia.  
+       apply In_Qsys. lia. lia.  
+       destruct (In_empty l). apply H1. 
+       apply NSet.inter_3. apply In_Qsys. lia. lia.  
+       apply In_Qsys. lia. lia.
+Qed.  
+
+    
+
+Lemma inter_empty_to_QSys: forall F1 F2,
+Considered_Formula F1 ->
+Considered_Formula F2 ->
+~ NSet.Empty (snd (Free_state F1))->
+~ NSet.Empty (snd (Free_state F2))->
+NSet.Equal (NSet.inter (snd (Free_state F1)) (snd (Free_state F2))) NSet.empty->
+snd (option_free (Free_State F1)) <= fst (option_free (Free_State F2))\/
+snd (option_free (Free_State F2)) <= fst (option_free (Free_State F1)) .
+Proof.  intros.     
+       assert( NSet.Equal 
+       (NSet.inter (Qsys_to_Set (option_nat (NSet.min_elt (snd (Free_state F1)))) 
+       (option_nat (NSet.max_elt (snd (Free_state F1))) + 1))
+       (Qsys_to_Set (option_nat (NSet.min_elt (snd (Free_state F2)))) 
+(option_nat (NSet.max_elt (snd (Free_state F2))) + 1))) NSet.empty).
+eapply equal_trans ; try apply H3. 
+apply inter_eq;
+apply Considered_Formula_set_eq; try assumption.
+apply Qsys_inter_empty'. admit. admit.
+rewrite Considered_Formula_min; try assumption. 
+rewrite Considered_Formula_min; try assumption. 
+pose(Considered_Formula_max F1 H). 
+pose(Considered_Formula_max F2 H0). 
+rewrite <-e in H4. rewrite <-e0 in H4. 
+rewrite sub_add in H4. rewrite sub_add in H4. 
+assumption. 
+apply Free_State_snd_gt_0; try assumption.
+intro. destruct H2. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H5. reflexivity. 
+apply Free_State_snd_gt_0; try assumption.
+intro. destruct H1. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H5. reflexivity. 
 Admitted.
+
 
 
 Lemma d_par_trace_sort{s e:nat}:forall (mu: list (state s e)) l r,
@@ -5082,14 +5627,132 @@ Proof. induction mu; intros. simpl in *.  destruct H0.
        apply IHmu. assumption. assumption.
 Qed. 
 
+
+
+
+
+
+Definition Considered_Formula_F_c (F1 F2 F3:State_formula) c:=
+((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
+ snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c))))))
+/\ Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3.
+
+
+Lemma inter_empty: forall a b,
+NSet.Equal a (NSet.empty) \/
+NSet.Equal b (NSet.empty) ->
+NSet.Equal (NSet.inter a b) (NSet.empty).
+Proof. unfold NSet.Equal. intros. split; intros. 
+       destruct H. apply H. eapply NSet.inter_1. 
+       apply H0. 
+       apply H. eapply NSet.inter_2. 
+       apply H0. 
+       apply In_empty in H0. destruct H0.    
+Qed.
+
+Lemma subset_empty':forall a b,
+NSet.Equal a NSet.empty->
+NSet.Subset a b.
+Proof. unfold NSet.Subset. unfold NSet.Equal; intros. 
+       apply H in H0. 
+       apply In_empty in H0. destruct H0.  
+       
+Qed.
+
+
+
+Lemma add_sub_eq_r: forall m n p, 
+m>=n->
+m<p+n-> m-n<p.
+Proof. destruct p; intros. simpl. lia. lia.     
+Qed.
+
+Lemma ceval_single_classic{s e:nat}:  forall c (mu mu':list (state s e)) l r , 
+NSet.Equal (snd (MVar c)) NSet.empty->
+ceval_single c mu mu'->
+ceval_single c (d_par_trace mu l r) (d_par_trace mu' l r).
+Proof. induction c. intros. apply ceval_skip_1 in H0. subst. 
+      apply ceval_skip. 
+      induction mu; intros; inversion_clear H0. econstructor.
+      rewrite d_par_trace_map2. simpl d_par_trace .
+      rewrite (state_eq_aexp _ (sigma, PMpar_trace rho l r)); try reflexivity.
+      econstructor. apply IHmu; try assumption. 
+
+      induction mu; intros; inversion H0; subst. econstructor.  simpl. econstructor.
+      assumption.
+     
+      intros. simpl in H. apply union_empty in H.
+      destruct H.    apply ceval_seq_1 in H0. destruct H0. destruct H0.
+      eapply ceval_seq with (d_par_trace x l r). apply IHc1; try assumption.
+      apply IHc2; try assumption.
+
+      induction mu; intros; inversion_clear H0. econstructor.
+      rewrite d_par_trace_map2; simpl d_par_trace .
+      econstructor. 
+      rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+      simpl in H. apply union_empty in H.  destruct H.   
+      apply subset_empty'. assumption.
+      apply IHmu; try assumption. 
+      simpl in H. apply union_empty in H.  destruct H.   
+      pose (IHc1 [(sigma, rho)] mu'0 ). simpl in c. apply c; try assumption.
+      
+      rewrite d_par_trace_map2; simpl d_par_trace .
+      apply E_IF_false. 
+      rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+      simpl in H. apply union_empty in H.  destruct H.   
+      apply subset_empty'. assumption.
+      apply IHmu; try assumption. 
+      simpl in H. apply union_empty in H.  destruct H.   
+      pose (IHc2 [(sigma, rho)] mu'0 ). simpl in c. apply c; try assumption.
+
+      intros.  remember <{while b do c end}> as original_command eqn:Horig. 
+    induction H0;  try inversion Horig; subst. 
+    econstructor. rewrite d_par_trace_map2; simpl d_par_trace . 
+    econstructor. 
+    rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+    apply IHceval_single1; try reflexivity; try assumption.   
+    pose (IHc [(sigma, rho)] mu1 ). simpl in c0. apply c0; try assumption.
+    apply IHceval_single3; try reflexivity; try assumption.
+
+     rewrite d_par_trace_map2; simpl d_par_trace . 
+    apply E_While_false. 
+    rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption. 
+    apply subset_empty'. assumption.
+    apply IHceval_single; try reflexivity; try assumption.   
+   
+    intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption. 
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption.
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. 
+     apply union_empty in H. apply H.
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption. 
+
+       
+Qed.
+
+Lemma WF_lt: forall s e (mu:list (state s e)),
+mu <> [] ->
+WF_dstate_aux mu -> s<=e .
+Proof. induction mu; intros. destruct H. reflexivity.  
+      destruct a. inversion_clear H0. unfold WF_state in H1. 
+      unfold WF_qstate in H1. lia.        
+       
+Qed.
+
+
+
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
-Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3-> 
+Considered_Formula_F_c F1 F2 F3 c-> 
 ({{F1}} c {{F2}}) 
 /\ (NSet.Equal (NSet.inter (fst (Free_state F3)) (fst (MVar c))) (NSet.empty) )
 /\ ((option_nat (NSet.max_elt (snd (MVar c)))) <  fst (option_free (Free_State F3)) \/
 snd (option_free (Free_State F3)) <= ((option_nat (NSet.min_elt (snd (MVar c))))))
 -> {{F1 ⊙ F3}} c {{F2 ⊙ F3}}. 
-Proof.  unfold hoare_triple.  intros F1 F2 F3 c HF3. intros. destruct H.
+Proof.  unfold hoare_triple.  intros F1 F2 F3 c HF3. intros. destruct H. 
+        unfold Considered_Formula_F_c in HF3.
         assert(StateMap.this mu<>[]) as H'. 
         eapply WF_sat_Assert. apply H1. 
         assert(sat_Assert mu F1 -> sat_Assert mu' F2).
@@ -5145,11 +5808,32 @@ pose (H s0 e0 (StateMap.Build_slist H10) (StateMap.Build_slist H13) H14 H15).
 rewrite sat_Assert_to_State in s1. 
 inversion_clear s1. assumption. 
 
-pose(State_eval_dstate_dom mu F1 H1). 
-destruct o.
+
+assert(Free_State F1 = None \/ ~(Free_State F1 = None )).
+apply Classical_Prop.classic. destruct H10. 
+pose (State_eval_dstate_dom mu F1 H1). 
+destruct o. clear H11. 
 assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
 apply Classical_Prop.classic. 
-destruct H11. admit.  
+destruct H11.
+(* apply inter_empty. left. 
+apply Free_State_None_empty. *)
+
+pose H1. 
+apply (@Pure_free_dstate s e) with (l:=s) (r:=s) in s0; try assumption.
+pose H5. 
+assert(ceval_single c (d_par_trace mu s s)
+(d_par_trace mu' s s)) as c1.
+apply ceval_single_classic; try assumption.
+
+apply H9 in c1; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
+
+apply subset_inter_empty with (Qsys_to_Set s s); try assumption.
+apply inter_empty. left.  rewrite empty_Empty. apply Qsys_to_Set_empty'. lia.
+apply State_eval_dstate_dom in c1.  destruct c1. 
+apply subset_empty'. apply Free_State_None_empty. rewrite H12. reflexivity.
+lia.   pose (WF_lt s e mu H' H0 ). lia.   
+
 remember ( (option_nat (NSet.min_elt ((snd (MVar c)))) ) ) as l.
 remember ( (option_nat (NSet.max_elt ((snd (MVar c)))) +1) ) as r.
 assert(l<r). rewrite Heqr. rewrite Heql.  
@@ -5158,6 +5842,11 @@ pose (ceval_single_dom c mu mu' H0 H5 H' H11).
 apply Subset_min_max_In in s0; try assumption.  
 assert(s <= l /\ l <= r <= e). 
 rewrite Heql. rewrite Heqr. lia.
+
+assert (NSet.Empty (snd (Free_state F3)) \/ (~NSet.Empty (snd (Free_state F3)))).
+apply Classical_Prop.classic. destruct H14.
+apply inter_empty. right. rewrite empty_Empty. assumption.
+
 
 pose H1.  
 apply (@Pure_free_dstate s e) with (l:=l) (r:=r) in s1; try assumption.
@@ -5168,15 +5857,20 @@ apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try
 apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
 apply Qsys_inter_empty; try lia.  
 rewrite Heql. rewrite Heqr. 
-destruct H2. destruct H14.
+destruct H2. destruct H15.
 right.
 rewrite <-Considered_Formula_min; try apply HF3. lia. 
 
 left.   
-rewrite <-Considered_Formula_max; try apply HF3.  admit.
+rewrite <-Considered_Formula_max; try apply HF3.
+apply add_sub_eq_r.  
+apply Free_State_snd_gt_0; try apply HF3. 
+intro. destruct H14. rewrite <-empty_Empty. 
+apply Free_State_None_empty. rewrite H16. reflexivity. lia.  
 
 apply State_eval_dstate_dom  in c0.
-destruct c0.   admit. 
+destruct c0.  apply subset_empty'.
+apply Free_State_None_empty. rewrite H15. reflexivity. 
 pose (Qsys_to_Set_min_max l r H12). destruct a. 
 apply Subset_min_max_In'; 
 intros; try rewrite H15 in *; try rewrite H16 in *.
@@ -5187,30 +5881,50 @@ rewrite <-Considered_Formula_max; try apply HF3. lia.
 pose (Qsys_to_Set_min_max l r H12). destruct a. 
 apply Subset_min_max_In';
 intros; try rewrite H14 in *; try rewrite H15 in *.
-apply In_Qsys; try lia. lia. lia.
+apply In_Qsys; try lia. lia. lia.  
 
+rewrite H10 in *. simpl in *. lia.  
+pose (State_eval_dstate_dom mu F1 H1). 
+destruct o. destruct H10. assumption. 
 
+(* Free_State F1 <> None*)
 assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
 apply Classical_Prop.classic. 
-destruct H11. 
+destruct H12. 
 remember ( (fst (option_free (Free_State F1)))) as l.
 remember ( (snd (option_free (Free_State F1)))) as r.
-assert(l<r). rewrite Heqr. rewrite Heql. lia.   
+assert(l<r). rewrite Heqr. rewrite Heql.  lia.   
 assert(s <= l /\ l <= r <= e). 
 rewrite Heql. rewrite Heqr. lia.
 
 pose H1.  
 apply State_dstate_free_eval with (s':=l) (e':=r) in s0; try apply (@WF_Mixed_dstate s e); try assumption.
 assert(ceval_single c (d_par_trace mu l r)
-(d_par_trace mu' l r)) as c0. admit. 
+(d_par_trace mu' l r)) as c0.
+apply ceval_single_classic; try assumption. 
 apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
 
-apply subset_inter_empty with (Qsys_to_Set l r); try assumption. 
-rewrite Heql. rewrite Heqr. admit. 
+apply subset_inter_empty with (Qsys_to_Set l r); try assumption.  
+rewrite Heql. rewrite Heqr.  
+apply equal_trans with ( NSet.inter (snd (Free_state F1))(snd (Free_state F3))); try assumption.
+apply inter_eq.  rewrite Considered_Formula_min; try apply HF3. 
+destruct HF3. destruct H16. 
+pose (Considered_Formula_max F1 H16).  
+apply add_sub_eq_nz' in e0. rewrite <-e0. 
+apply Considered_Formula_set_eq. assumption.
+apply option_eqb_neq in H10. 
+apply Free_State_not_empty in H10; try assumption. 
+intro. destruct H10. rewrite empty_Empty. assumption.   
+apply  Free_State_snd_gt_0; try apply H16; try assumption. 
+reflexivity.
+
+
+ 
 
 apply State_eval_dstate_dom  in c0.
-destruct c0.   admit. 
-pose (Qsys_to_Set_min_max l r H12). destruct a. 
+destruct c0.    apply subset_empty'.
+apply Free_State_None_empty. rewrite H15. reflexivity. 
+pose (Qsys_to_Set_min_max l r H13). destruct a. 
 apply Subset_min_max_In'; 
 intros; try rewrite H15 in *; try rewrite H16 in *.
 apply In_Qsys; try lia.   
@@ -5225,9 +5939,9 @@ remember (max (option_nat (NSet.max_elt ((snd (MVar c)))) +1) (snd (option_free 
 
 
 pose(State_eval_dstate_dom mu F1 H1). 
-destruct o. admit.
+destruct o. destruct H10. assumption. 
 assert(l<r). rewrite Heqr. rewrite Heql. lia.    
-pose (ceval_single_dom c mu mu' H0 H5 H' H11).
+pose (ceval_single_dom c mu mu' H0 H5 H' H12).
 apply Subset_min_max_In in s0; try assumption.  
 assert(s <= l /\ l <= r <= e). 
 rewrite Heql. rewrite Heqr. lia.
@@ -5240,50 +5954,74 @@ apply Par_trace_ceval_swap with (l:=l) (r:=r) in c0; try assumption.
 apply H9 in c0; try apply WF_d_par_trace; try apply (@d_par_trace_sort s e); try lia; try assumption .
 
 
+
+assert (NSet.Empty (snd (Free_state F3)) \/ (~NSet.Empty (snd (Free_state F3)))).
+apply Classical_Prop.classic. destruct H16.
+apply inter_empty. right. rewrite empty_Empty. assumption.
 apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
 apply Qsys_inter_empty; try lia.  
 rewrite Heql. rewrite Heqr.
-destruct H2. destruct H15.
+destruct H2. destruct H17.
 right.
 rewrite <-Considered_Formula_min; try apply HF3.
-assert(max (option_nat (NSet.max_elt (snd (MVar c))))
-(snd (option_free (Free_State F1)))  <=
-fst (option_free (Free_State F3))-1).
+
 apply max_lub_iff.
 split. lia. 
-admit. lia.  
+apply inter_empty_to_QSys in H8; try apply HF3. 
+destruct H8. lia. 
+destruct HF3. destruct H19. destruct H20. 
+pose (Considered_Formula_dom F3 H21) .  lia. 
+rewrite <-empty_Empty.
+apply Free_State_not_empty; try apply HF3. 
+apply option_eqb_neq. assumption.
+assumption.  
 
 left.  
 apply min_glb_lt_iff. 
-split. 
-rewrite <-Considered_Formula_max; try apply HF3. 
-admit. admit.
+rewrite <-Considered_Formula_max; try apply HF3.
+split. apply add_sub_eq_r. 
+apply Free_State_snd_gt_0; try apply HF3. 
+intro. destruct H16. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H18. reflexivity.        lia.   
+apply inter_empty_to_QSys in H8; try apply HF3.
+destruct H8. 
+assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
+admit. lia. apply add_sub_eq_r.
+apply Free_State_snd_gt_0; try apply HF3. 
+intro. destruct H16. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H18. reflexivity.   lia. 
+rewrite <-empty_Empty.
+apply Free_State_not_empty; try apply HF3. 
+apply option_eqb_neq. assumption.
+assumption.    
 apply State_eval_dstate_dom  in c0.
-destruct c0.  admit. 
-pose (Qsys_to_Set_min_max l r H13). destruct a. 
+destruct c0. apply subset_empty'.  
+apply  Free_State_None_empty. rewrite H17. reflexivity.
+pose (Qsys_to_Set_min_max l r H14). destruct a. 
 apply Subset_min_max_In'; 
-intros; try rewrite H16 in *; try rewrite H17 in *.
+intros; try rewrite H18 in *; try rewrite H19 in *.
 apply In_Qsys; try lia.   
 rewrite <-Considered_Formula_min; try apply HF3. lia. 
 rewrite <-Considered_Formula_max; try apply HF3. lia.
  
-pose (Qsys_to_Set_min_max l r H13). destruct a. 
+pose (Qsys_to_Set_min_max l r H14). destruct a. 
 apply Subset_min_max_In';
-intros; try rewrite H15 in *; try rewrite H16 in *.
+intros; try rewrite H16 in *; try rewrite H17 in *.
 apply In_Qsys; try lia. lia. lia.
 
 rewrite Heql.
 rewrite Heqr. 
 split.  
 apply  le_min_r. 
-apply le_max_r.
-
-    
+apply le_max_r. 
 Admitted.
 
 
+
+
+
 Theorem rule_qframe': forall (F1 F2 F3: State_formula) c,
-Considered_Formula F3 ->
+Considered_Formula_F_c F1 F2 F3 c ->
 ({{F1}} c {{F2}}) /\  (NSet.Equal (NSet.inter (fst (Free_state F3)) (fst (MVar c))) (NSet.empty) )
 /\ ((option_nat (NSet.max_elt (snd (MVar c)))) <  fst (option_free (Free_State F3)) \/
 snd (option_free (Free_State F3)) <= ((option_nat (NSet.min_elt (snd (MVar c))))))
@@ -5301,9 +6039,9 @@ Theorem rule_qframe'': forall (P1 P2 P3: Pure_formula) c,
          ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
 Proof. 
 intros. eapply rule_conseq; try apply rule_OdotO.
-eapply rule_qframe'. simpl. auto. 
-split. apply H. split. apply H.
+eapply rule_qframe'.  
+split. admit. simpl. auto. split.   apply H. split. apply H.
 simpl. right. lia. 
-Qed.
+Admitted.
 
 
