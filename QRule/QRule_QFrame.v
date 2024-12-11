@@ -5563,6 +5563,47 @@ Qed.
 
     
 
+Lemma Considered_Formula_not_empty_dom: forall F,
+Considered_Formula F ->Free_State F <> None ->
+fst (option_free (Free_State F)) < snd (option_free (Free_State F)).
+Proof. induction F; intros.
+       simpl in *. destruct H0. reflexivity. 
+       apply Considered_QExp_dom in H. assumption.
+       
+        simpl in *.
+       destruct (option_beq (Free_State F1) None) eqn :E.
+       apply IHF2; try assumption. 
+      
+      destruct (option_beq (Free_State F2) None) eqn :E1.
+      apply IHF1; try assumption.  
+      
+      simpl in *.  destruct H. destruct H1.
+      apply IHF1 in H. apply IHF2  in H1.  
+      destruct H2. rewrite min_l. rewrite max_r. lia. lia. lia. 
+      rewrite min_r. rewrite max_l. lia. lia. lia. 
+      rewrite option_eqb_neq. assumption.  
+      rewrite option_eqb_neq. assumption. 
+      
+      simpl in *.
+       destruct (option_beq (Free_State F1) None) eqn :E.
+       apply IHF2; try assumption. 
+      
+      destruct (option_beq (Free_State F2) None) eqn :E1.
+      apply IHF1; try assumption.  
+      
+      simpl in *.  destruct H. destruct H1.  
+      apply IHF1 in H. apply IHF2  in H1.  
+      destruct H2.
+      rewrite min_l. rewrite max_r. lia. lia. lia.
+      destruct H2.  
+      rewrite min_l. rewrite max_r. lia. lia. lia.
+      rewrite min_r. rewrite max_l. lia. lia. lia. 
+      rewrite option_eqb_neq. assumption.  
+      rewrite option_eqb_neq. assumption. 
+
+simpl in *. apply IHF. assumption. assumption. 
+Qed.
+
 Lemma inter_empty_to_QSys: forall F1 F2,
 Considered_Formula F1 ->
 Considered_Formula F2 ->
@@ -5580,7 +5621,13 @@ Proof.  intros.
 eapply equal_trans ; try apply H3. 
 apply inter_eq;
 apply Considered_Formula_set_eq; try assumption.
-apply Qsys_inter_empty'. admit. admit.
+apply Qsys_inter_empty'. 
+apply Considered_Formula_not_empty_dom; try assumption. 
+intro. destruct H1. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H5. reflexivity. 
+apply Considered_Formula_not_empty_dom; try assumption. 
+intro. destruct H2. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H5. reflexivity. 
 rewrite Considered_Formula_min; try assumption. 
 rewrite Considered_Formula_min; try assumption. 
 pose(Considered_Formula_max F1 H). 
@@ -5594,7 +5641,7 @@ rewrite H5. reflexivity.
 apply Free_State_snd_gt_0; try assumption.
 intro. destruct H1. rewrite <-empty_Empty. apply Free_State_None_empty.
 rewrite H5. reflexivity. 
-Admitted.
+Qed.
 
 
 
@@ -5633,8 +5680,8 @@ Qed.
 
 
 Definition Considered_Formula_F_c (F1 F2 F3:State_formula) c:=
-((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
- snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c))))))
+(Free_State F1 = None \/ ((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
+ snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c)))))))
 /\ Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3.
 
 
@@ -5970,7 +6017,8 @@ split. lia.
 apply inter_empty_to_QSys in H8; try apply HF3. 
 destruct H8. lia. 
 destruct HF3. destruct H19. destruct H20. 
-pose (Considered_Formula_dom F3 H21) .  lia. 
+pose (Considered_Formula_dom F3 H21) . 
+destruct H18. destruct H10. assumption.   lia. 
 rewrite <-empty_Empty.
 apply Free_State_not_empty; try apply HF3. 
 apply option_eqb_neq. assumption.
@@ -5984,9 +6032,13 @@ apply Free_State_snd_gt_0; try apply HF3.
 intro. destruct H16. rewrite <-empty_Empty. apply Free_State_None_empty.
 rewrite H18. reflexivity.        lia.   
 apply inter_empty_to_QSys in H8; try apply HF3.
-destruct H8. 
+destruct H8.  destruct HF3.  destruct H18. destruct H10. 
+assumption.   
 assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
-admit. lia. apply add_sub_eq_r.
+apply Considered_Formula_not_empty_dom; try apply H19. 
+intro. destruct H16. rewrite <-empty_Empty. apply Free_State_None_empty.
+rewrite H20. reflexivity. 
+lia. apply add_sub_eq_r.
 apply Free_State_snd_gt_0; try apply HF3. 
 intro. destruct H16. rewrite <-empty_Empty. apply Free_State_None_empty.
 rewrite H18. reflexivity.   lia. 
@@ -6014,7 +6066,7 @@ rewrite Heqr.
 split.  
 apply  le_min_r. 
 apply le_max_r. 
-Admitted.
+Qed.
 
 
 
@@ -6039,9 +6091,9 @@ Theorem rule_qframe'': forall (P1 P2 P3: Pure_formula) c,
          ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
 Proof. 
 intros. eapply rule_conseq; try apply rule_OdotO.
-eapply rule_qframe'.  
-split. admit. simpl. auto. split.   apply H. split. apply H.
+eapply rule_qframe'. unfold Considered_Formula_F_c. simpl. auto.  
+ split.   apply H. split. apply H.
 simpl. right. lia. 
-Admitted.
+Qed.
 
 
