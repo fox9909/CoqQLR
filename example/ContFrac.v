@@ -1121,7 +1121,8 @@ Lemma CF_converge :
   forall n a b,
     (a < b)%nat ->
     (forall i, i < n -> nthcfexp i a b <> 0)%nat ->
-    (a / b * CFq (S n) a b - CFp (S n) a b = (IZR (signflip n)) * ((nthmodseq (S n) a b) / (nthmodseq (S n) a b * CFq n a b + nthmodseq n a b * CFq (S n) a b)))%R.
+    (a / b * CFq (S n) a b - CFp (S n) a b = 
+    (IZR (signflip n)) * ((nthmodseq (S n) a b) / (nthmodseq (S n) a b * CFq n a b + nthmodseq n a b * CFq (S n) a b)))%R.
 Proof.
   intros n a b H0 H1.
   assert (H: 1 = 1) by lia.
