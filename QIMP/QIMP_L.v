@@ -31,7 +31,7 @@ Inductive aexp : Type :=
   | AMod (a1 a2:aexp)
   | APow (a1 a2: aexp)
   | ADiv (a1 a2:aexp)
-  | Afun (f1:R-> nat) (f2:nat->nat->R) (a1:aexp) (a2:aexp).
+  | Afun (f:nat->nat->nat->nat) (a1:aexp) (a2:aexp) (a3:aexp).
 
 Definition X0 : nat := 0.
 Definition X1 : nat := 1.
@@ -150,7 +150,7 @@ Fixpoint Free_aexp (a:aexp) : CSet :=
   | APow a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   |ADiv a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
   |AMod a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
-  |Afun f1 f2  a1 a2 => NSet.union (Free_aexp a1)  (Free_aexp a2)
+  |Afun f1  a1 a2 a3 =>NSet.union (NSet.union (Free_aexp a1)  (Free_aexp a2)) (Free_aexp a3)
   end.
 
 Fixpoint Free_bexp (b:bexp):CSet:=
@@ -239,7 +239,7 @@ Fixpoint aeval{s e:nat} (st: state s e)
   |  <{a1 ^ a2}> => Nat.pow (aeval st a1) (aeval st a2)
   |  <{a1 / a2}> => (Nat.div (aeval st a1) (aeval st a2))
   |  <{a1 % a2}> => (Nat.modulo (aeval st a1) (aeval st a2))
-  | Afun f1 f2 a1 a2 => f1 (f2 (aeval st a1) (aeval st a2))
+  | Afun f1 a1 a2 a3 => f1  (aeval st a1) (aeval st a2) (aeval st a3) 
   end.
 
 
@@ -1288,7 +1288,8 @@ Qed.
 Local Open Scope bool_scope.
 Lemma state_eq_aexp{s0 e0 s1 e1 :nat}: forall (st :state s0 e0 )  (st':state s1 e1) (a:aexp),
 (fst st) = (fst st')-> (aeval st a) = aeval st' a.
-Proof. intros. induction a;  simpl; try (rewrite IHa1; rewrite IHa2); try reflexivity.
+Proof. intros. induction a;  simpl; try (rewrite IHa1; rewrite IHa2);
+try rewrite IHa3; try reflexivity.
       rewrite H. reflexivity.
 Qed.
 

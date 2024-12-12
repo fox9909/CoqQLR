@@ -61,10 +61,12 @@ Fixpoint dstate_eq_qstate{s e:nat} (mu:list (cstate * qstate s e)) (q:qstate s e
   cstate_eq c1 c2 (Free_aexp a)->
   aeval (c1, q) a=aeval (c2,q) a.
   Proof. induction a; intros; simpl in *; try  apply cstate_eq_union in H;
-          try rewrite IHa1; try rewrite IHa2; try reflexivity; try apply H.
+          try rewrite IHa1; try rewrite IHa2;try rewrite IHa3; try reflexivity; try apply H.
          unfold cstate_eq in H. 
          apply NSet.add_1.
-         reflexivity.
+         reflexivity. 
+         destruct H. apply cstate_eq_union in H. apply H.
+         destruct H. apply cstate_eq_union in H. apply H.
   Qed.
   
   

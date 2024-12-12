@@ -21,6 +21,8 @@ From Quan Require Import QRule_QFrame.
 From Quan Require Import Forall_two.
 From Quan Require Import add.
 From Quan Require Import HHL.
+From Quan Require Import ContFrac.
+From Quan Require Import QuantumLib.Prelim.
 
 Local Open Scope com_scope.
 Local Open Scope assert_scope.
@@ -33,7 +35,7 @@ Require Import Arith.
 Module Type Param.
 Parameter x:nat.
 Parameter N:nat. 
-Parameter r:nat.
+Parameter r:nat. 
 Hypothesis Hr: x ^ r mod N =1 /\ (forall j, x ^ j mod N =1 -> r<=j).
 Hypothesis H: r>0 /\ 2 <= x <= N-1.
 Definition z:nat := 0.
@@ -57,13 +59,13 @@ Parameter delt_n:nat->nat.
 
 Hypothesis HtL: and (t>0)%nat (L>0)%nat.
 Hypothesis HNL:  (N < (2^L))%nat. 
-Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ t) =
- / √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ t)) (2 ^ t)).
 Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ L) = (∣ 1 ⟩_ L)).
-Hypothesis (Ht: forall s:nat,  s < r-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)).
-(* Hypothesis (Ht': forall j:nat,  j < (2^t)-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)). *)
 Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) (x * j mod N))) /\ 
                                (forall j:nat, j>=N /\ j<(2^L)-> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) j)).
+Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ t) =
+/ √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ t)) (2 ^ t)).
+Hypothesis (Ht: forall s:nat,  s < r-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)).
+
 
 Definition  H := p.H .
 Definition  Hr := p.Hr .
@@ -74,6 +76,8 @@ Definition  z':nat:=2 .
 Definition  b' := (AMod (APow x z ') (N)) .
 Definition  P (i:nat): Pure_formula := (BEq z' ' i%nat).
 Definition  P' (s:nat): Pure_formula := (BEq z' ' (s * 2 ^ t / r)%nat).
+
+
 
 
 Local Open Scope nat_scope.
@@ -88,9 +92,79 @@ Definition OF :=
        U_f [[0 t]] [[t (t + L)]];
        (adjoint QFT) [[ 0 t ]];
        z' :=M [[ 0 t ]];
-       z  := (Afun f (Rdiv) z' ' ((2^t)));
+       z  := (Afun CFq (CF_bound (2^t)) z' ' ((2^t)));
        b := b'
        end }>. 
+
+
+
+
+Require Import Psatz ZArith Znumtheory Reals QuantumLib.Prelim.
+Local Open Scope R_scope.
+
+
+(* Lemma CFq_eq :
+  forall (a1 a2 b1 b2:nat),
+    a1 * b2 = a2 * b1 ->
+    b1 < b2 ->
+    CFq (CF_bound b2) a1 b1 = CFq (CF_bound b2) a2 b2.
+Proof.
+  intros a1 a2 b1 b2 H_eq H_lt. 
+  (* 归纳法：n 为 CFq 的输入大小 *)
+  induction (CF_bound b2) as [|n IH].
+  
+  - (* 基本情况：当 n = 0 时， CFq 结果为 0 *)
+    simpl. reflexivity.
+  
+  - (* 递归步骤 *)
+    simpl. 
+    (* 考虑 nthcfexp 的两个可能情况 *)
+    destruct (nthcfexp n a1 b1 =? 0) eqn:Hn1; 
+    destruct (nthcfexp n a2 b2 =? 0) eqn:Hn2.
+    +  destruct n . reflexivity. 
+     
+    destruct (nthcfexp n a1 b1 =? 0); 
+    destruct (nthcfexp n a2 b2 =? 0) . 
+    (* 如果两者都为 0，递归调用 CFq 的结果相同 *)
+      apply IH.
+      apply modseq_generate with (n := b2); lia.
+    
+    + (* 处理 a1 的情况为 0，a2 不为 0 *)
+      apply IH.
+      apply modseq_generate with (n := b2); lia.
+    
+    + (* 处理 a2 的情况为 0，a1 不为 0 *)
+      apply IH.
+      apply modseq_generate with (n := b2); lia.
+    
+    + (* 递归计算的结果相等时，应用归纳假设 *)
+      apply IH.
+      apply modseq_generate with (n := b2); lia.
+Qed. *)
+
+Lemma Legendre_rational_bound :
+forall a b p q : nat,
+       (0 < q)%nat ->
+       (a < b)%nat ->
+       Rabs (a / b - p / q) < 1 / (2 * q^2) ->
+       rel_prime p q ->
+       CFq (CF_bound b) a b = q.
+Proof. intros. pose(Legendre_rational a b0 p q). 
+       destruct e; try assumption. 
+       destruct H4. 
+       assert(CF_bound b0= (CF_bound b0) - x0 + x0)%nat.
+       rewrite Nat.sub_add; try lia.
+       rewrite H6.
+       rewrite (nthmodseq_0_CFq (CF_bound b0 - x0) x0 a b0); try assumption. 
+       apply Classical_Prop.NNPP. 
+       intro. 
+       assert(x0=S (x0-1))%nat. rewrite S_add_1.
+       rewrite Nat.sub_add. reflexivity. lia.  
+       rewrite H8 in H7.
+       apply nthmodseq_neq_0_nthcfexp in H7. 
+       Search(nthmodseq ?n ?a ?b <> 0%nat).
+       unfold nthmodseq. 
+
 
 Lemma sum_pro: forall n (q:C), 
 q<>C1->

@@ -155,6 +155,15 @@ Proof. induction a; intros; simpl in *; [ | | | | | | | | | f_equal];
          assumption); try reflexivity.
       rewrite c_update_find_not. reflexivity.  
       intro. destruct H. apply NSet.add_1. lia. 
+       rewrite (IHa1  b). reflexivity. 
+       intro. destruct H. apply NSet.union_2. apply NSet.union_2.
+       assumption. 
+       rewrite (IHa2  b). reflexivity. 
+       intro. destruct H. apply NSet.union_2. apply NSet.union_3.
+       assumption.
+       rewrite (IHa3  b). reflexivity.
+       intro. destruct H. apply NSet.union_3.
+       assumption.
 Qed.
 
 Lemma c_update_beval_eq{s e:nat}: forall i b a c (q:qstate s e),  ~NSet.In i (Free_bexp b) -> 

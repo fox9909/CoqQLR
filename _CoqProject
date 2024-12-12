@@ -21,5 +21,6 @@
 ./QRule/QRule_QFrame.v
 ./example/add.v
 ./example/HHL.v
+./example/ContFrac.v
 ./example/OF.v
 ./example/Shor.v
