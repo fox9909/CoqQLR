@@ -1510,5 +1510,256 @@ Proof.
   simpl in G.
   rewrite G.
   simpl. replace (n + 1)%nat with (S n) by lia. assumption.
+Qed. 
+
+
+
+
+Lemma nthmodseq_not_0_nthcfexp_not_0: forall j i n a b0, 
+(a < b0)%nat->
+(n-i)%nat=j->
+(nthmodseq n a b0 <>0)%nat->
+(i < n)%nat  ->
+nthcfexp i a b0 <> 0%nat.
+Proof.  induction j; intros. lia.
+      
+      apply nthmodseq_neq_0_nthcfexp.
+       lia. 
+       destruct (Nat.eq_dec (S i) n). subst.
+       assumption.    
+      apply nthcfexp_neq_0_nthmodseq'. lia.
+      apply IHj with n; try lia.   
+  
 Qed.
+
+
+Lemma Legendre_rational' :
+  forall a b p q : nat,
+    (0 < q)%nat ->
+    (a < b)%nat ->
+    Rabs (a / b - p / q) < 1 / (2 * q^2) ->
+    rel_prime p q ->
+    exists step,
+      (1 <= step <= CF_bound b)%nat /\
+      CFp step a b = p /\ CFq step a b = q.
+Proof.
+  intros a b p q Hq Hab Hdis Hpq. assert (T: (a < b < S b)%nat) by lia. specialize (CF_finite (S b) a b T) as G.
+  destruct G as [n [Hn [Heq [Hl Hr] ] ] ].
+  bdestruct (CFq n a b <=? q)%nat.
+  - exists n. split. specialize (CF_finite_bound n a b Hab Hl) as Gn. unfold CF_bound. lia.
+    assert (a / b = CFp n a b / CFq n a b).
+    { assert (Hb: (0 < b)%nat) by lia. apply lt_INR in Hb. simpl in Hb.
+      assert (Hqn' : (CFq n a b > 0)%nat) by (apply CFq_pos; lia). assert (Hqn : (0 < CFq n a b)%nat) by lia. apply lt_INR in Hqn. simpl in Hqn. clear Hqn'.
+      apply Rmult_eq_reg_r with (r := b). 2:lra.
+      apply Rmult_eq_reg_r with (r := CFq n a b). 2:lra.
+      replace (a / b * b * CFq n a b) with ((/ b * b) * CFq n a b * a) by lra.
+      replace (CFp n a b / CFq n a b * b * CFq n a b) with ((/ CFq n a b * CFq n a b) * CFp n a b * b) by lra.
+      do 2 rewrite <- Rinv_l_sym by lra. do 2 rewrite Rmult_1_l. do 2 rewrite <- mult_INR.
+      rewrite Heq. easy.
+    } 
+    rewrite H0 in Hdis.
+    assert (Hdiv2: 1 / (2 * q ^ 2) < / q^2).
+    { apply lt_INR in Hq. simpl in Hq.
+      unfold Rdiv. rewrite Rmult_1_l. apply Rinv_lt_contravar.
+      simpl. replace (q * (q * 1) * (2 * (q * (q * 1)))) with (2 * (q * q) * (q * q)) by nra.
+      assert (0 < q * q) by nra. nra.
+      nra.
+    }
+    assert (Hdis': Rabs (CFp n a b / CFq n a b - p / q) < / q ^ 2) by lra.
+    assert (Hqn : (CFq n a b > 0)%nat) by (apply CFq_pos; lia).
+    assert (Hqn' : (0 < CFq n a b <= q)%nat) by lia.
+    specialize (ClosestFracUnique_CF' (CFp n a b) (CFq n a b) p q Hqn' Hdis') as G.
+    assert (Hcfpq : rel_prime (CFp n a b) (CFq n a b)) by (apply CF_coprime; easy).
+    assert (HINZ : Z.of_nat (CFp n a b) = Z.of_nat p /\ Z.of_nat (CFq n a b) = Z.of_nat q) by (apply rel_prime_cross_prod; try easy; try lia).
+    split; apply Nat2Z.inj_iff; easy. 
+   
+  - specialize (CFq_strict_inc n a b Hab Hn Hl) as G.
+    destruct G as [l [Hln [Hl2 [Hstart Hinc] ] ] ].
+    assert (Hlup: (CFq l a b <= q)%nat) by lia.
+    assert (H': (q < CFq n a b)%nat) by lia.
+    specialize (Inc_Seq_Search l n (fun x => CFq x a b) q Hln Hlup H' Hinc) as U.
+    destruct U as [i [Hi Hcfi] ].
+    exists i. split. specialize (CF_finite_bound n a b Hab Hl) as Gn. unfold CF_bound. lia.
+    assert (G: Rabs (CFp i a b / CFq i a b - p / q) < / CFq i a b * / q).
+    { specialize (Rabs_split (a / b) (CFp i a b / CFq i a b) (p / q)) as U.
+      assert (Hqn' : (CFq i a b > 0)%nat) by (apply CFq_pos; lia). assert (Hqn : (0 < CFq i a b)%nat) by lia. apply lt_INR in Hqn. simpl in Hqn. clear Hqn'.
+      assert (Hqn'' : (CFq i a b > 0)%nat) by (apply CFq_pos; lia). assert (Hqn' : (1 <= CFq i a b)%nat) by lia. apply le_INR in Hqn'. simpl in Hqn'. clear Hqn''.
+      rewrite Rabs_extract with (x := a / b) in U by lra.
+      assert (Hil : forall x : nat, (x < i -> nthcfexp x a b <> 0)%nat) by (intros; apply Hl; lia).
+      assert (Hq' : q <> O) by lia.
+      specialize (CF_distance_bound i a b p q Hab Hil Hcfi Hq') as U'.
+      clear Hq'. assert (Hq' : (1 <= q)%nat) by lia. apply le_INR in Hq'. simpl in Hq'.
+      replace (Rabs (a / b * q - p)) with (q * (/q * Rabs (a / b * q - p))) in U' by (field; lra).
+      rewrite <- Rabs_extract with (p := INR p) in U' by lra.
+      specialize (Rinv_0_lt_compat (CFq i a b) Hqn) as Hqn''.
+      assert (0 <= Rabs (a / b * CFq i a b - CFp i a b)) by (apply Rabs_pos).
+      assert (/ CFq i a b <= q * / CFq i a b) by nra.
+      assert (U1: / CFq i a b * Rabs (a / b * CFq i a b - CFp i a b) <= q / CFq i a b * Rabs (a / b - p / q)) by nra. clear H0 H1.
+      replace (Rabs (a / b - p / q)) with (q * / q * Rabs (a / b - p / q)) in U by (field; lra).
+      assert (Hdisnn: 0 <= Rabs (a / b - p / q)) by apply Rabs_pos.
+      assert (CFq i a b <= q)%nat by lia. apply le_INR in H0.
+      assert (/q <= / CFq i a b) by (apply Rinv_le_contravar; lra).
+      assert (0 < /q) by (apply Rinv_0_lt_compat; lra).
+      assert (0 <= q * Rabs (a / b - p / q)) by nra.
+      assert (q * Rabs (a / b - p / q) * /q <= q * Rabs (a / b - p / q) * / CFq i a b ) by nra.
+      assert (U2: q * / q * Rabs (a / b - p / q) <= q / CFq i a b * Rabs (a / b - p / q)) by nra. clear H0 H1 H2 H3 H4.
+      assert (Ufin: Rabs (CFp i a b / CFq i a b - p / q) <= 2 * q / CFq i a b * Rabs (a / b - p / q)) by lra.
+      assert (0 < 2 * q / CFq i a b) by nra.
+      assert (Ufin': Rabs (CFp i a b / CFq i a b - p / q) < 2 * q / CFq i a b * (1 / (2 * q^2))) by nra. clear H0.
+      replace (2 * q / CFq i a b * (1 / (2 * q ^ 2))) with (/ CFq i a b * / q) in Ufin' by (field; lra).
+      easy.
+    }
+    assert (Hqn' : (CFq i a b > 0)%nat) by (apply CFq_pos; lia).
+    assert (Hqnq : (0 < CFq i a b <= q)%nat) by lia.
+    specialize (ClosestFracUnique_CF (CFp i a b) (CFq i a b) p q Hqnq G) as F.
+    assert (Hil : forall x : nat, (S x < i)%nat -> nthcfexp x a b <> O) by (intros; apply Hl; lia).
+    assert (Hcfpq : rel_prime (CFp i a b) (CFq i a b)) by (apply CF_coprime; easy).
+    assert (HINZ : Z.of_nat (CFp i a b) = Z.of_nat p /\ Z.of_nat (CFq i a b) = Z.of_nat q) by (apply rel_prime_cross_prod; try easy; try lia).
+
+    split; apply Nat2Z.inj_iff; easy. 
+Qed.
+
+From Quan Require Import Matrix.
+From Quan Require Import Quantum.
+From Quan Require Import Basic.
+From Quan Require Import ParDensityO.
+From Quan Require Import QState.
+From Quan Require Import Par_trace.
+From Quan Require Import QIMP_L.
+From Quan Require Import Ceval_Linear.
+From Quan Require Import QAssert.
+From Quan Require Import QRule_E_L.
+From Quan Require Import QRule_Q_L.
+From Quan Require Import QRule_I_L.
+From Quan Require Import QSepar.
+From Quan Require Import QRule_QFrame.
+From Quan Require Import Forall_two.
+From Quan Require Import add.
+Local Open Scope R_scope.
+Lemma Legendre_rational_bound :
+forall a b p q : nat,
+       (0 < q)%nat ->
+       (a < b)%nat ->
+       Rabs (a / b - p / q) =0 ->
+       rel_prime p q ->
+       CFq (CF_bound b) a b = q.
+Proof. intros. pose(Legendre_rational' a b p q). 
+       destruct e; try assumption. rewrite H1. apply Rdiv_lt_0_compat; try lra.
+       apply Rmult_gt_0_compat; try lra. apply pow_lt.
+       rewrite IZR_INR_0.
+       apply lt_INR. assumption. 
+       assert(CF_bound b= (CF_bound b) - x + x)%nat.
+       rewrite Nat.sub_add; try lia.
+       rewrite H4. destruct H3. destruct H5.
+       rewrite (nthmodseq_0_CFq (CF_bound b - x) x a b); try assumption.
+       pose (CF_converge'). 
+       apply Classical_Prop.NNPP. 
+       intro. 
+       assert((forall i : nat,
+       (i < x)%nat ->
+       nthcfexp i a b <> 0%nat)).
+       intros.
+       apply (nthmodseq_not_0_nthcfexp_not_0 (x-i) i x);try lia.
+       pose H8.
+       apply e in n; try lia. 
+       
+       rewrite H6 in n. rewrite H5 in n.
+       apply Rcomplements.Rabs_eq_0 in H1.
+       assert( a / b * q - p =0).  
+       apply Rminus_diag_uniq in H1.
+       rewrite H1. apply Rminus_diag_eq.
+       rewrite Rdiv_unfold. rewrite Rmult_assoc.
+       rewrite Rinv_l. rewrite Rmult_1_r. reflexivity.
+       apply Rgt_neq_0. rewrite IZR_INR_0.
+       apply lt_INR. 
+       lia.  
+       rewrite H9 in n. 
+       assert(IZR (signflip (S x)) <> 0).
+       intro. pose (signflip_abs (S x)). 
+       apply eq_IZR_R0 in H10. rewrite H10 in e0.
+       lia.  
+       
+     
+       assert( IZR (signflip (S x)) *
+       (nthmodseq x a b /
+        (nthmodseq (S x) a b * q +
+         nthmodseq x a b * CFq (S x) a b)) <>0).
+         apply Rmult_integral_contrapositive.
+         split. assumption. rewrite Rdiv_unfold. 
+         apply Rmult_integral_contrapositive. 
+         split. rewrite IZR_INR_0. 
+         intro. 
+        
+         apply INR_eq in H11. destruct H7. assumption.
+        apply Rinv_neq_0_compat. 
+        apply Rgt_neq_0.  rewrite <-Rplus_0_l.
+        apply Rplus_le_lt_compat.
+        apply Rmult_le_pos. rewrite IZR_INR_0. 
+        apply le_INR. lia. rewrite IZR_INR_0.
+        apply le_INR. lia.   
+        apply Rmult_gt_0_compat. 
+        rewrite IZR_INR_0.
+        apply lt_INR. lia.
+        rewrite IZR_INR_0. 
+        apply lt_INR. 
+        apply Nat.lt_le_trans with q. lia.
+        rewrite <-H6. 
+        assert( S x = x+1)%nat.
+        rewrite S_add_1. reflexivity. 
+        rewrite H11. rewrite Nat.add_comm. 
+        apply CFq_inc. lia. 
+        destruct H11. lra. 
+Qed.
+
+Lemma Rabs_eq_0: forall a, 
+ a=0%R -> Rabs a= 0%R .
+Proof. intros. rewrite H. apply Rabs_R0. 
+Qed.
+
+
+Lemma real_div_mul : forall x y z : R,
+  y <> 0%R ->
+  (x / y = z)%R ->
+  (x = z * y)%R.
+Proof.
+  intros x y z Hneq Heq.
+  rewrite <-Heq. rewrite Rdiv_unfold.
+  rewrite Rmult_assoc. rewrite Rinv_l. 
+  rewrite (Rmult_1_r). reflexivity.
+  assumption.
+Qed.
+
+Lemma div_INR: forall (x y z:nat), 
+(y<>0%nat)->
+(Rdiv (INR x)  (INR y)) =z ->
+(Rdiv (INR x)  (INR y)) =INR (x/y).
+Proof. intros. simpl. rewrite H0.
+apply real_div_mul in H0.
+rewrite <-mult_INR in H0.
+apply INR_eq in H0. rewrite H0. 
+rewrite Nat.div_mul. reflexivity.
+assumption. 
+apply not_0_INR. assumption.
+Qed.
+
+
+Lemma Z_of_nat_mod : forall m n : nat,
+  (n <> 0 )%nat->
+  Z.of_nat (Nat.modulo m n) = Z.modulo (Z.of_nat m) (Z.of_nat n).
+Proof.
+  intros m n Hnz.
+  (* 使用 Nat2Z 的注入性质 *)
+  apply Nat2Z.inj_mod; try lia.
+Qed.
+
+Lemma inj_gcd : forall m n : nat,
+  Z.of_nat (Nat.gcd m n) = Z.gcd (Z.of_nat m) (Z.of_nat n).
+Proof.
+ 
+   Admitted.
+
+
+
+
+
 
