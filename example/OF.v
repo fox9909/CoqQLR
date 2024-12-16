@@ -1773,7 +1773,11 @@ Lemma rule_OCon_Oplus: forall (nF1 nF2 nF1' nF2': npro_formula),
 (nF1 ->>  nF1')->
 (nF2 ->>  nF2') ->
 (ANpro (nF1 ++ nF2) ->>  ANpro (nF1' ++ nF2')) .
-Proof. Admitted.
+Proof. unfold assert_implies. intros.  inversion_clear H2.
+ inversion_clear H4.    inversion_clear H6. 
+ rewrite get_pro_formula_p_n in H4. 
+       econstructor. 
+Admitted.
 
 
 Lemma big_Oplus_to_formula: forall n (F_n:nat-> State_formula) (F:State_formula),
@@ -1793,6 +1797,42 @@ Proof.  induction n;  unfold assert_implies;  intros; simpl in *. lia.
          assumption. 
 Qed.
 
+(* Lemma State_eval_split: forall s e (mu:list (cstate * qstate s e)) (P1 P2:Pure_formula),
+State_eval_dstate  (P1 \/p  P2) mu <->
+State_eval_dstate   P1 mu \/ State_eval_dstate P2 mu .
+Proof. intros. split; intros; 
+       induction mu; 
+       simpl in H0. destruct H0.
+       -destruct mu; destruct a; inversion_clear H0; simpl.
+        destruct H1. left. econstructor. assumption. econstructor. 
+        right. econstructor. assumption. econstructor. 
+        pose (IHmu H2).  
+        destruct H1. left. econstructor.    assumption.
+
+        apply IHmu. 
+        . econstructor. 
+        right. econstructor. assumption. econstructor.       
+      -destruct H. destruct H. 
+      -destruct a. destruct mu. simpl. econstructor. 
+       destruct H. inversion_clear H. inversion_clear H0.
+      split; intuition. apply Forall_nil.
+      simpl.  destruct H. inversion_clear H.
+      inversion_clear H0. intuition. 
+Qed. *)
+
+(* Lemma sat_assert_disj: forall s e (mu:dstate s e) (P1 P2:Pure_formula),
+sat_Assert mu (P1 \/p P2)<->
+sat_Assert mu  ([P1 ; P_2]).
+Proof.  split; destruct mu as [mu IHmu]; intros;
+      repeat rewrite sat_Assert_to_State in *.
+      inversion_clear H0.  apply State_eval_conj in H1.
+      simpl in *. split; econstructor; intuition.
+
+      destruct H. inversion_clear H. inversion_clear H0.
+      econstructor. intuition.
+      apply State_eval_conj. split; intuition.  
+Qed. *)
+
 
 Ltac not_In_solve:=
   simpl; intro; try repeat match goal with 
@@ -1803,6 +1843,17 @@ H:NSet.In ?b (NSet.add ?a (NSet.empty)) |-_ => apply NSet.add_3 in H;
 try discriminate end;
 try match goal with 
 H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
+
+
+Lemma div_le: forall a b, 
+0<a-> b<>0->
+a/b <=a.
+Proof. intros. destruct (Nat.eq_dec b0 1). subst. rewrite Nat.div_1_r. lia.  simpl.
+assert(a / b0 < a). 
+    apply Nat.div_lt; try lia. lia.  
+  
+Qed.
+
 
 Theorem OF_correctness: 
 {{BEq ((Nat.gcd x N)) 1 }} OF {{BEq z ' r}}.
@@ -1895,7 +1946,7 @@ Proof.
 
       *eapply rule_seq. 
       eapply rule_conseq_l  with (big_pOplus (fun i:nat=>(/  r)%R ) (fun s:nat=> P' s) r).
-      eapply big_Oplus_solve'. admit.
+      eapply big_Oplus_solve'.  admit.
       eapply rule_conseq_l .  eapply rule_Oplus. rewrite big_pOplus_get_npro. 
       unfold P'.
       eapply rule_conseq_l with 
@@ -1918,11 +1969,16 @@ Proof.
       unfold aeval in *. unfold s_update_cstate. unfold fst in *.
       bdestruct (c_find z x0 =? r / Nat.gcd i r).
       rewrite H8. assert(r / Nat.gcd i r < r \/ r / Nat.gcd i r = r).
-
-      admit. destruct H9. left. apply Nat.ltb_lt in H9. 
+      assert(0<r). unfold r. lia.  
+      assert(r / Nat.gcd i r <= r). apply div_le; unfold r in *; try lia.
+      intro. apply Nat.gcd_eq_0 in H10. lia. lia.  
+      destruct H9. left. apply Nat.ltb_lt in H9. 
       rewrite H9. auto. right. apply Nat.eqb_eq in H9. rewrite H9. auto.
-      destruct H7.  
-      admit.  
+      destruct H7.
+      unfold assert_implies. intros. rewrite sat_Assert_to_State in H6.
+      rewrite seman_find in H6.
+   
+      apply sat_State_Npro; try apply H6. 
 
       apply rule_Dassgn.
       eapply rule_conseq_l'. apply rule_Dassgn. 
