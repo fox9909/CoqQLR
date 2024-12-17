@@ -1779,22 +1779,82 @@ Proof. unfold assert_implies. intros.  inversion_clear H2.
        econstructor. 
 Admitted.
 
+Lemma big_dapp'_seman{s e:nat}:
+ forall p_n  (mu_n:list (dstate s e)) (mu:dstate s e) F,
+ (0<sum_over_list p_n <= 1)%R /\ ((Forall (fun i => i>=0) p_n))%R->
+ (Forall_two (fun i j=> (i>0)%R-> sat_State j F) p_n mu_n)->
+  big_dapp' p_n mu_n mu  ->
+  WF_dstate mu->
+  sat_State mu F.
+Proof. induction p_n; intros. inversion H2; subst.  
+       rewrite sum_over_list_nil in H0. lra.
+       inversion H2; subst. 
+       destruct (Req_dec a 0).
+       subst. inversion H6; subst. 
+       apply sat_State_dstate_eq with d.
+       apply dstate_eq_sym. apply d_app_empty_l.
+       apply IHp_n with td. 
+       rewrite sum_over_list_cons in *. 
+       rewrite Rplus_0_l in *. destruct H0.
+       inversion_clear H4. split; assumption.
+       inversion_clear H1. assumption.
+       assumption. 
+       eapply WF_dstate_eq with (d_app (d_empty s e) d).
+       apply d_app_empty_l. assumption. lra. 
+       assert(sum_over_list p_n >0 \/ ~(sum_over_list p_n >0))%R.
+       apply Classical_Prop.classic. destruct H5. 
+       apply d_seman_app'. 
+       inversion H6; subst. lra.   
+       apply  d_seman_scale.  
+       rewrite sum_over_list_cons in H0.
+       destruct H0.    inversion_clear H8.
+       assert(sum_over_list p_n  >=0)%R. lra.
+       lra. 
+       inversion_clear H1. apply H8.  
+       rewrite sum_over_list_cons in H0.
+       destruct H0. inversion_clear H1. lra.  
+       apply IHp_n with td. destruct H0.
+       rewrite sum_over_list_cons in H0. 
+       split. inversion_clear H7. lra.
+       inversion_clear H7. assumption. 
+       inversion_clear H1. assumption. 
+       assumption.  admit.
+       apply big_dapp'_out_empty in H8. 
+       apply sat_State_dstate_eq with r0. 
+       apply dstate_eq_trans with (d_app r0 (d_empty s e)).
+       apply dstate_eq_sym. apply d_app_empty_r.
+       apply d_app_eq. reflexivity. apply dstate_eq_sym. assumption.
+       inversion H5; subst. lra.   
+       apply  d_seman_scale.   
+       rewrite sum_over_list_cons in H0.
+       destruct H0.    inversion_clear H7.
+       assert(sum_over_list p_n  =0)%R. admit. lra.
+       inversion_clear H1. apply H7. 
+       destruct H0. inversion_clear H1. lra. 
+Admitted.
+
 
 Lemma big_Oplus_to_formula: forall n (F_n:nat-> State_formula) (F:State_formula),
 0<n-> 
 (forall i, i < n -> F_n i ->> F) ->
  big_Oplus F_n n ->> F. 
-Proof.  induction n;  unfold assert_implies;  intros; simpl in *. lia.
-        destruct (Nat.eq_dec n 0). subst. simpl in *. 
-        apply (H1 0). lia. assumption.     
-        apply (@sat_NPro_State' s e mu ).
-        assert([F;F] = [F] ++ [F]). simpl. reflexivity.
-        rewrite H3.
-        apply (rule_OCon_Oplus (big_Oplus F_n n) ([F_n n])).
-        apply IHn. lia. 
-        intros. unfold assert_implies.  apply H1. lia.
-         unfold assert_implies. apply H1. lia. 
-         assumption. 
+Proof. unfold assert_implies; intros.  inversion_clear H2.
+       inversion_clear H4.  
+       inversion_clear H6. 
+       rewrite get_pro_formula_p_n in *.
+       apply sat_Assert_dstate_eq with mu'.
+       apply dstate_eq_sym. assumption.
+       rewrite sat_Assert_to_State.
+       eapply big_dapp'_seman; try apply H4.
+       inversion_clear H5. rewrite get_pro_formula_p_n in *. 
+       
+       split; try lra. apply Forall_impl with ((fun x : R => (0 <= x)%R)).
+       intros. lra. assumption. 
+       symmetry. assumption. 
+       symmetry. assumption. 
+
+       admit. 
+       symmetry. assumption.
 Qed.
 
 (* Lemma State_eval_split: forall s e (mu:list (cstate * qstate s e)) (P1 P2:Pure_formula),
