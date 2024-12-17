@@ -1784,41 +1784,40 @@ Lemma big_dapp'_seman{s e:nat}:
  (0<sum_over_list p_n <= 1)%R /\ ((Forall (fun i => i>=0) p_n))%R->
  (Forall_two (fun i j=> (i>0)%R-> sat_State j F) p_n mu_n)->
   big_dapp' p_n mu_n mu  ->
-  WF_dstate mu->
   sat_State mu F.
 Proof. induction p_n; intros. inversion H2; subst.  
        rewrite sum_over_list_nil in H0. lra.
        inversion H2; subst. 
        destruct (Req_dec a 0).
-       subst. inversion H6; subst. 
+       subst. inversion H5; subst. 
        apply sat_State_dstate_eq with d.
        apply dstate_eq_sym. apply d_app_empty_l.
        apply IHp_n with td. 
        rewrite sum_over_list_cons in *. 
        rewrite Rplus_0_l in *. destruct H0.
-       inversion_clear H4. split; assumption.
+       inversion_clear H3. split; assumption.
        inversion_clear H1. assumption.
-       assumption. 
-       eapply WF_dstate_eq with (d_app (d_empty s e) d).
-       apply d_app_empty_l. assumption. lra. 
+       assumption. lra. 
        assert(sum_over_list p_n >0 \/ ~(sum_over_list p_n >0))%R.
-       apply Classical_Prop.classic. destruct H5. 
+       apply Classical_Prop.classic. destruct H4. 
        apply d_seman_app'. 
-       inversion H6; subst. lra.   
+       inversion H5; subst. lra.   
        apply  d_seman_scale.  
        rewrite sum_over_list_cons in H0.
-       destruct H0.    inversion_clear H8.
+       destruct H0.    inversion_clear H7.
        assert(sum_over_list p_n  >=0)%R. lra.
        lra. 
-       inversion_clear H1. apply H8.  
+       inversion_clear H1. apply H7.  
        rewrite sum_over_list_cons in H0.
        destruct H0. inversion_clear H1. lra.  
        apply IHp_n with td. destruct H0.
        rewrite sum_over_list_cons in H0. 
-       split. inversion_clear H7. lra.
-       inversion_clear H7. assumption. 
+       split. inversion_clear H6. lra.
+       inversion_clear H6. assumption. 
        inversion_clear H1. assumption. 
-       assumption.  admit.
+       assumption. 
+       eapply WF_dstate_big_dapp; try apply H2.
+        admit.
        apply big_dapp'_out_empty in H8. 
        apply sat_State_dstate_eq with r0. 
        apply dstate_eq_trans with (d_app r0 (d_empty s e)).
