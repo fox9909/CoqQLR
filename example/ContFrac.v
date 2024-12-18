@@ -1619,6 +1619,7 @@ Proof.
     split; apply Nat2Z.inj_iff; easy. 
 Qed.
 
+
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
@@ -1753,12 +1754,55 @@ Proof.
 Qed.
 
 Lemma inj_gcd : forall m n : nat,
-  Z.of_nat (Nat.gcd m n) = Z.gcd (Z.of_nat m) (Z.of_nat n).
-Proof.
- 
-   Admitted.
+Zis_gcd m n (Nat.gcd m n).
+Proof.  intros.  econstructor.
+       assert( Nat.divide (Nat.gcd m n) m ). 
+       apply Nat.gcd_divide_l. unfold Nat.divide in *. 
+       destruct H.   
+         unfold Z.divide. exists x . rewrite<- Nat2Z.inj_mul.
+        rewrite H at 1. reflexivity. 
+        assert( Nat.divide (Nat.gcd m n) n ). 
+        apply Nat.gcd_divide_r. unfold Nat.divide in *. 
+       destruct H.   
+         unfold Z.divide. exists x . rewrite<- Nat2Z.inj_mul.
+        rewrite H at 1. reflexivity. 
+     
 
+        intros. apply Zdivide_Zabs_inv_l in H. 
+        apply Zdivide_Zabs_inv_l in H0.  
+        assert((0 <= Z.abs x)%Z). lia.  
+         pose (IZN (Z.abs x) H1). destruct e. rewrite H2 in *.
+        apply Zdivide_Zabs_l . rewrite H2. 
+        unfold Z.divide in *. destruct H. destruct H0.
 
+        assert((0 <= x1 * x0)%Z). lia.   
+        
+        pose (Z.le_0_mul x1 x0 H3). destruct o.  destruct H4. 
+         apply IZN in H4. destruct H4.   rewrite H4 in *. 
+         assert((0 <= x2 * x0)%Z). lia.  
+         pose (Z.le_0_mul x2 x0 H6). destruct o.  destruct H7. 
+          apply IZN in H7. destruct H7.   rewrite H7 in *.  
+
+        assert(Nat.divide x0 (Nat.gcd m n) )%nat. 
+        apply Nat.gcd_divide_iff. split; unfold Nat.divide.
+        exists x3.  apply Nat2Z.inj_iff. rewrite H. rewrite Nat2Z.inj_mul. reflexivity.  
+        exists x4. apply Nat2Z.inj_iff. rewrite H0. rewrite Nat2Z.inj_mul. reflexivity. 
+        unfold Nat.divide in *.  destruct H9. 
+        exists x5.  rewrite H9. rewrite Nat2Z.inj_mul. reflexivity.
+         destruct H7.  assert(x0=0)%nat. lia. rewrite H9 in *.
+         exists 0%Z. 
+         rewrite Z.mul_0_r in *. subst. assert( Z0= 0%nat). lia. rewrite H4 in *.  
+         apply inj_eq. 
+          apply Nat.gcd_eq_0. split. apply Nat2Z.inj_iff.  assumption.
+          apply Nat2Z.inj_iff.  assumption.
+          destruct H4. 
+          assert(x0=0)%nat. lia. rewrite H6 in *.
+          exists 0%Z. 
+          rewrite Z.mul_0_r in *. subst. assert( Z0= 0%nat). lia. rewrite H6 in *.  
+          apply inj_eq. 
+           apply Nat.gcd_eq_0. split. apply Nat2Z.inj_iff.  assumption.
+           apply Nat2Z.inj_iff.  assumption.
+Qed.
 
 
 
