@@ -16,7 +16,7 @@ Import QArith.QOrderedType.
 From Quan Require Import QVector.
 From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 
 (*-----------------------------------Classic State----------------------------------------*)
 
@@ -185,7 +185,7 @@ Definition Qsys_to_Set (n m :nat): QSet:= Qsys_to_Set_aux n m (NSet.empty).
 Definition qstate (s e :nat):= Density (2^(e-s)).
 
 Definition WF_qstate{s e :nat} (rho : qstate s e ):=
-    @Mixed_State (2^(e-s)) rho /\ (s<=e)%nat.
+    @NZ_Mixed_State (2^(e-s)) rho /\ (s<=e)%nat.
 
 Definition q_update{s e:nat} (U: Square   (2^(e-s))) (rho :qstate s e): qstate s e:=
   super U rho.
@@ -208,7 +208,7 @@ Lemma WF_qstate_update{s e:nat}:forall  (U:Square (2^(e-s))) (q:qstate s e),
 WF_Unitary U-> WF_qstate q->WF_qstate (q_update U q).
 Proof.  unfold WF_qstate. intros. unfold q_update.
         split.
-         apply mixed_unitary. intuition. intuition. 
+         apply nz_mixed_unitary. intuition. intuition. 
          intuition.
 Qed.
 
@@ -231,7 +231,7 @@ Lemma WF_qstate_scale{s e}: forall (q: qstate s e) (p:R),
 Proof.
          unfold WF_qstate. simpl. 
         intros. destruct H. split.  
-         apply (@Mixed_State_scale (2^(e-s))). intuition.
+         apply (@nz_Mixed_State_scale (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
 
@@ -240,29 +240,29 @@ Lemma WF_q_plus{s e}:forall (q q0:qstate s e ) (p1 p2:R),
 WF_qstate q-> WF_qstate q0->
 WF_qstate (q_plus (q_scale p1  q) (q_scale p2 q0)).
 Proof. unfold WF_qstate.  unfold q_trace.  simpl. 
-       intros. split. apply (@Mix_S (2^(e-s))); intuition. intuition. 
+       intros. split. apply (@NZ_Mix_S (2^(e-s))); intuition. intuition. 
 Qed.
 
 Lemma WF_qstate_in_01{s e:nat}: forall (q:qstate s e), 
 WF_qstate q -> 0<(q_trace q) <=1.
-Proof.  unfold WF_qstate.  intros.  apply mixed_state_Cmod_1.   intuition.  
+Proof.  unfold WF_qstate.  intros.  apply nz_mixed_state_Cmod_1.   intuition.  
 Qed.
 
 Lemma  WF_qstate_not_Zero{s e:nat}: forall (q:qstate s e),  
 WF_qstate q -> q <> Zero.
 Proof.  unfold WF_qstate. simpl.  intros.
-apply (@Mixed_not_Zero (2^(e-s))). intuition.
+apply (@NZ_Mixed_not_Zero (2^(e-s))). intuition.
 Qed.
 
 Definition WWF_qstate{s e:nat} (rho : qstate s e ):=
-  @Mixed_State_aux (2^(e-s)) rho /\ (s<=e)%nat.
+  @NZ_Mixed_State_aux (2^(e-s)) rho /\ (s<=e)%nat.
 
 Lemma WWF_qstate_scale{s e}: forall (q: qstate s e) (p:R), 
 (0<p) /\ WWF_qstate q-> WWF_qstate  (q_scale p q).
 Proof.
          unfold WF_qstate. simpl. 
         intros. destruct H. unfold WWF_qstate in *.
-        split. apply (@Mixed_State_scale_aux (2^(e-s))). intuition.
+        split. apply (@nz_Mixed_State_scale_aux (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
 
@@ -272,20 +272,20 @@ WWF_qstate q-> WWF_qstate q0->
 WWF_qstate (q_plus q q0).
 Proof. unfold WF_qstate.  unfold q_plus.  simpl. 
        intros. split; try 
-       apply (@Mix_S_aux (2^(e-s))); try  apply H; try apply H0. 
+       apply (@NZ_Mix_S_aux (2^(e-s))); try  apply H; try apply H0. 
 Qed.
 
 Lemma WWF_qstate_to_WF_qstate{s e:nat}:  forall (q:qstate s e), 
 WF_qstate q <-> WWF_qstate q /\ q_trace q<=1.
 Proof. intros. unfold WF_qstate in *. unfold WWF_qstate in *. split; intros.
-       destruct H. apply Mixed_State_aux_to_Mix_State in H.
+       destruct H. apply nz_Mixed_State_aux_to_nz_Mix_State in H.
         intuition.
-       split. apply Mixed_State_aux_to_Mix_State. intuition. lia. 
+       split. apply nz_Mixed_State_aux_to_nz_Mix_State. intuition. lia. 
 Qed.
 
 Lemma WWF_qstate_gt_0{s e:nat}:  forall (q:qstate s e), 
 WWF_qstate q ->0<q_trace q.
-Proof. intros. apply mixed_state_Cmod_1_aux. apply H. Qed.
+Proof. intros. apply nz_mixed_state_Cmod_1_aux. apply H. Qed.
 
 Local Open Scope R_scope.
 Lemma q_trace_scale{s e:nat}: forall (q :(qstate s e)) (p:R) ,
@@ -353,36 +353,9 @@ Lemma WF_state_scale'{s e}: forall (st: state s e) (p:R),
 (0<p<=1) /\ WF_state st-> WF_state (s_scale p st).
 Proof.
         unfold WF_state. unfold WF_qstate. simpl. 
-        intros. destruct H. split. apply (@Mixed_State_scale (2^(e-s))). intuition.
+        intros. destruct H. split. apply (@nz_Mixed_State_scale (2^(e-s))). intuition.
         intuition. intuition. 
 Qed.
-(* Local Open Scope R_scope.
-Lemma WF_state_scale{s e}: forall c (q: qstate s e) (p:R), 
-(0<p<=1) /\ WF_state (c,q)-> @WF_state s e ((c, p .* q)).
-Proof.
-        unfold WF_state. unfold WF_qstate. simpl. 
-        intros. destruct H. split. apply Mixed_State_scale. intuition.
-        intuition. intuition. 
-Qed.
-
-  *)
-
-(* Lemma WF_s_plus{s e}:forall (c c0:cstate) (q q0:qstate s e ) (p1 p2:R),
-(0<p1<=1/\0<p2<=1)-> (p1+p2<=1)-> 
-WF_state (c, q)-> WF_state ( c0, q0)->
-@WF_state s e (c, (p1 .* q .+ p2 .* q0)).
-Proof. unfold WF_state.  unfold s_trace. unfold WF_qstate. simpl. 
-       intros. split. apply Mix_S; intuition. intuition. 
-Qed.   *)
-
-(* Lemma WF_s_plus{s e}:forall (c c0:cstate) (q q0:qstate s e ) (p1 p2:R),
-(0<p1<=1/\0<p2<=1)-> (p1+p2<=1)-> 
-WF_state (c, q)-> WF_state ( c0, q0)->
-@WF_state s e (c, (p1 .* q .+ p2 .* q0)).
-Proof. unfold WF_state.  unfold s_trace. unfold WF_qstate. simpl. 
-       intros. split. apply Mix_S; intuition. intuition. 
-Qed.  *)
-
 
 Lemma WF_state_in_01{s e:nat}: forall (st:state s e), 
 WF_state st -> 0<s_trace st <=1.
@@ -394,7 +367,7 @@ Lemma  WF_state_not_Zero{s e:nat}: forall (st:state s e),
 WF_state st -> snd st <> Zero .
 Proof. unfold WF_state. unfold WF_qstate. simpl.  intros.
 destruct H.
-apply mixed_state_trace_gt0 in H.
+apply nz_mixed_state_trace_gt0 in H.
 unfold not. intros.  rewrite H1 in H.  
 rewrite Zero_trace in H. simpl in H.
 lra.
@@ -440,7 +413,7 @@ Definition WWF_state{s e:nat} (st:state s e): Prop:=
 Lemma WWF_state_gt_0{s e:nat}: forall (st:state s e), 
 WWF_state st -> s_trace st>0.
 Proof. unfold WWF_state. unfold WWF_qstate. unfold s_trace. intros.
-        apply mixed_state_Cmod_1_aux. intuition. 
+        apply nz_mixed_state_Cmod_1_aux. intuition. 
 Qed.
 
 Lemma WWF_state_scale{s e}: forall (st: state s e) (p:R), 
@@ -448,11 +421,9 @@ Lemma WWF_state_scale{s e}: forall (st: state s e) (p:R),
 Proof.
         unfold WWF_state. unfold WWF_qstate. simpl. 
         intros. destruct H. unfold WWF_state in *.
-        split. apply (@Mixed_State_scale_aux (2^(e-s))). intuition.
+        split. apply (@nz_Mixed_State_scale_aux (2^(e-s))). intuition.
         intuition. intuition. 
 Qed. 
-
-
 
 #[export] Hint Resolve WF_state_cupdate WF_state_qupdate WF_state_qupdate : QState.
 (*------------------------Distribution state------------------------------*)
@@ -487,7 +458,7 @@ Inductive WF_dstate_aux{s e:nat}: list(cstate * (qstate s e)) -> Prop:=
 |WF_cons st mu': WF_state st -> WF_dstate_aux mu'->
                          (d_trace_aux (st::mu')) <=1 
                         -> WF_dstate_aux (st::mu').
-                       
+                      
 Definition WF_dstate{s e:nat} (mu: dstate s e):Prop:=
   WF_dstate_aux (this mu).
 
@@ -554,7 +525,6 @@ Inductive big_dapp'{s e:nat} :list R -> list (dstate s e) -> dstate s e -> Prop 
 
 Definition dstate_pro{s e:nat}  (mu:dstate s e) (m:state s e) :R :=
      q_trace (d_find (fst m) mu) .
-
 
 Definition sum_over_list (p_n:list R) := 
   big_sum (fun i => (nth i p_n 0)) (length p_n).
@@ -708,7 +678,7 @@ Proof. split; unfold WF_dstate;
        apply WF_cons. intuition. apply WF_nil. 
        unfold WF_state in H.  unfold WF_qstate in H. simpl in H.
        unfold d_trace_aux. unfold s_trace. simpl. rewrite Rplus_0_r.
-       apply mixed_state_Cmod_1. intuition.
+       apply nz_mixed_state_Cmod_1. intuition.
        inversion_clear H. intuition. 
 Qed.
 
@@ -719,6 +689,7 @@ Proof. split; unfold WF_dstate;
        destruct st; simpl; intros;
        apply  WF_state_dstate_aux; try assumption.
 Qed.
+
 
 
 Lemma WWF_dstate_gt_0_aux{s e:nat}: forall (mu:list( cstate*qstate s e)),
@@ -775,7 +746,6 @@ WWF_dstate mu /\ d_trace mu <= 1 <-> WF_dstate mu .
 Proof. intros s e(mu, IHmu). unfold WWF_dstate.
       unfold WF_dstate. unfold d_trace. simpl.
       apply WWF_dstate_aux_to_WF_dstate_aux.
-  
 Qed.
 
 
@@ -826,6 +796,8 @@ Proof. intros. unfold d_empty.  unfold WF_dstate. simpl. unfold Raw.empty.
 apply WF_nil. 
 Qed.
 
+(*WF_d_scale*)
+
 Local Open Scope R_scope.
 Lemma d_trace_map{s e:nat}: forall (mu:list (cstate * qstate s e)) (p:R),
 (0<p)-> d_trace_aux (StateMap.Raw.map (fun x : qstate s e =>q_scale p x) mu)=
@@ -867,7 +839,6 @@ Proof. intros. inversion_clear H0.
 -unfold d_trace. unfold d_empty.  simpl. rewrite Rmult_0_l. reflexivity.
 -apply d_trace_scale_not_0. lra.
 Qed.
-
 
 
 
@@ -968,7 +939,7 @@ Proof. intros. inversion_clear H0. apply WF_dstate_empty.
        apply WF_d_scale_not_0. lra. assumption.
 Qed.
 
-
+(*WF_d_app*)
 
 Lemma map2_r_refl{s e}: forall (mu: list (cstate * qstate s e)), 
  StateMap.Raw.map2_r option_app (mu) =  mu.
@@ -1044,7 +1015,7 @@ Proof. intros mu; induction mu.
      rewrite Rplus_assoc. reflexivity.
      intuition. intuition.  simpl. 
      rewrite IHmu; try assumption. unfold s_trace. unfold q_trace. unfold q_plus. 
-    simpl. rewrite mixed_state_Cmod_plus_aux; try apply H3 ; try apply H5.
+    simpl. rewrite nz_mixed_state_Cmod_plus_aux; try apply H3 ; try apply H5.
     repeat rewrite <-Rplus_assoc. 
     f_equal. repeat rewrite Rplus_assoc.   
     f_equal. apply Rplus_comm. 
@@ -1155,7 +1126,6 @@ rewrite Rmult_1_l in H5.
 intuition.
 Qed.
 
-Require Import ParDensityO.
 Lemma WF_d_app_aux'{s e:nat}: forall (mu mu':list (state s e)) (p1 p2:R),
 (0<p1<=1/\0<p2<=1)-> (p1+p2<=1)->
 WF_dstate_aux mu -> WF_dstate_aux mu'-> 
@@ -1187,6 +1157,8 @@ Proof. unfold WF_dstate. unfold d_app. unfold d_trace.
  intros  (mu, IHmu) (mu', IHmu') p1 p2. simpl. 
  intros. apply WF_d_app_aux'; try assumption.
 Qed.
+
+(*WF_big_dapp'*)
 
 Lemma WWF_dstate_big_map{s e:nat}: forall (p_n:list R) (mu_n:list (list (state s e))) (mu:list (state s e)), 
 Forall (fun x=> WWF_dstate_aux x) mu_n ->
@@ -1323,6 +1295,7 @@ Proof. induction p_n. intros. inversion_clear H0.
 Qed.
 
 
+
 Lemma WF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
 Forall_two (fun x y=> 0<y -> WF_dstate x) mu_n p_n->
 big_dapp' p_n mu_n mu->
@@ -1358,7 +1331,7 @@ Proof. intros. unfold d_find. simpl. reflexivity. Qed.
 
 Module Import MC := OrderedTypeFacts(Cstate_as_OT).
 
-
+(*d_find_scale*)
 Lemma d_find_map{s e:nat}: forall (mu:list (state s e)) p x, 
  option_qstate (StateMap.Raw.find x (p *l mu))= p .* (option_qstate (StateMap.Raw.find x mu)).
 Proof. intros. induction mu.  simpl.  rewrite Mscale_0_r.  reflexivity.
@@ -1384,6 +1357,7 @@ Proof. intros. inversion H;subst.
 -apply d_find_scale_not_0.
 Qed.
 
+(*d_find_app*)
 
 Require Import Classical_Prop.
 Lemma DeMoGen:forall P Q, ~(P\/Q) -> (~P/\~Q) .
@@ -1516,6 +1490,20 @@ Proof. intros. assert(r=0 \/ r<>0). apply classic.
    exists (r *l mu). econstructor. assumption.
 Qed.
 
+Lemma  d_scale_aux_sorted{s e:nat}: forall a (mu mu': list (state s e)),
+d_scale_aux a mu mu'->
+Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
+Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu'.
+Proof. intros. inversion_clear H; try econstructor. 
+        apply StateMap.Raw.map_sorted. assumption.
+Qed.
+
+Lemma d_scale_exsits{s e:nat}: forall r (mu:dstate s e),
+exists (mu':dstate s e), d_scale r mu mu' .
+Proof. intros. assert(r=0 \/ r<>0). apply classic. 
+   destruct H. exists (d_empty s e). rewrite H. apply d_scalar_0.
+   exists (d_scale_not_0  r mu). apply d_scalar_r. assumption.
+Qed.
 
 Lemma d_scale_not_0_nil{s e:nat}: forall (mu:dstate s e) p, 
 this (d_scale_not_0 p mu) = nil <-> this mu = [].
@@ -1565,6 +1553,7 @@ Proof. intros . unfold d_empty. unfold dstate_eq.
      unfold d_scale_not_0. simpl. unfold Raw.empty. reflexivity.
 Qed.
 
+(*scale 1 *)
 Lemma map_1_l{s e:nat}: forall (mu:list (state s e)), 
 (1 *l mu) = mu.
 Proof.
@@ -1590,6 +1579,7 @@ apply d_scale_not_0_1_l.
 Qed.
 
 
+(*scale assoc *)
 Lemma map_assoc{s e:nat}: forall (p1 p2:R) (mu:list (state s e)), 
 (p1 *l (p2 *l mu)) =  ((p1* p2)%R *l  mu).
 Proof. intros. 
@@ -1668,6 +1658,7 @@ Proof. intros. split; intros. assert(x=[]\/x<>[]).
         destruct H. rewrite H. rewrite H0. simpl. reflexivity.
 Qed.
 
+(*dapp comm*)
 Lemma map2_comm{s e:nat}: forall (mu mu': list (cstate * qstate s e)),
 (StateMap.Raw.map2 option_app mu mu')=
 (StateMap.Raw.map2 option_app mu' mu).
@@ -1712,41 +1703,11 @@ Qed.
 
 From Quan Require Import Matrix.
 Local Open Scope matrix_scope.
-Local Open Scope R_scope.
-Lemma Mscale_0: forall (m n:nat) (A:Matrix m n) (p: R), 
-(p <> 0) /\ (p .* A = Zero) -> A = Zero .
-Proof. intros. destruct H.  
-assert(((1%R)/p) .* (p .* A ) = Zero).
-rewrite H0. rewrite Mscale_0_r. reflexivity.  
-rewrite Mscale_assoc in H1.  
-rewrite Cdiv_unfold in H1.
-assert((/ p * p)%C = 1).
-rewrite Cinv_l. reflexivity.
-unfold RtoC. unfold not. intros. injection H2. 
-intros. intuition.
-rewrite <- Cmult_assoc in H1.
-rewrite H2 in H1.
-rewrite Cmult_1_l in H1.
-rewrite Mscale_1_l in H1.
-assumption.
-Qed.
+
 
 Local Open Scope R_scope.
-Lemma Mscale_not_0:forall (m n:nat) (A:Matrix m n) (p: R), 
-(p <> 0)/\ (A<>Zero )-> p.* A <> Zero .
-Proof. unfold not. intros. 
-intros. assert(A=Zero). apply (Mscale_0 _ _ _ p). 
-split. lra.
-assumption. apply H in H1. intuition.  
-Qed.
 
-Local Open Scope R_scope.
-Lemma Mscale_not_0':forall (m n:nat) (A:Matrix m n) (p: R), 
-p.* A <> Zero -> A<>Zero .
-Proof. unfold not.  intros.  rewrite H0 in H.  rewrite Mscale_0_r in H.
-intuition. 
-Qed.
-
+(*dapp assoc*)
 Lemma map2_assoc: forall s e (x y z: list (cstate *qstate s e)),
 (x +l (y +l z)) = (x +l y +l z).
 Proof. induction x. simpl; intros. 
@@ -1807,7 +1768,7 @@ Proof.   unfold dstate_eq. unfold d_app. unfold StateMap.map2.
      simpl.  rewrite map2_assoc. reflexivity.
 Qed.
 
-
+(*dapp_scale_distr*)
 Lemma  map_map2_distr:forall {s e : nat} (mu mu' : list( state s e)) (p : R),
  ( StateMap.Raw.map2 (@option_app  s e)
  (StateMap.Raw.map (fun x => p .* x) mu)  (StateMap.Raw.map (fun x => p .* x) mu'))=
@@ -1868,7 +1829,7 @@ Qed.
 
 (*--------------------------------------------------------------------*)
 
-       
+(*dstate equal*) 
 Lemma dstate_1{s e:nat}: forall (mu: list (cstate *qstate s e))
 (t x:cstate) (q:qstate s e),
 Sorted (Raw.PX.ltk (elt:=qstate s e)) ((t, q) :: mu)->
@@ -2066,7 +2027,7 @@ Qed.
 
 Lemma dstate_equal{s e:nat}: forall (mu1 mu2:dstate s e),
   WF_dstate mu1 -> WF_dstate mu2->
-( forall x, d_find x mu1=d_find x mu2)<-> dstate_eq mu1 mu2 .
+(forall x, d_find x mu1=d_find x mu2)<-> dstate_eq mu1 mu2 .
 Proof. split. apply d_eq_1. assumption. assumption.
      apply  d_find_eq.
 Qed. 
@@ -2087,20 +2048,6 @@ Proof.  induction p_n; intros. inversion H0; subst. destruct mu_n.
   inversion_clear H0.
 assumption.
 Qed. *)
-Lemma  d_scale_aux_sorted{s e:nat}: forall a (mu mu': list (state s e)),
-d_scale_aux a mu mu'->
-Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
-Sorted.Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu'.
-Proof. intros. inversion_clear H; try econstructor. 
-        apply StateMap.Raw.map_sorted. assumption.
-Qed.
-
-Lemma d_scale_exsits{s e:nat}: forall r (mu:dstate s e),
-exists (mu':dstate s e), d_scale r mu mu' .
-Proof. intros. assert(r=0 \/ r<>0). apply classic. 
-   destruct H. exists (d_empty s e). rewrite H. apply d_scalar_0.
-   exists (d_scale_not_0  r mu). apply d_scalar_r. assumption.
-Qed.
 
 Lemma  big_dapp_exsist {s e:nat} : forall (p_n:list R) (mu_n:list (dstate s e)),
 length p_n = length mu_n ->
@@ -2118,6 +2065,8 @@ Proof. induction p_n; intros;
         exists  (d_app x x0).
         econstructor; try assumption.
 Qed.
+
+
 
 Lemma dstate_to_list_length{s e:nat}: forall (mu_n:list (dstate s e)),
 length (dstate_to_list mu_n)= (length mu_n) .
@@ -2215,7 +2164,7 @@ Qed.
 
 (*-----------------------------------------------------------*)
 
-
+(* 
 Inductive emit_0{A:Type}:(list R) -> (list A)-> (list A)->Prop:=
 |emit_nil: emit_0 [] [] []
 |emit_cons_0: forall hf hg f g d,  (hf = 0)%R -> emit_0 f g d ->
@@ -2328,7 +2277,7 @@ Proof. induction p_n1; destruct g_n1; intros.
        lra. lra. 
        simpl. f_equal.  
        eapply IHp_n1; [apply H3 | apply H0| apply H4].
-Qed.
+Qed. *)
 
 Fixpoint fun_to_list{G:Type} (g: nat-> G) (n_0 : nat) : list (G) := 
   match n_0 with
@@ -2343,7 +2292,7 @@ Proof. induction n_0. simpl. reflexivity.
         simpl. intuition.
 Qed.
 
-Local Open Scope nat_scope.
+(* Local Open Scope nat_scope.
 From Quan Require Import Forall_two.
 Lemma emit_0_dtrace{s e:nat}: forall (p_n:list R)  (mu_n:list (dstate s e)) (mu:dstate s e) ( mu':list (dstate s e)),
 (Forall_two (fun p_i mu_i=> p_i <> 0%R -> d_trace mu_i = d_trace mu ) p_n mu_n)->
@@ -2354,7 +2303,7 @@ Proof. induction p_n; destruct mu_n ; intros;
        apply IHp_n with mu_n; try assumption.    
        econstructor. apply H0. assumption. 
        apply IHp_n with mu_n; try assumption.  
-Qed.
+Qed. *)
 
 #[export] Hint Resolve WF_state_dstate WF_dstate_eq WWF_dstate_aux_to_WF_dstate_aux: DState.
 (*------------WF_d_scale-------------------*)

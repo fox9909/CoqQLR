@@ -15,7 +15,7 @@ From Quan Require Import QIMP_L.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import QState.
-Require Import Par_trace.
+Require Import Reduced.
 
 
 (*-------------------------------Synatx------------------------------------*)
@@ -239,11 +239,11 @@ Proof.
   apply kron_assoc_mat_equiv.
 Qed.
 
-Import ParDensityO.
+Import Reduced.
 Local Open Scope nat_scope.
 Fixpoint QExp_eval{s' e':nat} (qs: QExp) (st: state s' e'){struct qs} :Prop:=
   (match qs with 
-  |QExp_s s e v=>Pure_State_Vector v /\ s'<=s /\ s<e /\ e<=e' /\ ((PMpar_trace (@scale (2^(e'-s')) (2^(e'-s')) (R1 / (Cmod (@trace (2^(e'-s')) (snd st))))%R  (snd st)) s e = outer_product v v))
+  |QExp_s s e v=>Pure_State_Vector v /\ s'<=s /\ s<e /\ e<=e' /\ ((Reduced (@scale (2^(e'-s')) (2^(e'-s')) (R1 / (Cmod (@trace (2^(e'-s')) (snd st))))%R  (snd st)) s e = outer_product v v))
   |QExp_t qs1 qs2=>  NSet.Equal (NSet.inter (Free_Qexp qs1) (Free_Qexp qs2)) (NSet.empty)  /\
   QExp_eval qs1 st /\ QExp_eval qs2 st  
 end).
@@ -808,6 +808,7 @@ Proof. induction mu; intros.
       inversion_clear H. assumption.
 Qed.
 
+Require Import Mixed_State.
 Lemma WF_state_dstate_aux{s e:nat}: forall (st:state s e), 
 WF_state st <-> WF_dstate_aux [st] .
 Proof. split; unfold WF_dstate;
@@ -816,7 +817,7 @@ Proof. split; unfold WF_dstate;
        apply WF_cons. intuition. apply WF_nil. 
        unfold WF_state in H.  unfold WF_qstate in H. simpl in H.
        unfold d_trace_aux. unfold s_trace. simpl. rewrite Rplus_0_r.
-       apply mixed_state_Cmod_1. intuition.
+       apply nz_mixed_state_Cmod_1. intuition.
 
        inversion_clear H. intuition. 
 Qed.
@@ -1058,7 +1059,7 @@ Lemma  WF_qstate_gt_0{s e:nat}: forall (q:qstate s e),
 WF_qstate q -> (Cmod (@trace (2^(e-s)) q) > 0)%R.
 Proof.
 unfold WF_qstate.  intros.
-apply mixed_state_Cmod_1. intuition. 
+apply nz_mixed_state_Cmod_1. intuition. 
 Qed.
 
 Lemma  State_eval_plus{s e:nat}: forall F c (q q0: qstate s e),
@@ -1074,7 +1075,7 @@ Proof.
       -induction qs. simpl in *.
         rewrite Rdiv_unfold in *.
         rewrite trace_plus_dist.
-        rewrite <-PMtrace_scale.
+        rewrite <-Reduced_scale.
         assert(q= (Cmod (@trace (2^(e-s)) q))%R .* (((R1 /  (Cmod (@trace  (2^(e-s)) q))))%R .* q) ).
         rewrite Mscale_assoc. 
          rewrite Rdiv_unfold.
@@ -1100,8 +1101,8 @@ Proof.
         unfold not. intros. apply WF_qstate_gt_0 in H0.
         rewrite H4 in H0. lra. 
          rewrite H3. rewrite H4.
-          rewrite PMtrace_plus. 
-          rewrite <-PMtrace_scale. 
+          rewrite Reduced_plus. 
+          rewrite <-Reduced_scale. 
           rewrite Rdiv_unfold in *.
           destruct H1. destruct H5. destruct H6. destruct H2.
           destruct H7.
@@ -1110,7 +1111,7 @@ Proof.
           split. intuition. split. intuition.
           split. intuition. split. intuition.
           rewrite H9.
-          rewrite <-PMtrace_scale. 
+          rewrite <-Reduced_scale. 
           rewrite Rdiv_unfold. rewrite H12.
         rewrite <-Mscale_plus_distr_l.
         rewrite Mscale_assoc. 
@@ -1119,13 +1120,13 @@ Proof.
        rewrite RtoC_mult.
          rewrite Rmult_assoc.
          rewrite <-trace_plus_dist.
-         rewrite mixed_state_Cmod_plus.
+         rewrite nz_mixed_state_Cmod_plus.
          rewrite Rinv_l. rewrite Rmult_1_l.
          rewrite Mscale_1_l. reflexivity.
          assert((Cmod (@trace (2^(e-s)) q) + Cmod (@trace  (2^(e-s)) q0) )%R<> 0%R).
          apply tech_Rplus. assert(Cmod(@trace (2^(e-s)) q)%R>0%R)%R.
-         apply mixed_state_Cmod_1. apply H.
-         intuition.  apply mixed_state_Cmod_1. apply H0.
+         apply nz_mixed_state_Cmod_1. apply H.
+         intuition.  apply nz_mixed_state_Cmod_1. apply H0.
          assumption.
          apply H. apply H0. 
        

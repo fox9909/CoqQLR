@@ -12,7 +12,7 @@ From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
 From Quan Require Import QState.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 
 Delimit Scope C_scope with C.
 Local Open Scope C_scope.
@@ -24,18 +24,18 @@ Local Open Scope nat_scope.
 
 Local Open Scope matrix_scope.
 
-Definition PMRpar_trace{s e:nat} (M: qstate s e) (l:nat) : qstate l e:=
-  let f:= (fun i=>  let v_i:= (Vec (2^(l-s)) i) in  
+Definition R_reduced{s e:nat} (M: qstate s e) (l:nat) : qstate l e:=
+  let f:= (fun i=>  let v_i:= (∣ i ⟩_ (2^(l-s))) in  
   ((v_i†) ⊗ (I (2^(e-l)))) ×  M ×  ((v_i) ⊗ (I (2^(e-l))))) in
   big_sum  f (2^(l-s)).
 
-Definition PMLpar_trace{s e:nat} (M: qstate s e ) (r:nat) : qstate s r:=
-    let f:= (fun i=>  let v_i:= (Vec (2^(e-r)) i) in  
+Definition L_reduced{s e:nat} (M: qstate s e ) (r:nat) : qstate s r:=
+    let f:= (fun i=>  let v_i:= (∣ i ⟩_ (2^(e-r))) in  
     ((I (2^(r-s)))  ⊗ (v_i†)   ×  M × ((I (2^(r-s))) ⊗ v_i))) in
     big_sum  f (2^(e-r)).
 
-Definition PMpar_trace{s e:nat} (M: qstate s e) (l:nat) (r:nat): qstate l r:=
-    PMRpar_trace (PMLpar_trace M r) l.
+Definition Reduced{s e:nat} (M: qstate s e) (l:nat) (r:nat): qstate l r:=
+    R_reduced (L_reduced M r) l.
 
 Ltac type_sovle:=
 try (repeat rewrite  <-Nat.pow_add_r;  rewrite Nat.mul_1_r ; f_equal ; lia).
@@ -43,12 +43,13 @@ try (repeat rewrite  <-Nat.pow_add_r;  rewrite Nat.mul_1_r ; f_equal ; lia).
 Ltac type_sovle':=
 try (repeat rewrite  <-Nat.pow_add_r;  f_equal ; lia).
 
-Lemma WF_PMLpar_trace{s e:nat}: forall (q:qstate s e)  r,
+(*WF Reduced*)
+Lemma WF_L_reduced{s e:nat}: forall (q:qstate s e)  r,
 s<=r/\r<=e->
 @WF_Matrix (2^(e-s)) (2^(e-s)) q->
-@WF_Matrix  (2^(r-s)) (2^(r-s)) (PMLpar_trace q r).
+@WF_Matrix  (2^(r-s)) (2^(r-s)) (L_reduced q r).
 Proof. intros. 
-       unfold PMLpar_trace.
+       unfold L_reduced.
        assert((2^(r-s))=((2^(r-s))*1)).
        rewrite Nat.mul_1_r.
        type_sovle'. destruct H1.
@@ -63,12 +64,12 @@ Proof. intros.
        auto_wf. auto_wf.
 Qed.
 
-Lemma WF_PMRpar_trace{s e:nat}: forall (q:qstate s e)  l,
+Lemma WF_R_reduced{s e:nat}: forall (q:qstate s e)  l,
 s<=l/\l<=e->
 @WF_Matrix (2^(e-s)) (2^(e-s)) q->
-@WF_Matrix  (2^(e-l)) (2^(e-l)) (PMRpar_trace q l).
+@WF_Matrix  (2^(e-l)) (2^(e-l)) (R_reduced q l).
 Proof. intros. 
-       unfold PMRpar_trace.
+       unfold R_reduced.
        assert((2^(e-l))=(1* (2^(e-l)))).
        rewrite Nat.mul_1_l.
        type_sovle'. destruct H1.
@@ -84,23 +85,23 @@ Proof. intros.
 Qed.
     
     
-Lemma WF_PMpar_trace{s e:nat}: forall (q:qstate s e)  l r,
+Lemma WF_Reduced{s e:nat}: forall (q:qstate s e)  l r,
 s<=l/\l<=r<=e->
 @WF_Matrix (2^(e-s)) (2^(e-s)) q->
-@WF_Matrix  (2^(r-l)) (2^(r-l)) (PMpar_trace q l r).
-Proof. intros. unfold PMpar_trace. apply WF_PMRpar_trace. lia. 
-       apply WF_PMLpar_trace. lia. assumption.
+@WF_Matrix  (2^(r-l)) (2^(r-l)) (Reduced q l r).
+Proof. intros. unfold Reduced. apply WF_R_reduced. lia. 
+       apply WF_L_reduced. lia. assumption.
 Qed. 
 
-
+(*Reduced trace*)
 Lemma Ptrace_l_r{ s e:nat}: forall (A:qstate s e) l r,
-PMpar_trace A  l r = big_sum (fun i : nat => big_sum
-    (fun i0 : nat => ⟨ i ∣_ (l-s) ⊗ I (2 ^ (r-l))
-    × (I (2 ^ (r - s)) ⊗ ⟨ i0 ∣_ (e-r) × A × (I (2 ^ (r - s)) ⊗ ∣ i0 ⟩_ (e-r)))
-    × (∣ i ⟩_ (l-s) ⊗ I (2 ^ (r-l)))) 
+Reduced A  l r = big_sum (fun i : nat => big_sum
+    (fun i0 : nat => ⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (r-l))
+    × (I (2 ^ (r - s)) ⊗ ⟨ i0 ∣_ (2^(e-r)) × A × (I (2 ^ (r - s)) ⊗ ∣ i0 ⟩_ (2^(e-r))))
+    × (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (r-l)))) 
     (2 ^ (e-r))) (2 ^ (l-s)). 
-Proof. unfold PMpar_trace. unfold PMLpar_trace.
-unfold PMRpar_trace; intros. apply big_sum_eq.  
+Proof. unfold Reduced. unfold L_reduced.
+unfold R_reduced; intros. apply big_sum_eq.  
 apply functional_extensionality. intros.
 rewrite (@Mmult_Msum_distr_l  (2 ^ (l-s) * 2 ^ (r-l)) (2 ^ (l-s) * 2 ^ (r-l))).
  rewrite Mmult_Msum_distr_r.
@@ -116,10 +117,10 @@ Qed.
 
 Lemma Ptrace_l_r' {s e:nat}: forall (A:qstate s e) l r,
 s<=l /\ l<=r ->
-PMpar_trace A l r =big_sum (fun i : nat => big_sum
-   (fun j: nat => (⟨ i ∣_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ⟨ j ∣_ (e-r)) 
+Reduced A l r =big_sum (fun i : nat => big_sum
+   (fun j: nat => (⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ ⟨ j ∣_ (2^(e-r))) 
                    × A ×  
-                  (∣ i ⟩_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ∣ j ⟩_ (e-r))) (2 ^ (e-r))) (2 ^ (l-s)).
+                  (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ ∣ j ⟩_ (2^(e-r)))) (2 ^ (e-r))) (2 ^ (l-s)).
 Proof. intros. rewrite Ptrace_l_r. 
        apply big_sum_eq_bounded. intros. 
        apply big_sum_eq_bounded. intros.
@@ -128,8 +129,8 @@ Proof. intros. rewrite Ptrace_l_r.
        destruct H2. rewrite Mmult_assoc_5. 
        f_equal; type_sovle'; type_sovle. 
        f_equal; type_sovle'; type_sovle. 
-       apply eq_trans with ((⟨ x ∣_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ I 1) 
-       × ((I (2 ^ (l-s))) ⊗ (I (2 ^ (r-l))) ⊗ ⟨ x0 ∣_ (e-r))).
+       apply eq_trans with ((⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ I 1) 
+       × ((I (2 ^ (l-s))) ⊗ (I (2 ^ (r-l))) ⊗ ⟨ x0 ∣_ (2^(e-r)))).
        f_equal;  type_sovle'; type_sovle.   
        rewrite kron_1_r. reflexivity. 
        rewrite id_kron. f_equal; type_sovle; type_sovle'.
@@ -138,8 +139,8 @@ Proof. intros. rewrite Ptrace_l_r.
        repeat rewrite Mmult_1_r. repeat rewrite Mmult_1_l.
        reflexivity. auto_wf. auto_wf. auto_wf.
 
-       apply eq_trans with (((I (2 ^ (l-s))) ⊗ (I (2 ^ (r-l))) ⊗ ∣ x0 ⟩_ (e-r)) 
-       × (∣ x ⟩_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ I 1)).
+       apply eq_trans with (((I (2 ^ (l-s))) ⊗ (I (2 ^ (r-l))) ⊗ ∣ x0 ⟩_ (2^(e-r))) 
+       × (∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ I 1)).
        f_equal;  type_sovle; type_sovle'.
        rewrite id_kron. f_equal; type_sovle; type_sovle'.
        f_equal; type_sovle'.
@@ -151,26 +152,30 @@ Qed.
 
 
 Local Open Scope nat_scope.
+Lemma  big_sum_trace: forall n (f:nat-> Square n) n0, 
+trace (big_sum  f  n0)= big_sum (fun i:nat => trace (f i)) n0.
+Proof. intros. induction n0. simpl. apply Zero_trace. 
+    simpl. rewrite trace_plus_dist. f_equal. assumption. Qed.
 
-Lemma  Ptrace_trace: forall s e (A:qstate s e) l r,
+Lemma  Reduced_trace: forall s e (A:qstate s e) l r,
 s <= l/\ l<=r /\ r<=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) A->
-@trace (2^(r-l)) (PMpar_trace A  l r) = @trace (2^(e-s)) A.
+@trace (2^(r-l)) (Reduced A  l r) = @trace (2^(e-s)) A.
 Proof. intros. rewrite Ptrace_l_r'.
    assert(2^(r-l)=1 * 2 ^ (r-l) * 1) . lia.
    destruct H1. rewrite big_sum_trace.
    rewrite (big_sum_eq_bounded  _ ((fun i : nat =>
    trace (big_sum
       (fun j : nat =>
-        ( (∣ i ⟩_ (l-s) × ⟨ i ∣_ (l-s)) ⊗ I (2 ^ (r-l)) ⊗  (∣ j ⟩_ (e-r)  × ⟨ j ∣_ (e-r)) × A))
+        ( (∣ i ⟩_ (2^(l-s)) × ⟨ i ∣_ (2^(l-s))) ⊗ I (2 ^ (r-l)) ⊗  (∣ j ⟩_ (2^(e-r))  × ⟨ j ∣_ (2^(e-r))) × A))
         (2 ^ (e-r)))))).
     rewrite <-big_sum_trace. 
     assert(2^(e-s) = 2^(l-s) * 2^(r-l) * (2^(e-r))); type_sovle'. 
     f_equal; type_sovle'.
      (* destruct H2. *)
     rewrite (big_sum_eq_bounded  _ ((fun i : nat =>
-    @Mmult (2^(e-s)) (2^(e-s)) (2^(e-s)) ( (∣ i ⟩_ (l-s) × ⟨ i ∣_ (l-s)) ⊗   I (2 ^ (r-l))
+    @Mmult (2^(e-s)) (2^(e-s)) (2^(e-s)) ( (∣ i ⟩_ (2^(l-s)) × ⟨ i ∣_ (2^(l-s))) ⊗   I (2 ^ (r-l))
     ⊗  (big_sum
-      (fun j : nat => (∣ j ⟩_ (e-r) × ⟨ j ∣_ (e-r)) ) 
+      (fun j : nat => (∣ j ⟩_ (2^(e-r)) × ⟨ j ∣_ (2^(e-r))) ) 
       (2 ^ (e-r)) ))  A ))  ). destruct H1.
     repeat rewrite <-@Mmult_Msum_distr_r. repeat rewrite <-kron_Msum_distr_r.
      repeat rewrite big_sum_I. repeat rewrite id_kron.
@@ -182,11 +187,11 @@ Proof. intros. rewrite Ptrace_l_r'.
      destruct H3.
     rewrite Mmult_Msum_distr_r. reflexivity.
     intros. repeat  rewrite big_sum_trace. apply big_sum_eq_bounded.
-    intros. rewrite trace_mult'.   
+    intros. rewrite trace_mult.   
     rewrite <-Mmult_assoc. 
     apply Logic.eq_trans with (trace
-    (∣ x ⟩_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ∣ x0 ⟩_ (e-r)
-     × (⟨ x ∣_ (l-s) ⊗ I (2 ^ (r-l)) ⊗ ⟨ x0 ∣_ (e-r)) × A)).
+    (∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ ∣ x0 ⟩_ (2^(e-r))
+     × (⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r-l)) ⊗ ⟨ x0 ∣_ (2^(e-r))) × A)).
      f_equal. f_equal. f_equal; try lia.
     repeat rewrite kron_mixed_product. 
     rewrite Mmult_1_r.  reflexivity.
@@ -194,38 +199,40 @@ Proof. intros. rewrite Ptrace_l_r'.
 Qed.
 
 
+(*WF_qstate Reduced*)
 Local Open Scope nat_scope.
-Lemma Mix_par_trace: forall s e l r (q:qstate s e),
+Lemma WF_qstate_Reduced: forall s e l r (q:qstate s e),
 s<=l/\l<=r/\r<=e->
 WF_qstate q->
-WF_qstate (PMpar_trace q l r).
+WF_qstate (Reduced q l r).
 Proof. intros. unfold WF_qstate in *.
-       destruct H0.  split.
-       apply Mixed_State_aux_to_Mix_State.
+       destruct H0.  split. 
+       apply nz_Mixed_State_aux_to_nz_Mix_State.
       split.  
       rewrite Ptrace_l_r'.
       remember ((fun i : nat =>
       big_sum
         (fun j : nat =>
-         ⟨ i ∣_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ⟨ j ∣_ (e - r) × q
-         × (∣ i ⟩_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ∣ j ⟩_ (e - r)))
+         ⟨ i ∣_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ⟨ j ∣_ (2^(e - r)) × q
+         × (∣ i ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ∣ j ⟩_ (2^(e - r))))
         (2 ^ (e - r)))).
       
       assert(2 ^ (r - l) = 1 * 2 ^ (r - l) * 1).
       lia. rewrite <-H2.
       
-      apply Mixed_State_aux_big_sum.
+      apply nz_Mixed_State_aux_big_sum.
       apply Nat.pow_nonzero. lia. 
-      intros.
+      intros.  rewrite NZ_Mixed_State_aux_equiv'.  
       assert( m i = Zero \/ m i<> Zero).
       apply Classical_Prop.classic.
-      destruct H4. right. assumption. 
+      destruct H4.
+      right. assumption.  
       left.  rewrite Heqm. rewrite <-H2.
-      apply Mixed_State_aux_big_sum.
+      apply nz_Mixed_State_aux_big_sum.
       apply Nat.pow_nonzero. lia.
       intros. 
-      remember (⟨ i ∣_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i0 ∣_ (e - r)).
-      remember ((∣ i ⟩_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ∣ i0 ⟩_ (e - r)) ).
+      remember (⟨ i ∣_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i0 ∣_ (2^(e - r))).
+      remember ((∣ i ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ∣ i0 ⟩_ (2^(e - r))) ).
       assert ((@Mmult ( 2 ^ (r - l) )
       (2 ^ (l - s) * 2 ^ (r - l) * 2 ^ (e - r))
          (2 ^ (r - l) )
@@ -238,6 +245,7 @@ Proof. intros. unfold WF_qstate in *.
       rewrite Heqm0. repeat rewrite kron_adjoint.
       rewrite id_adjoint_eq. repeat rewrite adjoint_involutive.
       reflexivity. rewrite H6.
+      rewrite NZ_Mixed_State_aux_equiv'. 
          assert( m0 × q × (m0) † = Zero \/ m0 × q × (m0) † <> Zero).
          apply Classical_Prop.classic.
         destruct H7. right.  
@@ -245,9 +253,9 @@ Proof. intros. unfold WF_qstate in *.
         left. 
         assert(2 ^ (r - l) = 1 * 2 ^ (r - l) * 1).
         lia. rewrite <-H8.
-        apply mixed_super_aux.
+        apply nz_mixed_super_aux.
         rewrite Heqm0. auto_wf. 
-        apply Mixed_State_aux_to_Mix_State.
+        apply nz_Mixed_State_aux_to_nz_Mix_State.
         assert((2 ^ (e - s))= (2 ^ (l - s) * 2 ^ (r - l) * 2 ^ (e - r))).
         type_sovle'. destruct H9.
         assumption. unfold super. assumption.
@@ -256,7 +264,7 @@ Proof. intros. unfold WF_qstate in *.
         rewrite Heqm in H4.
         assumption.
         apply big_sum_not_0.
-        assert(PMpar_trace q l r = 
+        assert(Reduced q l r = 
         big_sum m (2 ^ (l - s))).
         rewrite Ptrace_l_r'.
         rewrite Heqm. reflexivity.
@@ -265,43 +273,43 @@ Proof. intros. unfold WF_qstate in *.
         rewrite Nat.mul_1_r in H3.
         rewrite <-H3. 
         intro. 
-        assert(Cmod (@trace (2^(r-l)) (PMpar_trace q l r)) = Cmod ((@trace (2^(r-l)) Zero))) .
+        assert(Cmod (@trace (2^(r-l)) (Reduced q l r)) = Cmod ((@trace (2^(r-l)) Zero))) .
         rewrite H4. reflexivity.
         rewrite Zero_trace in H5. 
-        rewrite Ptrace_trace in H5. rewrite Cmod_0 in H5. 
-        apply mixed_state_Cmod_1 in H0.
+        rewrite Reduced_trace in H5. rewrite Cmod_0 in H5. 
+        apply nz_mixed_state_Cmod_1 in H0.
         rewrite H5 in H0. 
-        lra. lia. 
-        apply WF_Mixed. assumption. lia. 
-      rewrite Ptrace_trace.
-      apply mixed_state_Cmod_1. assumption.
-      lia. apply WF_Mixed. assumption. lia.
+        lra. lia.  auto_wf.
+        lia. 
+      rewrite Reduced_trace.
+      apply nz_mixed_state_Cmod_1. assumption.
+      lia. auto_wf. lia.
 Qed.
 
-
-Lemma Par_trace_Zero{s' e'}: forall l r,
-@PMpar_trace s' e' Zero l r = Zero.
-Proof. unfold PMpar_trace.  intros.
-unfold PMRpar_trace. 
+(* properties*)
+Lemma Reduced_Zero{s' e'}: forall l r,
+@Reduced s' e' Zero l r = Zero.
+Proof. unfold Reduced.  intros.
+unfold R_reduced. 
 apply (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
 intros. 
-unfold PMLpar_trace.
+unfold L_reduced.
 rewrite  (@big_sum_0_bounded (Matrix (2^(e'-s')) (2^(e'-s')))).
 Msimpl. reflexivity.
 intros. Msimpl. reflexivity.
 Qed.
 
-Lemma PMpar_trace_l{s e:nat} : forall r (M1:qstate s r) (M2:qstate r e) (M3:qstate s e),
+Lemma Reduced_tensor_l{s e:nat} : forall r (M1:qstate s r) (M2:qstate r e) (M3:qstate s e),
 @WF_Matrix (2^(r-s))  ((2^(r-s))) M1-> @WF_Matrix (2^(e-r))  ((2^(e-r))) M2-> 
 @WF_Matrix  (2^(e-s))  ((2^(e-s ))) M3->
 M3= @kron (2^(r-s))  ((2^(r-s))) (2^(e-r))  ((2^(e-r))) M1 M2
--> PMLpar_trace M3 r= (@trace (2^(e-r)) M2) .*  M1.
-Proof. intros.  unfold PMLpar_trace. rewrite H2.
-assert(forall i:nat, i< (2^(e-r)) -> (I (2 ^ (r-s)) ⊗ (Vec (2^(e-r)) i) †) × (M1 ⊗ M2)
-× (I (2 ^ (r-s)) ⊗ Vec (2^(e-r)) i) =(M1) 
+-> L_reduced M3 r= (@trace (2^(e-r)) M2) .*  M1.
+Proof. intros.  unfold L_reduced. rewrite H2.
+assert(forall i:nat, i< (2^(e-r)) -> (I (2 ^ (r-s)) ⊗ (Base_vec (2^(e-r)) i) †) × (M1 ⊗ M2)
+× (I (2 ^ (r-s)) ⊗ Base_vec (2^(e-r)) i) =(M1) 
 ⊗ ((M2 i i) .* I 1)).
 intros. repeat rewrite kron_mixed_product.
-rewrite Mmult_1_l. rewrite Mmult_1_r.  rewrite Vec_inner_M.
+rewrite Mmult_1_l. rewrite Mmult_1_r.  rewrite base_inner_M.
 reflexivity. 
 assumption. assumption.
 assumption. assumption. apply big_sum_eq_bounded in H3.
@@ -311,20 +319,20 @@ rewrite <- big_sum_Mscale_r.
  rewrite kron_1_r. reflexivity.
 Qed.
 
-Lemma PMpar_trace_r{s e:nat} :  forall l (M1:qstate s l) (M2:qstate l e) (M3:qstate s e),
+Lemma Reduced_tensor_r{s e:nat} :  forall l (M1:qstate s l) (M2:qstate l e) (M3:qstate s e),
 @WF_Matrix (2^(l-s))  ((2^(l-s))) M1-> @WF_Matrix (2^(e-l))  ((2^(e-l))) M2-> 
 @WF_Matrix  (2^(e-s))  ((2^(e-s ))) M3->
 M3= @kron (2^(l-s))  ((2^(l-s))) (2^(e-l))  ((2^(e-l))) M1 M2
--> PMRpar_trace M3 l= (@trace (2^(l-s)) M1) .*  M2.
-Proof. intros.  unfold PMRpar_trace. rewrite H2.
-assert(forall i:nat, i< (2^(l-s)) -> (Vec (2 ^ (l-s)) i) †
+-> R_reduced M3 l= (@trace (2^(l-s)) M1) .*  M2.
+Proof. intros.  unfold R_reduced. rewrite H2.
+assert(forall i:nat, i< (2^(l-s)) -> (Base_vec (2 ^ (l-s)) i) †
 ⊗ I (2 ^ (e-l))
 × (M1 ⊗ M2)
-× (Vec (2 ^ (l-s)) i
+× (Base_vec (2 ^ (l-s)) i
    ⊗ I (2 ^ (e - l)))  =  
 ((M1 i i) .* I 1) ⊗ (M2) ).
 intros. repeat rewrite kron_mixed_product.
-rewrite Mmult_1_l. rewrite Mmult_1_r. rewrite Vec_inner_M.
+rewrite Mmult_1_l. rewrite Mmult_1_r. rewrite base_inner_M.
 reflexivity. assumption. assumption.
 assumption. assumption. apply big_sum_eq_bounded in H3.
 rewrite H3. rewrite <- kron_Msum_distr_r. 
@@ -334,34 +342,34 @@ rewrite <- big_sum_Mscale_r.
  Qed.
  
    
-Lemma R_trace_scale: forall s e l c (M:qstate s e),
-(@scale (2^(e-l)) (2^(e-l)) c (PMRpar_trace M l))=
-(@PMRpar_trace s e (scale c  M) l ) .
-Proof. intros. unfold PMRpar_trace.
+Lemma R_reduced_scale: forall s e l c (M:qstate s e),
+(@scale (2^(e-l)) (2^(e-l)) c (R_reduced M l))=
+(@R_reduced s e (scale c  M) l ) .
+Proof. intros. unfold R_reduced.
 assert(forall i:nat, i< (2^(l-s))->
-((Vec (2 ^ (l-s)) i) † ⊗ I (2 ^ (e - l)) × (c .* M)
-× (Vec (2 ^ (l-s)) i ⊗ I (2 ^ (e - l)))) =
-(c .*((Vec (2 ^ (l-s)) i) † ⊗ I (2 ^ (e - l)) ×  M
-× (Vec (2 ^ (l-s)) i ⊗ I (2 ^ (e - l)))))) .
-intros. remember ((Vec (2 ^ (l-s)) i) † ⊗ I (2 ^ (e - l))) as A.
+(∣ i ⟩_ (2^(l-s)) † ⊗ I (2 ^ (e - l)) × (c .* M)
+× (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (e - l)))) =
+(c .*(∣ i ⟩_ (2^(l-s)) † ⊗ I (2 ^ (e - l)) ×  M
+× (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (e - l)))))) .
+intros. remember (∣ i ⟩_ (2^(l-s)) † ⊗ I (2 ^ (e - l))) as A.
 rewrite (Mscale_mult_dist_r _ _ _ c A M).
 rewrite (Mscale_mult_dist_l _ _ _ c (A × M) _).
 reflexivity.
 assert( big_sum
 (fun i : nat =>
- ⟨ i ∣_ (l - s) ⊗ I (2 ^ (e - l)) × (@scale (Nat.pow (S (S O)) (sub e s))
+ ⟨ i ∣_ (2^(l - s)) ⊗ I (2 ^ (e - l)) × (@scale (Nat.pow (S (S O)) (sub e s))
  (Nat.pow (S (S O)) (sub e s)) c M)
- × (∣ i ⟩_ (l - s) ⊗ I (2 ^ (e - l))))
+ × (∣ i ⟩_ (2^(l - s)) ⊗ I (2 ^ (e - l))))
 (2 ^ (l - s))= 
 big_sum
 (fun i : nat =>
- ⟨ i ∣_ (l - s) ⊗ I (2 ^ (e - l)) × (@scale
+ ⟨ i ∣_ (2^(l - s)) ⊗ I (2 ^ (e - l)) × (@scale
  (mul (Nat.pow (S (S O)) (sub l s))
     (Nat.pow (S (S O)) (sub e l)))
  (mul (Nat.pow (S (S O)) (sub l s))
     (Nat.pow (S (S O)) (sub e l)))
  c M)
- × (∣ i ⟩_ (l - s) ⊗ I (2 ^ (e - l))))
+ × (∣ i ⟩_ (2^(l - s)) ⊗ I (2 ^ (e - l))))
 (2 ^ (l - s))). f_equal.
 rewrite H0. 
 apply big_sum_eq_bounded in H.
@@ -400,35 +408,35 @@ apply IHn. rewrite H. reflexivity.
 Qed.
 
 
-Lemma L_trace_scale: forall s e r c (M:qstate s e) , 
-(@scale (2^(r-s)) (2^(r-s)) c (@PMLpar_trace s e M r))=
-(@PMLpar_trace s e ( scale c  M) r ).
-Proof. intros.   unfold PMLpar_trace.
+Lemma L_reduced_scale: forall s e r c (M:qstate s e) , 
+(@scale (2^(r-s)) (2^(r-s)) c (@L_reduced s e M r))=
+(@L_reduced s e ( scale c  M) r ).
+Proof. intros.   unfold L_reduced.
 assert(forall i:nat, (i< (2^(e-r)))%nat->
-(I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (e-r) ×  (c.* M)
-      × (I (2 ^ (r-s)) ⊗ ∣ i ⟩_ (e-r)) ) =
-(c .* (I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (e-r) × M
-× (I (2 ^ (r-s)) ⊗ ∣ i ⟩_ (e-r))) )) .
-intros. remember (I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (e-r)) as A.
+(I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (2^(e-r)) ×  (c.* M)
+      × (I (2 ^ (r-s)) ⊗ ∣ i ⟩_ (2^(e-r))) ) =
+(c .* (I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (2^(e-r)) × M
+× (I (2 ^ (r-s)) ⊗ ∣ i ⟩_ (2^(e-r)))) )) .
+intros. remember (I (2 ^ (r-s)) ⊗ ⟨ i ∣_ (2^(e-r))) as A.
 rewrite (Mscale_mult_dist_r _ _ _ c A M).
 rewrite (Mscale_mult_dist_l _ _ _ c (A × M) _).
 reflexivity.
 assert( big_sum
 (fun i : nat =>
-  I (2 ^ (r - s)) ⊗ ⟨ i ∣_ (e - r)  × 
+  I (2 ^ (r - s)) ⊗ ⟨ i ∣_ (2^(e - r))  × 
  (@scale (Nat.pow (S (S O)) (sub e s))
  (Nat.pow (S (S O)) (sub e s)) c M)
- × ( I (2 ^ (r - s)) ⊗  ∣ i ⟩_ (e - r) ))
+ × ( I (2 ^ (r - s)) ⊗  ∣ i ⟩_ (2^(e - r)) ))
 (2 ^ (e- r))= 
 big_sum
 (fun i : nat =>
-I (2 ^ (r - s)) ⊗ ⟨ i ∣_ (e - r)  × (@scale
+I (2 ^ (r - s)) ⊗ ⟨ i ∣_ (2^(e - r))  × (@scale
  (mul (Nat.pow (S (S O)) (sub r s))
     (Nat.pow (S (S O)) (sub e r)))
  (mul (Nat.pow (S (S O)) (sub r s))
     (Nat.pow (S (S O)) (sub e r)))
  c M)
- × ( I (2 ^ (r - s)) ⊗  ∣ i ⟩_ (e - r) ))
+ × ( I (2 ^ (r - s)) ⊗  ∣ i ⟩_ (2^(e - r)) ))
 (2 ^ (e-r))). f_equal.
 rewrite H0.
 apply big_sum_eq_bounded in H.
@@ -437,19 +445,19 @@ rewrite  Mscale_Msum_distr_r. reflexivity.
 Qed.
 
 Local Open Scope nat_scope.
-Lemma R_trace_plus: forall s e l (M N:qstate s e) , 
-((@PMRpar_trace s e (M .+ N) l ))=
-(@PMRpar_trace s e (M) l  ) .+  ((@PMRpar_trace s e (N) l  )).
-Proof. intros.   unfold PMRpar_trace. 
+Lemma R_reduced_plus: forall s e l (M N:qstate s e) , 
+((@R_reduced s e (M .+ N) l ))=
+(@R_reduced s e (M) l  ) .+  ((@R_reduced s e (N) l  )).
+Proof. intros.   unfold R_reduced. 
       rewrite (big_sum_eq_bounded 
       (fun i : nat =>
-    ⟨ i ∣_ (l-s) ⊗ I (2 ^ (e - l)) × (M .+ N)
-    × (∣ i ⟩_ (l-s) ⊗ I (2 ^ (e - l))))  
+    ⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (e - l)) × (M .+ N)
+    × (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (e - l))))  
       (fun i : nat =>
-      (⟨ i ∣_ (l-s) ⊗ I (2 ^ (e - l)) × M 
-      × (∣ i ⟩_ (l-s) ⊗ I (2 ^ (e - l))) ) .+ 
-      (⟨ i ∣_ (l-s) ⊗ I (2 ^ (e - l)) × N 
-      × (∣ i ⟩_ (l-s) ⊗ I (2 ^ (e - l))) )
+      (⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (e - l)) × M 
+      × (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (e - l))) ) .+ 
+      (⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (e - l)) × N 
+      × (∣ i ⟩_ (2^(l-s)) ⊗ I (2 ^ (e - l))) )
       )). assert(2^(e-l) =1*2^(e-l)).
       rewrite Nat.mul_1_l. reflexivity. destruct H.
       apply (@Msum_plus _ (2^(e-s)) (2^(e-s))).
@@ -459,19 +467,19 @@ Proof. intros.   unfold PMRpar_trace.
     reflexivity. 
 Qed.
 
-Lemma L_trace_plus: forall s e l   (M N:qstate s e) ,
-((@PMLpar_trace s e (M .+ N) l ))=
-(@PMLpar_trace s e (M) l  ) .+  ((@PMLpar_trace s e (N) l )).
-Proof. intros.   unfold PMLpar_trace.
+Lemma L_reduced_plus: forall s e l   (M N:qstate s e) ,
+((@L_reduced s e (M .+ N) l ))=
+(@L_reduced s e (M) l  ) .+  ((@L_reduced s e (N) l )).
+Proof. intros.   unfold L_reduced.
 rewrite (big_sum_eq_bounded 
 (fun i : nat =>
-    I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (e-l) × (M .+ N)
-    × (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (e-l)))  
+    I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (2^(e-l)) × (M .+ N)
+    × (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (2^(e-l))))  
 (fun i : nat =>
-I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (e-l) × M
-× (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (e-l)) .+ 
-I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (e-l) × N
-× (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (e-l))
+I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (2^(e-l)) × M
+× (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (2^(e-l))) .+ 
+I (2 ^ (l-s)) ⊗ ⟨ i ∣_ (2^(e-l)) × N
+× (I (2 ^ (l-s)) ⊗ ∣ i ⟩_ (2^(e-l)))
 )). assert(2^(l-s) =2^(l-s)*1). type_sovle.
  destruct H. apply (@Msum_plus _ (2^(l-s)) (2^(l-s))).  intros.
 rewrite Mmult_plus_distr_l.
@@ -479,34 +487,34 @@ rewrite Mmult_plus_distr_r.
 reflexivity. 
 Qed.
 
-Lemma PMtrace_scale: forall s e l r c (M:qstate s e) , 
-(@scale (2^(r-l)) (2^(r-l)) c (@PMpar_trace s e M l r))=
-(@PMpar_trace s e ( scale c  M) l r ) .
-Proof. intros. unfold PMpar_trace. rewrite R_trace_scale.
-rewrite L_trace_scale. reflexivity.
+Lemma Reduced_scale: forall s e l r c (M:qstate s e) , 
+(@scale (2^(r-l)) (2^(r-l)) c (@Reduced s e M l r))=
+(@Reduced s e ( scale c  M) l r ) .
+Proof. intros. unfold Reduced. rewrite R_reduced_scale.
+rewrite L_reduced_scale. reflexivity.
 Qed.
 
-Lemma PMtrace_plus: forall s e l r  (M N:qstate s e) ,
-((@PMpar_trace s e (M .+ N) l r))=
-(@PMpar_trace s e (M) l r ) .+  ((@PMpar_trace s e (N) l r )).
-Proof. intros. unfold PMpar_trace. rewrite L_trace_plus.
-rewrite R_trace_plus. reflexivity. 
+Lemma Reduced_plus: forall s e l r  (M N:qstate s e) ,
+((@Reduced s e (M .+ N) l r))=
+(@Reduced s e (M) l r ) .+  ((@Reduced s e (N) l r )).
+Proof. intros. unfold Reduced. rewrite L_reduced_plus.
+rewrite R_reduced_plus. reflexivity. 
 Qed.
 
-Require Import ParDensityO.
+
 Local Open Scope nat_scope.
-Lemma PMLpar_trace_assoc{ s e :nat}: forall (q:qstate s e) r r',
+Lemma L_reduced_assoc{ s e :nat}: forall (q:qstate s e) r r',
 s<=r' /\ r'<=r /\ r<=e->
-PMLpar_trace (PMLpar_trace q r)  r'=
-PMLpar_trace q  r'.
-Proof. intros. unfold PMLpar_trace.
+L_reduced (L_reduced q r)  r'=
+L_reduced q  r'.
+Proof. intros. unfold L_reduced.
        
        rewrite (big_sum_eq_bounded  
        _ ((fun i : nat =>
         big_sum
            (fun i0 : nat =>
-            I (2 ^ (r' - s)) ⊗ ⟨ i ∣_ (r - r') ⊗ ⟨ i0 ∣_ (e - r) × q
-            × ((I (2 ^ (r' - s)) ⊗ ∣ i ⟩_ (r - r')) ⊗ ∣ i0 ⟩_ (e - r)))
+            I (2 ^ (r' - s)) ⊗ ⟨ i ∣_ (2^(r - r')) ⊗ ⟨ i0 ∣_ (2^(e - r)) × q
+            × ((I (2 ^ (r' - s)) ⊗ ∣ i ⟩_ (2^(r - r'))) ⊗ ∣ i0 ⟩_ (2^(e - r))))
            (2 ^ (e - r))))).
       rewrite big_sum_double_sum.
       assert(2 ^ (e - r')= 2 ^ (e - r) * 2 ^ (r - r')).
@@ -519,36 +527,37 @@ Proof. intros. unfold PMLpar_trace.
       f_equal; type_sovle'.
       assert(e - r'= r-r'+ (e-r)).
       lia. rewrite H1.
-      assert( ∣ x / 2 ^ (e - r) ⟩_ (r - r')
-      ⊗ ∣ x mod 2 ^ (e - r) ⟩_ (e - r) =
-      ∣ x ⟩_ (r - r' + (e - r))).
-      apply (Vec_kron x (r-r') (e-r)).
-      assert(adjoint (∣ x / 2 ^ (e - r) ⟩_ (r - r')
-      ⊗ ∣ x mod 2 ^ (e - r) ⟩_ (e - r))=
+      assert( ∣ x / 2 ^ (e - r) ⟩_ (2^(r - r'))
+      ⊗ ∣ x mod 2 ^ (e - r) ⟩_ (2^(e - r)) =
+      ∣ x ⟩_ (2^(r - r' + (e - r)))).
+      rewrite Nat.pow_add_r.
+      apply (base_kron x (2^(r-r')) (2^(e-r))).
+      assert(adjoint (∣ x / 2 ^ (e - r) ⟩_ (2^(r - r'))
+      ⊗ ∣ x mod 2 ^ (e - r) ⟩_ (2^(e - r)))=
       adjoint (∣ x ⟩_ (r - r' + (e - r)))).
       rewrite H2. reflexivity.
       rewrite kron_adjoint in H3.
       assumption.
       apply WF_adjoint.
-      apply WF_vec. 
+      apply WF_base. 
       apply Nat.div_lt_upper_bound.
       apply Nat.pow_nonzero. lia. 
       assert(2 ^ (e - r) * 2 ^ (r - r') = 2^(e-r')).
       type_sovle'. rewrite H1. assumption.
      apply WF_adjoint.
-     apply WF_vec.
+     apply WF_base.
      apply Nat.mod_bound_pos.
      lia. apply pow_gt_0.
       rewrite kron_assoc; auto_wf.
       f_equal; type_sovle'.
-      apply Vec_kron.
-      apply WF_vec. 
+      apply base_kron.
+      apply WF_base. 
       apply Nat.div_lt_upper_bound.
       apply Nat.pow_nonzero. lia. 
       assert(2 ^ (e - r) * 2 ^ (r - r') = 2^(e-r')).
       type_sovle'. rewrite H1. assumption.
       
-     apply WF_vec.   apply Nat.mod_bound_pos.
+     apply WF_base.   apply Nat.mod_bound_pos.
      lia. apply pow_gt_0.
       assert(2^(r'-s) * 2^(r-r')=2^(r-s)*1).
       rewrite Nat.mul_1_r.   
@@ -559,10 +568,10 @@ Proof. intros. unfold PMLpar_trace.
        apply big_sum_eq_bounded.
        intros. 
        rewrite Mmult_assoc_5.
-       apply Logic.eq_trans with (I (2 ^ (r' - s)) ⊗ ⟨ x ∣_ (r - r')
-       ⊗ I 1 × (I (2 ^ (r' - s)) ⊗ I (2^(r-r')) ⊗ ⟨ x0 ∣_ (e - r)) × q
-       × (I (2 ^ (r' - s)) ⊗ I (2^(r - r')) ⊗ ∣ x0 ⟩_ (e - r)
-          × (I (2 ^ (r' - s)) ⊗ ∣ x ⟩_ (r - r') ⊗ I 1 ))).
+       apply Logic.eq_trans with (I (2 ^ (r' - s)) ⊗ ⟨ x ∣_ (2^(r - r'))
+       ⊗ I 1 × (I (2 ^ (r' - s)) ⊗ I (2^(r-r')) ⊗ ⟨ x0 ∣_ (2^(e - r))) × q
+       × (I (2 ^ (r' - s)) ⊗ I (2^(r - r')) ⊗ ∣ x0 ⟩_ (2^(e - r))
+          × (I (2 ^ (r' - s)) ⊗ ∣ x ⟩_ (2^(r - r')) ⊗ I 1 ))).
       f_equal; type_sovle'. 
       f_equal; type_sovle'.
       f_equal; type_sovle'.
@@ -581,18 +590,18 @@ Proof. intros. unfold PMLpar_trace.
       reflexivity.
 Qed.
 
-Lemma PMRpar_trace_assoc{ s e :nat}: forall (q:qstate s e) l l',
+Lemma R_reduced_assoc{ s e :nat}: forall (q:qstate s e) l l',
 s<=l /\ l<=l' /\ l'<=e->
-PMRpar_trace (PMRpar_trace q l)  l'=
-PMRpar_trace q  l'.
-Proof. intros. unfold PMRpar_trace.
+R_reduced (R_reduced q l)  l'=
+R_reduced q  l'.
+Proof. intros. unfold R_reduced.
        
        rewrite (big_sum_eq_bounded  
        _ ((fun i : nat =>
         big_sum
            (fun i0 : nat =>
-             (⟨ i0 ∣_ (l-s) ⊗ ⟨ i ∣_ (l' - l) ⊗  I (2 ^ (e - l')) ) × q
-            × ((  ∣ i0 ⟩_ (l- s)) ⊗ ∣ i ⟩_ (l' - l) ⊗ (I (2 ^ (e-l'))  )))
+             (⟨ i0 ∣_ (2^(l-s)) ⊗ ⟨ i ∣_ (2^(l' - l)) ⊗  I (2 ^ (e - l')) ) × q
+            × ((  ∣ i0 ⟩_ (2^(l- s))) ⊗ ∣ i ⟩_ (2^(l' - l)) ⊗ (I (2 ^ (e-l'))  )))
            (2 ^ ( l- s))))).
        rewrite big_sum_swap_order.
       rewrite big_sum_double_sum.
@@ -605,18 +614,19 @@ Proof. intros. unfold PMRpar_trace.
       f_equal; type_sovle'.
       assert(l' - s = l -s + (l' -l)).
       lia. rewrite H1.
-      assert(∣ x / 2 ^ (l' - l) ⟩_ (l - s)
-      ⊗ ∣ x mod 2 ^ (l' - l) ⟩_ (l' - l)=
-      ∣ x ⟩_ (l - s + (l' - l))).
-      apply Vec_kron.
-      assert(adjoint ( ∣ x / 2 ^ (l' - l) ⟩_ (l - s)
-      ⊗ ∣ x mod 2 ^ (l' - l) ⟩_ (l' - l))=
-      adjoint (∣ x ⟩_ (l - s + (l' - l)))).
+      assert(∣ x / 2 ^ (l' - l) ⟩_ (2^(l - s))
+      ⊗ ∣ x mod 2 ^ (l' - l) ⟩_ (2^(l' - l))=
+      ∣ x ⟩_ (2^(l - s + (l' - l)))).
+      rewrite Nat.pow_add_r.
+      apply (base_kron x (2 ^ (l - s)) (2 ^ (l' - l))).
+      assert(adjoint ( ∣ x / 2 ^ (l' - l) ⟩_ (2^(l - s))
+      ⊗ ∣ x mod 2 ^ (l' - l) ⟩_ (2^(l' - l)))=
+      adjoint (∣ x ⟩_ (2^(l - s + (l' - l))))).
       rewrite H2. reflexivity.
       rewrite kron_adjoint in H3.
       apply H3.
       f_equal; type_sovle'.
-      apply Vec_kron.
+      apply base_kron.
       assert(2^(l'-l) * 2^(e-l')=1 * 2^(e-l)).
       rewrite Nat.mul_1_l. 
       type_sovle'. destruct H0.
@@ -626,10 +636,10 @@ Proof. intros. unfold PMRpar_trace.
       apply big_sum_eq_bounded.
       intros. 
       rewrite Mmult_assoc_5.
-      apply Logic.eq_trans with ( I 1  ⊗ ⟨ x ∣_ (l'-l) ⊗  I (2 ^ (e-l')) 
-      × ( ⟨ x0 ∣_ (l- s) ⊗ I (2 ^ (l'-l)) ⊗ I (2^(e-l')) ) × q
-      × ( ∣ x0 ⟩_ (l - s) ⊗ I (2 ^ (l' - l)) ⊗ I (2^(e - l')) 
-      × (I 1 ⊗ ∣ x ⟩_ (l'- l) ⊗  I (2 ^ (e- l'))  ))).
+      apply Logic.eq_trans with ( I 1  ⊗ ⟨ x ∣_ (2^(l'-l)) ⊗  I (2 ^ (e-l')) 
+      × ( ⟨ x0 ∣_ (2^(l- s)) ⊗ I (2 ^ (l'-l)) ⊗ I (2^(e-l')) ) × q
+      × ( ∣ x0 ⟩_ (2^(l - s)) ⊗ I (2 ^ (l' - l)) ⊗ I (2^(e - l')) 
+      × (I 1 ⊗ ∣ x ⟩_ (2^(l'- l)) ⊗  I (2 ^ (e- l'))  ))).
       f_equal; type_sovle'.
       f_equal; type_sovle'.
       f_equal; type_sovle'.
@@ -650,33 +660,33 @@ Proof. intros. unfold PMRpar_trace.
       reflexivity.
 Qed.
 
-Lemma Par_trace_comm{ s e :nat}: forall (q:qstate s e) l r ,
+Lemma Reduced_comm{ s e :nat}: forall (q:qstate s e) l r ,
 s<=l /\ l<=r /\ r<=e->
-PMRpar_trace (PMLpar_trace q r) l=
-PMLpar_trace (PMRpar_trace q l) r.
-Proof. intros. unfold PMRpar_trace. 
-       unfold PMLpar_trace.
+R_reduced (L_reduced q r) l=
+L_reduced (R_reduced q l) r.
+Proof. intros. unfold R_reduced. 
+       unfold L_reduced.
        rewrite (big_sum_eq_bounded 
        _ ((fun i : nat =>
       big_sum
       (fun i0 : nat =>
-      ⟨ i ∣_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i0 ∣_ (e - r) × q
-      × ((∣ i ⟩_ (l - s) ⊗ I (2 ^ (r - l))) ⊗ ∣ i0 ⟩_ (e - r)))
+      ⟨ i ∣_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i0 ∣_ (2^(e - r)) × q
+      × ((∣ i ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l))) ⊗ ∣ i0 ⟩_ (2^(e - r))))
       (2 ^ (e - r))))).
       
       rewrite (big_sum_eq_bounded 
       (fun i : nat =>
-      I (2 ^ (r - l)) ⊗ ⟨ i ∣_ (e - r)
+      I (2 ^ (r - l)) ⊗ ⟨ i ∣_ (2^(e - r))
       × big_sum
        (fun i0 : nat =>
-        ⟨ i0 ∣_ (l - s) ⊗ I (2 ^ (e - l)) × q
-        × (∣ i0 ⟩_ (l - s) ⊗ I (2 ^ (e - l))))
-       (2 ^ (l - s)) × (I (2 ^ (r - l)) ⊗ ∣ i ⟩_ (e - r)))
+        ⟨ i0 ∣_ (2^(l - s)) ⊗ I (2 ^ (e - l)) × q
+        × (∣ i0 ⟩_ (2^(l - s)) ⊗ I (2 ^ (e - l))))
+       (2 ^ (l - s)) × (I (2 ^ (r - l)) ⊗ ∣ i ⟩_ (2^(e - r))))
       ((fun i : nat =>
      big_sum
      (fun i0 : nat =>
-     ⟨ i0 ∣_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i∣_ (e - r) × q
-     × ((∣ i0 ⟩_ (l - s) ⊗ I (2 ^ (r - l))) ⊗ ∣ i ⟩_ (e - r)))
+     ⟨ i0 ∣_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ ⟨ i∣_ (2^(e - r)) × q
+     × ((∣ i0 ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l))) ⊗ ∣ i ⟩_ (2^(e - r))))
      (2 ^ (l-s))))).
      rewrite big_sum_swap_order at 1.
      apply big_sum_eq_bounded. 
@@ -691,10 +701,10 @@ Proof. intros. unfold PMRpar_trace.
        apply big_sum_eq_bounded.
        intros. 
        rewrite Mmult_assoc_5.
-       apply Logic.eq_trans with ( I 1 ⊗ I (2 ^ (r - l)) ⊗ ⟨ x ∣_ (e - r)
-        × ( ⟨ x0 ∣_ (l - s) ⊗ I (2 ^ (r- l)) ⊗ I (2^(e-r)) ) × q
-       ×  ( ∣ x0 ⟩_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ I (2^(e - r)) 
-          × (  I 1  ⊗ I (2 ^ (r - l)) ⊗ ∣ x ⟩_ (e - r)  ))).
+       apply Logic.eq_trans with ( I 1 ⊗ I (2 ^ (r - l)) ⊗ ⟨ x ∣_ (2^(e - r))
+        × ( ⟨ x0 ∣_ (2^(l - s)) ⊗ I (2 ^ (r- l)) ⊗ I (2^(e-r)) ) × q
+       ×  ( ∣ x0 ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ I (2^(e - r)) 
+          × (  I 1  ⊗ I (2 ^ (r - l)) ⊗ ∣ x ⟩_ (2^(e - r))  ))).
       f_equal; type_sovle'. 
       f_equal; type_sovle'.
       f_equal; type_sovle'.
@@ -723,10 +733,10 @@ Proof. intros. unfold PMRpar_trace.
        apply big_sum_eq_bounded.
        intros. 
        rewrite Mmult_assoc_5.
-       apply Logic.eq_trans with ( ⟨ x ∣_ (l - s ) ⊗ I (2 ^ (r - l))  ⊗ I 1
-        × ( I (2 ^ ( l- s)) ⊗ I (2^ (r - l)) ⊗ ⟨ x0 ∣_ (e - r) ) × q
-        ×  (  I (2 ^ (l- s)) ⊗ I (2^(r - l)) ⊗ ∣ x0 ⟩_ (e - r)
-        × ( ∣ x ⟩_ (l - s) ⊗ I (2 ^ (r - l)) ⊗ I 1 ))).
+       apply Logic.eq_trans with ( ⟨ x ∣_ (2^(l - s )) ⊗ I (2 ^ (r - l))  ⊗ I 1
+        × ( I (2 ^ ( l- s)) ⊗ I (2^ (r - l)) ⊗ ⟨ x0 ∣_ (2^(e - r)) ) × q
+        ×  (  I (2 ^ (l- s)) ⊗ I (2^(r - l)) ⊗ ∣ x0 ⟩_ (2^(e - r))
+        × ( ∣ x ⟩_ (2^(l - s)) ⊗ I (2 ^ (r - l)) ⊗ I 1 ))).
       f_equal; type_sovle'. lia. lia.  
       f_equal; type_sovle'. lia. 
       f_equal; type_sovle'. lia. lia. 
@@ -745,28 +755,28 @@ Qed.
 
 
 
-Lemma PMpar_trace_assoc{ s e :nat}: forall (q:qstate s e) l r l' r',
+Lemma Reduced_assoc{ s e :nat}: forall (q:qstate s e) l r l' r',
 s<=l /\ l<=l' /\l' <=r' /\  r'<=r /\ r<=e->
-PMpar_trace (PMpar_trace q l r) l' r'=
-PMpar_trace q l' r'.
-Proof. intros. unfold PMpar_trace. 
-       rewrite Par_trace_comm; try lia.
-       rewrite PMRpar_trace_assoc; try lia.
-       rewrite Par_trace_comm; try lia.
-       rewrite PMLpar_trace_assoc; try lia.
-       rewrite Par_trace_comm; try lia.
+Reduced (Reduced q l r) l' r'=
+Reduced q l' r'.
+Proof. intros. unfold Reduced. 
+       rewrite Reduced_comm; try lia.
+       rewrite R_reduced_assoc; try lia.
+       rewrite Reduced_comm; try lia.
+       rewrite L_reduced_assoc; try lia.
+       rewrite Reduced_comm; try lia.
        reflexivity. 
 Qed. 
 
 
 
-Lemma PMRpar_trace_refl{s e : nat}: forall (l : nat) (q : qstate s e),
+Lemma R_reduced_refl{s e : nat}: forall (l : nat) (q : qstate s e),
 l = s -> @WF_Matrix  (2^(e-s)) (2^(e-s)) q  -> 
-PMRpar_trace q l = q.
-Proof. intros. subst. unfold PMRpar_trace. 
+R_reduced q l = q.
+Proof. intros. subst. unfold R_reduced. 
        rewrite Nat.sub_diag.  
        simpl. rewrite Mplus_0_l.
-       rewrite Vec_I. rewrite id_adjoint_eq.
+       rewrite base_I. rewrite id_adjoint_eq.
        rewrite kron_1_l; auto_wf.
        repeat rewrite Nat.add_0_r.
        repeat rewrite Nat.mul_1_r.
@@ -775,13 +785,13 @@ Proof. intros. subst. unfold PMRpar_trace.
        reflexivity.   
 Qed.
 
-Lemma PMLpar_trace_refl{s e : nat}: forall (r : nat) (q : qstate s e),
+Lemma L_reduced_refl{s e : nat}: forall (r : nat) (q : qstate s e),
  r=e -> @WF_Matrix  (2^(e-s)) (2^(e-s)) q  -> 
-PMLpar_trace q r = q.
-Proof. intros. subst. unfold PMLpar_trace. 
+L_reduced q r = q.
+Proof. intros. subst. unfold L_reduced. 
        rewrite Nat.sub_diag.  
        simpl. rewrite Mplus_0_l.
-       rewrite Vec_I. rewrite id_adjoint_eq.
+       rewrite base_I. rewrite id_adjoint_eq.
        rewrite kron_1_r; auto_wf.
        repeat rewrite Nat.add_0_r.
        repeat rewrite Nat.mul_1_r.
@@ -791,53 +801,53 @@ Proof. intros. subst. unfold PMLpar_trace.
 Qed.
 
 
-Lemma PMpar_trace_refl{s e:nat}: forall l r (q: qstate s e),
+Lemma Reduced_refl{s e:nat}: forall l r (q: qstate s e),
 l=s/\r=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) q->
-PMpar_trace q l r=q.
+Reduced q l r=q.
 Proof. intros. destruct H. subst.
-       unfold PMpar_trace. 
-       rewrite PMLpar_trace_refl; try reflexivity; try assumption.
-       rewrite PMRpar_trace_refl; try reflexivity; assumption.
+       unfold Reduced. 
+       rewrite L_reduced_refl; try reflexivity; try assumption.
+       rewrite R_reduced_refl; try reflexivity; assumption.
 Qed.
 
 
 
-Lemma PMpar_trace_L {s e : nat}: forall (l r : nat) (q : qstate s e),
+Lemma Reduced_L {s e : nat}: forall (l r : nat) (q : qstate s e),
 s=l/\ l<=r/\r<=e -> @WF_Matrix  (2^(e-s)) (2^(e-s)) q  -> 
-PMpar_trace q l r = PMLpar_trace q r.
-Proof. intros. destruct H. subst. unfold PMpar_trace. 
-       rewrite PMRpar_trace_refl. 
+Reduced q l r = L_reduced q r.
+Proof. intros. destruct H. subst. unfold Reduced. 
+       rewrite R_reduced_refl. 
        reflexivity. reflexivity.
-       apply WF_PMLpar_trace.
+       apply WF_L_reduced.
        assumption. assumption. 
 Qed.
 
-Lemma PMpar_trace_R {s e : nat}: forall (l r : nat) (q : qstate s e),
+Lemma Reduced_R {s e : nat}: forall (l r : nat) (q : qstate s e),
 r=e -> @WF_Matrix  (2^(e-s)) (2^(e-s)) q  -> 
-PMpar_trace q l r = PMRpar_trace q l.
-Proof. intros.  subst. unfold PMpar_trace. 
-       rewrite PMLpar_trace_refl. 
+Reduced q l r = R_reduced q l.
+Proof. intros.  subst. unfold Reduced. 
+       rewrite L_reduced_refl. 
        reflexivity. reflexivity.
        assumption. 
 Qed.
 
 
-Fixpoint d_par_trace{ s e: nat} (mu:list (cstate * qstate s e)) l r :=
+Fixpoint d_reduced{ s e: nat} (mu:list (cstate * qstate s e)) l r :=
        match mu with 
        | nil => nil 
-       | (c, q)::mu' =>(c, PMpar_trace q l r):: (d_par_trace mu' l r)
+       | (c, q)::mu' =>(c, Reduced q l r):: (d_reduced mu' l r)
        end.
      
      
-Lemma d_par_trace_assoc{ s e :nat}: forall (mu: list (cstate *qstate s e)) l r l' r',
+Lemma d_reduced_assoc{ s e :nat}: forall (mu: list (cstate *qstate s e)) l r l' r',
 s<=l /\ l<=l' /\l' <=r' /\  r'<=r /\ r<=e->
-d_par_trace (d_par_trace mu l r) l' r'=
-d_par_trace mu l' r'.
+d_reduced (d_reduced mu l r) l' r'=
+d_reduced mu l' r'.
 Proof. induction mu; intros.
 simpl. reflexivity.
 destruct a. 
 simpl. f_equal.
-rewrite PMpar_trace_assoc. reflexivity.
+rewrite Reduced_assoc. reflexivity.
 intuition. apply IHmu. intuition. 
 Qed. 
 
@@ -850,20 +860,20 @@ Fixpoint WF_Matrix_dstate { s e:nat} (mu: list (cstate * qstate s e)) :=
   end.
 
 
-Lemma d_par_trace_refl{s e:nat}: forall l r (mu: list (cstate * qstate s e)),
+Lemma d_reduced_refl{s e:nat}: forall l r (mu: list (cstate * qstate s e)),
 l=s/\r=e-> WF_Matrix_dstate mu->
-d_par_trace mu l r=mu.
+d_reduced mu l r=mu.
 Proof. induction mu; intros. simpl. reflexivity.
         destruct a. 
       simpl in *. f_equal. 
-      f_equal. apply PMpar_trace_refl.
+      f_equal. apply Reduced_refl.
       intuition. intuition.
       apply IHmu. intuition. intuition.
 Qed.
 
-Lemma d_par_trace_map2{s e :nat}: forall (mu1 mu2: list (cstate *qstate s e)) l r,
-(d_par_trace (StateMap.Raw.map2 option_app mu1 mu2) l r)=
-( (StateMap.Raw.map2 option_app (d_par_trace mu1 l r ) (d_par_trace mu2 l r))).
+Lemma d_reduced_map2{s e :nat}: forall (mu1 mu2: list (cstate *qstate s e)) l r,
+(d_reduced (StateMap.Raw.map2 option_app mu1 mu2) l r)=
+( (StateMap.Raw.map2 option_app (d_reduced mu1 l r ) (d_reduced mu2 l r))).
 Proof. induction mu1; induction mu2; intros.
        simpl. reflexivity.
        destruct a. 
@@ -876,9 +886,10 @@ Proof. induction mu1; induction mu2; intros.
        destruct (Cstate_as_OT.compare c c0).
        simpl. rewrite IHmu1.
        simpl. reflexivity.
-       simpl. unfold q_plus. rewrite PMtrace_plus.
+       simpl. unfold q_plus. rewrite Reduced_plus.
        rewrite IHmu1.
        reflexivity.
        simpl. rewrite IHmu2.
        reflexivity.
 Qed.
+

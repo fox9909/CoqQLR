@@ -100,39 +100,7 @@ Proof. intros. assert(1=1^2). simpl. repeat rewrite Rmult_1_r. reflexivity.
 Qed.
 
 
-Lemma norm_1_pure_vec{n:nat}:  forall (x:Vector n),
-WF_Matrix x ->
-norm x =1 ->
-Pure_State_Vector x.
-Proof. intros. econstructor. assumption. unfold norm in *. 
-       rewrite <-sqrt_1 in H0. apply sqrt_inj in H0. 
-       assert( WF_Matrix (I 1)). auto_wf.
-       unfold WF_Matrix in *.
-       unfold inner_product in H0. unfold I. 
-       prep_matrix_equality. destruct x1. destruct y.
-       simpl. 
-       remember(((x0) † × x0) 0%nat 0%nat).
-       assert(c0= (fst c0, snd c0)). destruct c0. reflexivity.
-       rewrite H2. assert(C1=(1,0)). reflexivity. rewrite H3.
-         f_equal. subst. assumption. subst. 
-       unfold adjoint. unfold Mmult. rewrite big_sum_snd_0.
-       reflexivity. intros. simpl. lra.
-       unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
-       intros.   rewrite H. rewrite Cmult_0_r. reflexivity.
-       destruct y.  lia. lia.
 
-       destruct y;    simpl in *. 
-       unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
-       intros. unfold adjoint. simpl.   rewrite H. rewrite Cconj_0. rewrite Cmult_0_l. reflexivity.
-        lia. assert((S x1 <? 1) = false). apply Nat.ltb_ge. lia.  
-        rewrite H2. simpl. assert((x1 =? y) && false = false).
-        destruct (x1=?y); simpl; reflexivity. rewrite H3.
-        unfold Mmult.  apply (@big_sum_0_bounded C C_is_monoid).
-       intros. unfold adjoint. simpl.   rewrite H. rewrite Cconj_0. rewrite Cmult_0_l. reflexivity.
-       lia. 
-       apply inner_product_ge_0. lra.  
-  
-Qed.
 
 
 

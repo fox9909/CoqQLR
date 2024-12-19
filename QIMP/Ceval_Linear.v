@@ -7,14 +7,11 @@ Require Import
   Coq.Structures.OrderedTypeEx.
 
 
-(* From Quan Require Import QMatrix.
-From Quan Require Import QVector.
-From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
-From Quan Require Import Par_trace.
+From Quan Require Import Reduced.
 From Quan Require Import Basic.
 From Quan Require Import QIMP_L.
 
@@ -23,6 +20,8 @@ Local Open Scope C_scope.
 Local Open Scope com_scope.
 Local Open Scope state_scope.
 Import Sorted.
+
+
 Lemma ceval_app_while{s e:nat}: 
 forall b c,
 (forall  x y mu : list (cstate * qstate s e),
@@ -427,9 +426,9 @@ Proof. induction n0; intros f g mu mu1 mu2 Hf Hg; intros.
        pose(Hf n0). pose (Hg n0).
        destruct o. lia. destruct o0. lia. 
        destruct H7. 
-       apply mixed_state_trace_gt0_aux in H7.
+       apply nz_mixed_state_trace_gt0_aux in H7.
        destruct H8.
-       apply mixed_state_trace_gt0_aux in H8.
+       apply nz_mixed_state_trace_gt0_aux in H8.
        lra. rewrite H8 in H0.  destruct H0.
        reflexivity. rewrite H7 in H3. destruct H3.
        reflexivity.

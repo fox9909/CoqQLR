@@ -8,9 +8,9 @@
 ./QuantumLib/Quantum.v
 ./QState/Forall_two.v
 ./QState/Basic.v
-./QState/ParDensityO.v
+./QState/Mixed_State.v
 ./QState/QState.v
-./QState/Par_trace.v
+./QState/Reduced.v
 ./QIMP/QIMP_L.v
 ./QIMP/Ceval_Linear.v
 ./QAssert/QAssert.v
