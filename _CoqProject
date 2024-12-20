@@ -14,10 +14,10 @@
 ./QIMP/QIMP_L.v
 ./QIMP/Ceval_Linear.v
 ./QAssert/QAssert.v
-./QRule/QRule_Q_L.v
 ./QRule/QSepar.v
 ./QRule/QRule_E_L.v
 ./QRule/QRule_I_L.v
+./QRule/QRule_Q_L.v
 ./QRule/QRule_QFrame.v
 ./example/add.v
 ./example/HHL.v

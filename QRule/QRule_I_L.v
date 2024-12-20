@@ -16,16 +16,28 @@ Require Import Coq.Arith.Peano_dec.
 
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
 From Quan Require Import QIMP_L.
 From Quan Require Import QAssert.
-From Quan Require Import Par_trace.
-From Quan Require Import QRule_Q_L.
+From Quan Require Import Reduced.
+(* From Quan Require Import QRule_Q_L. *)
 From Quan Require Import QRule_E_L.
 Require Import Forall_two.
 
 Local Open Scope com_scope.
 
+Definition hoare_triple
+   (P:Assertion) (c : com) (Q : Assertion) : Prop :=
+            forall (s e :nat)  (mu : dstate s e) (mu': dstate s e),
+               ceval c mu mu' ->
+               sat_Assert  mu P ->
+               sat_Assert  mu' Q.
+Declare Scope rule_scope.
+Notation "{{ P }}  c  {{ Q }}" :=
+(hoare_triple P c Q) (at level 90, c custom com at level 99)
+               : rule_scope.
+Local Open Scope rule_scope.
 
 Open Scope rule_scope.
 Theorem rule_skip : forall (D: Assertion), {{D}} skip {{D}}.
@@ -37,7 +49,32 @@ Proof. unfold hoare_triple. intros.
 Qed.
 
 
-Theorem rule_assgn: forall (P:Pure_formula) (i:nat) ( a:aexp),
+Theorem rule_PAssgn_aux :  forall (P:Pure_formula) (i:nat) ( a:aexp) 
+(s e:nat) (mu : list (cstate * qstate s e)) (mu': list (cstate * qstate s e)),
+WF_dstate_aux mu->
+ceval_single (<{i := a}>) mu mu' ->
+State_eval_dstate (PAssn i a P) mu->
+State_eval_dstate P mu'.
+Proof. intros P i a s e mu. induction mu; intros; inversion H; subst.
+  --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
+  -- destruct mu. inversion H0; subst. inversion_clear H10; subst.
+     simpl. econstructor.  simpl in H1. inversion_clear H1.
+     assumption. apply Forall_nil.
+     destruct a0. inversion_clear H0. 
+     apply d_seman_app_aux.
+     apply WF_state_dstate_aux.  
+     apply WF_state_eq with (c,q). reflexivity.
+     assumption. apply WF_ceval with (<{ i := a }>)
+      ((p :: mu)). assumption. assumption.
+    inversion_clear H1. simpl in H0. simpl.
+    econstructor. assumption. apply Forall_nil.
+     apply IHmu. intuition. assumption. 
+     inversion_clear H1. apply State_eval_dstate_Forall.
+     discriminate.  assumption.
+Qed. 
+
+
+Theorem rule_PAssgn: forall (P:Pure_formula) (i:nat) ( a:aexp),
              {{PAssn i a P}} i := a {{P}}.
 Proof. unfold hoare_triple;
        intros F X a s e (mu,IHmu) (mu', IHmu').
@@ -46,10 +83,77 @@ Proof. unfold hoare_triple;
        rewrite sat_Assert_to_State in *.
        inversion_clear H0.
        apply sat_F. eapply WF_ceval. apply H1. apply H2. 
-       apply rule_asgn_aux with X a mu.
+       apply rule_PAssgn_aux with X a mu.
        intuition. intuition. assumption. 
 Qed. 
 
+
+
+Theorem rule_SAssn_aux :  forall (F:State_formula) (i:nat) ( a:aexp) 
+(s e:nat) (mu : list (cstate * qstate s e)) (mu': list (cstate * qstate s e)),
+WF_dstate_aux mu->
+ceval_single (<{i := a}>) mu mu' ->
+State_eval_dstate (SAssn i a F) mu->
+State_eval_dstate F mu'.
+Proof. intros P i a s e mu. induction mu; intros; inversion H; subst.
+  --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
+  -- destruct mu. inversion H0; subst. inversion_clear H10; subst.
+     simpl. econstructor.  simpl in H1. inversion_clear H1.
+     assumption. apply Forall_nil.
+     destruct a0. inversion_clear H0. 
+     apply d_seman_app_aux.
+     apply WF_state_dstate_aux.  
+     apply WF_state_eq with (c,q). reflexivity.
+     assumption. apply WF_ceval with (<{ i := a }>)
+      ((p :: mu)). assumption. assumption.
+    inversion_clear H1. simpl in H0. simpl.
+    econstructor. assumption. apply Forall_nil.
+     apply IHmu. intuition. assumption. 
+     inversion_clear H1. apply State_eval_dstate_Forall.
+     discriminate.  assumption.
+Qed. 
+
+Theorem rule_SAssgn: forall (F:State_formula) (i:nat) ( a:aexp),
+             {{SAssn i a F}} i := a {{F}}.
+Proof. unfold hoare_triple;
+       intros F X a s e (mu,IHmu) (mu', IHmu').
+       intros. 
+       inversion_clear H; simpl in H2.
+       rewrite sat_Assert_to_State in *.
+       inversion_clear H0.
+       apply sat_F. eapply WF_ceval. apply H1. apply H2. 
+       apply rule_SAssn_aux with X a mu.
+       intuition. intuition. assumption. 
+Qed.
+
+Lemma ceval_single_1{s e:nat}: forall (mu mu':list (state s e)) X a,
+ceval_single <{ X := a }> mu mu'->
+mu'= d_update_cstate_aux X a mu .
+Proof. induction mu;  intros;
+       inversion H; subst.
+       simpl. reflexivity.
+       unfold d_update_cstate_aux.
+       f_equal. apply IHmu.
+       assumption. 
+Qed.
+
+
+Theorem rule_assgn: forall (D:Assertion) (i:nat) ( a:aexp),
+             {{Assn_sub i a D}} i := a {{D}}.
+Proof. unfold hoare_triple;
+       intros F X a s e (mu,IHmu) (mu', IHmu').
+       intros. 
+       inversion_clear H; simpl in H2.
+       apply ceval_single_1 in H2.
+       apply sat_Assert_dstate_eq with 
+       ({|
+        StateMap.this := d_update_cstate_aux X a mu;
+        StateMap.sorted := d_update_cstate_sorted X a mu IHmu
+      |}).
+       unfold dstate_eq. simpl. intuition. 
+       inversion_clear H0. unfold d_update_cstate in H.
+       simpl in H. assumption.
+Qed.
 
 Lemma bool_true: forall (a b:nat),
 a=b-> (a =? b =true).

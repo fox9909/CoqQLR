@@ -26,6 +26,30 @@ Proof. induction l1; destruct l2; intros; inversion_clear H; try reflexivity.
        simpl. auto.
 Qed.
 
+
+Lemma Forall_two_app{A B:Type}:forall (P:A-> B-> Prop)  (f1: list A) (g1: list B )  (f2: list A) 
+  (g2: list B) ,
+  (Forall_two P f1 g1)->
+  (Forall_two P f2 g2)->
+  (Forall_two P (f1++f2) (g1++g2)).
+  Proof.  induction f1; destruct g1; simpl; intros; inversion_clear H.
+          assumption. 
+          econstructor. assumption.
+          apply IHf1. intuition. intuition.
+Qed.
                   
 
+Lemma Forall_two_Conj{A B:Type }:forall (P Q: A ->B->Prop) (f :list A) (g:list B),
+((Forall_two P f g) /\ (Forall_two Q f g))<->
+(Forall_two (fun i j=> P i j /\ Q i j) f g).
+Proof. induction f; intros; destruct g; split;intros;  try econstructor; inversion_clear H.
+       econstructor. econstructor.  
+       inversion_clear H0. inversion_clear H1.  
+       inversion_clear H0. inversion_clear H1.  
+       try split; try assumption. 
+       inversion_clear H0. inversion_clear H1.
+       apply IHf; split; try assumption. 
+       econstructor. apply H0. apply IHf. assumption.
+       econstructor. apply H0. apply IHf. assumption.
+Qed.
 

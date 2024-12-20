@@ -297,6 +297,10 @@ Proof. intros.  unfold q_trace. unfold q_scale.
 intuition.
 Qed.
 
+
+Lemma WF_Matrix_qstate : forall {s e:nat} (ρ : Density (2^(e-s))), WF_qstate ρ -> WF_Matrix ρ.
+Proof.  induction 1; auto with wf_db. Qed.
+
 #[export] Hint Resolve WF_qstate_update WF_qstate_kron : QState.
 
 
@@ -336,6 +340,12 @@ Definition s_trace{s e:nat} (st:state s e): R:=
       q_trace (snd st). 
 
 Local Open Scope R_scope.
+
+
+Lemma WF_Matrix_state : forall {s e:nat} c (ρ : Density (2^(e-s))), WF_state (c,ρ) -> WF_Matrix ρ.
+Proof.  induction 1; auto with wf_db. Qed.
+#[export] Hint Resolve WF_Matrix_qstate : wf_db. 
+#[export] Hint Resolve WF_Matrix_state : wf_db. 
 
 Lemma WF_state_cupdate{s e:nat}: forall i ( n:nat) (st:state s e),
 WF_state st-> WF_state (s_update_cstate i n st).
@@ -2158,6 +2168,54 @@ Proof.  induction p_n; destruct mu_n; intros; inversion H;subst.
   inversion H5; subst. simpl. econstructor.
   econstructor. lra. 
    apply IHp_n. assumption.
+Qed.
+
+
+Lemma big_dapp'_out_empty{s e:nat}: forall  (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e),
+(Forall (fun i => ( i = 0%R)%R) p_n)->
+big_dapp' p_n mu_n mu->
+dstate_eq mu (d_empty s e).
+Proof. induction p_n;destruct mu_n; intros; simpl in *. inversion_clear H0. reflexivity.
+     inversion_clear H0.  
+     inversion H0;subst.
+         inversion H0; subst. inversion_clear H.
+          pose (IHp_n _ _ H2 H7). 
+          apply dstate_eq_trans with ((d_app r (d_empty s e))).
+          apply d_app_eq. reflexivity. assumption.
+          inversion H6; subst.  
+          apply d_app_empty_l.
+          lra.
+Qed.
+
+
+Lemma big_dapp'_app{s e:nat}:forall (p1 p2 : list R) (mu_n1 mu_n2 : list (dstate s e)) mu1 mu2 mu3,
+big_dapp' p1 mu_n1 mu1->
+big_dapp' p2 mu_n2 mu2->
+big_dapp' (p1++p2) (mu_n1++mu_n2) mu3->
+dstate_eq mu3 (d_app mu1 mu2).
+Proof. induction p1; destruct mu_n1;  intros. simpl in *. 
+       inversion_clear H. 
+       eapply dstate_eq_trans with mu2. 
+       eapply big_dapp_eq. apply H1. apply H0.
+       apply dstate_eq_sym. apply d_app_empty_l.
+       inversion_clear H. inversion_clear H.
+       simpl in *. 
+       inversion H; subst. 
+       inversion H1; subst. 
+       eapply IHp1 in H10; try apply H8; try apply H0.
+       apply dstate_eq_trans with (d_app r (d_app d0 mu2)).
+       apply d_app_eq. 
+       eapply d_scale_eq; try apply H7; try apply H9.
+       reflexivity. assumption. apply dstate_eq_sym.
+       apply d_app_assoc'.
+Qed.
+
+Lemma big_dapp_eq_bound{s e:nat}: forall p_n q_n (mu_n: list (dstate s e)) mu,
+Forall_two (fun i j: R=> i=j) p_n q_n->
+big_dapp' p_n mu_n mu->
+big_dapp' q_n mu_n mu .
+Proof. induction p_n; intros; destruct mu_n; destruct q_n; inversion_clear H0; try econstructor;
+        try inversion_clear H. rewrite H0 in *. assumption. auto.
 Qed.
 
 #[export] Hint Resolve WF_d_app' : DState.

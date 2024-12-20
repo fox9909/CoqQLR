@@ -381,6 +381,12 @@ Proof. induction n0; intros.
       f_equal. apply IHn0.
 Qed.
 
+Lemma fst_plus: forall (c1 c2: C),
+ fst(c1 + c2)= (fst c1 + fst c2)%R.
+Proof. intros. destruct c1. destruct c2.
+      simpl. reflexivity.
+Qed.
+
 Local Open Scope nat_scope.
 Lemma big_app'_plus{s e:nat}: forall n0 (f g: nat -> (cstate * qstate s e)) mu mu1 mu2, 
 (forall i, i < n0 -> WWF_qstate ( snd ( f i))\/ ( snd ( f i))= Zero)->

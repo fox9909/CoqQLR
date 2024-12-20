@@ -502,6 +502,18 @@ rewrite R_reduced_plus. reflexivity.
 Qed.
 
 
+Lemma big_sum_Reduced{ s e: nat}: forall n (f:nat-> Square (2^(e-s)) ) l r ,
+s<=l/\l<=r/\ r<=e->
+Reduced (big_sum f n) l r=
+big_sum (fun i :nat =>Reduced (f i) l r ) n .
+Proof. induction n; intros; simpl. 
+      apply Reduced_Zero.  
+      unfold qstate in *.
+      rewrite Reduced_plus.
+      rewrite <-IHn. reflexivity. assumption.
+Qed.
+
+
 Local Open Scope nat_scope.
 Lemma L_reduced_assoc{ s e :nat}: forall (q:qstate s e) r r',
 s<=r' /\ r'<=r /\ r<=e->

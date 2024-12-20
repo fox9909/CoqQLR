@@ -33,42 +33,6 @@ Local Open Scope assert_scope.
 Local Open Scope nat_scope.
 
 
-Theorem rule_asgn_aux :  forall (F:State_formula) (i:nat) ( a:aexp) 
-(s e:nat) (mu : list (cstate * qstate s e)) (mu': list (cstate * qstate s e)),
-WF_dstate_aux mu->
-ceval_single (<{i := a}>) mu mu' ->
-State_eval_dstate (SAssn i a F) mu->
-State_eval_dstate F mu'.
-Proof. intros P i a s e mu. induction mu; intros; inversion H; subst.
-  --simpl in H0. inversion H0; subst. simpl in H1. destruct H1.
-  -- destruct mu. inversion H0; subst. inversion_clear H10; subst.
-     simpl. econstructor.  simpl in H1. inversion_clear H1.
-     assumption. apply Forall_nil.
-     destruct a0. inversion_clear H0. 
-     apply d_seman_app_aux.
-     apply WF_state_dstate_aux.  
-     apply WF_state_eq with (c,q). reflexivity.
-     assumption. apply WF_ceval with (<{ i := a }>)
-      ((p :: mu)). assumption. assumption.
-    inversion_clear H1. simpl in H0. simpl.
-    econstructor. assumption. apply Forall_nil.
-     apply IHmu. intuition. assumption. 
-     inversion_clear H1. apply State_eval_dstate_Forall.
-     discriminate.  assumption.
-Qed. 
-
-Theorem rule_assgn: forall (F:State_formula) (i:nat) ( a:aexp),
-             {{SAssn i a F}} i := a {{F}}.
-Proof. unfold hoare_triple;
-       intros F X a s e (mu,IHmu) (mu', IHmu').
-       intros. 
-       inversion_clear H; simpl in H2.
-       rewrite sat_Assert_to_State in *.
-       inversion_clear H0.
-       apply sat_F. eapply WF_ceval. apply H1. apply H2. 
-       apply rule_asgn_aux with X a mu.
-       intuition. intuition. assumption. 
-Qed. 
 
 Definition v1: nat := 0.
 Definition v2: nat := 1. 
@@ -147,94 +111,13 @@ H: False |-_ => destruct H end; simpl ; intuition.
   simpl; eapply implies_trans;
   [apply rule_OMerg; lra| ] ] ].  
 
-Lemma c_update_aeval_eq{s e:nat}: forall i a b c (q:qstate s e),  ~NSet.In i (Free_aexp a) -> 
-aeval (c, q) a = aeval (c_update i b c, q) a.
-Proof. induction a; intros; simpl in *; [ | | | | | | | | | f_equal];
-       try (f_equal;  [rewrite (IHa1 b) | rewrite (IHa2 b)]; try reflexivity;
-         intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption); try reflexivity.
-      rewrite c_update_find_not. reflexivity.  
-      intro. destruct H. apply NSet.add_1. lia. 
-       rewrite (IHa1  b). reflexivity. 
-       intro. destruct H. apply NSet.union_2. apply NSet.union_2.
-       assumption. 
-       rewrite (IHa2  b). reflexivity. 
-       intro. destruct H. apply NSet.union_2. apply NSet.union_3.
-       assumption.
-       rewrite (IHa3  b). reflexivity.
-       intro. destruct H. apply NSet.union_3.
-       assumption.
-Qed.
-
-Lemma c_update_beval_eq{s e:nat}: forall i b a c (q:qstate s e),  ~NSet.In i (Free_bexp b) -> 
-beval (c, q) b = beval (c_update i a c, q) b.
-Proof. induction b; intros; simpl in *; [ | | | f_equal| | f_equal | f_equal|  ];
-       try (f_equal; erewrite c_update_aeval_eq; f_equal; 
-       intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption); try apply IHb; try assumption;
-         try (f_equal; [apply IHb1 | apply IHb2]; 
-         intro; destruct H; [apply NSet.union_2| apply NSet.union_3]; 
-         assumption ); try reflexivity. 
-Qed.
-
-Lemma Assn_true_F: forall i a, ~NSet.In i (Free_aexp a) ->
-(BTrue ->> SAssn i a (BEq (i ') a) ).
-Proof. rule_solve.  repeat rewrite c_update_find_eq. 
-       apply (c_update_aeval_eq _ _ (aeval (x, (d_find x mu)) a) x (d_find x mu) ) in H.
-       apply Nat.eqb_eq in H. rewrite H. assumption. 
-Qed.
 
 
-Lemma Assn_true_P: forall i a, ~NSet.In i (Free_aexp a) ->
-(BTrue ->> PAssn i a (BEq (AId i) a) ).
-Proof. rule_solve.  repeat rewrite c_update_find_eq. 
-       apply (c_update_aeval_eq _ _ (aeval (x, (d_find x mu)) a) x (d_find x mu) ) in H.
-       apply Nat.eqb_eq in H. rewrite H. assumption. 
-Qed.
-
-Lemma  rule_ConjE: forall (F1 F2: State_formula), 
-(F2 ->> BTrue) /\ (BTrue ->> F2) ->
-F1 ->> F1 /\s F2 .
-Proof. unfold assert_implies. intros. apply sat_assert_conj. intuition.
-       apply H2. apply rule_PT in H0. assumption.
-Qed.
-
-Lemma rule_Conj_two: forall (F1 F2 F: State_formula),
- (F->> F1) ->
- (F ->> F2) ->
-(F ->> (F1 /\s F2)).
-Proof. unfold assert_implies. intros.   apply sat_assert_conj; split;
-       auto.
-Qed.
 
 
-Lemma Assn_conj_P: forall (P1 P2 : Pure_formula) i a,
-~NSet.In i ( (Free_pure P1)) ->
-P1 /\p PAssn i a P2 ->>
-(PAssn i a (P1 /\p P2)). 
-Proof. rule_solve.  apply (cstate_eq_P P3 x ); try assumption.
-       unfold cstate_eq. intros. destruct (eq_dec j i).
-       rewrite e0 in *. destruct H. assumption.
-       rewrite c_update_find_not. reflexivity. lia.
-Qed.
 
 
-Lemma Assn_conj_F: forall (F1 F2 : State_formula) i a,
-~NSet.In i (fst (Free_state F1)) ->
-F1 /\s SAssn i a F2 ->>
-(SAssn i a (F1 /\s F2)) . 
-Proof. rule_solve.  apply (cstate_eq_F F1 x ); try assumption.
-       unfold cstate_eq. intros. destruct (eq_dec j i).
-       rewrite e0 in *. destruct H. assumption.
-       rewrite c_update_find_not. reflexivity. lia.
-Qed.
-
-Lemma Assn_comm:forall i a (F1 F2:State_formula), 
-SAssn i a (F1 /\s F2) ->> SAssn i a (F2 /\s F1).
-Proof. rule_solve.
-  
-Qed.
-
+(* 
 
 Lemma big_pOplus'_to_pOplus:forall n (p_n : nat -> R) F_n ,
 ( forall i, i< n -> (0< p_n i)%R)->
@@ -243,7 +126,7 @@ Proof. induction n; intros. simpl. econstructor.
     simpl. apply big_pOplus_cons. 
     apply Rgt_neq_0. apply H. lia.
     apply IHn. intros. apply H. lia.  
-Qed.
+Qed. *)
 
 
 
@@ -255,8 +138,6 @@ match i with
 |0 => eapply implies_trans; [apply y|]
 |S _ =>eapply implies_trans; [| apply y]
 end.
-
-
 
 
 Local Open Scope nat_scope.

@@ -783,11 +783,7 @@ Qed.
 
 
 (* Local Open Scope C_scope.
-Lemma fst_plus: forall (c1 c2: C),
- fst(c1 + c2)= (fst c1 + fst c2)%R.
-Proof. intros. destruct c1. destruct c2.
-      simpl. reflexivity.
-Qed.
+
 
 Lemma fst_mult: forall (r: R) (c: C),
  fst(r * c)= (r * fst c)%R.
@@ -814,13 +810,7 @@ Qed. *)
 
 
 
-Lemma inner_trace: forall n (x: Vector (n)),
-WF_Matrix x->
- ((norm x) * (norm x))%R = (fst (trace (x × x †))).
-Proof. intros. unfold norm. rewrite sqrt_sqrt. 
-f_equal. unfold inner_product. rewrite trace_mult.  unfold trace.
-simpl. rewrite Cplus_0_l.  reflexivity. apply inner_product_ge_0.
-Qed. 
+
 
  *)
 
