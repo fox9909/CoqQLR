@@ -34,44 +34,9 @@ Local Open Scope nat_scope.
 
 
 
-(* Lemma  subset_union: forall x y z, NSet.Subset (NSet.union x y) z ->
-NSet.Subset x z /\ NSet.Subset y z.
-Proof. intros. unfold NSet.Subset in *. 
-       split. intros. 
-       apply H. apply NSet.union_2.
-       assumption.
-       intros. apply H. apply NSet.union_3.
-       assumption.
-       
-Qed.
+(* 
 
 
-Lemma In_Qsys_l_r: forall r l , 
-l<r->
-NSet.In l (Qsys_to_Set l r) /\
-NSet.In (r-1) (Qsys_to_Set l r).
-Proof. unfold Qsys_to_Set. induction r; induction l; intros; simpl.
- lia. lia.   
- simpl. split. destruct r.
- simpl.  
- apply NSet.add_1. reflexivity.
- apply NSet.add_2. 
- eapply IHr. lia.  
- rewrite sub_0_r.
- apply NSet.add_1. reflexivity.
- destruct r. lia.  
- pose H.
- apply Lt_n_i in l0. rewrite l0.
- split.
- bdestruct (l =? r).
- rewrite H0. apply NSet.add_1.
- reflexivity.
- apply NSet.add_2.
- apply IHr. lia.  
- rewrite sub_0_r.
- apply NSet.add_1.
- reflexivity.    
-Qed.
 
 
 
@@ -200,118 +165,7 @@ destruct H3.
  apply In_empty in H3. destruct H3.
 Qed.
 
-
-Ltac Reduced_ceval_swap_solve mu:=
-  induction mu; intros;
-  try  match goal with 
-   H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
-   try  match goal with 
-   H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
-   try  match goal with 
-   H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
-   try apply Nat.eq_dec;
-   [simpl; econstructor|];
-   try match goal with 
-   H: WF_dstate_aux ((?sigma, ?rho) :: ?mu) |- _ => inversion_clear H end;
-   try match goal with 
-   H2: NSet.Subset ?a ?b |- _ =>simpl in H2 end;
-   try match goal with 
-   H2: NSet.Subset (NSet.union ?a ?b) ?c |- _ => pose H2 as H2'; apply subset_union in H2';
-   destruct H2' as [H2' H2'']; apply subset_Qsys in H2' ; try lia end;
-   try match goal with 
-   H2'': NSet.Subset ?a ?b |- _ => pose H2'' as H2''';  apply subset_Qsys in H2'''; try lia end;
-   try rewrite d_reduced_map2; try simpl d_reduced;
-   try rewrite Reduced_ceval_swap_QUnit_one;  
-   try rewrite Reduced_ceval_swap_Qinit;
-   try rewrite Reduced_ceval_swap_QUnit_Ctrl; try lia; auto_wf; try assumption;
-   econstructor; try lia; try assumption; 
-   try match goal with IHmu:_ |- _ => apply IHmu; try assumption end.
-
-
-
-Import Mixed_State.
-Local Open Scope nat_scope.
-Lemma Reduced_ceval_swap: forall c s e (mu mu': list (cstate *qstate s e)) l r,
-s<=l /\ l<=r /\ r<=e ->
-NSet.Subset (snd (MVar c)) (Qsys_to_Set l r)->
-WF_dstate_aux mu ->
-ceval_single c mu mu'->
-ceval_single c (d_reduced mu l r )
-(d_reduced mu' l r ).
-Proof. induction c; try Reduced_ceval_swap_solve mu. 
-       { induction mu; intros. inversion_clear H2.
-        simpl. econstructor.
-        destruct a0. inversion H2 ;subst.
-        rewrite d_reduced_map2.
-        simpl d_reduced.
-        rewrite (state_eq_aexp  _ (c,(Reduced q l r) )).
-        econstructor. apply IHmu. assumption.
-        assumption. inversion_clear H1. intuition.
-        assumption. reflexivity.  }
-       intros.  
-       apply (IHc1 _ _ _ mu1 l r) in H8. simpl in H8. apply H8.
-       lia.  apply subset_union in H0. apply H0. 
-       econstructor; try assumption. 
-       apply subset_union in H0. apply H0. 
-       apply WF_ceval with c1 ((sigma, rho) :: mu); try econstructor; try assumption.
-       assumption.
-       {induction mu; intros. inversion H2; subst.
-       simpl. econstructor.
-       inversion H2; subst. 
-       rewrite d_reduced_map2.
-      econstructor. rewrite (state_eq_bexp _  (sigma, rho)).
-      intuition. reflexivity. simpl in H0.   apply subset_union in H0. apply H0.  
-      apply IHmu.  intuition.
-      intuition. inversion_clear H1.  assumption. assumption. 
-      assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
-      reflexivity. rewrite <-H3. apply IHc1. assumption.
-      simpl in H0. apply subset_union in H0.
-       intuition. apply WF_state_dstate_aux.
-        inversion_clear H1.  assumption. assumption. 
-      rewrite d_reduced_map2.
-      apply E_IF_false. rewrite (state_eq_bexp _  (sigma, rho)).
-      intuition. reflexivity. simpl in H0.   apply subset_union in H0. apply H0.  
-      apply IHmu.  intuition.
-      intuition. inversion_clear H1. assumption. assumption. 
-      assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
-      reflexivity. rewrite <-H3. apply IHc2.
-      assumption.  
-      simpl in H0. apply subset_union in H0.
-       intuition.  inversion_clear H1. 
-       apply WF_state_dstate_aux. assumption. 
-      assumption. 
-          }
-      {   intros.  remember <{while b do c end}> as original_command eqn:Horig. 
-      induction H2;  try inversion Horig; subst. 
-       simpl. econstructor.  
-       simpl. rewrite d_reduced_map2.   
-       apply E_While_true with ((d_reduced mu1 l r)). rewrite (state_eq_bexp _  (sigma, rho)).
-       intuition. reflexivity. 
-       apply IHceval_single1; try reflexivity; try assumption. 
-       inversion_clear H1. assumption.
-       assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
-       reflexivity. rewrite <-H3. apply IHc. assumption. apply H0.
-       apply WF_state_dstate_aux.
-        inversion_clear H1.  assumption. assumption.
-        apply IHceval_single3; try reflexivity; try assumption. 
-        eapply WF_ceval; try apply H2_0; try assumption. 
-        apply WF_state_dstate_aux.
-        inversion_clear H1.  assumption.
-      
-        rewrite d_reduced_map2.   
-        apply E_While_false. rewrite (state_eq_bexp _  (sigma, rho)).
-        intuition. reflexivity. assumption.
-        apply IHceval_single; try reflexivity; try assumption. 
-        inversion_clear H1. assumption.
-        }
-      apply (d_reduced_app' _ l r) in H11; try lia. 
-      destruct H11. destruct H1. simpl in H1. 
-      eapply big_app_eq_bound''. rewrite<-H5 in H1. apply H1.
-      intros.
-      rewrite  <-Reduced_ceval_swap_QMeas;try lia; auto_wf; try reflexivity.
-    intros. simpl. apply mixed_super_ge_0; auto_wf. 
-     apply WWF_qstate_to_WF_qstate. apply H2.
-Qed. *)
+ *)
 
 (*----------------------------separ-------------------*)
 

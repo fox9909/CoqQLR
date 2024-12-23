@@ -1194,19 +1194,6 @@ Theorem rule_OdotO': forall (F1 F2:State_formula),
  ((F1 ⊙ F2) ->> (F1 /\s F2)) .
 Proof.  rule_solve. Qed.
 
-Lemma Rdiv_in01: forall p1 p2,
-0 < p1 <=1->
-0 < p2 <=1->
-0 < p1 / (p1 + p2) <=1.
-Proof. split.  rewrite Rdiv_unfold. apply Rmult_gt_0_compat.
-intuition. apply Rinv_0_lt_compat. apply Rplus_lt_0_compat.
-intuition. intuition. apply (Rcomplements.Rdiv_le_1 p1 _).
-apply Rplus_lt_0_compat.
-intuition. intuition.  assert(p1=p1+0). rewrite Rplus_0_r.
-reflexivity. rewrite H1 at 1. apply Rplus_le_compat_l.
-intuition. 
-Qed.
-
 
 Theorem rule_OMerg:forall (p0 p1:R) (F:State_formula) (pF:pro_formula),
 0< p0<1/\ 0< p1 <1->
