@@ -1063,12 +1063,12 @@ Qed.
 
 (*mu_1 .+ mu_2 \models F*)
 Lemma  State_eval_plus{s e:nat}: forall F c (q q0: qstate s e),
-WF_qstate q ->
-WF_qstate q0->
+@NZ_Mixed_State_aux (2^(e-s))q ->
+@NZ_Mixed_State_aux (2^(e-s)) q0 ->
 State_eval F (c, q)->
 State_eval F (c,q0) ->
-@State_eval s e F (c, q .+ q0) .
-Proof.  
+@State_eval s e F (c, q .+ q0).
+Proof.   
        induction F; intros;  intros.
       -apply state_eq_Pure with  (c, q0). 
        reflexivity. intuition.   
@@ -1078,15 +1078,15 @@ Proof.
         rewrite <-Reduced_scale.
         assert(q= (Cmod (@trace (2^(e-s)) q))%R .* (((R1 /  (Cmod (@trace  (2^(e-s)) q))))%R .* q) ).
         rewrite Mscale_assoc. 
-         rewrite Rdiv_unfold.
-         rewrite RtoC_mult. 
+        rewrite Rdiv_unfold.
+       rewrite RtoC_mult.
        rewrite <-Rmult_assoc . 
        rewrite Rmult_comm.  
-         rewrite <-Rmult_assoc . 
+         rewrite<-Rmult_assoc . 
          rewrite Rinv_l.   
          rewrite Rmult_1_r . 
          rewrite Mscale_1_l. reflexivity.
-        unfold not. intros. apply WF_qstate_in_01 in H. unfold q_trace in H.  
+        unfold not. intros. apply nz_mixed_state_Cmod_1_aux in H.
         rewrite H3 in H. lra. 
         assert(q0= (Cmod (@trace (2^(e-s)) q0))%R .* (((R1 /  (Cmod (@trace  (2^(e-s)) q0))))%R .* q0) ).
         rewrite Mscale_assoc. 
@@ -1098,21 +1098,20 @@ Proof.
          rewrite Rinv_l.   
          rewrite Rmult_1_r . 
          rewrite Mscale_1_l. reflexivity.
-        unfold not. intros. apply WF_qstate_in_01 in H0. unfold q_trace in H0. 
+        unfold not. intros. apply nz_mixed_state_Cmod_1_aux in H0.
         rewrite H4 in H0. lra. 
          rewrite H3. rewrite H4.
           rewrite Reduced_plus. 
           rewrite <-Reduced_scale. 
           rewrite Rdiv_unfold in *.
           destruct H1. destruct H5. destruct H6. destruct H2.
-          destruct H7.
-          destruct H8. destruct H10.
-          destruct H11.
+          destruct H8. destruct H9.
           split. intuition. split. intuition.
           split. intuition. split. intuition.
-          rewrite H9.
+           destruct H7.
+          rewrite H11.
           rewrite <-Reduced_scale. 
-          rewrite Rdiv_unfold. rewrite H12.
+          rewrite Rdiv_unfold. destruct H10. rewrite H12.
         rewrite <-Mscale_plus_distr_l.
         rewrite Mscale_assoc. 
         rewrite<-H4. rewrite <-H3.
@@ -1120,13 +1119,13 @@ Proof.
        rewrite RtoC_mult.
          rewrite Rmult_assoc.
          rewrite <-trace_plus_dist.
-         rewrite nz_mixed_state_Cmod_plus.
+         rewrite nz_mixed_state_Cmod_plus_aux.
          rewrite Rinv_l. rewrite Rmult_1_l.
          rewrite Mscale_1_l. reflexivity.
          assert((Cmod (@trace (2^(e-s)) q) + Cmod (@trace  (2^(e-s)) q0) )%R<> 0%R).
          apply tech_Rplus. assert(Cmod(@trace (2^(e-s)) q)%R>0%R)%R.
-         apply nz_mixed_state_Cmod_1. apply H.
-         intuition.  apply nz_mixed_state_Cmod_1. apply H0.
+         apply nz_mixed_state_Cmod_1_aux. apply H.
+         intuition.  apply nz_mixed_state_Cmod_1_aux. apply H0.
          assumption.
          apply H. apply H0. 
        
@@ -1138,9 +1137,9 @@ Proof.
         assumption.  
       -simpl in *. split. intuition.  split. intuition. intuition. 
       - simpl in *.  split. intuition. intuition.
-      -simpl in *.   rewrite (state_eq_aexp _ (c,q)); try reflexivity.
-      rewrite (state_eq_aexp _ (c,q)) in H2; try reflexivity.
-      apply IHF; try assumption. 
+      -simpl in *. eapply IHF; try assumption.
+      rewrite (state_eq_aexp _ (c,q)); try reflexivity; try assumption.
+      rewrite (state_eq_aexp _ (c,q0)); try reflexivity; try assumption.
 Qed.
 
 
@@ -1178,8 +1177,8 @@ Proof.
        apply map2_app_not_nil. left. discriminate. 
        assumption.
        simpl. econstructor. apply State_eval_plus.
-       inversion_clear H. apply H3. 
-       inversion_clear  H0. apply H3. 
+       inversion_clear H. apply nz_Mixed_State_aux_to_nz_Mix_State. apply H3. 
+       inversion_clear  H0.  apply nz_Mixed_State_aux_to_nz_Mix_State. apply H3. 
        inversion_clear H1. assumption.
        inversion_clear H2. unfold Cstate_as_OT.eq in e0.
        rewrite e0. assumption.  
@@ -1340,6 +1339,379 @@ Proof. induction p_n; intros. inversion H1; subst.
        apply sum_over_list_eq_0; try assumption.
        apply Forall_eq_0; try assumption.
        Qed.
+
+ (*---------------------*)
+Local Open Scope nat_scope.
+ Lemma WF_qstate_big_sum{s e}:forall (f:nat -> qstate s e) i n,
+(forall i, i<n ->@Mixed_State_aux  (2^(e-s)) (f i))->
+(exists j, and (j<i) ( (f j) <> Zero))->
+WF_qstate (@big_sum (Matrix (2^(e-s)) (2^(e-s))) _  f n)->
+i<=n /\ i>0
+->WF_qstate (@big_sum (Matrix (2^(e-s)) (2^(e-s))) _  f i).
+Proof. intros.   destruct H1. econstructor.  
+       rewrite<- nz_Mixed_State_aux_to_nz_Mix_State in *.
+       destruct H1. split. apply nz_Mixed_State_aux_big_sum.
+       lia. intros. apply H. lia. destruct H0.
+       exists x.  intuition. 
+       apply Rle_trans with (Cmod (@trace (2^(e-s)) (@big_sum (Matrix (2^(e-s)) (2^(e-s))) _  f n))).
+        repeat  rewrite big_sum_Cmod.
+        apply big_sum_le. intros. apply mixed_state_Cmod_ge_0_aux. apply H. lia. lia.   
+         intros. apply H. assumption.
+        intros. apply H. lia.   
+        assumption. assumption.
+Qed.
+
+
+Lemma State_eval_sum{ s e:nat}: forall n c (f:nat -> qstate s e) F , 
+(forall j, j<n -> ((@NZ_Mixed_State_aux (2^(e-s))  (f j) ) /\ State_eval F (c, (f j))) \/ (f j)= Zero)->
+(exists j, and (j<n) (f j <> Zero)) ->
+State_eval F (c, @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f n)  .
+Proof.
+     induction n;   intros. simpl in *. destruct H0. destruct H0.  lia.
+      simpl in *. destruct H0. 
+      destruct(eq_dec x n). rewrite e0 in *.  
+      assert( @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f ( n)= Zero
+      \/  @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f (n) <> Zero).
+     apply Classical_Prop.classic. destruct H1.
+     rewrite H1 in *. rewrite Mplus_0_l in *.
+     pose (H (n)). destruct o. lia. apply H2.
+
+     rewrite H2 in *.  destruct H0. destruct H3.
+     reflexivity. 
+     assert(NZ_Mixed_State_aux (@big_sum  (Matrix (2^(e-s)) (2^(e-s))) _ f (n))).
+     apply nz_Mixed_State_aux_big_sum. intro. rewrite H2 in *.
+     simpl in *. destruct H1. reflexivity.
+     intros.  rewrite NZ_Mixed_State_aux_equiv'.
+      pose (H (i)). destruct o. lia. 
+     left. intuition. right. assumption.  
+     apply (@big_sum_not_0 (2^(e-s))). assumption.
+     
+     pose (H (n)). destruct o. lia. 
+     apply State_eval_plus; try auto.  intuition.
+     apply IHn. intros. apply H. lia.
+     apply (@big_sum_not_0 (2^(e-s))). assumption.
+     intuition. destruct H0. rewrite H3 in *.
+     destruct H4. reflexivity.
+
+     pose (H (n)). destruct o. lia. 
+     assert( @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f ( n)= Zero
+     \/  @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f (n) <> Zero).
+    apply Classical_Prop.classic. destruct H2.
+    rewrite H2 in *. rewrite Mplus_0_l in *.
+    intuition. 
+
+    assert(NZ_Mixed_State_aux (@big_sum  (Matrix (2^(e-s)) (2^(e-s))) _ f (n))).
+    apply nz_Mixed_State_aux_big_sum. intro. rewrite H3 in *.
+    simpl in *. destruct H2. reflexivity.
+    intros.  rewrite NZ_Mixed_State_aux_equiv'.
+     pose (H (i)). destruct o. lia.
+    left. intuition. right. assumption.  
+    apply (@big_sum_not_0 (2^(e-s))). assumption.
+
+
+    apply State_eval_plus; try auto. intuition.
+    apply IHn. intros. apply H. lia.
+    apply (@big_sum_not_0 (2^(e-s))). assumption.
+    intuition.  
+    
+    rewrite H1.
+    rewrite Mplus_0_r. apply IHn.
+    intros. apply H. lia. exists x.
+    intuition.  
+Qed. 
+
+
+
+
+
+Lemma normalize_eq{n:nat}:forall (A B:Square n),
+trace (B)= C1 ->
+(exists (c:C), and (c <> C0) (A = c .* B))->
+/(trace A) .* A =B.
+Proof. intros. destruct H0. destruct H0. rewrite H1.
+      rewrite trace_mult_dist. 
+      rewrite Mscale_assoc.
+      rewrite Cinv_mult_distr.
+      rewrite Cmult_comm. rewrite Cmult_assoc.
+      rewrite Cinv_r. rewrite H.
+      rewrite Cinv_r.  rewrite Mscale_1_l.
+      reflexivity. intro. injection H2. lra.
+      assumption. assumption. 
+      rewrite H. intro. injection H2.
+      lra.
+Qed.
+
+Import Basic.
+Lemma Rdiv_in01: forall p1 p2,
+0 < p1 <=1->
+0 < p2 <=1->
+0 < p1 / (p1 + p2) <=1.
+Proof. split.  rewrite Rdiv_unfold. apply Rmult_gt_0_compat.
+intuition. apply Rinv_0_lt_compat. apply Rplus_lt_0_compat.
+intuition. intuition. apply (Rcomplements.Rdiv_le_1 p1 _).
+apply Rplus_lt_0_compat.
+intuition. intuition.  assert(p1=p1+0)%R. rewrite Rplus_0_r.
+reflexivity. rewrite H1 at 1. apply Rplus_le_compat_l.
+intuition. 
+Qed.
+
+Lemma QExp_eval_sub: forall (qs: QExp) s e c (q1 q2 q': qstate s e) ,
+@NZ_Mixed_State (2^(e-s)) q1 ->
+@NZ_Mixed_State (2^(e-s)) q2->
+@NZ_Mixed_State (2^(e-s)) (q')->
+@Mplus (2^(e-s)) (2^(e-s)) q1  q2= q'->
+State_eval qs (c, q')->
+State_eval qs (c, q1) /\
+State_eval qs (c, q2).
+Proof. induction qs; intros s0 e0 c q1 q2 q' Hq1 Hq2 Hq'; intros.
+       destruct H. 
+       simpl in H0. destruct H0.
+       destruct H0. destruct H1. destruct H2.
+       assert(trace (outer_product v v) = C1).
+       destruct H.  unfold outer_product.
+       rewrite trace_mult. rewrite H4.
+       rewrite trace_I. reflexivity.
+      rewrite Mscale_plus_distr_r in H3.
+      rewrite Reduced_plus in H3.
+      apply (@Mixed_pure (2^(e-s))
+      (Reduced ((R1 / Cmod (trace (q1 .+ q2)))%R .* q1) s e) 
+      (Reduced ((R1 / Cmod (trace (q1 .+ q2)))%R .* q2) s e) ) in H3.
+      destruct H3. destruct H3.
+      destruct H3. 
+      repeat rewrite <-Reduced_scale in H5.
+      rewrite Rdiv_unfold in H5.
+      rewrite Rmult_1_l in H5. 
+      destruct H5. 
+
+       simpl. repeat rewrite Rdiv_unfold.
+      repeat  rewrite Rmult_1_l. repeat rewrite <-Reduced_scale.
+       split. split. auto.
+       split. auto. split. auto.
+       assert( RtoC (Cmod (@trace (2^(e0-s0)) q1)) = @trace (2^(e0-s0)) q1).
+       assert(@trace (2^(e0-s0)) (q1) = (fst (@trace (2^(e0-s0)) (q1 )), snd (@trace (2^(e0-s0)) (q1)))).
+       destruct (@trace (2^(e0-s0)) (q1) ).
+       reflexivity. rewrite H7. 
+       rewrite nz_mixed_state_trace_real.
+       rewrite Cmod_snd_0. simpl. reflexivity.
+       simpl. apply nz_mixed_state_trace_gt0. assumption.
+       simpl. reflexivity. assumption.
+       rewrite RtoC_inv. split. intuition. 
+       rewrite H7. rewrite <-(Reduced_trace _ _ _ s e).
+       apply (@normalize_eq (2^(e-s))).
+       assumption. 
+       exists (Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) * x)%R.
+       split. 
+       apply RtoC_neq. apply Rmult_integral_contrapositive_currified.
+       rewrite nz_mixed_state_Cmod_plus; try assumption.
+       apply Rgt_neq_0.
+       apply Rplus_lt_0_compat; apply nz_mixed_state_Cmod_1; assumption.
+       lra. rewrite RtoC_mult. rewrite<- Mscale_assoc.
+       unfold outer_product.
+       rewrite <-H5. rewrite Mscale_assoc.
+       rewrite <-RtoC_mult. rewrite Rinv_r.
+       rewrite Mscale_1_l. reflexivity.
+       assert(Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) >0)%R.
+       apply nz_mixed_state_Cmod_1. assumption. lra.
+       lia. apply WF_NZ_Mixed. assumption.
+       assert(Cmod (@trace (2^(e0-s0)) (q1 )) >0)%R.
+       apply nz_mixed_state_Cmod_1. assumption.
+       lra. 
+       
+       split.  auto.
+       split. auto. split. auto.
+       assert( RtoC (Cmod (@trace (2^(e0-s0)) q2)) = @trace (2^(e0-s0)) q2).
+       assert(@trace (2^(e0-s0)) (q2) = (fst (@trace (2^(e0-s0)) (q2)), snd (@trace (2^(e0-s0)) (q2)))).
+       destruct (@trace (2^(e0-s0)) (q2) ).
+       reflexivity. rewrite H7. 
+       rewrite nz_mixed_state_trace_real.
+       rewrite Cmod_snd_0. simpl. reflexivity. 
+       simpl. apply nz_mixed_state_trace_gt0.
+       assumption.
+       simpl. reflexivity. assumption.
+       rewrite RtoC_inv. split. intuition.
+       rewrite H7. rewrite <-(Reduced_trace _ _ _ s e).
+       apply (@normalize_eq (2^(e-s))).
+       assumption. 
+       exists (Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) * x0)%R.
+       split. apply RtoC_neq. apply Rmult_integral_contrapositive_currified.
+       rewrite nz_mixed_state_Cmod_plus; try assumption.
+       apply Rgt_neq_0.
+       apply Rplus_lt_0_compat; apply nz_mixed_state_Cmod_1; assumption.
+       lra. rewrite RtoC_mult. rewrite<- Mscale_assoc.
+       unfold outer_product.
+       rewrite <-H6. rewrite Mscale_assoc.
+       rewrite <-RtoC_mult. rewrite Rinv_r.
+       rewrite Mscale_1_l. reflexivity.
+       assert(Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) >0)%R.
+       apply nz_mixed_state_Cmod_1. assumption. lra.
+       lia. apply WF_NZ_Mixed. assumption.
+       assert(Cmod (@trace (2^(e0-s0)) (q2)) >0)%R.
+       apply nz_mixed_state_Cmod_1. assumption. lra.
+       apply WF_qstate_Reduced. lia.
+       split. apply nz_Mixed_State_aux_to_01'.
+       apply nz_Mixed_State_aux_to_nz_Mix_State. assumption.
+       rewrite Rdiv_unfold. rewrite Rmult_1_l.
+       apply Rinv_0_lt_compat. apply nz_mixed_state_Cmod_1.
+       assumption. 
+       rewrite trace_mult_dist. rewrite Cmod_mult.
+       rewrite Rdiv_unfold. rewrite Rmult_1_l.
+       rewrite Cmod_R. rewrite Rabs_right.
+       rewrite nz_mixed_state_Cmod_plus; try assumption. 
+       rewrite Rmult_comm. rewrite <-Rdiv_unfold.
+       apply Rdiv_in01; apply nz_mixed_state_Cmod_1; assumption.
+       assert((/ Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) > 0)%R).
+       apply Rinv_0_lt_compat. apply nz_mixed_state_Cmod_1.
+       assumption. lra.   lia.   
+       apply WF_qstate_Reduced. lia.
+       split. apply nz_Mixed_State_aux_to_01'.
+       apply nz_Mixed_State_aux_to_nz_Mix_State.
+       assumption. 
+       rewrite Rdiv_unfold. rewrite Rmult_1_l.
+       apply Rinv_0_lt_compat. apply nz_mixed_state_Cmod_1. assumption.
+        rewrite trace_mult_dist. rewrite Cmod_mult.
+       rewrite Rdiv_unfold. rewrite Rmult_1_l.
+       rewrite Cmod_R. rewrite Rabs_right.
+       rewrite nz_mixed_state_Cmod_plus; try assumption. 
+       rewrite Rmult_comm. rewrite <-Rdiv_unfold.
+       rewrite Rplus_comm.
+       apply Rdiv_in01; apply nz_mixed_state_Cmod_1; assumption.
+       assert((/ Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) > 0)%R).
+       apply Rinv_0_lt_compat. apply nz_mixed_state_Cmod_1.
+       assumption. lra. 
+       lia. 
+       rewrite <-Reduced_plus.
+       rewrite <-Mscale_plus_distr_r.
+       rewrite Rdiv_unfold. rewrite Rmult_1_l.
+       rewrite <-Reduced_scale. 
+       rewrite <-(Reduced_trace _ _ _ s e).
+       apply nz_Mixed_State_aux_to01.
+       apply nz_Mixed_State_aux_to_nz_Mix_State.
+       apply WF_qstate_Reduced. lia.
+       split. assumption. lia.  
+       lia. apply WF_NZ_Mixed. assumption.
+       assumption. 
+      destruct H.
+      simpl in H0.
+      destruct H0. destruct H0.
+      apply (IHqs1 _ _ _  q1 q2) in H0 .
+      apply (IHqs2 _ _ _  q1 q2) in H1 .
+      
+      simpl. split. 
+      intuition. intuition. assumption.
+      assumption. assumption. reflexivity.
+      assumption. assumption. assumption.
+      reflexivity. 
+Qed.
+
+
+
+Lemma QExp_eval_sub': forall F s e c (q1 q2 q': qstate s e) ,
+@NZ_Mixed_State (2^(e-s)) q1 ->
+@NZ_Mixed_State (2^(e-s)) q2->
+@NZ_Mixed_State (2^(e-s)) (q')->
+@Mplus (2^(e-s)) (2^(e-s)) q1  q2= q'->
+State_eval F (c, q')->
+State_eval F (c, q1) /\
+State_eval F (c, q2).
+Proof. induction F; intros s0 e0 c q1 q2 q' Hq1 Hq2 Hq'; intros.
+       split;
+       apply state_eq_Pure with (c,q');
+       try reflexivity; try assumption. 
+        
+       apply QExp_eval_sub with q'.
+       assumption.
+       assumption. assumption. assumption.
+       assumption. 
+      
+      simpl in H0.
+      destruct H0. destruct H1.
+      apply (IHF1 _ _ _  q1 q2) in H1 .
+      apply (IHF2 _ _ _  q1 q2) in H2 .
+      
+      simpl. split. 
+      intuition. intuition. assumption. assumption.
+      assumption. assumption. assumption.
+      assumption. assumption. assumption. 
+
+      simpl in H0.
+      destruct H0. 
+      apply (IHF1 _ _ _  q1 q2) in H0 .
+      apply (IHF2 _ _ _  q1 q2) in H1 .
+      
+      simpl. split. 
+      intuition. intuition. assumption. assumption.
+      assumption. assumption. assumption.
+      assumption. assumption. assumption.
+
+      simpl. split. eapply IHF; [ try apply Hq2| try apply Hq1| apply Hq'| | ].
+      rewrite Mplus_comm. assumption.
+      simpl in H0. 
+      rewrite (state_eq_aexp _ (c, q')); try reflexivity; try assumption.
+      simpl in H0.
+      eapply IHF; [ try apply Hq1| try apply Hq2| apply Hq'| apply H | ].
+      simpl in H0. 
+      rewrite (state_eq_aexp _ (c, q')); try reflexivity; try assumption.
+Qed.
+
+Local Open Scope nat_scope.
+Lemma State_eval_sub_sum{ s e:nat}: forall n c (f:nat -> qstate s e) F , 
+(forall i, i<n -> WF_qstate (f i) \/ (f i) = Zero)->
+(WF_qstate (@big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s)))  f n)) ->
+State_eval F (c, @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f n)->
+(forall j, j<n-> WF_qstate (f j) -> State_eval F (c, (f j))).
+Proof. induction n; intros. simpl in *. lia.
+       simpl in H1. 
+       assert(j =  n\/ j<  n).  lia. destruct H4.
+       rewrite H4 in *.
+       assert( @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f (n)= Zero
+       \/  @big_sum  (Matrix (2^(e-s)) (2^(e-s))) (M_is_monoid (2^(e-s)) (2^(e-s))) f (n) <> Zero).
+      apply Classical_Prop.classic. destruct H5. rewrite H5 in *.
+      rewrite Mplus_0_l in *. assumption.
+
+      apply (QExp_eval_sub' F _ _ _ 
+      (big_sum f (n)) (f ( n))) in H1.
+      intuition. eapply WF_qstate_big_sum with (S n).
+      intros.  rewrite NZ_Mixed_State_aux_equiv'.
+        pose (H i). destruct o. lia.
+      left. apply nz_Mixed_State_aux_to_nz_Mix_State.
+      apply H7. right. assumption.
+       apply (@big_sum_not_0 (2^(e-s))). assumption.
+       apply H0. split. lia. assert( n<>0).
+       intro. rewrite H6 in *. simpl in *. destruct H5.
+       reflexivity. lia.     
+      apply H3. apply H0.
+      reflexivity. 
+      apply IHn. intros. apply H. lia.
+
+      eapply WF_qstate_big_sum with (S n).
+      intros.  rewrite NZ_Mixed_State_aux_equiv'. pose (H i). destruct o. lia.
+      left. apply nz_Mixed_State_aux_to_nz_Mix_State.
+      apply H6. right. assumption. exists j.
+      split. lia. apply (@NZ_Mixed_not_Zero (2^(e-s))).
+      apply H3. apply H0. lia.    
+
+      assert(f n = Zero \/ (f n) <> Zero). 
+      apply Classical_Prop.classic. destruct H5.
+      rewrite H5 in *. rewrite Mplus_0_r in *.
+      assumption. 
+      apply (QExp_eval_sub' F _ _ _ 
+       (big_sum f (n)) (f (n))) in H1. 
+       intuition.
+
+       eapply WF_qstate_big_sum with (S n).
+       intros.  rewrite NZ_Mixed_State_aux_equiv'. pose (H i). destruct o. lia.
+       left. apply nz_Mixed_State_aux_to_nz_Mix_State.
+       apply H7. right. assumption. exists j.
+       split. lia. apply (@NZ_Mixed_not_Zero (2^(e-s))).
+       apply H3. apply H0. lia.
+       
+       pose (H n). destruct o. lia. apply H6.
+       rewrite H6 in H5. destruct H5. reflexivity.  
+       
+        apply H0.
+       reflexivity. lia. assumption.   
+Qed.
+
 
 
 (* seman_find_eq*)

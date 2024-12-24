@@ -241,7 +241,8 @@ WF_qstate q-> WF_qstate q0->
 WF_qstate (q_plus (q_scale p1  q) (q_scale p2 q0)).
 Proof. unfold WF_qstate.  unfold q_trace.  simpl. 
        intros. split. apply (@NZ_Mix_S (2^(e-s))); intuition. intuition. 
-Qed.
+Qed. 
+
 
 Lemma WF_qstate_in_01{s e:nat}: forall (q:qstate s e), 
 WF_qstate q -> 0<(q_trace q) <=1.
@@ -471,6 +472,22 @@ Inductive WF_dstate_aux{s e:nat}: list(cstate * (qstate s e)) -> Prop:=
                       
 Definition WF_dstate{s e:nat} (mu: dstate s e):Prop:=
   WF_dstate_aux (this mu).
+
+Fixpoint WF_Matrix_dstate { s e:nat} (mu: list (cstate * qstate s e)) :=
+  match mu with 
+  |nil => True 
+  | (c,q)::mu' => and (@WF_Matrix (2^(e-s)) (2^(e-s)) q)  (WF_Matrix_dstate mu') 
+  end.
+
+Lemma WF_NZ_Mixed_dstate{ s e: nat}: forall (mu : list (cstate * qstate s e)), 
+WF_dstate_aux mu -> WF_Matrix_dstate mu.
+Proof. induction mu; intros. econstructor.
+      destruct a. inversion H; subst.
+      econstructor. apply WF_NZ_Mixed.
+      apply H2.
+      apply IHmu.
+      apply H3.       
+Qed.
 
 Definition option_qstate{s e:nat} (q: option (qstate s e)): (qstate s e) :=
     match q with 

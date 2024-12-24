@@ -789,6 +789,7 @@ Proof. intros. rewrite Cmod_snd_0.
         intuition.
 Qed. 
 
+
 Local Open Scope R_scope.
 Lemma nz_mixed_state_Cmod_plus_aux: forall {n} (ρ1  ρ2: Density n), NZ_Mixed_State_aux ρ1 -> NZ_Mixed_State_aux ρ2->  
 Cmod (trace (ρ1 .+ ρ2)) = Cmod (trace ρ1) + Cmod (trace ρ2).
@@ -970,7 +971,22 @@ Proof. intros; split; intros.
        assumption. rewrite H. apply zero_mixed_aux. apply pow_gt_0. 
 Qed.
 
+Lemma mixed_state_Cmod_ge_0_aux : forall {n} (ρ : Density (2^n)), Mixed_State_aux ρ ->0<= Cmod (trace ρ).
+Proof. intros. rewrite NZ_Mixed_State_aux_equiv' in H. destruct H. 
+      apply nz_mixed_state_Cmod_1_aux in H. lra. rewrite H. rewrite Zero_trace.
+      rewrite Cmod_0. lra.
+Qed. 
 
+Lemma Mix_stated_plus_aux{n:nat}: forall (q1 q2: Density n),
+Mixed_State_aux  q1 ->
+Mixed_State_aux  q2 ->
+(Mplus q1  q2 <> Zero)->
+NZ_Mixed_State_aux  (q1.+ q2).
+Proof. intros. 
+       apply NZ_Mixed_State_aux_equiv.
+       split.
+       apply Mix_S_aux; assumption. assumption.
+Qed.
 (*Vec is Mix_stated_aux*)
 Local Open Scope nat_scope.
 Lemma Vector_State_snd_0: forall n (x: Vector (n)),

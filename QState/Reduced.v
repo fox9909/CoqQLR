@@ -850,7 +850,9 @@ Fixpoint d_reduced{ s e: nat} (mu:list (cstate * qstate s e)) l r :=
        | (c, q)::mu' =>(c, Reduced q l r):: (d_reduced mu' l r)
        end.
      
-     
+
+
+
 Lemma d_reduced_assoc{ s e :nat}: forall (mu: list (cstate *qstate s e)) l r l' r',
 s<=l /\ l<=l' /\l' <=r' /\  r'<=r /\ r<=e->
 d_reduced (d_reduced mu l r) l' r'=
@@ -863,13 +865,6 @@ rewrite Reduced_assoc. reflexivity.
 intuition. apply IHmu. intuition. 
 Qed. 
 
-
-
-Fixpoint WF_Matrix_dstate { s e:nat} (mu: list (cstate * qstate s e)) :=
-  match mu with 
-  |nil => True 
-  | (c,q)::mu' => and (@WF_Matrix (2^(e-s)) (2^(e-s)) q)  (WF_Matrix_dstate mu') 
-  end.
 
 
 Lemma d_reduced_refl{s e:nat}: forall l r (mu: list (cstate * qstate s e)),
@@ -905,3 +900,53 @@ Proof. induction mu1; induction mu2; intros.
        reflexivity.
 Qed.
 
+Lemma d_reduced_trace{s e:nat}: forall (l r : nat) (mu: list (cstate * qstate s e)),
+s <= l /\ l <= r <= e -> 
+WF_Matrix_dstate mu ->
+ d_trace_aux mu =
+ d_trace_aux (d_reduced mu l r).
+Proof. induction mu; intros. simpl. reflexivity.
+      destruct a. simpl. unfold s_trace.
+      simpl. unfold q_trace.  rewrite  Reduced_trace.
+      rewrite IHmu. reflexivity.
+      intuition. inversion_clear H0. intuition.
+      intuition. inversion_clear H0. 
+       intuition.  
+Qed.
+
+
+Lemma WF_d_reduced: forall (s e l r : nat) (mu: list (cstate * qstate s e)),
+s <= l /\ l <= r <= e -> WF_dstate_aux mu ->
+ WF_dstate_aux (d_reduced mu l r).
+Proof. induction mu; intros. simpl. econstructor.
+destruct a. simpl. econstructor.
+unfold WF_state. simpl. apply WF_qstate_Reduced.
+intuition. inversion_clear H0. assumption.
+apply IHmu. intuition. inversion_clear H0.
+assumption. assert((((c, Reduced q l r) :: d_reduced mu l r)=
+d_reduced ((c, q) :: mu) l r)).
+simpl. reflexivity.
+unfold state.
+rewrite H1. 
+rewrite <-d_reduced_trace.
+inversion_clear H0. assumption.
+intuition.
+apply WF_NZ_Mixed_dstate.
+assumption.
+ 
+Qed.
+
+Import Sorted.
+Lemma d_reduced_sort{s e:nat}:forall (mu: list (state s e)) l r,
+Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
+Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) (d_reduced mu l r).
+Proof. induction mu; intros. simpl. econstructor.
+inversion_clear H. 
+destruct a. simpl. econstructor . 
+apply IHmu. assumption.
+destruct mu. simpl in *. econstructor.
+destruct s0. 
+simpl. econstructor.  inversion_clear H1.
+unfold StateMap.Raw.PX.ltk in *. simpl in *.
+assumption.
+Qed.

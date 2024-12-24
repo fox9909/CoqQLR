@@ -464,13 +464,13 @@ super M Zero = Zero .
 Proof. intros. unfold super. Msimpl. reflexivity.
 Qed.
 
-(* Lemma WF_Mixed_Zero{s e:nat}:forall (q: Square (2^(e-s))),
+Lemma WF_Mixed_Zero{s e:nat}:forall (q: Square (2^(e-s))),
 WF_qstate q \/ q= Zero ->
 WF_Matrix q .
 Proof. intros. destruct H. destruct H. auto_wf. 
 rewrite H. auto_wf.
 Qed.
-#[export] Hint Resolve WF_Mixed WF_Mixed_Zero : wf_db. *)
+#[export] Hint Resolve WF_Mixed WF_Mixed_Zero : wf_db.
 
 Lemma WF_QInit{s' e'}: forall s e (rho:qstate s' e'),
 s'<=s/\s<=e/\ e<=e'-> 
