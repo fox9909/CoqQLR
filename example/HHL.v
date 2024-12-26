@@ -7,9 +7,9 @@ Require Import Strings.String.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
-From Quan Require Import Par_trace.
+From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Linear.
 From Quan Require Import QAssert.
@@ -17,7 +17,7 @@ From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
-From Quan Require Import QRule_QFrame.
+From Quan Require Import QFrame.
 From Quan Require Import Forall_two.
 From Quan Require Import add.
 
@@ -30,6 +30,86 @@ Local Open Scope rule_scope.
 Lemma pow_0: (2^0=1)%nat. Proof. auto. Qed.
 Lemma add_sub_eq: forall n m, n+m-n=m .
 Proof. intuition.     
+Qed.
+
+Lemma kron_n_I : forall n m, n ⨂ I m = I (m ^ n).
+Proof.
+  intros.
+  induction n; simpl.
+  reflexivity.
+  rewrite IHn. 
+  rewrite id_kron.
+  apply f_equal.
+  lia.
+Qed.
+
+Lemma kron_n_unitary : forall {m n} (A : Matrix m m),
+  WF_Unitary A -> WF_Unitary (n ⨂ A).
+Proof.
+  intros m n A  [WFA UA].
+  unfold WF_Unitary in *.
+  split.
+  auto with wf_db.
+  rewrite kron_n_adjoint.
+  rewrite kron_n_mult.
+  rewrite UA.
+  rewrite kron_n_I. 
+  easy. assumption.
+Qed.
+
+
+
+Lemma n_kron: forall n, ∣ 0 ⟩_ (2^n) = n ⨂ qubit0.
+Proof.
+induction n. simpl. unfold Base_vec.  
+prep_matrix_equality. destruct y; destruct x;
+ simpl; try reflexivity.
+assert (WF_Matrix (I 1)). apply WF_I.
+unfold WF_Matrix in *. rewrite H. reflexivity.
+intuition. rewrite kron_n_assoc. rewrite <-IHn.
+rewrite <-base_qubit0.
+rewrite Nat.pow_1_l.
+rewrite (qubit0_base_kron n 0). f_equal. f_equal. lia.
+apply pow_gt_0. auto_wf.
+Qed.
+
+Lemma Had_N: forall n:nat, 
+n ⨂ hadamard × ∣ 0 ⟩_ ((2^n)) = (/ (√ 2) ^ n)%C .* big_sum (fun z=> ∣ z ⟩_ ((2^n))) (2^n).
+Proof. intros. 
+rewrite n_kron. apply Logic.eq_trans with (n ⨂ hadamard × n ⨂ ∣0⟩).
+f_equal. rewrite Nat.pow_1_l. reflexivity.
+rewrite kron_n_mult. rewrite MmultH0. 
+unfold xbasis_plus. 
+rewrite Mscale_kron_n_distr_r. 
+rewrite <-RtoC_inv. rewrite RtoC_pow.
+rewrite <-Rinv_pow_depr. 
+f_equal. apply  Nat.pow_1_l.  rewrite RtoC_inv. f_equal.
+rewrite RtoC_pow.
+f_equal. apply Rgt_neq_0. 
+apply pow_lt.   apply sqrt_lt_R0. lra.
+
+induction n.  simpl. rewrite Mplus_0_l.
+rewrite base_I. reflexivity.
+ rewrite kron_n_assoc.  rewrite IHn.
+simpl. rewrite Nat.add_0_r.
+rewrite big_sum_sum. 
+rewrite kron_plus_distr_r.
+unfold Gplus.  simpl.
+f_equal. lia.   rewrite Nat.pow_1_l. simpl. reflexivity. 
+apply Logic.eq_trans with (∣0⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (2^n) ) (2 ^ n)).
+f_equal. apply Nat.pow_1_l.
+rewrite kron_Msum_distr_l.
+apply big_sum_eq_bounded. intros.
+rewrite <-base_qubit0.
+rewrite qubit0_base_kron. reflexivity. assumption.
+apply Logic.eq_trans with (∣1⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (2^n) ) (2 ^ n) ).
+f_equal. apply Nat.pow_1_l.
+rewrite kron_Msum_distr_l.
+apply big_sum_eq_bounded. intros.
+rewrite <-base_qubit1.
+rewrite qubit1_base_kron. rewrite (Nat.add_comm x). reflexivity. assumption.
+auto_wf. apply sqrt_neq_0_compat. lra. 
+apply sqrt_neq_0_compat. lra. 
 Qed.
 
 
@@ -64,10 +144,10 @@ Hypothesis Hx:WF_Matrix x /\ x=(big_sum (fun i : nat => b_n i / lamda_n i .* v_n
 Hypothesis Hc: c> 0 /\ forall j:nat, Rabs (c / j) <= 1.
 Hypothesis Ht': t>0.
 
-Hypothesis HU_b: WF_Unitary U_b /\ ( U_b × (Vec (2^m) 0) = b).
+Hypothesis HU_b: WF_Unitary U_b /\ ( U_b × (Base_vec (2^m) 0) = b).
 Hypothesis HU: (WF_Unitary (U) )/\ forall j :nat,  (U) × ( (v_n j))= (cos ((lamda_n j) * t), sin ( (lamda_n j) * t)) .* ( (v_n j)).
-Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ n) =
-1 / √ 2 ^ n .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^n)) * j * k),  sin (((2 * PI)/(2^n)) * j * k)) .*  (∣ j ⟩_ n)) (2 ^ n)).
+Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ (2^n)) =
+/ √ 2 ^ n .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^n)) * j * k),  sin (((2 * PI)/(2^n)) * j * k)) .*  (∣ j ⟩_ (2^n))) (2 ^ n)).
 
 Hypothesis (Ht: forall j:nat, and (delt_n j < 2^n)%nat  ((lamda_n j * t/ (2*PI))*(2^n) = delt_n j)).
 
@@ -75,9 +155,6 @@ Definition  U_f (i:nat):= exp_U U i.
 Definition  phi (j:nat):= (lamda_n j * t) / (2 * PI).
 Definition  phi' (j:nat) := ((phi j) * (2^n))%R.
 Definition  adj_Uf (i:nat) := adjoint (U_f i).
-
-Inductive Vec_R (n :nat) (i:R): Vector (2^n) -> Prop :=
-|vec_r:  forall j:nat, and (j<n) (INR j=i)%R -> Vec_R n i (Vec n j).
 
 Definition  U_c (j:nat): Matrix 2 2:=
   match j with 
@@ -100,14 +177,10 @@ Proof. intros. assert(1=1^2). simpl. repeat rewrite Rmult_1_r. reflexivity.
 Qed.
 
 
-
-
-
-
 Local Open Scope nat_scope.
-Lemma HU_c:(forall j, WF_Unitary (U_c j)) /\ ((U_c 0) × (∣ 0 ⟩_ (1))) = (∣ 0 ⟩_ (1)) /\
-(forall j:nat, (j<>0)%nat ->(U_c j) × (∣ 0 ⟩_ (1)) = 
-(((sqrt (1-(( c^2)/( (j)^2)))) .* (∣ 0 ⟩_ (1)) .+ (c/((j)) .* (∣ 1 ⟩_ (1)))))).
+Lemma HU_c:(forall j, WF_Unitary (U_c j)) /\ ((U_c 0) × (∣ 0 ⟩_ (2))) = (∣ 0 ⟩_ (2)) /\
+(forall j:nat, (j<>0)%nat ->(U_c j) × (∣ 0 ⟩_ (2)) = 
+(((sqrt (1-(( c^2)/( (j)^2)))) .* (∣ 0 ⟩_ (2)) .+ (c/((j)) .* (∣ 1 ⟩_ (2)))))).
 Proof. split. intros. destruct j. simpl. apply id_unitary.
        unfold WF_Unitary. split.
        unfold WF_Matrix. intros. destruct x0; destruct y. lia. 
@@ -265,12 +338,12 @@ Ltac type_sovle:=
   try rewrite kron_1_l; try rewrite kron_1_r.
 
 Lemma Had_N':
-U_v 0 n 0 n (n ⨂ hadamard) ∣ 0 ⟩_ n= (1/√ 2 ^ n) .* big_sum (fun z=> ∣ z ⟩_ (n)) (2^n).
-Proof. unfold U_v. type_sovle.   rewrite Had_N. reflexivity. auto_wf.
+U_v 0 n 0 n (n ⨂ hadamard) ∣ 0 ⟩_ (2^n)= (/√ 2 ^ n) .* big_sum (fun z=> ∣ z ⟩_ (2^n)) (2^n).
+Proof. unfold U_v. type_sovle. rewrite Had_N. reflexivity. auto_wf.
 Qed.
 
 Lemma U_vb:
-U_v n (n + m) n (n + m) U_b ∣ 0 ⟩_ (m)=(big_sum (fun j=>(b_n j) .* (v_n j)) (2^m)).
+U_v n (n + m) n (n + m) U_b ∣ 0 ⟩_ (2^m)=(big_sum (fun j=>(b_n j) .* (v_n j)) (2^m)).
 Proof. unfold U_v. type_sovle.  pose HU_b. destruct a. 
 rewrite H0.  rewrite HB_decom. reflexivity. apply HU_b.  
 Qed.
@@ -283,13 +356,11 @@ auto_wf.
 Qed.
 
 
-
-
 Lemma U_f': forall (v:Vector (2^n *(2^m))) , 
 (UCtrl_v 0 n n (n + m) 0 (n + m) U_f v) =
-Mmult (big_sum (fun i : nat => (∣ i ⟩_ (n) × ⟨ i ∣_ (n)) ⊗ (U_f i))  (2 ^ n)) v.
+Mmult (big_sum (fun i : nat => (∣ i ⟩_ (2^n) × ⟨ i ∣_ (2^n)) ⊗ (U_f i))  (2 ^ n)) v.
 Proof.  intros. unfold UCtrl_v. type_sovle.  
-apply Logic.eq_trans with (∣ x0 ⟩_ (n) × ⟨ x0 ∣_ (n) ⊗ I (2 ^ m)
+apply Logic.eq_trans with (∣ x0 ⟩_ (2^n) × ⟨ x0 ∣_ (2^n) ⊗ I (2 ^ m)
 × (I (2 ^ n) ⊗  U_f x0)). 
 f_equal; type_sovle'; try lia. 
 rewrite kron_mixed_product. rewrite Mmult_1_r.
@@ -300,9 +371,9 @@ Qed .
 
 Definition  P (i:nat): Pure_formula := (BEq v ' ( i)) .
 
-Lemma simpl_HB: (1 / √ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (n)) (2 ^ n)
+Lemma simpl_HB: (/ √ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (2^n)) (2 ^ n)
 ⊗ big_sum (fun j : nat => b_n j .* v_n j) (2 ^ m)=
-big_sum (fun j : nat => b_n j .* ((1 / √ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (n) ⊗ v_n j ) (2 ^ n)
+big_sum (fun j : nat => b_n j .* (( / √ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (2^n) ⊗ v_n j ) (2 ^ n)
 )) (2 ^ m).
 Proof.  
 rewrite kron_Msum_distr_l.
@@ -311,11 +382,6 @@ rewrite Mscale_kron_dist_r.
 rewrite Mscale_kron_dist_l.  f_equal. 
 rewrite kron_Msum_distr_r. reflexivity.    
 Qed.
-
-
-Search (INR).
-
-
 
 Lemma simpl_expU:forall i j,
 U_f i × v_n j = (cos ((lamda_n j)* t *i), sin (((lamda_n j)* t * i))) .* v_n j.
@@ -336,8 +402,8 @@ Qed.
 
 Lemma simpl_Uf:
 UCtrl_v 0 n n (n + m) 0 (n + m) U_f
-(big_sum (fun j : nat =>  b_n j  .* ((1/√ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (n) ⊗ v_n j)  (2 ^ n))) (2 ^ m))
-= (big_sum (fun j : nat =>  b_n j .* ((1/√ 2 ^ n) .* big_sum (fun z : nat => (cos (2*PI * (phi j)* z), sin ((2*PI * (phi j)* z))) .* ∣ z ⟩_ (n)) 
+(big_sum (fun j : nat =>  b_n j  .* ((/√ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (2^n) ⊗ v_n j)  (2 ^ n))) (2 ^ m))
+= (big_sum (fun j : nat =>  b_n j .* ((/√ 2 ^ n) .* big_sum (fun z : nat => (cos (2*PI * (phi j)* z), sin ((2*PI * (phi j)* z))) .* ∣ z ⟩_ (2^n)) 
 (2 ^ n)) ⊗ v_n j )  (2 ^ m)).
 Proof. rewrite U_f'. rewrite Mmult_Msum_distr_l.
       apply big_sum_eq_bounded. intros.
@@ -350,14 +416,14 @@ Proof. rewrite U_f'. rewrite Mmult_Msum_distr_l.
       apply big_sum_eq_bounded. intros.
       rewrite Mmult_Msum_distr_r.
       rewrite (big_sum_eq_bounded   _ ((fun i : nat =>
-      (∣ i ⟩_ (n) × ⟨ i ∣_ (n) × ∣ x1 ⟩_ (n)) ⊗  ((cos (2*PI * (phi x0)* i), sin ((2* PI * (phi x0)* i))) .* v_n x0)))).
+      (∣ i ⟩_ (2^n) × ⟨ i ∣_ (2^n) × ∣ x1 ⟩_ (2^n)) ⊗  ((cos (2*PI * (phi x0)* i), sin ((2* PI * (phi x0)* i))) .* v_n x0)))).
       apply big_sum_unique .
       exists x1. split. assumption. 
-      split. rewrite Mmult_assoc. rewrite Vec_inner_1. unfold c_to_Vector1.
+      split. rewrite Mmult_assoc. rewrite base_inner_1. unfold c_to_Vector1.
       Msimpl. rewrite Mscale_kron_dist_r.
       rewrite Mscale_kron_dist_l.
       reflexivity. assumption.
-      intros. rewrite Mmult_assoc. rewrite Vec_inner_0; try assumption.
+      intros. rewrite Mmult_assoc. rewrite base_inner_0; try assumption.
       unfold c_to_Vector1. Msimpl.  reflexivity. lia. 
       intros.  
       rewrite kron_mixed_product. f_equal.
@@ -382,9 +448,9 @@ Qed.
 
 Lemma simpl_QFT': 
 @U_v n (n+m) 0 n 0 (n + m) (QFT) † 
-(big_sum (fun j : nat => b_n j.* ((1/√ 2 ^ n) .* big_sum (fun z : nat =>
- (cos (2 * PI * phi j * z),  sin (2 * PI * phi j * z)).* ∣ z ⟩_ (n)) (2 ^ n)) ⊗ v_n j) (2 ^ m))
-=(big_sum (fun j : nat => b_n j .* (Vec (2^n) (delt_n j)) ⊗  v_n j) (2 ^ m)).
+(big_sum (fun j : nat => b_n j.* ((/√ 2 ^ n) .* big_sum (fun z : nat =>
+ (cos (2 * PI * phi j * z),  sin (2 * PI * phi j * z)).* ∣ z ⟩_ (2^n)) (2 ^ n)) ⊗ v_n j) (2 ^ m))
+=(big_sum (fun j : nat => b_n j .* (Base_vec (2^n) (delt_n j)) ⊗  v_n j) (2 ^ m)).
 Proof. pose Ht.  unfold U_v. type_sovle. 
 assert(2^n=1* 2^n). lia. destruct H.
 assert( 2^n * 2^m= 2^(n+m)). type_sovle'. destruct H.
@@ -398,7 +464,7 @@ rewrite kron_mixed_product.
 rewrite Mmult_1_l. f_equal.
 pose HQFT. 
 apply unitary_trans. intuition.
-apply WF_vec. apply a. 
+apply WF_base. apply a. 
 destruct a0. rewrite H1. 
 f_equal.
 apply big_sum_eq_bounded. intros.
@@ -418,20 +484,20 @@ Qed.
 
 Lemma simpl_Uc:
 UCtrl_v 0 n (n + m) (n + m + 1) 0 (n + m + 1) U_c 
-(big_sum (fun i : nat =>  b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i ⊗ ∣ 0 ⟩_ (1)) (2 ^ m))=
- (big_sum (fun i : nat =>  b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i ⊗
-((sqrt (1-(( c^2)/( (phi' i)^2)))) .* (∣ 0 ⟩_ (1)) .+ (c/((phi' i)) .* (∣ 1 ⟩_ (1))))) (2 ^ m)).
+(big_sum (fun i : nat =>  b_n i .* ∣ delt_n i ⟩_ (2^n) ⊗ v_n i ⊗ ∣ 0 ⟩_ (2)) (2 ^ m))=
+ (big_sum (fun i : nat =>  b_n i .* ∣ delt_n i ⟩_ (2^n) ⊗ v_n i ⊗
+((sqrt (1-(( c^2)/( (phi' i)^2)))) .* (∣ 0 ⟩_ (2)) .+ (c/((phi' i)) .* (∣ 1 ⟩_ (2))))) (2 ^ m)).
 Proof. pose Ht as H. unfold UCtrl_v. type_sovle. 
 assert(m+1=n + m + 1 - n). lia. destruct H0.
 assert(2^n * 2^m * 2^1=2^(n+m+1)). type_sovle'. destruct H0.
 rewrite Mmult_Msum_distr_l. apply big_sum_eq_bounded.
 intros. apply Logic.eq_trans with (big_sum
-(fun i : nat => (∣  i ⟩_ (n) × ⟨  i ∣_ (n))⊗ I (2^m) ⊗ U_c i )
-(2 ^ n) × (b_n x0 .* ∣ delt_n x0 ⟩_ (n) ⊗ v_n x0 ⊗ ∣ 0 ⟩_ (1))).
+(fun i : nat => (∣  i ⟩_ (2^n) × ⟨  i ∣_ (2^n))⊗ I (2^m) ⊗ U_c i )
+(2 ^ n) × (b_n x0 .* ∣ delt_n x0 ⟩_ (2^n) ⊗ v_n x0 ⊗ ∣ 0 ⟩_ (2))).
 f_equal; rewrite Nat.mul_1_l. rewrite Nat.pow_add_r.
 rewrite Nat.mul_assoc. reflexivity. 
 apply big_sum_eq_bounded. intros. 
-apply Logic.eq_trans with ((∣ x1 ⟩_ (n) × ⟨ x1 ∣_ (n)) ⊗ I (2 ^ m) ⊗ I (2)
+apply Logic.eq_trans with ((∣ x1 ⟩_ (2^n) × ⟨ x1 ∣_ (2^n)) ⊗ I (2 ^ m) ⊗ I (2)
 × (I (2 ^ n)  ⊗ I (2 ^ m) ⊗  U_c x1)).   
 rewrite kron_1_l; auto_wf. rewrite kron_1_r;auto_wf.
  rewrite kron_assoc; auto_wf. repeat rewrite id_kron; auto_wf.
@@ -445,10 +511,10 @@ exists (delt_n x0). split. apply H.
 split. repeat rewrite Mscale_kron_dist_l.
 rewrite Mscale_mult_dist_r. f_equal.
 repeat rewrite kron_mixed_product.  rewrite Mmult_1_l.
-rewrite Mmult_assoc. rewrite Vec_inner_1. unfold c_to_Vector1.
+rewrite Mmult_assoc. rewrite base_inner_1. unfold c_to_Vector1. 
 Msimpl. f_equal.   
 assert((lamda_n x0 * t / (2 * PI) * 2 ^ n)%R = delt_n x0). apply H. 
-pose HU_c. destruct a.  destruct H3.  
+pose HU_c.  destruct a.  destruct H3. rewrite <-base_qubit0.  rewrite <-base_qubit1.  
 rewrite H4. rewrite<-H1. unfold phi'. unfold phi. reflexivity.
 apply INR_not_0. 
 rewrite <-H1. apply Rmult_integral_contrapositive_currified.
@@ -457,11 +523,11 @@ apply Rmult_integral_contrapositive_currified. apply Hlamda.
 pose Ht'. apply Rgt_neq_0.  lra.  
 apply Rgt_neq_0. apply Rinv_0_lt_compat. apply Rmult_lt_0_compat.
 lra.  apply PI_RGT_0. rewrite pow_IZR.  apply not_0_IZR. lia.
-apply WF_vec. apply H.  apply H. apply Hv_n. intros.
+apply WF_base. apply H.  apply H. apply Hv_n. intros.
 repeat rewrite Mscale_kron_dist_l.
 rewrite Mscale_mult_dist_r. 
 repeat rewrite kron_mixed_product.
-rewrite Mmult_assoc.  rewrite Vec_inner_0. unfold c_to_Vector1.
+rewrite Mmult_assoc.  rewrite base_inner_0. unfold c_to_Vector1.
 Msimpl. reflexivity.
 intuition. assumption.
 apply H.
@@ -469,16 +535,16 @@ Qed.
 
 
 Lemma simpl_QFT: 
-@U_v (n-0) (n+m+1-0) 0 n 0 (n + m + 1) QFT (big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i
-⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1).+ c / phi' i .* ∣ 1 ⟩_ (1))) (2 ^ m)) =
-(big_sum (fun i : nat => b_n i .* (((1/√ 2 ^ n) .* 
-big_sum  (fun z : nat => (cos (2 * PI * phi i * z),  sin (2 * PI * phi i * z)) .* ∣ z ⟩_ (n)) (2 ^ n))) ⊗ v_n i
-          ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1) .+ c / phi' i .* ∣ 1 ⟩_ (1)))
+@U_v (n-0) (n+m+1-0) 0 n 0 (n + m + 1) QFT (big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (2^n) ⊗ v_n i
+⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2).+ c / phi' i .* ∣ 1 ⟩_ (2))) (2 ^ m)) =
+(big_sum (fun i : nat => b_n i .* (((/√ 2 ^ n) .* 
+big_sum  (fun z : nat => (cos (2 * PI * phi i * z),  sin (2 * PI * phi i * z)) .* ∣ z ⟩_ (2^n)) (2 ^ n))) ⊗ v_n i
+          ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2) .+ c / phi' i .* ∣ 1 ⟩_ (2)))
          (2 ^ m)).
 Proof. pose Ht as H. unfold U_v. type_sovle. 
 apply Logic.eq_trans with (QFT ⊗ I (2 ^ m) ⊗ I (2^1)
-× big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i
-⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1) .+ c / phi' i .* ∣ 1 ⟩_ (1))) (2 ^ m)).
+× big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (2^n) ⊗ v_n i
+⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2) .+ c / phi' i .* ∣ 1 ⟩_ (2))) (2 ^ m)).
 f_equal; type_sovle'. rewrite kron_assoc; auto_wf.
 rewrite id_kron.  f_equal; try lia; type_sovle'. f_equal; type_sovle'.
 apply HQFT. rewrite Mmult_Msum_distr_l. 
@@ -518,31 +584,31 @@ Qed.
 
 Lemma simpl_Uf':
 UCtrl_v 0 n n (n + m) 0 (n + m + 1) adj_Uf 
-(big_sum (fun i : nat =>  b_n i  .* (1 / √ 2 ^ n
- .* big_sum (fun z : nat =>  (cos (2 * PI * phi i * z), sin (2 * PI * phi i * z)) .*   ∣ z ⟩_ (n)) (2 ^ n)) ⊗ v_n i
-              ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1)
-                 .+ c / phi' i .* ∣ 1 ⟩_ (1))) (2 ^ m))
-  = (big_sum (fun i : nat => b_n i .* ((1/√ 2 ^ n)  .* big_sum (fun z : nat => ∣ z ⟩_ (n)) (2 ^ n)) ⊗ v_n i
-          ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1) .+ c / phi' i .* ∣ 1 ⟩_ (1)))
+(big_sum (fun i : nat =>  b_n i  .* ( / √ 2 ^ n
+ .* big_sum (fun z : nat =>  (cos (2 * PI * phi i * z), sin (2 * PI * phi i * z)) .*   ∣ z ⟩_ (2^n)) (2 ^ n)) ⊗ v_n i
+              ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2)
+                 .+ c / phi' i .* ∣ 1 ⟩_ (2))) (2 ^ m))
+  = (big_sum (fun i : nat => b_n i .* ((/√ 2 ^ n)  .* big_sum (fun z : nat => ∣ z ⟩_ (2^n)) (2 ^ n)) ⊗ v_n i
+          ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2) .+ c / phi' i .* ∣ 1 ⟩_ (2)))
          (2 ^ m)) .
 Proof. pose HU.  destruct a. 
  unfold UCtrl_v. type_sovle.
 apply Logic.eq_trans with (big_sum
 (fun i : nat =>
- (∣ i ⟩_ (n) × ⟨ i ∣_ (n)) ⊗ adj_Uf i ⊗ I (2 ^ 1)) 
+ (∣ i ⟩_ (2^n) × ⟨ i ∣_ (2^n)) ⊗ adj_Uf i ⊗ I (2 ^ 1)) 
 (2 ^ n)
-× big_sum (fun i : nat => b_n i .* ((1/√ 2 ^ n)
+× big_sum (fun i : nat => b_n i .* ((/√ 2 ^ n)
  .* big_sum (fun z : nat => (cos (2 * PI * phi i * z),
                     sin (2 * PI * phi i * z)) .* 
-             ∣ z ⟩_ (n)) (2 ^ n)) ⊗ v_n i
-   ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* Vec 2 0
-      .+ c / phi' i .* Vec 2 1)) (2 ^ m)).
+             ∣ z ⟩_ (2^n)) (2 ^ n)) ⊗ v_n i
+   ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* Base_vec 2 0
+      .+ c / phi' i .* Base_vec 2 1)) (2 ^ m)).
 f_equal. rewrite <-Nat.add_assoc. rewrite Nat.mul_1_l.
 rewrite add_sub_eq.   rewrite <-Nat.mul_assoc.
 f_equal. simpl. rewrite Nat.pow_add_r. simpl. reflexivity.
 type_sovle'. apply big_sum_eq_bounded. intros.
 repeat rewrite kron_1_l. repeat rewrite kron_assoc; auto_wf.
-eapply Logic.eq_trans with (∣ x0 ⟩_ (n) × ⟨ x0 ∣_ (n)
+eapply Logic.eq_trans with (∣ x0 ⟩_ (2^n) × ⟨ x0 ∣_ (2^n)
 ⊗ I ((2^m * 2^1))
 × (I (2 ^ n) ⊗ ( adj_Uf x0 ⊗ I (2 ^ 1)))).
 f_equal.  simpl. type_sovle. rewrite <-Nat.add_assoc.
@@ -572,7 +638,7 @@ split. repeat rewrite kron_mixed_product. f_equal.
 rewrite Mscale_mult_dist_r.
 rewrite Mscale_kron_dist_l.
 rewrite <-Mscale_kron_dist_r. f_equal.
-rewrite Mmult_assoc. rewrite Vec_inner_1. unfold c_to_Vector1.
+rewrite Mmult_assoc. rewrite base_inner_1. unfold c_to_Vector1.
 Msimpl. reflexivity.   assumption.
 rewrite <-Mscale_mult_dist_r.
 unfold adj_Uf. 
@@ -593,28 +659,29 @@ rewrite Mscale_mult_dist_r.
 rewrite Mscale_kron_dist_l.
 rewrite <-Mscale_kron_dist_r. f_equal.
 rewrite <-Mscale_mult_dist_r.
-rewrite Mmult_assoc. rewrite Vec_inner_0. unfold c_to_Vector1.
+rewrite Mmult_assoc. rewrite base_inner_0. unfold c_to_Vector1.
 rewrite Mscale_0_l. rewrite Mmult_0_r.
 rewrite kron_0_l. rewrite kron_0_l. reflexivity. intuition.
 assumption. assumption.
 Qed. 
 
+
 Lemma simpl_H:
 @U_v (n-0) (n+m+1-0) 0 n 0 (n + m + 1) (n ⨂ hadamard) (big_sum
- (fun i : nat =>  b_n i  .* ((1/√ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (n)) (2 ^ n)) ⊗ v_n i
-    ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1) .+ c / phi' i .* ∣ 1 ⟩_ (1))) (2 ^ m))
-=(big_sum (fun i : nat =>  b_n i .* (∣ 0 ⟩_ (n)) ⊗ v_n i ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (1)    .+ c / phi' i .* ∣ 1 ⟩_ (1)))  (2 ^ m))  .
+ (fun i : nat =>  b_n i  .* ((/√ 2 ^ n) .* big_sum (fun z : nat => ∣ z ⟩_ (2^n)) (2 ^ n)) ⊗ v_n i
+    ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2) .+ c / phi' i .* ∣ 1 ⟩_ (2))) (2 ^ m))
+=(big_sum (fun i : nat =>  b_n i .* (∣ 0 ⟩_ (2^n)) ⊗ v_n i ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* ∣ 0 ⟩_ (2)    .+ c / phi' i .* ∣ 1 ⟩_ (2)))  (2 ^ m))  .
 Proof.  unfold U_v. rewrite <-Nat.add_assoc. type_sovle. 
  apply Logic.eq_trans with 
  (n ⨂ hadamard ⊗ I ( 2 ^ m) ⊗ I 2
  × big_sum
      (fun i : nat =>
       b_n i
-      .* ((1/√ 2 ^ n)
-          .* big_sum (fun z : nat => ∣ z ⟩_ (n))
+      .* ((/√ 2 ^ n)
+          .* big_sum (fun z : nat => ∣ z ⟩_ (2^n))
                (2 ^ n)) ⊗ v_n i
-      ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* Vec 2 0
-         .+ c / phi' i .* Vec 2 1)) (2 ^ m)).
+      ⊗ (√ (1 - c ^ 2 / phi' i ^ 2) .* Base_vec 2 0
+         .+ c / phi' i .* Base_vec 2 1)) (2 ^ m)).
          f_equal; repeat rewrite Nat.pow_add_r;
          rewrite Nat.mul_assoc; try reflexivity.
 rewrite kron_assoc; auto_wf. f_equal; simpl; try rewrite Nat.sub_0_r;
@@ -626,7 +693,7 @@ f_equal. f_equal. assert(n ⨂ hadamard= (n ⨂ hadamard) †).
 rewrite kron_n_adjoint. f_equal. rewrite  hadamard_sa.
 reflexivity. auto_wf. rewrite H0.
 apply  unitary_trans. apply kron_n_unitary. apply H_unitary.
-apply WF_scale. apply WF_vec. apply pow_gt_0.
+apply WF_scale. apply WF_base. apply pow_gt_0.
 rewrite Mscale_mult_dist_r. f_equal. apply Had_N.
 auto_wf. apply Hv_n.   auto_wf. 
 Qed.
@@ -638,48 +705,36 @@ Proof. intros.  unfold NSet.Equal. intro.
 Qed.
 
 
-Lemma norm_vec_1: forall n x, (x<2^n) ->norm (Vec (2^n) x)=1 .
-Proof. intros.  unfold norm.   rewrite <-inner_trace'. rewrite Vec_inner_1.
-       unfold c_to_Vector1. Msimpl. 
-       rewrite trace_I. simpl. rewrite sqrt_1. reflexivity. assumption.
-Qed.
-
-Lemma pure_vector_vec: forall n x, (x<2^n) -> Pure_State_Vector (Vec (2^n) x) .
-Proof. intros. econstructor. auto_wf. rewrite Vec_inner_1. unfold c_to_Vector1. Msimpl.
-       reflexivity. assumption. 
-Qed.
-
-
 
 Lemma simpl_QMeas:((/
 norm
-  (@U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1) (Vec 2 1 × (Vec 2 1) †)
+  (@U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1)(Base_vec 2 1 × (Base_vec 2 1) †)
      (@big_sum (Matrix
-        (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m))
+        (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) 
            (S (S O))) (S O)) _ 
         (fun i : nat =>
-        @kron (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) (S O) (S (S O)) (S O) (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i)
-          (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Vec 2 0 .+ c / phi' i .* Vec 2 1))
+        @kron (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) (S O) (S (S O)) (S O) (b_n i .* ∣ 0 ⟩_ (2^n) ⊗ v_n i)
+          (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Base_vec 2 0 .+ c / phi' i .* Base_vec 2 1))
         (2 ^ m))))%R
-.* @U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1) (Vec 2 1 × (Vec 2 1) †)
+.* @U_v (S O) (Nat.sub (Init.Nat.add (Init.Nat.add n m) (S O)) O) (n + m) (n + m + 1) 0 (n + m + 1) (Base_vec 2 1 × (Base_vec 2 1) †)
     (@big_sum
     (Matrix (Init.Nat.mul (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m))
           (S (S O))) (S O)) _
        (fun i : nat =>
        @kron (Init.Nat.mul (Nat.pow (S (S O)) n) (Nat.pow (S (S O)) m)) (S O) (S (S O)) (S O)
-       (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i)
-         (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Vec 2 0 .+ c / phi' i .* Vec 2 1)) 
-       (2 ^ m)))= ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 .
+       (b_n i .* ∣ 0 ⟩_ (2^n) ⊗ v_n i)
+         (√ (1 - c * (c * 1) / (phi' i * (phi' i * 1))) .* Base_vec 2 0 .+ c / phi' i .* Base_vec 2 1)) 
+       (2 ^ m)))= ∣ 0 ⟩_ (2^n) ⊗ x ⊗ Base_vec 2 1 .
 Proof. 
 unfold U_v. type_sovle. pose Hmn. 
 assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity. 
 destruct H.  assert(2 ^ (n + m) * 2 ^ 1 = 2 ^ (n + m + 1)). rewrite <-Nat.pow_add_r. reflexivity.
 destruct H. rewrite Mmult_Msum_distr_l.
 rewrite (big_sum_eq_bounded _  
-((fun i : nat => (b_n i .* ∣ 0 ⟩_ (n) ⊗ v_n i ⊗ (c / phi' i .* Vec 2 1))) )). 
+((fun i : nat => (b_n i .* ∣ 0 ⟩_ (2^n) ⊗ v_n i ⊗ (c / phi' i .* Base_vec 2 1))) )). 
 unfold phi'. unfold phi.
 rewrite (big_sum_eq_bounded _ 
-((fun i : nat => (((c * (2 * PI)  / ( 2 ^ n* t)))%R.* (∣ 0 ⟩_ (n) ⊗ ((b_n i/ lamda_n i ) .* v_n i) ⊗ ( Vec 2 1)))) )). 
+((fun i : nat => (((c * (2 * PI)  / ( 2 ^ n* t)))%R.* (∣ 0 ⟩_ (2^n) ⊗ ((b_n i/ lamda_n i ) .* v_n i) ⊗ ( Base_vec 2 1)))) )). 
 assert((2 ^ (n + m) * 2 ^ 1)= (2 ^ n * 2 ^ m * 2)). simpl. rewrite Nat.pow_add_r. reflexivity.
 destruct H. 
          
@@ -689,15 +744,14 @@ assert(2=2^1). simpl. reflexivity. destruct H.
 rewrite <-kron_Msum_distr_r.  rewrite <-kron_Msum_distr_l. 
 
 rewrite Cmod_R. rewrite Rabs_right.   repeat rewrite norm_kron.
-assert(norm (Vec 2 1)= norm (Vec (2^1) 1)). reflexivity. rewrite H.
-repeat rewrite norm_vec_1.  rewrite Rmult_1_r. rewrite Rmult_1_l. 
+repeat rewrite norm_base_1.  rewrite Rmult_1_r. rewrite Rmult_1_l. 
 rewrite Rinv_mult_distr_depr.  rewrite Mscale_assoc. rewrite RtoC_mult. 
 rewrite Rmult_assoc. rewrite Rmult_comm. rewrite Rmult_assoc.
 rewrite Rinv_r. rewrite Rmult_1_r. 
 rewrite <-Mscale_kron_dist_l.  rewrite <-Mscale_kron_dist_r.
 f_equal. f_equal.
-pose Hx. destruct a0. destruct H1.
- rewrite H1 in *. rewrite H2.
+pose Hx. destruct a0. destruct H0.
+ rewrite H0 in *. rewrite H1.
 rewrite Rinv_1.
 rewrite Mscale_1_l. reflexivity.    
 apply Rgt_neq_0. apply Rdiv_lt_0_compat.
@@ -710,8 +764,8 @@ apply Rmult_gt_0_compat.  apply Hc.
 apply Rmult_gt_0_compat. lra. apply PI_RGT_0.
 apply Rmult_gt_0_compat. apply pow_lt. lra.
 apply Ht'.   
-pose Hx. destruct a0. destruct H1.
- rewrite H1 in *. rewrite H2. lra.  
+pose Hx. destruct a0. destruct H0.
+ rewrite H0 in *. rewrite H1. lra.  
 
 simpl. lia. apply pow_gt_0.
 assert ((c * (2 * PI) / (2 ^ n * t) > 0)%R).
@@ -750,17 +804,17 @@ repeat rewrite Cmult_assoc. reflexivity.
 
 
 intros.
-remember ((√ (1 - c * (c * 1) / (phi' x0 * (phi' x0 * 1))) .* Vec 2 0 .+ c / phi' x0 .* Vec 2 1)).
+remember ((√ (1 - c * (c * 1) / (phi' x0 * (phi' x0 * 1))) .* Base_vec 2 0 .+ c / phi' x0 .* Base_vec 2 1)).
 assert(2^n*2^m=2^(n+m)). type_sovle'. destruct H0. rewrite <-id_kron.
 assert(2=2^1). simpl. reflexivity. destruct H0. 
-apply eq_trans with (I (2 ^ n) ⊗ I (2 ^ m) ⊗ (Vec 2 1 × (Vec 2 1) †) × (b_n x0 .* ∣ 0 ⟩_ (n) ⊗ v_n x0 ⊗ m0)).
+apply eq_trans with (I (2 ^ n) ⊗ I (2 ^ m) ⊗ (Base_vec 2 1 × (Base_vec 2 1) †) × (b_n x0 .* ∣ 0 ⟩_ (2^n) ⊗ v_n x0 ⊗ m0)).
 f_equal. repeat  rewrite kron_mixed_product. rewrite Heqm0. Msimpl.
 f_equal. f_equal.  rewrite Mmult_plus_distr_l;
 repeat rewrite Mscale_mult_dist_r.  repeat rewrite Mmult_assoc. 
-repeat rewrite <-Vec_qubit0. rewrite<- Vec_qubit1.
-assert((Vec 2 1) † × Vec 2 0=(Vec (2^1) 1) † × (Vec (2^1) 0)). reflexivity. rewrite H0.
-assert((Vec 2 1) † × Vec 2 1=(Vec (2^1) 1) † × (Vec (2^1) 1)). reflexivity. rewrite H1.
-rewrite Vec_inner_1. rewrite Vec_inner_0. unfold c_to_Vector1. Msimpl.  reflexivity.
+repeat rewrite <-base_qubit0. rewrite<- base_qubit1.
+assert((Base_vec 2 1) † × Base_vec 2 0=(Base_vec (2^1) 1) † × (Base_vec (2^1) 0)). reflexivity. rewrite H0.
+assert((Base_vec 2 1) † × Base_vec 2 1=(Base_vec (2^1) 1) † × (Base_vec (2^1) 1)). reflexivity. rewrite H1.
+rewrite base_inner_1. rewrite base_inner_0. unfold c_to_Vector1. Msimpl.  reflexivity.
 lia. simpl. lia. simpl. lia. simpl. lia. apply Hv_n. assert(0<2^n). apply pow_gt_0.
 auto_wf. 
 Qed.
@@ -774,9 +828,9 @@ Proof.
     pose (Qsys_to_Set_min_max (n+m) (n+m+1) ). destruct a0. lia.
 
       eapply rule_seq.
-    {eapply rule_conseq_l'. eapply (rule_assgn (BEq v ' ( 0))). apply Assn_true_F. simpl. unfold not.  apply (In_empty v). } 
+    {eapply rule_conseq_l'. eapply (rule_SAssgn (BEq v ' ( 0))). apply Assn_true_F. simpl. unfold not.  apply (In_empty v). } 
       eapply rule_conseq. 
-    {eapply (rule_while BTrue (QExp_s 0 (n+m+1) ((Vec (2^n) 0) ⊗ (x) ⊗ (Vec 2 1)))).
+    {eapply (rule_while BTrue (QExp_s 0 (n+m+1) ((Base_vec (2^n) 0) ⊗ (x) ⊗ (Base_vec 2 1)))).
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_PT. eapply rule_QInit. }  
         eapply rule_seq.
@@ -846,7 +900,7 @@ Proof.
       assert(2 ^ n * 2 ^ m= 2^(n+m)). type_sovle'. destruct H6.
       rewrite kron_Msum_distr_r.
       eapply rule_conseq_l with (P':=| UCtrl_v 0 n (n + m) (n + m + 1) 0 (n + m + 1) U_c
-      (big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (n) ⊗ v_n i ⊗ ∣ 0 ⟩_ (1))
+      (big_sum (fun i : nat => b_n i .* ∣ delt_n i ⟩_ (2^n) ⊗ v_n i ⊗ ∣ 0 ⟩_ (2))
         (2 ^ m)) >[ 0, n + m + 1]).
       apply implies_refl. rewrite simpl_Uc. eapply rule_seq.
      {apply rule_QUnit_One'. lia. }  rewrite simpl_QFT. eapply rule_seq.
@@ -881,10 +935,10 @@ econstructor.
 assert(Datatypes.length [1%R;0%R] =
 Datatypes.length
 [<{ true }> /\s <{ (v) ' = 0 }>;
-   (| ∣ 0 ⟩_ (n) ⊗ x ⊗ Vec 2 1 >[ 0, n + m + 1]) /\s
+   (| ∣ 0 ⟩_ (2^n) ⊗ x ⊗ Base_vec 2 1 >[ 0, n + m + 1]) /\s
    <{ ~ (v) ' = 0 }>] ). reflexivity.
 apply H7. simpl. 
-remember ((SQuan (QExp_s 0 ((n+m)+1) (@kron (2^n*2^m) 1 2 1 (@kron (2^n) (S O) (2^m) (S O) (∣ 0 ⟩_ (n)) x) (Vec 2 1))))).
+remember ((SQuan (QExp_s 0 ((n+m)+1) (@kron (2^n*2^m) 1 2 1 (@kron (2^n) (S O) (2^m) (S O) (∣ 0 ⟩_ (2^n)) x) (Base_vec 2 1))))).
 assert([(1%R, <{ true }> /\s <{ (v) ' = 0 }>);
 (0%R, s0 /\s <{ ~ (v) ' = 0 }>)]=
 swap_list [(0%R, s0 /\s <{ ~ (v) ' = 0 }>); (1%R, <{ true }> /\s <{ (v) ' = 0 }>)] 0 ).
@@ -895,10 +949,10 @@ rewrite sat_Assert_to_State. assumption. }
     assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H6. 
     assert(2^(n+m+1-(n+m))=2). assert(2^1=2). simpl. reflexivity.
     rewrite<- H6. rewrite H6 at 1. f_equal. lia. destruct H6.
-    implies_trans_solve 0 rule_Separ'. lia. apply pure_vector_vec. type_sovle. simpl. lia. 
+    implies_trans_solve 0 rule_Separ'. lia. apply Pure_State_Vector_base. type_sovle. simpl. lia. 
     type_sovle.
     assert(2 ^ n * 2 ^ m=2^(n+m)). type_sovle'. destruct H6. 
-    apply ParDensityO.pure_state_vector_kron. apply pure_vector_vec. apply pow_gt_0.
+    apply pure_state_vector_kron. apply Pure_State_Vector_base. apply pow_gt_0.
      apply norm_1_pure_vec; try apply Hx.
    
 
@@ -914,7 +968,7 @@ rewrite sat_Assert_to_State. assumption. }
     repeat rewrite add_sub_eq. simpl. reflexivity. destruct H6.
     implies_trans_solve 0  rule_Separ'. lia. 
     rewrite add_sub_eq.  apply norm_1_pure_vec; try apply Hx.
-   apply pure_vector_vec. apply pow_gt_0.
+   apply Pure_State_Vector_base. apply pow_gt_0.
     implies_trans_solve 0 rule_odotT. 
     implies_trans_solve 0 rule_OdotO'. 
     implies_trans_solve 0 rule_ConjC.   

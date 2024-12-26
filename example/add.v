@@ -16,23 +16,160 @@ Require Import Coq.Arith.Peano_dec.
 
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
 From Quan Require Import QIMP_L.
 From Quan Require Import QAssert.
-From Quan Require Import Par_trace.
+From Quan Require Import Reduced.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
-From Quan Require Import QRule_QFrame.
+From Quan Require Import QFrame.
 Import Basic. Import Ceval_Linear.
+
+
+
+Lemma Mmult0H: ⟨0∣ × ∣+⟩= / √ 2 .* (I 1).
+Proof. solve_matrix. 
+Qed.
+
+Lemma Mmult1H: ⟨1∣ × ∣+⟩= / √ 2 .* (I 1).
+Proof. solve_matrix. 
+Qed.
+
+Lemma MmultH0 : (hadamard) × ∣0⟩ = ∣+⟩. Proof. solve_matrix. Qed.
+Lemma H_adjoint: adjoint (hadamard) =hadamard.
+Proof. solve_matrix. Qed.
+
+Local Open Scope C_scope.
+
+Lemma MmultH_xplus : adjoint (hadamard) × ∣+⟩ = ∣0⟩. Proof.
+assert((hadamard) × ∣0⟩ = ∣+⟩). rewrite MmultH0. reflexivity.
+symmetry in H. rewrite H. rewrite <- Mmult_assoc.
+assert((hadamard) † × hadamard = I 2).
+apply H_unitary. rewrite H0. rewrite Mmult_1_l.
+reflexivity. apply WF_qubit0. Qed. 
+
+#[export] Hint Rewrite @Mmult0H @Mmult1H @kron_1_r @MmultH0 @MmultH_xplus using (auto 100 with wf_db): M_db.
+
+Lemma Norm0: (norm ∣0⟩)=1 %R.
+Proof. unfold norm. unfold qubit0. simpl.
+      rewrite Rmult_1_l. repeat rewrite Rmult_0_r.
+      repeat rewrite Rplus_0_l. repeat rewrite Rminus_0_r.
+      rewrite Rplus_0_r. simpl.
+      rewrite sqrt_1.
+     reflexivity.
+Qed. 
+
+
+Lemma Norm1: (norm ∣1⟩)=1 %R.
+Proof. unfold norm. unfold qubit0. simpl.
+      rewrite Rmult_1_l. repeat rewrite Rmult_0_r.
+      repeat rewrite Rplus_0_l. repeat rewrite Rminus_0_r.
+      rewrite Rplus_0_l. simpl.
+      rewrite sqrt_1.
+     reflexivity.
+Qed. 
+
+
+Local Open Scope R_scope.
+Lemma Norm_plus01: 
+norm( ∣0⟩ .+  ∣1⟩)= √ 2.
+Proof. intros. unfold norm. repeat rewrite rewrite_norm.
+unfold Mplus. simpl.
+autorewrite with R_db.
+repeat rewrite Cmod_0. repeat rewrite Rmult_0_l.
+repeat  rewrite Rplus_0_r.  repeat rewrite Cmod_1. repeat rewrite Rmult_1_l.
+repeat rewrite Rplus_0_l. repeat rewrite sqrt_1.
+repeat rewrite Cplus_0_l. repeat rewrite Cplus_0_r.
+repeat rewrite Cmod_1. 
+ rewrite Rmult_1_l.
+reflexivity.
+Qed.
+
+
+Lemma NormH: (norm ∣+⟩)=1 %R.
+Proof. unfold "∣+⟩". rewrite norm_scale.
+      rewrite Norm_plus01.
+      unfold Cmod. simpl.
+       autorewrite with R_db.
+       rewrite <-Rdiv_unfold.
+       repeat rewrite sqrt2_div2.
+       rewrite Rdiv_unfold. 
+       rewrite <-sqrt2_inv.
+       autorewrite with R_db.
+       rewrite sqrt2_inv_sqrt2.
+       reflexivity.
+Qed.
+
+
+Local Open Scope R_scope.
+Lemma big_sum_product_R : forall m n (f g:nat->R), 
+  n <> O ->
+  big_sum f m * big_sum g n = big_sum (fun x => f (x / n)%nat * g (x mod n)%nat) (m * n). 
+Proof. intros. 
+induction m; simpl. 
++ rewrite Rmult_0_l; reflexivity. 
++ rewrite Rmult_plus_distr_r.
+  rewrite IHm. clear IHm.
+  pose (big_sum_mult_l (f m) ( g )). rewrite e.    
+  remember ((fun x : nat => f (x / n)%nat * g (x mod n)%nat)) as h.
+  replace (big_sum (fun x : nat => f m * g x) n) with
+          (big_sum (fun x : nat => h ((m * n) + x)%nat) n). 
+  2:{
+    subst.
+    apply big_sum_eq_bounded.
+    intros x Hx.
+    rewrite Nat.div_add_l by assumption.
+    rewrite Nat.div_small; trivial.
+    rewrite Nat.add_0_r.
+    rewrite Nat.add_mod by assumption.
+    rewrite Nat.mod_mul by assumption.
+    rewrite Nat.add_0_l.
+    repeat rewrite Nat.mod_small; trivial. }
+    rewrite Nat.add_comm.
+    pose (big_sum_sum  (m*n) n h). rewrite e0.
+    reflexivity. 
+Qed.
+
+Lemma big_sum_ge_0' : forall f n, (forall x, 0 <= (f x)) -> (0 <= (big_sum f n))%R.
+Proof.
+  intros f n H.
+  induction n.
+  - simpl. lra. 
+  - simpl in *.
+    rewrite <- Rplus_0_r at 1.
+    apply Rplus_le_compat; easy.
+Qed.
+
+
+Lemma norm_kron{m n:nat}:forall (M: Vector  m) (N : Vector  n),
+norm (kron M N) = (norm M) * norm (N).
+Proof.
+intros. unfold norm. repeat rewrite rewrite_norm.
+unfold kron. simpl Nat.div. rewrite Nat.mod_1_r.
+rewrite <-sqrt_mult. f_equal. destruct (Nat.eq_dec n 0).
+subst. rewrite Nat.mul_0_r. simpl. rewrite Rmult_0_r. reflexivity.
+destruct (Nat.eq_dec m 0). 
+subst. rewrite Nat.mul_0_l. simpl. rewrite Rmult_0_l. reflexivity.
+symmetry.
+rewrite big_sum_product_R.  apply big_sum_eq.
+apply functional_extensionality. intros.     
+repeat rewrite <-Rsqr_pow2.
+rewrite <-Rsqr_mult. rewrite Cmod_mult. reflexivity. assumption.
+apply big_sum_ge_0'. intros. apply pow2_ge_0. 
+apply big_sum_ge_0'. intros. apply pow2_ge_0. 
+Qed.
+#[export] Hint Rewrite @kron_mixed_product @Norm0 @Norm1 @NormH @norm_kron  @MmultH_xplus using (auto 100 with wf_db): M_db.
+
+
+(*---------------------------------------addM-----------------------------------------------*)
+
 Local Open Scope com_scope.
 Local Open Scope rule_scope.
 Local Open Scope assert_scope.
 Local Open Scope nat_scope.
-
-
 
 Definition v1: nat := 0.
 Definition v2: nat := 1. 
@@ -112,25 +249,6 @@ H: False |-_ => destruct H end; simpl ; intuition.
   [apply rule_OMerg; lra| ] ] ].  
 
 
-
-
-
-
-
-(* 
-
-Lemma big_pOplus'_to_pOplus:forall n (p_n : nat -> R) F_n ,
-( forall i, i< n -> (0< p_n i)%R)->
-big_pOplus' p_n F_n n (big_pOplus p_n F_n n) .
-Proof. induction n; intros. simpl. econstructor. 
-    simpl. apply big_pOplus_cons. 
-    apply Rgt_neq_0. apply H. lia.
-    apply IHn. intros. apply H. lia.  
-Qed. *)
-
-
-
-
 Lemma IZR_INR_0:IZR 0= INR 0. Proof. rewrite INR_IZR_INZ. f_equal. Qed .
 
 Ltac implies_trans_solve i y:=
@@ -150,7 +268,7 @@ Proof.
 (*QInit*)
 eapply rule_seq. eapply rule_QInit. simpl sub.  
 eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
-eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (1) >[ 1, 2]).
+eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (2) >[ 1, 2]).
 unfold Considered_Formula_F_c.
 simpl. intuition. simpl.  
 split. eapply rule_QInit. split. apply inter_empty. left.
@@ -182,9 +300,9 @@ eapply rule_conseq_l. eapply rule_odotT.
 eapply rule_conseq_l. eapply rule_Separ.
 
 (*QMeas_1*)
-assert (forall i:nat,(((@Mmult 4 4 1  (@kron 2 2 2 2 (I 1 ⊗ (Vec 2 i × (Vec 2 i) †))
+assert (forall i:nat,(((@Mmult 4 4 1  (@kron 2 2 2 2 (I 1 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †))
          (I (2))) (∣+⟩ ⊗ ∣+⟩))) ) =
-         (I 1 ⊗ (Vec 2 i × (Vec 2 i) †) ⊗ I 2 × (∣+⟩ ⊗ ∣+⟩))). 
+         (I 1 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †) ⊗ I 2 × (∣+⟩ ⊗ ∣+⟩))). 
 reflexivity. 
  
 eapply rule_seq. 
@@ -244,9 +362,9 @@ destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
 unfold U_v. simpl.
-assert (forall i:nat,( ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (Vec 2 i × (Vec 2 i) †))
+assert (forall i:nat,( ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (∣ i ⟩_ (2)  × (∣ i ⟩_ (2)) †))
            (I (1))) (∣0⟩ ⊗ ∣+⟩))) ) =
-           (I 2 ⊗ (Vec 2 i × (Vec 2 i) †) ⊗ I 1 × (∣0⟩ ⊗ ∣+⟩))).
+           (I 2 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †) ⊗ I 1 × (∣0⟩ ⊗ ∣+⟩))).
 reflexivity. 
  rewrite (H0 0). rewrite (H0 1). Msimpl.
 assert ((
@@ -301,9 +419,9 @@ eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
 unfold U_v. simpl.
 assert (forall i:nat,(
-  ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (Vec 2 i × (Vec 2 i) †))
+  ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †))
            (I (1))) (∣1⟩ ⊗ ∣+⟩))) ) =
-           (I 2 ⊗ (Vec 2 i × (Vec 2 i) †) ⊗ I 1 × (∣1⟩ ⊗ ∣+⟩))).
+           (I 2 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †) ⊗ I 1 × (∣1⟩ ⊗ ∣+⟩))).
    reflexivity. 
  rewrite (H0 0). rewrite (H0 1). Msimpl.
 assert ((
@@ -360,7 +478,7 @@ econstructor; try apply Forall_two.Forall_two_cons;
 try apply Forall_two.Forall_two_cons;
 try apply Forall_two.Forall_two_cons; try apply Forall_two.Forall_two_nil;
 try eapply rule_conseq_l';
-try eapply rule_assgn;
+try eapply rule_SAssgn;
 implies_trans_solve 1 Assn_comm;
 implies_trans_solve 1 Assn_conj_F; simpl; try unfold not; try apply In_empty;
 implies_trans_solve 1 rule_ConjC;

@@ -8,9 +8,9 @@ From Quan Require Import QuantumLib.Prelim.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
-From Quan Require Import Par_trace.
+From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Linear.
 From Quan Require Import QAssert.
@@ -18,7 +18,7 @@ From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
-From Quan Require Import QRule_QFrame.
+From Quan Require Import QFrame.
 From Quan Require Import Forall_two.
 From Quan Require Import add.
 From Quan Require Import HHL.
@@ -33,14 +33,12 @@ Local Open Scope rule_scope.
 
 Require Import Arith.
 
-
-
 Module Type Param.
 Parameter x:nat.
 Parameter N:nat. 
 Parameter r:nat. 
-Hypothesis Hr: x ^ r mod N =1 /\ (forall j, x ^ j mod N =1 -> r<=j).
-Hypothesis H: r>0 /\ 2 <= x <= N-1.
+Hypothesis Hr: r > 0 /\ x ^ r mod N =1 /\ (forall j, x ^ j mod N =1 -> r<=j).
+Hypothesis H: (Nat.gcd x N =1 ) /\ 2 <= x <= N-1.
 Definition z:nat := 0.
 End Param.
 
@@ -60,20 +58,20 @@ Parameter QFT: Square (2^t).
 Parameter delt_n:nat->nat.
 
 
-Hypothesis HtL: and (t>0)%nat (L>0)%nat.
+Hypothesis HtL:  (t>0)%nat /\ (L>0)%nat /\ (2 ^ t >= r).
 Hypothesis HNL:  (N < (2^L))%nat. 
-Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ L) = (∣ 1 ⟩_ L)).
-Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) (x * j mod N))) /\ 
-                               (forall j:nat, j>=N /\ j<(2^L)-> U × (Vec (2 ^ L) j) = (Vec (2 ^ L) j)).
-Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ t) =
-/ √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ t)) (2 ^ t)).
+Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ (2^L)) = (∣ 1 ⟩_ (2^L))).
+Hypothesis HU: WF_Unitary U /\ (forall j:nat, j< N -> U × (Base_vec (2 ^ L) j) = (Base_vec (2 ^ L) (x * j mod N))) /\ 
+                               (forall j:nat, j>=N /\ j<(2^L)-> U × (Base_vec (2 ^ L) j) = (Base_vec (2 ^ L) j)).
+Hypothesis HQFT: WF_Unitary QFT /\ forall k:nat, QFT × (∣ k ⟩_ (2^t)) =
+/ √ 2 ^ t .* (big_sum (fun j : nat => (cos (((2 * PI)/(2^t)) * j * k)%R,  sin (((2 * PI)/(2^t)) * j * k)%R) .*  (∣ j ⟩_ (2^t))) (2 ^ t)).
 Hypothesis (Ht: forall s:nat,  s < r-> exists j, j < (2^t) /\ ((( s / r) * 2^t)%R =  j)).
 
 
 Definition  H := p.H .
 Definition  Hr := p.Hr .
 Definition  U_f (i:nat):= exp_U U i.
-Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s /r) * k)%R,  sin (- ((2 * PI)) * ( s / r) * k)%R) .*  Vec (2 ^ L) (x ^ k mod N)) (r) ) .
+Definition  Us (s:nat):=  / √ r .* (big_sum (fun k:nat=> (cos (- ((2 * PI)) * (s /r) * k)%R,  sin (- ((2 * PI)) * ( s / r) * k)%R) .*  Base_vec (2 ^ L) (x ^ k mod N)) (r) ) .
 Definition  b:nat := 1.
 Definition  z':nat:=2 .
 Definition  b' := (AMod (APow x z ') (N)) .
@@ -157,7 +155,7 @@ Qed.
 Lemma  CF_out_divide: forall s,
 (s<r)%nat->
 CFq (CF_bound (2^t)) (s*2^t /r ) (2^t) =  (r / (Nat.gcd s r))%nat .
-Proof. intros. pose H. apply Legendre_rational_bound with (s/ (Nat.gcd s r))%nat.
+Proof. intros. pose Hr. apply Legendre_rational_bound with (s/ (Nat.gcd s r))%nat.
        apply Nat.div_str_pos. split.  
        assert(Nat.gcd s r <> 0)%nat. intro. 
        apply Nat.gcd_eq_0 in H1. destruct H1. unfold r in *. lia.
@@ -206,9 +204,9 @@ Proof. intros. pose H. apply Legendre_rational_bound with (s/ (Nat.gcd s r))%nat
 Qed.
 Local Open Scope nat_scope.
 Lemma HU_s: 
-  / √ r .*  (big_sum (fun s:nat=> Us s) (r) ) =(∣ 1 ⟩_ (L)).
-Proof. pose H. assert(0<r)%R. rewrite IZR_INR_0. 
-      apply lt_INR. apply a. 
+  / √ r .*  (big_sum (fun s:nat=> Us s) (r) ) =(∣ 1 ⟩_ (2^L)).
+Proof. pose H. pose Hr. assert(0<r)%R. rewrite IZR_INR_0. 
+      apply lt_INR. apply a0. 
       assert(0<x)%R. rewrite IZR_INR_0. 
       apply lt_INR. unfold x. lia. pose Hr.  
       unfold Us. rewrite Mscale_Msum_distr_r. rewrite Mscale_assoc. 
@@ -216,8 +214,8 @@ Proof. pose H. assert(0<r)%R. rewrite IZR_INR_0.
        rewrite (big_sum_eq_bounded _ ((fun i : nat =>
        (@big_sum C _ (fun j : nat =>
           (cos (- (2 * PI) * (j / r) * i), sin (- (2 * PI) * (j / r) * i))) r)
-          .* ∣ x ^ i mod N ⟩_ (L)))).
-        rewrite (big_sum_unique  (r .* ∣ x ^ r mod N ⟩_ (L) )).
+          .* ∣ x ^ i mod N ⟩_ (2^L)))).
+        rewrite (big_sum_unique  (r .* ∣ x ^ r mod N ⟩_ (2^L) )).
         repeat rewrite Mscale_assoc.
         assert(√ r<>0).  
         apply sqrt_neq_0_compat; try assumption.
@@ -225,17 +223,17 @@ Proof. pose H. assert(0<r)%R. rewrite IZR_INR_0.
         rewrite RtoC_mult. 
         rewrite <-Rinv_mult_distr_depr; try assumption.
         rewrite sqrt_sqrt. rewrite RtoC_mult. 
-        rewrite Rinv_l. Msimpl. destruct a0. unfold x.
-        unfold r. unfold N.    rewrite H3.
+        rewrite Rinv_l. Msimpl. destruct a0. destruct H4. unfold x.
+        unfold r. unfold N.    rewrite H4.
         reflexivity. apply Rgt_neq_0. assumption. lra. 
-        exists 0. split. apply H. 
+        exists 0. split. apply Hr. 
         split. f_equal. 
         rewrite (@big_sum_eq_bounded  C C_is_monoid _ (fun j=>1%R)).  
         rewrite big_sum_constant. apply times_1_n. 
         intros. rewrite Rmult_0_r. rewrite cos_0. 
         rewrite sin_0. reflexivity. 
-        destruct a0. unfold x.
-        unfold r. unfold N.  rewrite H2. simpl. 
+        destruct a0. destruct H3. unfold x.
+        unfold r. unfold N.  rewrite H3. simpl. 
         rewrite Nat.mod_small. reflexivity. unfold N. lia.  
         intros. 
         rewrite (@big_sum_eq_bounded  C C_is_monoid 
@@ -301,9 +299,9 @@ Qed.
 
 
 Lemma  simpl_H_Uplus: 
-/ √ 2 ^ t .* big_sum (fun z0 : nat => ∣ z0 ⟩_ (t)) (2 ^ t) ⊗ ∣ 1 ⟩_ (L)
-= / √ (r *2^t) .*  (big_sum (fun s:nat=>(big_sum (fun j=>(Vec (2^t) j)) (2^t)) ⊗ (Us s)) (r) ).
-Proof. intros.   rewrite<- HU_s. pose H.  
+/ √ 2 ^ t .* big_sum (fun z0 : nat => ∣ z0 ⟩_ (2^t)) (2 ^ t) ⊗ ∣ 1 ⟩_ (2^L)
+= / √ (r *2^t) .*  (big_sum (fun s:nat=>(big_sum (fun j=>(Base_vec (2^t) j)) (2^t)) ⊗ (Us s)) (r) ).
+Proof. intros.   rewrite<- HU_s. pose Hr.  
    rewrite Mscale_kron_dist_l.
    rewrite Mscale_kron_dist_r.
    rewrite Mscale_assoc.
@@ -323,7 +321,7 @@ Qed.
 
 
 Lemma WF_Us: forall s, WF_Matrix (Us s) .
-Proof.  unfold Us. intros.  pose HNL. pose (H). assert(forall i,  x^i mod N < 2^(L)).
+Proof.  unfold Us. intros.  pose HNL. pose (H). assert(forall i,  x^i mod N < (2^L)).
         intros. apply Nat.lt_trans with (N).
         apply  Nat.mod_upper_bound. unfold N.  lia.  lia. auto_wf.    
 Qed.
@@ -345,21 +343,21 @@ Qed.
 
 Lemma simpl_U_Us: forall s,
 U × Us s = (cos ((2*PI )*(s/r )), sin ((2*PI) *(s/r))) .* Us s.
-Proof. intros. pose HU. pose HNL. pose H. unfold Us. rewrite Mscale_mult_dist_r.
+Proof. intros. pose HU. pose HNL. pose Hr. unfold Us. rewrite Mscale_mult_dist_r.
        rewrite Mscale_assoc. rewrite Cmult_comm.
        rewrite <-Mscale_assoc. f_equal. 
        rewrite Mmult_Msum_distr_l. 
        rewrite <-Mscale_Msum_distr_r.
        rewrite (big_sum_eq_bounded _ 
-       ((fun i : nat =>  ((cos (- (2 * PI ) * (s / r) * (i))%R, sin (- (2 * PI ) * (s / r) * (i))%R)) .* ∣ x ^ (i+1) mod N ⟩_ (L)))).
+       ((fun i : nat =>  ((cos (- (2 * PI ) * (s / r) * (i))%R, sin (- (2 * PI ) * (s / r) * (i))%R)) .* ∣ x ^ (i+1) mod N ⟩_ (2^L)))).
        rewrite (big_sum_eq_bounded ((fun i : nat =>
        (cos (2 * PI * (s / r)), sin (2 * PI * (s / r))) .* ((cos (- (2 * PI) * (s / r) * i),
-            sin (- (2 * PI) * (s / r) * i)).* ∣ x ^ i mod N ⟩_ (L)))) 
-       ((fun i : nat =>  ((cos (-(2 * PI ) * (s / r) * (i-1%nat)), sin (-(2 * PI) * (s / r) * (i-1%nat))) .* ∣ x ^ i mod N ⟩_ (L))))).
+            sin (- (2 * PI) * (s / r) * i)).* ∣ x ^ i mod N ⟩_ (2^L)))) 
+       ((fun i : nat =>  ((cos (-(2 * PI ) * (s / r) * (i-1%nat)), sin (-(2 * PI) * (s / r) * (i-1%nat))) .* ∣ x ^ i mod N ⟩_ (2^L))))).
        rewrite (big_sum_move_r ((fun i : nat =>
        (cos (- (2 * PI) * (s / r) * (i - 1%nat)),
         sin (- (2 * PI) * (s / r) * (i - 1%nat)))
-       .* ∣ x ^ i mod N ⟩_ (L)))).  apply big_sum_eq_bounded.
+       .* ∣ x ^ i mod N ⟩_ (2^L)))).  apply big_sum_eq_bounded.
        intros.    rewrite plus_INR. rewrite Rminus_unfold.
        rewrite Rplus_assoc. rewrite Rplus_opp_r. rewrite Rplus_0_r.
        reflexivity. 
@@ -375,8 +373,8 @@ Proof. intros. pose HU. pose HNL. pose H. unfold Us. rewrite Mscale_mult_dist_r.
        rewrite cos_period. rewrite sin_period. 
        rewrite cos_0. rewrite sin_0. rewrite Ropp_0. reflexivity.
        apply Rgt_neq_0. rewrite IZR_INR_0. apply lt_INR. unfold r.
-       lia.  pose Hr.  destruct a1. unfold x. unfold r. unfold N.
-       simpl. rewrite H0. rewrite Nat.mod_small. reflexivity. lia.     
+       lia.   destruct a0 as [ a1]. destruct H0.  unfold x. unfold r. unfold N.
+       simpl. rewrite H0. rewrite Nat.mod_small. reflexivity. pose H. lia.     
        intros. rewrite Mscale_assoc. f_equal. 
        rewrite<-cons_sin_plus_mult.  f_equal; f_equal;
        repeat rewrite <-Ropp_mult_distr_l;
@@ -392,8 +390,8 @@ Proof. intros. pose HU. pose HNL. pose H. unfold Us. rewrite Mscale_mult_dist_r.
        rewrite Nat.mul_comm.
        rewrite Nat.mul_mod_idemp_l; try unfold N; try lia. 
        f_equal. f_equal. rewrite Nat.pow_add_r. simpl.
-       rewrite Nat.mul_1_r. reflexivity.  
-       apply Nat.mod_upper_bound. unfold N. lia.   
+       rewrite Nat.mul_1_r. reflexivity. pose H. lia.   
+       apply Nat.mod_upper_bound. unfold N. pose H. lia.   
 Qed.
 
 
@@ -440,9 +438,9 @@ Ltac type_sovle:=
 Lemma U_f': forall (v:Vector (2^t *(2^L))) , 
 UCtrl_v 0 t t (t + L) 0 (t + L) U_f v =
 Mmult (big_sum (fun i : nat =>
- (∣ i ⟩_ (t) × ⟨ i ∣_ (t)) ⊗ (U_f i)) (2 ^ t)) v.
+ (∣ i ⟩_ (2^t) × ⟨ i ∣_ (2^t)) ⊗ (U_f i)) (2 ^ t)) v.
 Proof.  intros. unfold UCtrl_v. pose HU. type_sovle.
-apply Logic.eq_trans with (∣ x0 ⟩_ (t) × ⟨ x0 ∣_ (t) ⊗ I (2 ^ L)
+apply Logic.eq_trans with (∣ x0 ⟩_ (2^t) × ⟨ x0 ∣_ (2^t) ⊗ I (2 ^ L)
 × (I (2 ^ t) ⊗  U_f x0)). f_equal; type_sovle'; try lia. 
 rewrite kron_mixed_product; Msimpl; try reflexivity.
 unfold U_f. apply WF_expU. apply a. 
@@ -452,10 +450,10 @@ Qed.
 Lemma  simpl_Uf: 
 UCtrl_v 0 t t (t + L) 0 (t + L) U_f
 ( / √ (r * 2 ^ t)
- .* big_sum (fun s : nat => big_sum (fun j : nat => ∣ j ⟩_ (t)) (2 ^ t) ⊗ Us s) r) =
+ .* big_sum (fun s : nat => big_sum (fun j : nat => ∣ j ⟩_ (2^t)) (2 ^ t) ⊗ Us s) r) =
 ( / √ (r) .* big_sum (fun s : nat => (/ √ (2 ^ t)).*  big_sum (fun j : nat =>(cos ((2*PI/2^t)* j *(s/r * 2^t)), 
-sin ((2*PI/2^t)* j *(s/r * 2^t))) .* ∣ j ⟩_ (t)) (2 ^ t)⊗ Us s) r).
-Proof. intros. rewrite U_f'. pose H.  
+sin ((2*PI/2^t)* j *(s/r * 2^t))) .* ∣ j ⟩_ (2^t)) (2 ^ t)⊗ Us s) r).
+Proof. intros. rewrite U_f'. pose Hr.  
 rewrite Mscale_mult_dist_r.
 rewrite Mmult_Msum_distr_l.  rewrite<- RtoC_inv;
 try apply sqrt_neq_0_compat; try apply Rmult_gt_0_compat; 
@@ -477,16 +475,16 @@ apply big_sum_unique .
 exists x1. split. assumption. 
 split. 
 apply Logic.eq_trans with ((
-(∣ x1 ⟩_ (t) × ⟨ x1 ∣_ (t) × ∣ x1 ⟩_ (t)) ⊗  ((cos ((2*PI/2^t)* x1 *(x0/r * 2^t)), sin ((2*PI/2^t)* x1 *(x0/r * 2^t))) .* Us x0))).
+(∣ x1 ⟩_ (2^t) × ⟨ x1 ∣_ (2^t) × ∣ x1 ⟩_ (2^t)) ⊗  ((cos ((2*PI/2^t)* x1 *(x0/r * 2^t)), sin ((2*PI/2^t)* x1 *(x0/r * 2^t))) .* Us x0))).
 rewrite kron_mixed_product. f_equal.
 rewrite simpl_expU. f_equal. 
-rewrite Mmult_assoc. rewrite Vec_inner_1. unfold c_to_Vector1.
+rewrite Mmult_assoc. rewrite base_inner_1. unfold c_to_Vector1.
 Msimpl. rewrite Mscale_kron_dist_r.
 rewrite Mscale_kron_dist_l.
 reflexivity. assumption.  
 intros.
 rewrite kron_mixed_product.
-rewrite Mmult_assoc. rewrite Vec_inner_0. unfold  c_to_Vector1.
+rewrite Mmult_assoc. rewrite base_inner_0. unfold  c_to_Vector1.
 Msimpl. reflexivity.   intuition. assumption. assumption.
 assert(0</r)%R. apply Rinv_0_lt_compat. rewrite IZR_INR_0. 
 apply lt_INR. apply a. lra.
@@ -507,10 +505,10 @@ Lemma  simpl_QFT':
 @U_v t (t+L) 0 t 0 (t + L) (QFT) †
 (/ √ r .* big_sum (fun s : nat =>  / √ (2 ^ t) .* big_sum  (fun j : nat =>
              (cos (2 * PI / 2 ^ t * j * (s / r * 2 ^ t)), sin (2 * PI / 2 ^ t * j * (s / r * 2 ^ t))) 
-             .* ∣ j ⟩_ (t)) (2 ^ t) ⊗ Us s) r)
- =( / √ r .* big_sum  (fun s : nat =>   (Vec (2^t) (s * (2^t) / r )) ⊗  Us s) r).
+             .* ∣ j ⟩_ (2^t)) (2 ^ t) ⊗ Us s) r)
+ =( / √ r .* big_sum  (fun s : nat =>   (Base_vec (2^t) (s * (2^t) / r )) ⊗  Us s) r).
 Proof. 
-unfold U_v. type_sovle. pose H.
+unfold U_v. type_sovle. pose Hr.
 assert(2^t=1* 2^t). lia. destruct H0.
 assert( 2^t * 2^L= 2^(t+L)). type_sovle'. destruct H0.
 rewrite Mscale_mult_dist_r. f_equal.
@@ -519,7 +517,7 @@ apply big_sum_eq_bounded.  intros.
 rewrite kron_mixed_product. Msimpl.
 f_equal. pose HQFT. 
 apply unitary_trans. intuition.
-apply WF_vec. apply Nat.div_lt_upper_bound. unfold r. lia.
+apply WF_base. apply Nat.div_lt_upper_bound. unfold r. lia.
 apply Nat.mul_lt_mono_pos_r. apply pow_gt_0.  assumption. 
 destruct a0. rewrite H2.  
 f_equal. repeat rewrite RtoC_pow. repeat rewrite <-RtoC_inv. 
@@ -545,46 +543,6 @@ apply WF_adjoint. apply HQFT.
 Qed.
 
 
-Lemma Had_N: forall n:nat, 
-n ⨂ hadamard × ∣ 0 ⟩_ (n) = (/ (√ 2) ^ n)%C .* big_sum (fun z=> ∣ z ⟩_ (n)) (2^n).
-Proof. intros. 
-rewrite n_kron. apply Logic.eq_trans with (n ⨂ hadamard × n ⨂ ∣0⟩).
-f_equal. rewrite Nat.pow_1_l. reflexivity.
-rewrite kron_n_mult. rewrite MmultH0. 
-unfold xbasis_plus. 
-rewrite Mscale_kron_n_distr_r. 
-rewrite <-RtoC_inv. rewrite RtoC_pow.
-rewrite <-Rinv_pow_depr. 
-f_equal. apply  Nat.pow_1_l.  rewrite RtoC_inv. f_equal.
-rewrite RtoC_pow.
-f_equal. apply Rgt_neq_0. 
-apply pow_lt.   apply sqrt_lt_R0. lra.
-
-induction n.  simpl. rewrite Mplus_0_l.
-rewrite Vec_I. reflexivity.
- rewrite kron_n_assoc.  rewrite IHn.
-simpl. rewrite Nat.add_0_r.
-rewrite big_sum_sum. 
-rewrite kron_plus_distr_r.
-unfold Gplus.  simpl.
-f_equal. lia.   rewrite Nat.pow_1_l. simpl. reflexivity. 
-apply Logic.eq_trans with (∣0⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (n) ) (2 ^ n)).
-f_equal. apply Nat.pow_1_l.
-rewrite kron_Msum_distr_l.
-apply big_sum_eq_bounded. intros.
-rewrite <-Vec_qubit0.
-rewrite qubit0_Vec_kron. reflexivity. assumption.
-apply Logic.eq_trans with (∣1⟩ ⊗ big_sum (fun z : nat => ∣ z ⟩_ (n) ) (2 ^ n) ).
-f_equal. apply Nat.pow_1_l.
-rewrite kron_Msum_distr_l.
-apply big_sum_eq_bounded. intros.
-rewrite <-Vec_qubit1.
-rewrite qubit1_Vec_kron. rewrite (Nat.add_comm x0). reflexivity. assumption.
-auto_wf. apply sqrt_neq_0_compat. lra. 
-apply sqrt_neq_0_compat. lra. 
-Qed.
-
-
 Ltac seman_sovle:=
   unfold assert_implies;
   intros; 
@@ -607,46 +565,6 @@ Ltac seman_sovle:=
   end;try repeat match goal with 
   H: _ |- Pure_eval (?P /\p ?Q) ?st => try split end;
   try assumption.
-
-
-
-
-
-
-
-
-
-
-(* 
-Lemma big_Oplus_sat'{s e:nat}: forall n (F_n:nat-> State_formula) (mu: dstate s e),
-sat_Assert mu (big_Oplus F_n n) ->
-(exists (p_n:nat-> R) , sat_Assert mu (big_pOplus p_n F_n n)).
-Proof. intros.  inversion_clear H0.  
-      exists (fun i=> nth  i p_n (1%R)). 
-
-      rewrite big_pOplus_get_pro in *.
-      assert( n= length mu_n0). 
-      rewrite <-(fun_to_list_length  p_n n). eapply big_dapp'_length. apply H1.
-      exists mu'.  split. 
-      rewrite H0.
-      rewrite n_th_fun_to_list_inv. rewrite <-H0. assumption. 
-       split. assumption.
-      intros. rewrite H0 in H4.  
-      eapply (Forall_two_nth _ mu_n0  (big_pOplus p_n F_n n) (d_empty s e) ((1%R, SPure (PBexp <{BTrue}>)))) in H3; try apply H4.
-      destruct H3. pose(H6 i H4).
-      rewrite fst_nth_big_pOplus in a; try lia.  
-      rewrite snd_nth_big_pOplus in a;try lia.
-      apply a. assumption.
-Qed. *)
-
-
-
-
-(* Fixpoint  list_to_fun{A:Type} (mu: list A) (default: A):  nat-> A:= 
-  match mu with 
-  |[]=> (fun i:nat => default)
-  |a::mu=> (fun i:nat => if i=?0 then a else ((list_to_fun mu default) i))
-  end. *)
 
 
 
@@ -833,7 +751,7 @@ Qed. *)
 
 Lemma s_r_t_relation: forall i, 
 i< r -> i*(2^t) /r < (2^t).
-Proof. intros. pose H.  
+Proof. intros. pose Hr.  
 apply Nat.div_lt_upper_bound. unfold r. lia.
 apply Nat.mul_lt_mono_pos_r. apply pow_gt_0.
 assumption.   
@@ -842,7 +760,7 @@ Qed.
 Lemma i_j_le: forall i j, 
 i< r-> j<r->
 i< j -> i*(2^t) /r < j*(2^t) /r.
-Proof. intros. apply INR_lt. pose Ht.  pose H.
+Proof. intros. apply INR_lt. pose Ht.  pose Hr.
 pose (e  i H0). pose (e j H1). 
 destruct e0. destruct e1. 
 unfold Rdiv in *. rewrite (Rmult_comm  _ (/r)) in H3.
@@ -873,7 +791,7 @@ i<> j -> i*(2^t) /r <> j*(2^t) /r.
 Proof. intros. intro. 
 assert(INR (i * 2 ^ t / r) = INR (j * 2 ^ t / r )).
 rewrite H3. reflexivity. 
-pose Ht.  pose H.
+pose Ht.  pose Hr.
 pose (e  i H0). pose (e j H1). 
 destruct e0. destruct e1. 
 unfold Rdiv in *.
@@ -993,7 +911,7 @@ Qed.
 
 Lemma  norm_Us: forall i, i< r -> Nat.gcd x N =1-> norm (Us i) =1 .
 Proof. 
-intros. unfold Us. pose H.
+intros. unfold Us. pose Hr. pose H.
 rewrite norm_scale.
 unfold norm. rewrite <-inner_trace' . 
 rewrite Msum_adjoint. rewrite Mmult_Msum_distr_l. 
@@ -1021,13 +939,13 @@ erewrite (@big_sum_unique C C_is_monoid _ ). reflexivity.
 exists x0. split. assumption. rewrite Mscale_mult_dist_r.
 rewrite Mscale_adj.
 repeat rewrite Mscale_mult_dist_l.
-rewrite Vec_inner_1. unfold c_to_Vector1. split.  
+rewrite base_inner_1. unfold c_to_Vector1. split.  
 Msimpl. rewrite Mscale_assoc. rewrite trace_mult_dist.
 rewrite trace_I. Csimpl. rewrite Cmult_comm. reflexivity.
 intros.  rewrite Mscale_mult_dist_r.
 rewrite Mscale_adj.
 repeat rewrite Mscale_mult_dist_l.
-rewrite Vec_inner_0. unfold c_to_Vector1.
+rewrite base_inner_0. unfold c_to_Vector1.
 Msimpl. rewrite Zero_trace. reflexivity. 
 intro.
 assert(x'>=x0\/ ~(x'>=x0)).
@@ -1063,7 +981,7 @@ rewrite Nat.mod_add. rewrite Nat.mod_small. reflexivity.
 unfold N. lia. unfold N. lia. 
 unfold x. apply Nat.pow_nonzero.    lia.
 rewrite<- H7 in H8. 
-pose Hr. destruct a0. apply H10 in H8. 
+pose Hr. destruct a1 as [ a1 ]. destruct H9. apply H10 in H8. 
 unfold r in *. lia. unfold N. lia.
 apply Nat.pow_le_mono_r. unfold x. lia. lia.
 symmetry in H5.
@@ -1097,7 +1015,7 @@ rewrite Nat.mod_add. rewrite Nat.mod_small. reflexivity.
 unfold N. lia. unfold N. lia. 
 unfold x. apply Nat.pow_nonzero.    lia.
 rewrite<- H7 in H8. 
-pose Hr. destruct a0. apply H10 in H8. 
+pose Hr. destruct a1 as [ a1 ]. destruct H9. apply H10 in H8. 
 unfold r in *. lia. unfold N. lia.
 apply Nat.pow_le_mono_r. unfold x. lia. lia.
 apply Nat.lt_trans with (N).
@@ -1126,37 +1044,37 @@ Qed.
   (fun i : nat =>
    (norm
       (@U_v (Nat.sub t O)
-      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
-         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)) ^ 2)%R)
+      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (2^(t - 0)) × ⟨ i ∣_ (2^(t - 0)))
+         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (2^t) ⊗ Us s) r)) ^ 2)%R)
   (fun i : nat =>
    P i /\s
    (| (/
        norm
          (@U_v (Nat.sub t O)
-         (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
-            (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)))%R
+         (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (2^(t - 0)) × ⟨ i ∣_ (2^(t - 0)))
+            (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (2^t) ⊗ Us s) r)))%R
       .* @U_v (Nat.sub t O)
-      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (t - 0) × ⟨ i ∣_ (t - 0))
-           (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r) >[ 0, t + L])) 
+      (Nat.sub (Init.Nat.add t L) 0) 0 t 0 (t + L) (∣ i ⟩_ (2^(t - 0)) × ⟨ i ∣_ (2^(t - 0)))
+           (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (2^t) ⊗ Us s) r) >[ 0, t + L])) 
   (2 ^ (t - 0)) ->> big_pOplus (fun _ : nat => (/ r)%R) (fun s : nat => P' s) r .
-Proof.   pose Hr. pose HtL. pose H. 
-         assert(forall i j x0, ∣ i ⟩_ (t) × ⟨ i ∣_ (t) ⊗ I (2 ^ L) × (∣ j ⟩_ (t) ⊗ Us x0)=
+Proof.   pose Hr. pose HtL. pose H. pose Hr.
+         assert(forall i j x0, ∣ i ⟩_ (2^t) × ⟨ i ∣_ (2^t) ⊗ I (2 ^ L) × (∣ j ⟩_ (2^t) ⊗ Us x0)=
          (@Mmult ((2^t) * ((2^L))) ((2^t) * ((2^L)))  1 
-         (∣ i ⟩_ (t) × ⟨ i ∣_ (t) ⊗ I (2 ^ L)) (∣ j ⟩_ (t) ⊗ Us x0) ) ).
+         (∣ i ⟩_ (2^t) × ⟨ i ∣_ (2^t) ⊗ I (2 ^ L)) (∣ j ⟩_ (2^t) ⊗ Us x0) ) ).
          reflexivity. intros.  
 
          assert(forall i, i< r->(norm
-         (@U_v t (Init.Nat.add t L) 0 t 0 (t + L)  (∣ i * 2 ^ t / r ⟩_ (t) × ⟨ i * 2 ^ t / r ∣_ (t))
-         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (t) ⊗ Us s) r)))= (/ √ r)%R).
+         (@U_v t (Init.Nat.add t L) 0 t 0 (t + L)  (∣ i * 2 ^ t / r ⟩_ (2^t) × ⟨ i * 2 ^ t / r ∣_ (2^t))
+         (/ √ r .* big_sum (fun s : nat => ∣ s * 2 ^ t / r ⟩_ (2^t) ⊗ Us s) r)))= (/ √ r)%R).
          intros. unfold U_v. type_sovle. 
          rewrite <-Mscale_Msum_distr_r.
          repeat rewrite Nat.mul_1_l.
          rewrite Mmult_Msum_distr_l. 
-         rewrite (@big_sum_unique (Matrix ((2^t) * ((2^L))) 1) (M_is_monoid ((2^t) * ((2^L))) 1) (/ √ r .* (∣ i * 2 ^ t / r ⟩_ (t) ⊗ Us i)) 
+         rewrite (@big_sum_unique (Matrix ((2^t) * ((2^L))) 1) (M_is_monoid ((2^t) * ((2^L))) 1) (/ √ r .* (∣ i * 2 ^ t / r ⟩_ (2^t) ⊗ Us i)) 
           ). 
-          assert(2^(t)* 2^L= 2^(t+L)). type_sovle'. destruct H3.
+          assert((2^t)* 2^L= 2^(t+L)). type_sovle'. destruct H3.
           rewrite norm_scale.
-          rewrite norm_kron. rewrite norm_vec_1. rewrite norm_Us. rewrite Rmult_1_r. rewrite Rmult_1_r.
+          rewrite norm_kron. rewrite norm_base_1. rewrite norm_Us. rewrite Rmult_1_r. rewrite Rmult_1_r.
           rewrite Cmod_inv.  rewrite Cmod_R. rewrite Rabs_right. reflexivity.
           apply Rgt_ge. apply sqrt_lt_R0. unfold r.
           rewrite IZR_INR_0.   apply lt_INR. lia. apply RtoC_neq.  apply sqrt_neq_0_compat. unfold r.
@@ -1166,20 +1084,20 @@ Proof.   pose Hr. pose HtL. pose H.
          exists i.  
          split. assumption.  split.
          rewrite Mscale_mult_dist_r. rewrite <-H0. 
-         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_1.
-         unfold c_to_Vector1. Msimpl.  reflexivity. apply WF_vec.
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite base_inner_1.
+         unfold c_to_Vector1. Msimpl.  reflexivity. apply WF_base.
             apply s_r_t_relation. assumption.
             apply s_r_t_relation. assumption.
          intros. rewrite Mscale_mult_dist_r. rewrite <-H0.  
-         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_0.
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite base_inner_0.
          unfold c_to_Vector1. Msimpl. reflexivity. apply i_j_neq; try assumption.
          apply s_r_t_relation. assumption.   apply s_r_t_relation. assumption. 
          apply WF_mult; try apply WF_adjoint;
-         apply WF_vec.   apply s_r_t_relation. assumption. 
+         apply WF_base.   apply s_r_t_relation. assumption. 
          apply s_r_t_relation. assumption.
          
          eapply implies_trans. type_sovle. 
-         eapply (big_Oplus_solve _ _ _ r  (fun s=> (s * 2^t/r))).  admit.
+         eapply (big_Oplus_solve _ _ _ r  (fun s=> (s * 2^t/r))). pose HtL. lia.  
          intros. apply i_j_le; try assumption.  
          intros. destruct H4. destruct H4. rewrite<-H5. rewrite Nat.sub_0_r in H2.  
          rewrite (H2 x0). apply Rgt_neq_0. rewrite <-Rsqr_pow2. apply Rlt_0_sqr.
@@ -1193,10 +1111,10 @@ Proof.   pose Hr. pose HtL. pose H.
          rewrite big_sum_0_bounded. simpl. rewrite Rmult_1_r. 
          apply Rmult_eq_0_compat_l.
          apply norm_zero_iff_zero; try reflexivity. 
-         assert(2^(t)* 2^L= 2^(t+L)). type_sovle'. destruct H5. auto_wf.
+         assert((2^t)* 2^L= 2^(t+L)). type_sovle'. destruct H5. auto_wf.
          
          intros. rewrite Mscale_mult_dist_r. rewrite <-H0. 
-         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite Vec_inner_0.
+         rewrite kron_mixed_product. Msimpl.  rewrite Mmult_assoc. rewrite base_inner_0.
          unfold c_to_Vector1. Msimpl. reflexivity.  
          intro. destruct H4. exists x0. split. assumption. auto. assumption.
          apply s_r_t_relation. assumption.  
@@ -1227,46 +1145,7 @@ Proof.   pose Hr. pose HtL. pose H.
           apply rule_OCon''. repeat  rewrite big_pOplus_get_pro. reflexivity.
           repeat rewrite big_pOplus_get_npro. repeat rewrite <-fun_to_list_big_Oplus_eq.
           apply Forall_two_forall. intros. apply rule_Conj_split_l.
-Admitted.
-
-(* 
-Lemma snd_nth_npro_to_pro_formula: forall nF p_n i,
-length nF=length p_n->
-(snd (nth i (npro_to_pro_formula nF p_n) (1%R, SPure (PBexp <{BTrue}>))))=
-nth i nF <{true}>.
-Proof. induction nF; intros. simpl. destruct p_n. simpl. destruct i. simpl. reflexivity. 
-reflexivity. simpl. destruct i; reflexivity.
- destruct p_n. simpl in *. lia.   simpl. destruct i. reflexivity.
- rewrite IHnF. reflexivity. injection H0. auto.     
 Qed.
-
-
-Lemma fst_nth_npro_to_pro_formula: forall nF p_n i,
-length nF=length p_n->
-(fst (nth i (npro_to_pro_formula nF p_n) (1%R, SPure (PBexp <{BTrue}>))))=
-nth i p_n (1%R).
-Proof. induction nF; intros. simpl. destruct p_n. simpl. destruct i. simpl. reflexivity. 
-reflexivity. simpl in *. lia. 
- destruct p_n. simpl in *. lia.   simpl. destruct i. reflexivity.
- rewrite IHnF. reflexivity. injection H0. auto.     
-Qed. *)
-
-
-
-(* Lemma rule_OCon_Oplus: forall (nF1 nF2 nF1' nF2': npro_formula),
-(nF1 ->>  nF1')->
-(nF2 ->>  nF2') ->
-(ANpro (nF1 ++ nF2) ->>  ANpro (nF1' ++ nF2')) .
-Proof. unfold assert_implies. intros.  inversion_clear H2.
- inversion_clear H4.    inversion_clear H6. 
- rewrite get_pro_formula_p_n in H4. 
-       econstructor. 
-Admitted. *)
-
-
-
-
-
 
 
 Ltac not_In_solve:=
@@ -1291,7 +1170,7 @@ Qed.
 
 
 Theorem OF_correctness: 
-{{BEq ((Nat.gcd x N)) 1 }} OF {{BEq z ' r}}.
+{{BTrue }} OF {{BEq z ' r}}.
 Proof.
        pose HtL. pose H. pose Hr. 
        pose (Qsys_to_Set_min_max t (t+L)). destruct a2; try lia.
@@ -1299,19 +1178,20 @@ Proof.
 
        unfold OF. 
        eapply rule_seq.
-       eapply rule_conseq_l; try eapply rule_assgn with (F:=(BEq z ' 1)).
+       eapply rule_conseq_l; try eapply rule_SAssgn with (F:=  (BEq z ' 1)).
+       (* implies_trans_solve 1 Assn_conj_F; try apply rule_Conj_two; try apply implies_refl;[|not_In_solve]; *)
        implies_trans_solve 0 rule_PT; try apply Assn_true_F; not_In_solve.
 
        eapply rule_seq.
-       eapply rule_conseq_l; try eapply rule_assgn with (F:=( (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
-       implies_trans_solve 1 Assn_conj_F; try eapply rule_Conj_two; try apply implies_refl.
-       implies_trans_solve 0  rule_PT;  unfold b'; apply Assn_true_F. 
-       not_In_solve.  not_In_solve.  
+       eapply rule_conseq_l; try eapply rule_SAssgn with (F:=(  (BEq z ' 1) /\s ( BEq b ' (AMod ( APow x  (z '))  N )))).
+       implies_trans_solve 1 Assn_conj_F; try eapply rule_Conj_two; try apply implies_refl; [|not_In_solve];
+       implies_trans_solve 0  rule_PT;  unfold b'; apply Assn_true_F;  not_In_solve.  
 
-       eapply rule_conseq_l with (P':=( (BLt z ' r /\p (BNeq b ' 1)))).
+       eapply rule_conseq_l with (P':=( ( (BLt z ' r) /\p (BNeq b ' 1)))).
+       (* implies_trans_solve 1 SAnd_PAnd_eq. apply rule_Conj_two; *)
 
        assert(1<>r). unfold r. 
-       intro. rewrite <-H4 in *. simpl in *.  destruct a1.
+       intro. rewrite <-H4 in *. simpl in *.  destruct a1 as [a1]. destruct H5.
        rewrite Nat.mod_small in H5; try rewrite Nat.mul_1_r in *; try lra.
        rewrite H5 in *. lia. lia. assert(1<r). unfold r in *. lia.     
 
@@ -1320,13 +1200,14 @@ Proof.
       bdestruct (c_find z x0 =? 1).   
       try rewrite H8.
       try apply Nat.ltb_lt in H5; try rewrite H5;  try auto.
-      destruct H6.  
+      destruct H6.   
       bdestruct(c_find b x0 =? x ^ c_find z x0 mod N).
       rewrite H9.  rewrite H8. simpl. rewrite Nat.mul_1_r.
 
       rewrite Nat.mod_small. bdestruct (x=?1). 
       pose H. unfold x in H10. lia. auto. pose H. unfold x.
       unfold N. lia. destruct H7. destruct H6.
+
 
       eapply rule_conseq.
       eapply rule_while with (F0:= (BLt z ' r))  (F1:=  (BEq z ' r)).
@@ -1360,7 +1241,7 @@ Proof.
       eapply rule_conseq_l. eapply rule_odotT.
       eapply rule_conseq_l. eapply rule_Separ.
       assert(L=t + L - t). lia. destruct H6.
-      assert(t=t-0). lia. destruct H6.
+      assert(t=t-0). lia.  destruct H6.  
       rewrite simpl_H_Uplus.
       eapply rule_QUnit_Ctrl; try lia.  rewrite simpl_Uf.
 
@@ -1381,7 +1262,7 @@ Proof.
 
       *eapply rule_seq. 
       eapply rule_conseq_l  with (big_pOplus (fun i:nat=>(/  r)%R ) (fun s:nat=> P' s) r).
-      eapply big_Oplus_solve'.  admit.
+      eapply big_Oplus_solve'.  unfold x. unfold N. lia. 
       eapply rule_conseq_l .  eapply rule_Oplus. rewrite big_pOplus_get_npro. 
       unfold P'.
       eapply rule_conseq_l with 
@@ -1415,20 +1296,20 @@ Proof.
    
       apply sat_State_Npro; try apply H6. 
 
-      apply rule_Dassgn.
-      eapply rule_conseq_l'. apply rule_Dassgn. 
+      apply rule_assgn.
+      eapply rule_conseq_l'. apply rule_assgn. 
       unfold b'.  simpl. apply Assn_sub_Plus. econstructor. 
 
       eapply implies_trans with (<{  (z) ' < r }> /\s (SAssn b <{ x ^ (z) ' % N }> <{ (b) ' <> 1 }>)).
       apply rule_Conj_two. apply implies_refl.
-      rule_solve. intros. apply H8 in H16.
+      rule_solve. intros. apply H8 in H18.
       unfold State_eval in *.  unfold Pure_eval in *.
       unfold beval in *. unfold aeval in *. unfold fst in *.
       unfold s_update_cstate.  rewrite c_update_find_eq.
       bdestruct (c_find z x0 <? r).   
       bdestruct (x ^ c_find z x0 mod N =? 1).
-      pose Hr. destruct a. unfold x in *. unfold N in *. unfold r in *. 
-      apply H20 in H18. lia.  auto. simpl in *. destruct H16.
+      unfold x in *. unfold N in *. unfold r in *. 
+      apply H11 in H20. lia.  auto. destruct H18. 
 
       apply Assn_conj_F. simpl.
 
@@ -1438,15 +1319,13 @@ Proof.
 
       eapply implies_trans with (<{  (z) ' = r }> /\s (SAssn b <{ x ^ (z) ' % N }> <{ ~ (b) ' <> 1 }>)).
       apply rule_Conj_two. apply implies_refl.
-      rule_solve. intros. apply H8 in H16.
+      rule_solve. intros. apply H8 in H18.
       unfold State_eval in *.  unfold Pure_eval in *.
       unfold beval in *. unfold aeval in *. unfold fst in *.
-      unfold s_update_cstate.  rewrite c_update_find_eq.
-      bdestruct (c_find z x0 =? r).   
-      bdestruct (x ^ c_find z x0 mod N =? 1). auto. 
-      rewrite H17 in H18. 
-      pose Hr. destruct a. unfold x in *. unfold N in *. unfold r in *. lia.
-      destruct H16.  
+      unfold s_update_cstate.  rewrite c_update_find_eq.  
+      bdestruct (c_find z x0 =? r). rewrite H19.   
+      unfold x in *. unfold N in *. unfold r in *. rewrite H10. simpl. lia.
+      destruct H18.  
 
       apply Assn_conj_F. simpl.
 
@@ -1458,10 +1337,10 @@ Proof.
 
       implies_trans_solve 0 SAnd_PAnd_eq. 
       unfold assert_implies; intros;
-      apply sat_NPro_State; assumption.
+      apply sat_NPro_State. assumption.
 
       apply rule_Conj_split_l. 
-Admitted.
+Qed.
 End OF.
 
 

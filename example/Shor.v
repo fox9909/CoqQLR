@@ -6,9 +6,9 @@ Require Import Strings.String.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
-From Quan Require Import ParDensityO.
+From Quan Require Import Mixed_State.
 From Quan Require Import QState.
-From Quan Require Import Par_trace.
+From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Linear.
 From Quan Require Import QAssert.
@@ -16,7 +16,7 @@ From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
-From Quan Require Import QRule_QFrame.
+From Quan Require Import QFrame.
 From Quan Require Import Forall_two.
 From Quan Require Import add.
 From Quan Require Import HHL.
@@ -44,7 +44,7 @@ Definition N := p.N.
 Definition z := p.z.
 Definition r := p.r.
 Definition Hx:= p.H.
-Definition Hr:= p.Hr.
+Hypothesis Hr : (r > 0) /\ x ^ r mod N =1 /\ (forall j, x ^ j mod N =1 -> r<=j).
 Definition y:nat := 3.
 
 Parameter random: nat -> nat -> nat.
@@ -171,18 +171,20 @@ Qed.
 
 
 Lemma Big_hypose_sovle: 
-    (BEq (z) '  r )  /\p
+(<{ 1 < x }> /\p <{ x < N }>) /\p (BEq (z) '  r )  /\p
    (BAnd (BEq (AMod z ' 2) 0 )  
          (BNeq (( (AMod (APlus (APow x (ADiv z ' 2)) 1) N) )) 0))
     ->> Big_hypose x z N.
 Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
-       unfold beval in *. unfold aeval in *. simpl fst in *. 
-       pose Hr. pose Hx. unfold r in *.     unfold x in *.  unfold N in *. 
-       destruct a.  bdestruct (c_find z x0 =? p.r). 
-       rewrite H3 in *. 
+       unfold beval in *. unfold aeval in *. simpl fst in *.  
+       pose Hr.  bdestruct (1 <? x); try destruct H. 
+       bdestruct (x <? N); try destruct H2.
+       unfold r in *.     unfold x in *.  unfold N in *.
+       destruct a as [a0 ]. destruct H2.   bdestruct (c_find z x0 =? p.r). 
+       rewrite H5 in *. 
        bdestruct ((p.r mod 2 =? 0)). 
        assert(1= 1 mod p.N). rewrite Nat.mod_small. reflexivity. 
-       lia. rewrite H5 in H1.
+       lia. rewrite H7 in H2.
        assert(p.r = (p.r/2)*2).
        rewrite Nat.mul_comm. 
        rewrite <-Nat.divide_div_mul_exact; try lia.  
@@ -190,90 +192,90 @@ Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
        rewrite Nat.div_mul_cancel_l; try lia.
        rewrite Nat.div_1_r. reflexivity. 
        rewrite <-Nat.mod_divide. assumption. lia.  
-       rewrite H6 in H1.  rewrite Nat.pow_mul_r in H1.
-       apply mod_eq_1 in H1.  destruct H1. 
+       rewrite H8 in H2.  rewrite Nat.pow_mul_r in H2.
+       apply mod_eq_1 in H2.  destruct H2. 
        assert (((p.x ^ (p.r / 2)) ^ 2 - 1 ^ 2) mod p.N =0).
-       rewrite H1. simpl. rewrite <-Nat.add_sub_assoc; try lia.
+       rewrite H2. simpl. rewrite <-Nat.add_sub_assoc; try lia.
        rewrite Nat.sub_diag. rewrite Nat.add_0_r. 
        apply Nat.mod_mul. lia. 
-       rewrite pow_sub in H7. rewrite Nat.mod_divide in H7; try lia. 
-       apply Nat.divide_mul_split in H7.
-       destruct H7. destruct H7.  destruct H7. 
-       destruct H8.
+       rewrite pow_sub in H9. rewrite Nat.mod_divide in H9; try lia. 
+       apply Nat.divide_mul_split in H9.
+       destruct H9. destruct H9.  destruct H9. 
+       destruct H10.
        assert(exists c:nat, p.N=  x2 * c).
        exists x3. assumption.  
        assert(exists c:nat, p.N=  x3 * c).
        exists x2. rewrite Nat.mul_comm. assumption. 
-       rewrite <-Nat.mod_divides in H10.
-       rewrite <-Nat.mod_divides in H12.
-       rewrite Nat.mod_divide in H10.
-       rewrite Nat.mod_divide in H12.
+       rewrite <-Nat.mod_divides in H13.
+       rewrite <-Nat.mod_divides in H14.
+       rewrite Nat.mod_divide in H13.
+       rewrite Nat.mod_divide in H14.
        assert(Nat.divide x2 (Nat.gcd ((p.x ^ (p.r / 2) + 1)) (p.N))).
        apply Nat.gcd_divide_iff. split; try assumption.
-       apply Nat.divide_pos_le in H13. 
+       apply Nat.divide_pos_le in H15. 
        assert(Nat.divide x3 (Nat.gcd ((p.x ^ (p.r / 2) - 1)) (p.N))).
        apply Nat.gcd_divide_iff. split; try assumption.
-       apply Nat.divide_pos_le in H14. 
+       apply Nat.divide_pos_le in H16. 
        destruct ((¬ (p.x ^ (p.r / 2) + 1) mod p.N =? 0)) eqn:E.
        assert(Nat.gcd (p.x ^ (p.r / 2) + 1) p.N <> p.N).
-       intro. rewrite Nat.gcd_comm in H15.
-       apply Nat.divide_gcd_iff in H15; try lia.  
-       rewrite <-Nat.mod_divide in H15; try lia. 
-       rewrite H15 in E.   simpl in E.  auto. 
-       apply Nat.eqb_neq in H15.  rewrite H15. 
+       intro. rewrite Nat.gcd_comm in H17.
+       apply Nat.divide_gcd_iff in H17; try lia.  
+       rewrite <-Nat.mod_divide in H17; try lia. 
+       rewrite H17 in E.   simpl in E.  auto. 
+       apply Nat.eqb_neq in H17.  rewrite H17. 
        assert(1<x2 \/ ~(1<x2 )).
-       apply Classical_Prop.classic. destruct H16. 
+       apply Classical_Prop.classic. destruct H18. 
        assert(Nat.gcd (p.x ^ (p.r / 2) + 1) p.N <> 1).
-       lia. apply Nat.eqb_neq in H17. rewrite H17. 
+       lia. apply Nat.eqb_neq in H19. rewrite H19. 
        right. simpl. auto.
-       assert(x2<>0). intro. rewrite H17 in H7. simpl in H7. lia.   
-       assert(x2=1). lia. rewrite H18 in *. rewrite Nat.mul_1_l in H7.
-       rewrite<-H7 in H14.      
+       assert(x2<>0). intro. rewrite H19 in H9. simpl in H9. lia.   
+       assert(x2=1). lia. rewrite H20 in *. rewrite Nat.mul_1_l in H9.
+       rewrite<-H9 in H16.      
        assert(Nat.gcd (p.x ^ (p.r / 2) - 1) p.N <> p.N).
-       intro. rewrite Nat.gcd_comm in H19.
-       apply Nat.divide_gcd_iff in H19; try lia.  
-       rewrite <-Nat.mod_divide in H19; try lia. 
+       intro. rewrite Nat.gcd_comm in H22.
+       apply Nat.divide_gcd_iff in H22; try lia.  
+       rewrite <-Nat.mod_divide in H22; try lia. 
        assert((p.x ^ (p.r / 2) ) mod p.N = 1).
        assert(0=0mod p.N). rewrite Nat.mod_small. reflexivity.
-       lia. rewrite H20 in H19 at 3.
-       apply mod_eq_1 in H19; try lia. destruct H19. 
-       rewrite Nat.add_0_r in H19. symmetry in H19.
-       apply repad_lemma2 in H19. 
-       rewrite H19. rewrite Nat.mod_add; try lia.
+       lia. rewrite H23 in H22 at 3.
+       apply mod_eq_1 in H22; try lia. destruct H22. 
+       rewrite Nat.add_0_r in H22. symmetry in H22.
+       apply repad_lemma2 in H22. 
+       rewrite H22. rewrite Nat.mod_add; try lia.
        assert(p.x ^ (p.r / 2) <> 0). 
         apply Nat.pow_nonzero. lia. lia.   
        assert(p.r<=(p.r / 2)).  
-       apply H2. assumption. 
-       assert((p.r / 2)< p.r). apply Nat.div_lt; try lia. lia.
-       apply Nat.eqb_neq in H19. rewrite H19. 
+       apply H4. assumption. 
+       assert((p.r / 2)< p.r). apply Nat.div_lt; try lia.  lia.  
+       apply Nat.eqb_neq in H22.  rewrite H22. 
        assert(Nat.gcd (p.x ^ (p.r / 2) - 1) p.N <>1). lia.
-       apply Nat.eqb_neq in H20. rewrite H20. 
+       apply Nat.eqb_neq in H23. rewrite H23. 
        left. simpl. auto.
        simpl in H0. destruct H0.
        assert(Nat.gcd (p.x ^ (p.r / 2) - 1) p.N<>0).
-       intro.  apply  Nat.gcd_eq_0 in H15. 
-       destruct H15. lia. lia.   
+       intro.  apply  Nat.gcd_eq_0 in H17. 
+       destruct H17. lia. lia.   
        assert(Nat.gcd (p.x ^ (p.r / 2) + 1) p.N<>0).
-       intro.  apply  Nat.gcd_eq_0 in H14. 
-       destruct H14. lia. lia.
-        intro. rewrite H13 in *.  rewrite Nat.mul_0_r in H7.
+       intro.  apply  Nat.gcd_eq_0 in H16. 
+       destruct H16. lia. lia.
+        intro. rewrite H15 in *.  rewrite Nat.mul_0_r in H9.
         lia.   
-        intro. rewrite H13 in *.  rewrite Nat.mul_0_l in H7.
+        intro. rewrite H15 in *.  rewrite Nat.mul_0_l in H9.
         lia.
-        intro. rewrite H13 in *.  rewrite Nat.mul_0_r in H7.
-        lia.
-        intro. rewrite H13 in *.  rewrite Nat.mul_0_l in H7.
+        intro. rewrite H15 in *.  rewrite Nat.mul_0_r in H9.
         lia.   
+        intro. rewrite H15 in *.  rewrite Nat.mul_0_l in H9.
+        lia.
         lia. 
         assert(p.x ^ (p.r / 2) <> 0). 
         apply Nat.pow_nonzero. lia.  
         lia. lia.
-        assert(1=1^2). simpl. reflexivity. rewrite H7 at 3.
+        assert(1=1^2). simpl. reflexivity. rewrite H9 at 3.
         apply Nat.pow_le_mono_l. 
         assert(p.x ^ (p.r / 2) <> 0). 
         apply Nat.pow_nonzero. lia.  
         lia.
-        simpl in H0. destruct H0. simpl in H0. destruct H. 
+        simpl in H0. destruct H0.  destruct H1.
 Qed.
 
 
@@ -343,18 +345,18 @@ Proof. unfold Shor.
 
        eapply rule_conseq_r'.
        eapply rule_qframe''.
-       split.  apply QRule_I_L.rule_assgn.
+       split.  apply rule_PAssgn.
        
        simpl. apply inter_empty. left.
        apply union_empty; split; try reflexivity;
        apply union_empty; split; try reflexivity. 
        classic_slove_1;  rewrite Nat.eqb_eq in H2. rewrite H2. apply Nat.eqb_eq in H3. 
-       rewrite H3. auto. rewrite H2. simpl. auto. rewrite H2.  pose Hx. unfold N. 
+       rewrite H3. auto. rewrite H2. simpl. auto. rewrite H2. 
+       unfold Cop in H.  destruct H. unfold N in *.  
        bdestruct (2 =? p.N ). simpl. lia. auto.
     
         }
-       eapply rule_seq with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) (0))) 
-       /\p ((  (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
+       eapply rule_seq with (((  (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.
@@ -363,21 +365,21 @@ Proof. unfold Shor.
           
           simpl. apply inter_empty. left.
           apply union_empty; split; try reflexivity;
-         apply union_empty; split; try reflexivity.
+         apply union_empty; split; try reflexivity. 
          
-          implies_trans_solve 0 SAnd_PAnd_eq. implies_trans_solve 1 SAnd_PAnd_eq. 
-          apply rule_CconjCon. apply implies_refl. 
+          implies_trans_solve 0 SAnd_PAnd_eq. implies_trans_solve 1 SAnd_PAnd_eq.
+          implies_trans_solve 0 rule_Conj_split_r.  
         classic_slove_1;
         pose (Hran 2 (N-1)); try rewrite <-H0 in a; destruct a;
         rewrite <-Nat.ltb_lt in *; simpl in *; rewrite Nat.sub_add in *;  try rewrite H1; try rewrite H2; auto.
-        pose p.H. unfold N. lia.  pose p.H. unfold N. lia.
+        pose p.H. unfold N. lia.  
 
         }
-          eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x ((N)))))
+          eapply rule_seq with (( ( (BLt 1 x ) /\p (BLt x ((N)))))
           /\p ((F_1 y x N) \/p (F_2 y x N) \/p F_3 y x N)).
-          {eapply rule_conseq_l with ((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p (( (BLt 1 x ) /\p (BLt x ((N))))) 
+          {eapply rule_conseq_l with ( (( (BLt 1 x ) /\p (BLt x ((N))))) 
           /\p (PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N))))).
-          implies_trans_solve 1 SAnd_PAnd_eq.
+          implies_trans_solve 1 SAnd_PAnd_eq. 
           apply rule_ConjE. split. apply rule_PT. apply Assn_true_P.
 
           simpl;intro; try repeat match goal with 
@@ -390,59 +392,55 @@ Proof. unfold Shor.
           H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
           eapply rule_qframe''.
-          split.  apply QRule_I_L.rule_assgn.
+          split.  apply rule_PAssgn.
           
           simpl. apply inter_empty. left.
           apply union_empty; split; try reflexivity;
          try apply union_empty; try split; try reflexivity;
          try apply union_empty; try split; try reflexivity.
-         classic_slove_2. right.  split. auto. rewrite Nat.eqb_eq in H4. rewrite H4. 
-         bdestruct (Nat.gcd x N =? N). pose Hx. unfold N. unfold x. simpl. 
+         classic_slove_2. right.  split. auto. rewrite Nat.eqb_eq in H2. rewrite H2.
+         bdestruct (1 <? x). bdestruct (x <? N). 
+         bdestruct (Nat.gcd x N =? N). 
          rewrite Nat.gcd_comm in H5. apply Nat.divide_gcd_iff in H5; unfold N; try lia.
-         apply Nat.divide_pos_le in H5; unfold x in *; unfold N in *; lia.   
-         auto.
+         apply Nat.divide_pos_le in H5; unfold x in *; unfold N in *; lia.    
+         auto. destruct H1. destruct H.
           }
           eapply rule_conseq_r'.
           apply rule_while_classic.
-           eapply rule_seq with (((Pre Cop N)/\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x (N))))
+           eapply rule_seq with (( ( (BLt 1 x ) /\p (BLt x (N))))
            /\p (BEq z ' r)). 
            eapply rule_conseq_l with 
-           ((((Pre Cop N) /\p  (BNot (BEq (N mod 2) 0)) /\p ( (BLt 1 x ) /\p (BLt x  (N))))
+           ((( ( (BLt 1 x ) /\p (BLt x  (N))))
            /\p (BEq ((Nat.gcd x N)) 1))).
            classic_slove_2.
 
            apply rule_qframe''. 
-           split.  
-           apply OF.OF_correctness. 
+           split.  eapply rule_conseq_l; try
+           apply OF.OF_correctness; try apply rule_PT. 
            simpl. apply inter_empty. left.
           apply union_empty; split; try reflexivity;
          try apply union_empty; try split; try reflexivity;
          try apply union_empty; try split; try reflexivity.
            apply rule_cond_classic. split.
-           eapply rule_conseq_l with ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLt 1 x ) /\p (BLt x ((N)))))
+           eapply rule_conseq_l with ((( ((BLt 1 x ) /\p (BLt x ((N)))))
            /\p ( BEq z ' r) /\p (Big_hypose x z N))).
-           eapply implies_trans with 
-           ((((Pre Cop N) /\p (BNot (BEq (( (N mod 2))) 0)) /\p ((BLt 1 x ) /\p (BLt x ((N)))))
-           /\p ( BEq z ' r) /\p (( BEq z ' r) /\p (<{ (z) ' % 2 = 0 && (APlus <{ x ^ (ADiv (z) ' 2) }> 1) % N <> 0 }>)))).
-           classic_slove_1.
            implies_trans_solve 1 SAnd_PAnd_eq.
            implies_trans_solve 0 SAnd_PAnd_eq.  
-           apply rule_CconjCon; try apply implies_refl.
+           apply rule_Conj_two. apply rule_Conj_split_l.
+           implies_trans_solve 0 SAnd_PAnd_eq.  
            apply Big_hypose_sovle.
            apply rule_cond_classic. split.
            eapply rule_conseq_l with 
-           ( (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLt 1 x ) /\p (BLt x ( (N))))) 
+           ( (( ( (BLt 1 x ) /\p (BLt x ( (N))))) 
            )/\p (
            (PAssn y (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) ((F_1 y x N) /\p (BEq y ' ( (Nat.gcd ((x^ (r / 2)) -1) N))))))).
             { classic_slove_2.  
-
-          
              } 
             eapply rule_conseq_r'.
            
 
           eapply rule_qframe''.
-          split.  apply QRule_I_L.rule_assgn.
+          split.  apply rule_PAssgn.
          
           
           simpl. apply inter_empty. left.
@@ -463,25 +461,26 @@ Proof. unfold Shor.
             apply H. assumption.
 
           eapply rule_conseq_l with 
-          ( ((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) 0)) /\p ( (BLt 1 x ) /\p (BLt x (ANum (N)))) ) 
+          ( ( ( (BLt 1 x ) /\p (BLt x (ANum (N)))) ) 
           /\p (PAssn y (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) ((F_2 y x N) /\p BEq y ' (ANum (Nat.gcd (x^ (r / 2) + 1) N))))).
           unfold Big_hypose.
           classic_slove_2;
           bdestruct ((Nat.gcd (x ^ (c_find z x0 / 2) - 1) N =? N) ); simpl in H1;
           destruct H1;
-          bdestruct (Nat.gcd (x ^ (c_find z x0 / 2) - 1) N =? 1); simpl in H7;
-          destruct H7; simpl in H0; destruct H0.
+          bdestruct (Nat.gcd (x ^ (c_find z x0 / 2) - 1) N =? 1); simpl in H5;
+          destruct H5; simpl in H0; destruct H0.
 
          eapply rule_conseq_r'.
          eapply rule_qframe''.
-         split.  apply QRule_I_L.rule_assgn.
+         split.  apply rule_PAssgn.
          
 
          simpl. apply inter_empty. left.
          apply union_empty; split; try reflexivity;
         try apply union_empty; try split; try reflexivity;
         try apply union_empty; try split; try reflexivity;
-        try apply union_empty; try split; try reflexivity.
+        try apply union_empty; try split; try reflexivity. 
+        
 
 
          intros. unfold assert_implies.
@@ -492,8 +491,7 @@ Proof. unfold Shor.
           intros. econstructor. apply H. assumption.
            unfold State_eval.  left. right.
            apply H. assumption.
-         eapply rule_seq with (((Pre Cop N) /\p  (BNot (BEq ((ANum (N mod 2))) (0)))) 
-       /\p (( (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
+         eapply rule_seq with ( (( (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.  
@@ -504,7 +502,7 @@ Proof. unfold Shor.
          reflexivity.
           classic_slove_1.
         }
-        {eapply rule_conseq_l with ((((Pre Cop N) /\p  (BNot (BEq ((ANum ((N mod 2)))) 0)) /\p (( (BLt 1 x )/\p (BLt x (ANum (N))))))) 
+        {eapply rule_conseq_l with ((((( (BLt 1 x )/\p (BLt x (ANum (N))))))) 
         /\p PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N)))).
         implies_trans_solve 1 SAnd_PAnd_eq.
         apply rule_ConjE; split. apply rule_PT. apply Assn_true_P.
@@ -520,7 +518,7 @@ try match goal with
 H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
           eapply rule_qframe''.
-          split.  apply QRule_I_L.rule_assgn. 
+          split.  apply rule_PAssgn. 
 
           simpl. apply inter_empty. left.
           apply union_empty; split; try reflexivity;
@@ -530,25 +528,28 @@ H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
 
 
          seman_sovle. right. unfold F_3. split; try assumption.
-         classic_slove_aux. apply Nat.eqb_eq in H4.
-         rewrite H4. bdestruct (Nat.gcd x N =? N). pose Hx. unfold N. unfold x. simpl. 
+         classic_slove_aux. apply Nat.eqb_eq in H2.
+         rewrite H2.
+         bdestruct (1 <? x). bdestruct (x <? N). 
+         bdestruct (Nat.gcd x N =? N). 
          rewrite Nat.gcd_comm in H5. apply Nat.divide_gcd_iff in H5; unfold N; try lia.
          apply Nat.divide_pos_le in H5; unfold x in *; unfold N in *; lia.   
-         auto.
+         auto. destruct H1. destruct H.
           }
           
        classic_slove_2; try rewrite Nat.eqb_eq in H7; try
-       rewrite H7. 
+       rewrite H7;
+       bdestruct (1 <? x); bdestruct (x <? N); try destruct H2; try destruct H.
        assert(N mod Nat.gcd (x ^ (r / 2) - 1) N = 0).
-       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H8. unfold N in *. pose Hx. lia.
-       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H8. rewrite H8. auto.
+       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H. unfold N in *. lia.
+       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H5. rewrite H5. rewrite H. auto.   
        assert(N mod Nat.gcd (x ^ (r / 2) + 1) N = 0).
-       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H8. unfold N in *. pose Hx. lia.
-       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H8. rewrite H8. auto.
-       rewrite Nat.eqb_eq in H6. rewrite H6. 
+       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H. unfold N in *.  lia.
+       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H5. rewrite H5. rewrite H. auto.
+       rewrite Nat.eqb_eq in H4. rewrite H4. 
        assert(N mod Nat.gcd x N = 0).
-       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H7. unfold N in *. pose Hx. lia.
-       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H7. rewrite H7. auto.
+       apply Nat.mod_divide. intro. apply Nat.gcd_eq_0 in H. unfold N in *.  lia.
+       apply Nat.gcd_divide_r. apply Nat.eqb_eq in H. rewrite H. auto.
 Qed.
 
 End Shor.

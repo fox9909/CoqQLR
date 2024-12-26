@@ -813,6 +813,10 @@ Proof. intros. split. apply Rdiv_lt_0_compat.
 Qed.
 
 (*relation*)
+Local Open Scope R_scope.
+Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
+Proof. intros. lra. Qed.
+
 Lemma normalize_nz_mixed{n}: forall (ρ: Square n),
 NZ_Mixed_State_aux ρ -> 
 Cmod (trace ρ).* ((/ Cmod (trace ρ))%R .* ρ)=ρ.
