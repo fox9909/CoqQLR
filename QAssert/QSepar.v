@@ -22,7 +22,7 @@ From Quan Require Import QIMP_L.
 From Quan Require Import QAssert.
 From Quan Require Import Reduced.
 From Quan Require Import Basic.
-From Quan Require Import Ceval_Linear.
+From Quan Require Import Ceval_Prop.
 Require Import Mixed_State.
 Local Open Scope nat_scope.
 (*From Quan Require Import QRule_E_L.
@@ -2954,6 +2954,324 @@ Proof. induction mu; intros.
       apply H9.
       inversion_clear H1. assumption.  
 Qed.
+
+
+
+
+(*  ------------------------------mu \models F => mu|_{V} \modesl F -----------*)
+Lemma QExp_free_eval{s e:nat}:forall (qs: QExp) (st: state s e) s' e',
+s<=s'/\ s'<=e' /\ e'<=e ->
+s'<=(fst (Free_QExp' qs)) /\ (snd (Free_QExp' qs))<=e'->
+@WF_Matrix (2^(e-s)) (2^(e-s)) (snd st)->
+QExp_eval qs st <-> QExp_eval qs (fst st, (Reduced (snd st) s' e')).
+Proof. induction qs; split; intros. 
+        simpl in *. rewrite Reduced_scale.
+        rewrite Reduced_assoc. 
+        split. intuition. split. lia.
+        split. lia. split. lia. 
+        rewrite Reduced_trace. intuition.
+        lia. assumption. lia.  
+        simpl in *. 
+        rewrite Reduced_scale in H2.
+        rewrite Reduced_assoc in H2.
+        rewrite Reduced_trace in H2.
+        split. intuition. 
+        split. lia. split. lia. split. lia. 
+        intuition. lia. assumption.  lia.
+        simpl in H2. 
+        simpl. split.  intuition.
+        destruct st. simpl in *.
+  
+        split. 
+        apply (IHqs1 (c, q)).  assumption.
+        intuition. assumption.
+        intuition. 
+        apply (IHqs2 (c,q)). assumption.
+        intuition. assumption.
+        intuition. 
+        simpl in *. split.  intuition.
+        destruct H2.
+        destruct H3.
+  
+        split.
+        apply IHqs1 in H3. 
+        assumption. intuition.
+        pose (QExp_eval_dom qs1 (fst st) (Reduced (snd st) s' e') H3).
+        lia. 
+        assumption.
+        apply IHqs2 in H4. assumption.
+        intuition.
+        pose (QExp_eval_dom qs2 (fst st) (Reduced (snd st) s' e') H4).
+        lia. 
+        assumption. 
+Qed.
+
+
+
+Lemma min_max_eq: forall x1 x2 y1 y2,
+min x1 x2= max y1 y2->
+x1<=y1 /\ x2<=y2->
+x1=y1 /\ x2 = y2.
+Proof. intros. lia. Qed.
+
+Lemma Pure_free_eval'{s e s' e':nat}:forall  (F: State_formula) c (q : qstate s e) (q0: qstate s' e'),
+(Free_State F)= None->
+State_eval F (c, q) -> 
+State_eval F (c, q0).
+Proof. induction F;   intros.
+       eapply state_eq_Pure with (c, q). 
+       reflexivity. apply H0.
+       apply QExp_eval_dom in H0.
+       unfold Free_State in *. discriminate H.
+
+       simpl in *;
+       split. intuition.
+       destruct H0. destruct H1.
+destruct (option_edc (Free_State F1) None).
+split.  apply IHF1 with q; try assumption. 
+apply IHF2 with q; try assumption. 
+rewrite H3 in *. simpl in *. assumption. 
+apply option_eqb_neq in H3. rewrite H3 in *.
+destruct (option_edc (Free_State F2) None); try assumption.
+rewrite H4 in *. simpl in *. rewrite H in *. simpl in *. discriminate H3.
+apply option_eqb_neq in H4. 
+rewrite H4 in *. discriminate H.
+
+destruct H0. simpl in H. 
+destruct (option_edc (Free_State F1) None).
+rewrite H2 in *. simpl in *. 
+split. apply IHF1 with q; try assumption. reflexivity. 
+apply IHF2 with q; try assumption.  
+
+apply option_eqb_neq in H2. rewrite H2 in *.
+destruct (option_edc (Free_State F2) None); try assumption.
+rewrite H3 in *. simpl in *. rewrite H in *. simpl in *. discriminate H2.
+apply option_eqb_neq in H3. 
+rewrite H3 in *. discriminate H.
+
+eapply IHF. apply H. simpl in H0. rewrite (state_eq_aexp _ (c, q)). apply H0.
+reflexivity.
+Qed. 
+
+
+(*对于一个连续的而言*)  
+Lemma State_free_eval{s e:nat}:forall (F: State_formula) (st: state s e) s' e',
+s<=s'/\ s'<=e' /\ e'<=e ->
+s'<=(fst (option_free (Free_State F))) /\ (snd (option_free (Free_State F)))<=e' ->
+@WF_Matrix (2^(e-s)) (2^(e-s)) (snd st) ->
+State_eval F st <-> 
+State_eval F (fst st, (Reduced (snd st) s' e')).
+Proof. induction F. split; intros. destruct st. 
+    eapply state_eq_Pure with (c, q). 
+    reflexivity. apply H2.
+    destruct st. simpl in *.
+    eapply state_eq_Pure with (c, Reduced q s' e'). 
+    reflexivity. intuition. destruct st.
+    split; intros.
+    apply (QExp_free_eval _  (c, q)) .
+    intuition. intuition. intuition.
+    assumption.
+    simpl in *.
+    rewrite QExp_free_eval. apply H2. 
+    intuition. intuition. intuition.
+
+
+    intros.
+    simpl in *.
+    destruct (option_edc (Free_State F1) None). 
+    split; intros.
+    split. intuition.
+    split. destruct st. simpl.  
+    apply (@Pure_free_eval' s e) with q; try assumption.
+ intuition.  rewrite H2 in *. simpl in *.
+    apply IHF2; try assumption. intuition.
+    split. intuition. 
+    split. 
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s' e') with (Reduced (snd (c, q)) s' e'); try assumption.
+           intuition. rewrite H2 in *.  simpl in *.
+    eapply IHF2; try assumption. apply H. assumption.
+    intuition. 
+    apply option_eqb_neq in H2.  rewrite H2 in *.
+    destruct (option_edc (Free_State F2) None).
+    rewrite H3 in *. simpl in *.
+    split. intros.
+    split. intuition.
+    split. apply IHF1; try assumption. intuition.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s e) with q; try assumption.
+ intuition.   
+    split. intuition.
+    split. eapply IHF1; try assumption. apply H.
+    assumption. intuition.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s' e') with (Reduced (snd (c, q)) s' e'); try assumption.
+           intuition.
+
+
+           apply option_eqb_neq in H3.  rewrite H3 in *. simpl in *.
+    split. intros. 
+    simpl in *. split. intuition.
+    split. apply IHF1. assumption.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  rewrite max_comm. apply H0.
+    assumption. intuition.
+    apply IHF2. assumption.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.   apply H0.
+    assumption. intuition.
+    split. intuition.
+    simpl in *.
+    split. eapply IHF1; try assumption. apply H.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  rewrite max_comm. apply H0.
+    intuition.
+    eapply IHF2; try assumption. apply H. 
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  apply H0. intuition.
+    
+
+    intros.
+    simpl in *.
+    destruct (option_edc (Free_State F1) None). 
+    rewrite H2 in *. simpl in *. 
+    split; intros.
+    split.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s e) with q; try assumption.
+ intuition.
+    apply IHF2; try assumption. intuition.
+    split.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s' e') with (Reduced (snd (c, q)) s' e'); try assumption.
+           intuition.
+    eapply IHF2; try assumption. apply H. assumption.
+    intuition.
+    destruct (option_edc (Free_State F2) None).
+    apply option_eqb_neq in H2. 
+    rewrite H2 in *. rewrite H3 in *. simpl in *.
+    split. intros.
+    split. apply IHF1; try assumption. intuition.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s e) with q; try assumption.
+ intuition.
+    split. eapply IHF1; try assumption. apply H.
+    assumption. intuition.
+    destruct st. simpl.  
+    apply (@Pure_free_eval' s' e') with (Reduced (snd (c, q)) s' e'); try assumption.
+           intuition.
+           apply option_eqb_neq in H2. 
+           rewrite H2 in *.
+           apply option_eqb_neq in H3. 
+           rewrite H3 in *. simpl in *.
+    simpl in *.
+    split; intros.
+    split.  apply IHF1. assumption.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  rewrite max_comm. apply H0.
+    assumption. intuition.
+    apply IHF2. assumption.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  apply H0.
+    assumption. intuition.
+    split. eapply IHF1; try assumption. apply H.
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.  rewrite max_comm. apply H0.
+    intuition.
+  
+    eapply IHF2; try assumption. apply H. 
+    split.
+    apply min_glb_l with (fst (option_free(Free_State F2))).
+    intuition.
+    eapply max_lub_iff.   apply H0.
+    intuition.
+
+    intros. destruct st. simpl. rewrite (state_eq_aexp ((c, Reduced q s' e')) (c,q)); try reflexivity.
+    eapply IHF; try assumption.
+Qed.
+
+
+Lemma State_dstate_free_eval{s e:nat}:forall  (mu: list (cstate * qstate s e)) (F: State_formula) s' e',
+s<=s'/\ s'<=e' /\ e'<=e ->
+s'<=(fst (option_free (Free_State F))) /\ (snd (option_free (Free_State F)))<=e' ->
+WF_Matrix_dstate mu ->
+State_eval_dstate F mu <-> 
+State_eval_dstate F (d_reduced mu s' e').
+Proof. induction mu; intros. simpl. intuition.
+       destruct mu; destruct a. 
+       split; intros.
+       inversion_clear H2. 
+       econstructor.
+       apply (State_free_eval _ (c, q)).  
+       assumption. assumption. 
+       inversion_clear H1. intuition.
+       assumption. econstructor.
+       
+       inversion_clear H2.
+       econstructor.
+       apply (State_free_eval _ (c, q)) in H3.
+       assumption. assumption. assumption.
+       inversion_clear H1. intuition.
+       econstructor.
+
+       split; intros.
+       inversion_clear H2.
+       econstructor. 
+       apply (State_free_eval _ (c, q)).  
+       assumption. assumption. 
+       inversion_clear H1. intuition.
+       assumption.
+       rewrite <-State_eval_dstate_Forall in H4. 
+       rewrite (IHmu _ s' e') in H4.
+       rewrite <-State_eval_dstate_Forall.
+       apply H4. destruct p.  discriminate.
+       assumption. assumption. 
+       inversion_clear H1. intuition.
+       discriminate. 
+       
+       econstructor. 
+       inversion_clear H2.
+       apply (State_free_eval _ (c, q)) in H3.  
+       assumption. assumption. assumption. 
+       inversion_clear H1. intuition.
+       destruct p. 
+       inversion_clear H2.
+       rewrite <-State_eval_dstate_Forall. 
+       rewrite (IHmu _ s' e').
+       simpl. assumption. assumption.
+       assumption.
+       inversion_clear H1. intuition.
+       discriminate.
+Qed.
+
+
+Lemma Pure_free_dstate{s e s' e':nat}:forall  (F: State_formula)  (mu : list (state s e))  l r,
+(Free_State F)= None-> 
+State_eval_dstate F mu -> 
+State_eval_dstate F (d_reduced mu l r).
+Proof. induction mu; intros. simpl in *.  destruct H0.
+       destruct a.   inversion_clear H0.  destruct mu.
+       simpl in *. econstructor.  
+       eapply Pure_free_eval'. assumption. apply H1.
+       econstructor. destruct s0.   
+       simpl. econstructor.   
+       eapply Pure_free_eval'. assumption. apply H1.
+       apply IHmu. assumption. assumption.
+Qed. 
 
 
 

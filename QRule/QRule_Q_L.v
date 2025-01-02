@@ -26,156 +26,10 @@ From Quan Require Import QRule_I_L.
 Import Reduced.
 Import Forall_two.
 Import Basic.
+Import Ceval_Prop.
 Local Open Scope nat_scope.
 
 Local Open Scope com_scope.
-
-#[export] Hint Extern 1 (pow_gt_0) => lia : wf_db.
-
-Ltac type_sovle':=
-  try (repeat rewrite  <-pow_add_r; f_equal ; lia).
-
-Lemma PMtrace_Super_swap{s e:nat}: forall l r  (M: Square (2^(r-l))) (A:qstate s e) ,
-s<=l /\l<=r /\ r<=e -> WF_Matrix M->
-super M (Reduced A  l r)= @Reduced s e (super (I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r))) A) l r.
-Proof. intros. unfold super. repeat rewrite Ptrace_l_r'; try lia.   
-       assert((2 ^ (r-l)) = 1 * (2 ^ (r- l)) * 1). lia.  destruct H1.
-       rewrite (Mmult_Msum_distr_l ((2 ^ (l-s))) _ M).
-       rewrite Mmult_Msum_distr_r.
-       apply big_sum_eq_bounded.  intros.  
-       assert((2 ^ (r-l)) = 1 * (2 ^ (r- l)) * 1). lia. destruct H2. 
-       rewrite Mmult_Msum_distr_l. rewrite Mmult_Msum_distr_r.
-       apply big_sum_eq_bounded.  intros. 
-       rewrite Mmult_assoc_5.   rewrite Mmult_assoc_5. f_equal.  f_equal.
-
-       apply Logic.eq_trans with ((I 1 ⊗ M ⊗ I 1) × (⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ⟨ x0 ∣_ (2^(e-r)))).
-       rewrite kron_1_l; auto_wf. rewrite kron_1_r. f_equal; try lia. 
-       apply Logic.eq_trans with (⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ⟨ x0 ∣_ (2^(e-r))
-       × (I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r)))).
-       repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_l; auto_wf.
-       repeat rewrite Mmult_1_r; auto_wf.  f_equal; auto_wf. 
-       f_equal; lia. 
-
-       apply Logic.eq_trans with ((∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ∣ x0 ⟩_ (2^(e-r)))× (I 1 ⊗ (M) † ⊗ I 1)  ).
-       rewrite kron_1_l; auto_wf. rewrite kron_1_r. f_equal; try lia. 
-       apply Logic.eq_trans with ((I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r))) †
-       × (∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ∣ x0 ⟩_ (2^(e-r)))). 
-       repeat rewrite kron_adjoint. repeat rewrite id_adjoint_eq.
-       repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_l; auto_wf.
-       repeat rewrite Mmult_1_r; auto_wf.  f_equal; auto_wf. 
-       f_equal; lia. 
-Qed.
-
-
-
-
-Lemma Mmult_kron_5: forall {m1 n1 m2 n2 m3 n3 m4 n4 m5 n5:nat} (A: Matrix m1 n1)
-(B: Matrix m2 n2) (C: Matrix m3 n3) (D: Matrix m4 n4) (E: Matrix m5 n5), 
-WF_Matrix A -> WF_Matrix B -> WF_Matrix C -> WF_Matrix D -> WF_Matrix E->
-A ⊗ (B ⊗ C ⊗ D) ⊗ E= (A ⊗ B) ⊗ C ⊗ (D ⊗ E).
-Proof. intros. repeat rewrite <-kron_assoc; try reflexivity;
-       auto_wf.
-Qed.
-
-Lemma Reduced_ceval_swap_Qinit{ s e:nat}: forall (q: qstate s e ) s0 e0 l r,
-s<=l /\ l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
-@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
-@Reduced  s e (QInit_fun s0 e0 q) l r = QInit_fun s0 e0 (Reduced q l r) .
-Proof. intros. unfold QInit_fun. unfold q_update.
-       rewrite big_sum_Reduced.
-       apply big_sum_eq_bounded. 
-       intros. assert(0<(2^(e0 - s0))). lia.  
-      rewrite PMtrace_Super_swap. f_equal.
-      f_equal; type_sovle'.  
-      assert(  2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l)).
-      type_sovle'. destruct H3.
-      rewrite Mmult_kron_5; auto_wf. 
-      repeat rewrite id_kron. f_equal; type_sovle';
-      f_equal; type_sovle'; f_equal; type_sovle'.
-      lia. auto_wf. lia.   
-Qed. 
-
-Lemma Reduced_ceval_swap_QUnit_one{ s e:nat}: forall (q: qstate s e ) s0 e0 
-(U:Square (2^(e0-s0))) l r,
-s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
-@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
-WF_Unitary U->
-@Reduced  s e (QUnit_One_fun s0 e0 U q) l r = QUnit_One_fun s0 e0 U (Reduced q l r) .
-Proof. intros. unfold QUnit_One_fun.
-       unfold q_update. 
-       rewrite PMtrace_Super_swap. 
-      f_equal; f_equal; type_sovle'.
-      assert( 2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l) ).
-      type_sovle'. destruct H2.
-      rewrite Mmult_kron_5; auto_wf. 
-      repeat rewrite id_kron. f_equal; type_sovle';
-      f_equal; type_sovle'; f_equal; type_sovle'.
-       apply H1. lia. destruct H1. auto_wf. 
-Qed.
-
-Lemma Reduced_ceval_swap_QUnit_Ctrl{ s e:nat}: forall (q: qstate s e ) s0 e0 s1 e1  
-(U: nat -> Square (2^(e1-s1))) l r,
-s<=l /\ l<=s0 /\ s0<=e0 /\ e0 <=s1 /\ s1 <= e1 /\ e1<=r /\ r<=e-> 
-@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
-(forall j, WF_Unitary (U j ))->
-@Reduced  s e (QUnit_Ctrl_fun s0 e0  s1 e1 U q) l r 
-= QUnit_Ctrl_fun s0 e0 s1 e1 U (Reduced q l r) .
-Proof. intros. unfold QUnit_Ctrl_fun.
-       unfold q_update.
-      rewrite PMtrace_Super_swap.
-      f_equal. f_equal; type_sovle'.
-      rewrite kron_Msum_distr_l.
-      rewrite kron_Msum_distr_r.
-      apply big_sum_eq_bounded.
-      intros. 
-      remember (I (2 ^ (s0 - l)) ⊗ (∣ x ⟩_ (2^(e0 - s0)) × ⟨ x ∣_ (2^(e0 - s0))) ⊗ I (2 ^ (r - e0))).
-      remember ( (I (2 ^ (s1 - l)) ⊗ U x ⊗ I (2 ^ (r - e1)))).
-      apply Logic.eq_trans with 
-      (@kron (2^(l-s)) (2^(l-s)) (2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0))
-      (2 ^ (s1 - l) * 2 ^ (e1 - s1) * 2 ^ (r - e1))
-      (I (2 ^ (l - s)) × I (2 ^ (l - s)))
-       (m × m0)
-      ⊗ (I (2 ^ (e - r)) × I (2 ^ (e - r)))).
-      repeat rewrite <-kron_mixed_product.
-      rewrite Heqm. rewrite Heqm0.
-       rewrite Mmult_kron_5; auto_wf.
-       repeat rewrite id_kron.  
-      f_equal; type_sovle'. f_equal; type_sovle';
-      f_equal; type_sovle'. 
-      f_equal; type_sovle'. 
-      assert(2 ^ (s1 - l) * 2 ^ (e1 - s1) * 2 ^ (r - e1)= 
-      2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)).
-      type_sovle'. destruct H3.
-      rewrite Mmult_kron_5; auto_wf.
-      repeat rewrite id_kron.  
-      f_equal; type_sovle'; f_equal; type_sovle'.
-      f_equal; type_sovle'.
-      apply H1. repeat rewrite Mmult_1_r; auto_wf.
-      f_equal; type_sovle'. f_equal; type_sovle'.
-      f_equal; type_sovle'. lia. 
-      apply WF_Msum.
-      intros. assert(WF_Unitary (U i)). auto.
-      destruct H3. auto_wf.
-Qed.
-
-
-Lemma Reduced_ceval_swap_QMeas{ s e:nat}: forall (q: qstate s e ) s0 e0 j l r,
-s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
-@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
-j<2^(e0-s0)->
-@Reduced  s e (QMeas_fun s0 e0 j q) l r = QMeas_fun s0 e0 j (Reduced q l r) .
-Proof. intros. unfold QMeas_fun.
-       unfold q_update. 
-       rewrite PMtrace_Super_swap.
-      assert( 2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l) ).
-      type_sovle'. destruct H2.
-      f_equal. f_equal; type_sovle'.
-      rewrite Mmult_kron_5; auto_wf. 
-      repeat rewrite id_kron. f_equal; type_sovle';
-      f_equal; type_sovle'; f_equal; type_sovle'.
-      lia.  auto_wf. 
-Qed.
-#[export]Hint Unfold Reduced: M_db.
 
 
 Local Open Scope nat_scope.
@@ -1277,7 +1131,7 @@ Proof. induction p_n; intros; destruct mu_n. reflexivity.
       assumption.
 Qed.
 
-From Quan Require Import Ceval_Linear.
+
 
 
 Lemma big_dapp_list_and{s e:nat}: forall (p_n:list R)(mu_n1 mu_n2:list (dstate s e)) mu1 mu2 mu3,

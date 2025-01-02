@@ -19,7 +19,7 @@ From Quan Require Import QAssert.
 From Quan Require Import Reduced.
 From Quan Require Import Mixed_State.
 From Quan Require Import QSepar.
-
+From Quan Require Import Ceval_Prop.
 
 Local Open Scope nat_scope.
 
@@ -154,21 +154,7 @@ Qed.
   apply NSet.union_3. apply NSet.inter_2 in H. assumption.
   Qed.
   
-  Lemma union_empty:forall x y ,
-  NSet.Equal ( (NSet.union x y)) NSet.empty <->
-  NSet.Equal x NSet.empty /\ NSet.Equal y NSet.empty.
-  Proof.  unfold NSet.Equal. split; intros.  
-   split; split; intros.
-    apply H. apply NSet.union_2. assumption. 
-    inversion_clear H0. 
-    apply H. apply NSet.union_3. assumption.
-    inversion_clear H0.
-    destruct H. 
-    split. intros. apply NSet.union_1 in H1. destruct H1.
-    apply H. assumption.
-    apply H0. assumption.
-    intros. inversion_clear H1. 
-  Qed. 
+  
   
 
   
@@ -207,6 +193,7 @@ Qed.
            rule_solve; try rewrite inter_comm; try assumption.
   Qed.
   
+
   
   Theorem rule_OdotA: forall F1 F2 F3:State_formula,
   ((F1 ⊙ (F2 ⊙ F3) )<<->>( (F1 ⊙ F2) ⊙ F3) ).
@@ -350,86 +337,6 @@ Qed.
 Import Mixed_State.
 Local Open Scope nat_scope.
 
-Lemma In_empty: forall s, NSet.In s NSet.empty -> False .
-Proof. intros. pose (NSet.empty_1). unfold NSet.Empty in *. 
-        apply e in H. destruct H.
-Qed.
-
-Lemma In_Qsys: forall r l s, 
-l<r->
-NSet.In s (Qsys_to_Set l r)<-> l<=s<r.
-Proof. unfold Qsys_to_Set. 
-induction r; intros.
-lia.
-destruct l.
-simpl. split. intros.
-bdestruct (s=?r).
-rewrite H1. 
-lia.
-destruct r.  
-apply NSet.add_3 in H0.
-simpl in H0.
-apply In_empty in H0.
-destruct H0.
- intuition.
-apply NSet.add_3 in H0.
-apply IHr in H0. lia. 
-lia.
-intuition.
-intros.
-bdestruct (s=?r).
-rewrite H1.
-apply NSet.add_1.
-reflexivity.
-destruct r. 
-assert(s=0). lia.
-rewrite H2.  
-apply NSet.add_1.
-reflexivity.
-apply NSet.add_2.
-apply IHr. lia.  
-lia.
-
-
-simpl.  pose H.
-apply Lt_n_i in l0.
-rewrite l0.
-
-bdestruct (S l <?r).
-split; intros.
-bdestruct (s=? r).
-rewrite H2. lia.
-apply NSet.add_3 in H1.
-apply IHr in H1.
-lia. intuition. intuition.
-
-bdestruct (s=? r).
-rewrite H2. apply NSet.add_1. reflexivity.
-apply NSet.add_2. 
-apply IHr . assumption.
-lia. 
-
-assert(forall l r, l>=r ->(Qsys_to_Set_aux l r NSet.empty = NSet.empty)).
-intros. induction r0. 
- simpl. reflexivity.
- simpl. 
- assert(l1 <? S r0 = false).
- apply ltb_ge. 
- assumption.
- rewrite H2. reflexivity.
-rewrite H1.
-bdestruct (s=? r).
-rewrite H2.
-split;intros. lia.
-apply NSet.add_1. reflexivity.
-split; intros. 
-apply NSet.add_3 in H3.
-apply In_empty in H3.
-destruct H3.
-intuition.
-lia. 
-assumption.    
-Qed.
 
 Theorem  rule_Separ':forall s x e u v, 
  s<x/\x<e-> Pure_State_Vector u -> Pure_State_Vector v ->
@@ -870,7 +777,7 @@ Fixpoint swap_list {A:Type} (l:list A) (i:nat):=
   |h:: h'::t, S i' => h:: (swap_list (h'::t) i')
   end .
 
-Import Ceval_Linear.
+Import Ceval_Prop.
 
 Lemma  big_dapp_nil'{s e:nat}: forall g (f:list (dstate s e)),
 g=[]\/f=[]-> dstate_eq (big_dapp g f ) (d_empty s e) .

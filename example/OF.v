@@ -12,7 +12,7 @@ From Quan Require Import Mixed_State.
 From Quan Require Import QState.
 From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
-From Quan Require Import Ceval_Linear.
+From Quan Require Import Ceval_Prop.
 From Quan Require Import QAssert.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
@@ -1342,5 +1342,4 @@ Proof.
       apply rule_Conj_split_l. 
 Qed.
 End OF.
-
 

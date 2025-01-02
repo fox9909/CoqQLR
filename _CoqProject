@@ -12,9 +12,9 @@
 ./QState/QState.v
 ./QState/Reduced.v
 ./QIMP/QIMP_L.v
-./QIMP/Ceval_Linear.v
+./QIMP/Ceval_Prop.v
 ./QAssert/QAssert.v
-./QRule/QSepar.v
+./QAssert/QSepar.v
 ./QRule/QRule_E_L.v
 ./QRule/QRule_I_L.v
 ./QRule/QRule_Q_L.v

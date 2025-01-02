@@ -1258,7 +1258,7 @@ Proof. induction p_n; intros. rewrite sum_over_list_nil. reflexivity.
         pose(IHp_n H2 H). rewrite e in *. rewrite Rplus_0_r. lra. 
 Qed. 
 
-From Quan Require Import Ceval_Linear.
+From Quan Require Import Ceval_Prop.
 Lemma Forall_eq_0:  forall p_n,  
 Forall (fun i : R => (i >= 0)%R) p_n ->
 sum_over_list p_n = 0%R ->
@@ -2140,7 +2140,7 @@ dstate_eq (d_scale_not_0 r (d_update_cstate i a mu1))
   (d_update_cstate i a (d_scale_not_0 r mu1)).
 Proof. intros i a r (mu1, IHmu1). unfold dstate_eq. simpl in *.
     apply map_update.
-Qed. 
+Qed.
 
 
 Lemma d_scale_update{s e:nat}: forall i a r (mu1 mu2 mu3:dstate s e),
@@ -2192,39 +2192,48 @@ Proof. intros (mu, IHmu). unfold WWF_dstate.  unfold d_trace. unfold d_update_cs
 Qed.
 
 
-(* 
-
-
-Require Import Classical_Prop.
-
-Lemma d_app_mu_nil: forall (s e : nat) (mu mu': dstate s e),
-StateMap.this mu'= []->
-StateMap.this (d_app mu mu') = StateMap.this mu .
-Proof. intros s e (mu, IHmu) (mu', IHmu').
-        induction mu. simpl. rewrite map2_r_refl.
-        intuition. 
-        simpl. intros. rewrite H. destruct a.
-        simpl. rewrite map2_l_refl.
-        reflexivity.
-  
+(*eval_odot*)
+Lemma State_eval_odot:forall (s e : nat) (mu : list (cstate * qstate s e)) (F1 F2 : State_formula),
+State_eval_dstate ((F1 ⊙ F2)) mu <->
+State_eval_dstate F1 mu /\ State_eval_dstate F2 mu /\ 
+NSet.Equal (NSet.inter (snd (Free_state F1))
+         (snd (Free_state F2)))
+     NSet.empty  .
+Proof.
+intros. split; intros; 
+       induction mu; 
+       simpl in H. destruct H.
+       -destruct mu; destruct a; inversion_clear H; simpl;
+        intuition.  
+      -destruct H. destruct H. 
+      -destruct a. destruct mu. simpl. econstructor. 
+       destruct H. inversion_clear H. inversion_clear H0.
+      split; inversion_clear H. intuition. intuition.  apply Forall_nil.
+      simpl. econstructor.  destruct H. inversion_clear H.
+      destruct H0.
+      inversion_clear H. intuition.
+      apply IHmu. destruct H. inversion_clear H. destruct H0.
+      inversion_clear H. split. 
+      intuition. intuition.  
 Qed.
-  
-  
-  Lemma  Rplus_le_1:forall (r1 r2:R), r1>0->r1+r2<=1 ->r2<=1 .
-  Proof. intros. lra.
-  Qed.
 
 
-  Lemma map2_scale_not_nil: forall s e(p:R) (mu :list (cstate * qstate s e)),
-  mu<>nil -> (p>0)->
-  StateMap.Raw.map (fun x : qstate s e =>@scale (2^(e-s)) (2^(e-s)) p x)
-    mu <> [].
-  Proof. intros. induction mu. destruct H. reflexivity.
-          destruct a. simpl. discriminate.
-  Qed. *)
-
-
-
+Lemma sat_assert_odot: forall s e (mu:dstate s e) (F1 F2:State_formula),
+sat_Assert mu (F1 ⊙ F2)<->
+sat_Assert mu F1/\ sat_Assert mu F2 /\ NSet.Equal (NSet.inter (snd (Free_state F1))
+         (snd (Free_state F2)))
+     NSet.empty .
+Proof.  split; destruct mu as [mu IHmu]; intros;
+      repeat rewrite sat_Assert_to_State in *.
+      inversion_clear H.  apply State_eval_odot in H1.
+      split. econstructor. assumption. apply H1.
+      split. econstructor. assumption. apply H1.
+      apply H1.
+      inversion_clear H. inversion_clear H0.
+      econstructor. intuition.
+      apply State_eval_odot. destruct H1.
+      inversion_clear H0. split; intuition.  
+Qed.
 
 
 

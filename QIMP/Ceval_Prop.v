@@ -1530,6 +1530,539 @@ Proof. induction mu_n; intros; destruct mu_n'; simpl  in *; inversion H0; subst.
       apply IHmu_n; try assumption.
 Qed.
 
+(*---------------------mv(c)\subseteq S =>[[c]]mu|_{S}= ([[c]]mu)|_{S}---------------------------------------------------------*)
+
+
+Local Open Scope com_scope.
+Local Open Scope nat_scope.
+
+#[export] Hint Extern 1 (pow_gt_0) => lia : wf_db.
+
+Ltac type_sovle':=
+  try (repeat rewrite  <-Nat.pow_add_r; f_equal ; lia).
+
+Lemma PMtrace_Super_swap{s e:nat}: forall l r  (M: Square (2^(r-l))) (A:qstate s e) ,
+s<=l /\l<=r /\ r<=e -> WF_Matrix M->
+super M (Reduced A  l r)= @Reduced s e (super (I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r))) A) l r.
+Proof. intros. unfold super. repeat rewrite Ptrace_l_r'; try lia.   
+       assert((2 ^ (r-l)) = 1 * (2 ^ (r- l)) * 1). lia.  destruct H1.
+       rewrite (Mmult_Msum_distr_l ((2 ^ (l-s))) _ M).
+       rewrite Mmult_Msum_distr_r.
+       apply big_sum_eq_bounded.  intros.  
+       assert((2 ^ (r-l)) = 1 * (2 ^ (r- l)) * 1). lia. destruct H2. 
+       rewrite Mmult_Msum_distr_l. rewrite Mmult_Msum_distr_r.
+       apply big_sum_eq_bounded.  intros. 
+       rewrite Mmult_assoc_5.   rewrite Mmult_assoc_5. f_equal.  f_equal.
+
+       apply Logic.eq_trans with ((I 1 ⊗ M ⊗ I 1) × (⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ⟨ x0 ∣_ (2^(e-r)))).
+       rewrite kron_1_l; auto_wf. rewrite kron_1_r. f_equal; try lia. 
+       apply Logic.eq_trans with (⟨ x ∣_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ⟨ x0 ∣_ (2^(e-r))
+       × (I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r)))).
+       repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_l; auto_wf.
+       repeat rewrite Mmult_1_r; auto_wf.  f_equal; auto_wf. 
+       f_equal; lia. 
+
+       apply Logic.eq_trans with ((∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ∣ x0 ⟩_ (2^(e-r)))× (I 1 ⊗ (M) † ⊗ I 1)  ).
+       rewrite kron_1_l; auto_wf. rewrite kron_1_r. f_equal; try lia. 
+       apply Logic.eq_trans with ((I (2 ^ (l-s)) ⊗ M ⊗ I (2 ^ (e-r))) †
+       × (∣ x ⟩_ (2^(l-s)) ⊗ I (2 ^ (r- l)) ⊗ ∣ x0 ⟩_ (2^(e-r)))). 
+       repeat rewrite kron_adjoint. repeat rewrite id_adjoint_eq.
+       repeat rewrite kron_mixed_product. repeat rewrite Mmult_1_l; auto_wf.
+       repeat rewrite Mmult_1_r; auto_wf.  f_equal; auto_wf. 
+       f_equal; lia. 
+Qed.
+
+
+
+
+Lemma Mmult_kron_5: forall {m1 n1 m2 n2 m3 n3 m4 n4 m5 n5:nat} (A: Matrix m1 n1)
+(B: Matrix m2 n2) (C: Matrix m3 n3) (D: Matrix m4 n4) (E: Matrix m5 n5), 
+WF_Matrix A -> WF_Matrix B -> WF_Matrix C -> WF_Matrix D -> WF_Matrix E->
+A ⊗ (B ⊗ C ⊗ D) ⊗ E= (A ⊗ B) ⊗ C ⊗ (D ⊗ E).
+Proof. intros. repeat rewrite <-kron_assoc; try reflexivity;
+       auto_wf.
+Qed.
+
+Lemma Reduced_ceval_swap_Qinit{ s e:nat}: forall (q: qstate s e ) s0 e0 l r,
+s<=l /\ l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
+@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
+@Reduced  s e (QInit_fun s0 e0 q) l r = QInit_fun s0 e0 (Reduced q l r) .
+Proof. intros. unfold QInit_fun. unfold q_update.
+       rewrite big_sum_Reduced.
+       apply big_sum_eq_bounded. 
+       intros. assert(0<(2^(e0 - s0))). lia.  
+      rewrite PMtrace_Super_swap. f_equal.
+      f_equal; type_sovle'.  
+      assert(  2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l)).
+      type_sovle'. destruct H3.
+      rewrite Mmult_kron_5; auto_wf. 
+      repeat rewrite id_kron. f_equal; type_sovle';
+      f_equal; type_sovle'; f_equal; type_sovle'.
+      lia. auto_wf. lia.   
+Qed. 
+
+Lemma Reduced_ceval_swap_QUnit_one{ s e:nat}: forall (q: qstate s e ) s0 e0 
+(U:Square (2^(e0-s0))) l r,
+s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
+@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
+WF_Unitary U->
+@Reduced  s e (QUnit_One_fun s0 e0 U q) l r = QUnit_One_fun s0 e0 U (Reduced q l r) .
+Proof. intros. unfold QUnit_One_fun.
+       unfold q_update. 
+       rewrite PMtrace_Super_swap. 
+      f_equal; f_equal; type_sovle'.
+      assert( 2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l) ).
+      type_sovle'. destruct H2.
+      rewrite Mmult_kron_5; auto_wf. 
+      repeat rewrite id_kron. f_equal; type_sovle';
+      f_equal; type_sovle'; f_equal; type_sovle'.
+       apply H1. lia. destruct H1. auto_wf. 
+Qed.
+
+Lemma Reduced_ceval_swap_QUnit_Ctrl{ s e:nat}: forall (q: qstate s e ) s0 e0 s1 e1  
+(U: nat -> Square (2^(e1-s1))) l r,
+s<=l /\ l<=s0 /\ s0<=e0 /\ e0 <=s1 /\ s1 <= e1 /\ e1<=r /\ r<=e-> 
+@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
+(forall j, WF_Unitary (U j ))->
+@Reduced  s e (QUnit_Ctrl_fun s0 e0  s1 e1 U q) l r 
+= QUnit_Ctrl_fun s0 e0 s1 e1 U (Reduced q l r) .
+Proof. intros. unfold QUnit_Ctrl_fun.
+       unfold q_update.
+      rewrite PMtrace_Super_swap.
+      f_equal. f_equal; type_sovle'.
+      rewrite kron_Msum_distr_l.
+      rewrite kron_Msum_distr_r.
+      apply big_sum_eq_bounded.
+      intros. 
+      remember (I (2 ^ (s0 - l)) ⊗ (∣ x ⟩_ (2^(e0 - s0)) × ⟨ x ∣_ (2^(e0 - s0))) ⊗ I (2 ^ (r - e0))).
+      remember ( (I (2 ^ (s1 - l)) ⊗ U x ⊗ I (2 ^ (r - e1)))).
+      apply Logic.eq_trans with 
+      (@kron (2^(l-s)) (2^(l-s)) (2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0))
+      (2 ^ (s1 - l) * 2 ^ (e1 - s1) * 2 ^ (r - e1))
+      (I (2 ^ (l - s)) × I (2 ^ (l - s)))
+       (m × m0)
+      ⊗ (I (2 ^ (e - r)) × I (2 ^ (e - r)))).
+      repeat rewrite <-kron_mixed_product.
+      rewrite Heqm. rewrite Heqm0.
+       rewrite Mmult_kron_5; auto_wf.
+       repeat rewrite id_kron.  
+      f_equal; type_sovle'. f_equal; type_sovle';
+      f_equal; type_sovle'. 
+      f_equal; type_sovle'. 
+      assert(2 ^ (s1 - l) * 2 ^ (e1 - s1) * 2 ^ (r - e1)= 
+      2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)).
+      type_sovle'. destruct H3.
+      rewrite Mmult_kron_5; auto_wf.
+      repeat rewrite id_kron.  
+      f_equal; type_sovle'; f_equal; type_sovle'.
+      f_equal; type_sovle'.
+      apply H1. repeat rewrite Mmult_1_r; auto_wf.
+      f_equal; type_sovle'. f_equal; type_sovle'.
+      f_equal; type_sovle'. lia. 
+      apply WF_Msum.
+      intros. assert(WF_Unitary (U i)). auto.
+      destruct H3. auto_wf.
+Qed.
+
+
+Lemma Reduced_ceval_swap_QMeas{ s e:nat}: forall (q: qstate s e ) s0 e0 j l r,
+s<=l/\l<=s0 /\ s0<=e0 /\ e0<=r /\ r<=e-> 
+@WF_Matrix (2^(e-s)) (2^(e-s)) q -> 
+j<2^(e0-s0)->
+@Reduced  s e (QMeas_fun s0 e0 j q) l r = QMeas_fun s0 e0 j (Reduced q l r) .
+Proof. intros. unfold QMeas_fun.
+       unfold q_update. 
+       rewrite PMtrace_Super_swap.
+      assert( 2 ^ (s0 - l) * 2 ^ (e0 - s0) * 2 ^ (r - e0)= 2 ^ (r - l) ).
+      type_sovle'. destruct H2.
+      f_equal. f_equal; type_sovle'.
+      rewrite Mmult_kron_5; auto_wf. 
+      repeat rewrite id_kron. f_equal; type_sovle';
+      f_equal; type_sovle'; f_equal; type_sovle'.
+      lia.  auto_wf. 
+Qed.
+#[export]Hint Unfold Reduced: M_db.
+
+Lemma  subset_union: forall x y z, NSet.Subset (NSet.union x y) z ->
+NSet.Subset x z /\ NSet.Subset y z.
+Proof. intros. unfold NSet.Subset in *. 
+       split. intros. 
+       apply H. apply NSet.union_2.
+       assumption.
+       intros. apply H. apply NSet.union_3.
+       assumption.
+       
+Qed.
+
+Lemma In_empty: forall s, NSet.In s NSet.empty -> False .
+Proof. intros. pose (NSet.empty_1). unfold NSet.Empty in *. 
+        apply e in H. destruct H.
+Qed.
+
+Lemma In_Qsys: forall r l s, 
+l<r->
+NSet.In s (Qsys_to_Set l r)<-> l<=s<r.
+Proof. unfold Qsys_to_Set. 
+induction r; intros.
+lia.
+destruct l.
+simpl. split. intros.
+bdestruct (s=?r).
+rewrite H1. 
+lia.
+destruct r.  
+apply NSet.add_3 in H0.
+simpl in H0.
+apply In_empty in H0.
+destruct H0.
+ intuition.
+apply NSet.add_3 in H0.
+apply IHr in H0. lia. 
+lia.
+intuition.
+intros.
+bdestruct (s=?r).
+rewrite H1.
+apply NSet.add_1.
+reflexivity.
+destruct r. 
+assert(s=0). lia.
+rewrite H2.  
+apply NSet.add_1.
+reflexivity.
+apply NSet.add_2.
+apply IHr. lia.  
+lia.
+
+
+simpl.  pose H.
+apply Lt_n_i in l0.
+rewrite l0.
+
+bdestruct (S l <?r).
+split; intros.
+bdestruct (s=? r).
+rewrite H2. lia.
+apply NSet.add_3 in H1.
+apply IHr in H1.
+lia. intuition. intuition.
+
+bdestruct (s=? r).
+rewrite H2. apply NSet.add_1. reflexivity.
+apply NSet.add_2. 
+apply IHr . assumption.
+lia. 
+
+assert(forall l r, l>=r ->(Qsys_to_Set_aux l r NSet.empty = NSet.empty)).
+intros. induction r0. 
+ simpl. reflexivity.
+ simpl. 
+ assert(l1 <? S r0 = false).
+ apply Nat.ltb_ge. 
+ assumption.
+ rewrite H2. reflexivity.
+rewrite H1.
+bdestruct (s=? r).
+rewrite H2.
+split;intros. lia.
+apply NSet.add_1. reflexivity.
+split; intros. 
+apply NSet.add_3 in H3.
+apply In_empty in H3.
+destruct H3.
+intuition.
+lia. 
+assumption.    
+Qed.
+
+
+Lemma In_Qsys_l_r: forall r l , 
+l<r->
+NSet.In l (Qsys_to_Set l r) /\
+NSet.In (r-1) (Qsys_to_Set l r).
+Proof. unfold Qsys_to_Set. induction r; induction l; intros; simpl.
+ lia. lia.   
+ simpl. split. destruct r.
+ simpl.  
+ apply NSet.add_1. reflexivity.
+ apply NSet.add_2. 
+ eapply IHr. lia.  
+ rewrite Nat.sub_0_r.
+ apply NSet.add_1. reflexivity.
+ destruct r. lia.  
+ pose H.
+ apply Lt_n_i in l0. rewrite l0.
+ split.
+ bdestruct (l =? r).
+ rewrite H0. apply NSet.add_1.
+ reflexivity.
+ apply NSet.add_2.
+ apply IHr. lia.  
+ rewrite Nat.sub_0_r.
+ apply NSet.add_1.
+ reflexivity.    
+Qed.
+
+Lemma subset_Qsys:forall s e l r, 
+l<r-> 
+NSet.Subset (Qsys_to_Set l r) (Qsys_to_Set s e ) ->
+ s<=l /\ r<=e.
+Proof. intro. intro. intro. intro. intro. 
+apply NF_1. intros.
+ apply Classical_Prop.not_and_or in H0.
+unfold not. intros. 
+destruct H0. unfold not in H0.
+assert(s>l). intuition. 
+unfold NSet.Subset in H1.
+pose (H1 l). 
+assert(NSet.In l (Qsys_to_Set s e)).
+apply i. apply In_Qsys_l_r. assumption.
+apply In_Qsys in H3. lia.
+assert(s<e\/ ~ (s<e)).
+apply Classical_Prop.classic.
+destruct H5. assumption.
+assert(s >= e). lia.
+apply Nat.ltb_ge in H6.
+unfold Qsys_to_Set in H3.
+destruct e.  
+simpl in H3.  
+apply In_empty in H3.
+destruct H3.
+ simpl in H3. rewrite H6 in H3.
+ apply In_empty in H3. destruct H3.
+
+assert(r>e). intuition. 
+unfold NSet.Subset in H1.
+pose (H1 (r-1)). 
+assert(NSet.In (r-1) (Qsys_to_Set s e)).
+apply i. apply In_Qsys_l_r. assumption.
+apply In_Qsys in H3. lia.
+assert(s<e\/ ~ (s<e)).
+apply Classical_Prop.classic.
+destruct H5. assumption.
+assert(s >= e). lia.
+apply Nat.ltb_ge in H6.
+unfold Qsys_to_Set in H3.
+destruct e.  
+simpl in H3.  
+apply In_empty in H3.
+destruct H3.
+ simpl in H3. rewrite H6 in H3.
+ apply In_empty in H3. destruct H3.
+Qed.
+
+Ltac Reduced_ceval_swap_solve mu:=
+  induction mu; intros;
+  try  match goal with 
+   H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
+   try  match goal with 
+   H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
+   try  match goal with 
+   H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
+   try apply Nat.eq_dec;
+   [simpl; econstructor|];
+   try match goal with 
+   H: WF_dstate_aux ((?sigma, ?rho) :: ?mu) |- _ => inversion_clear H end;
+   try match goal with 
+   H2: NSet.Subset ?a ?b |- _ =>simpl in H2 end;
+   try match goal with 
+   H2: NSet.Subset (NSet.union ?a ?b) ?c |- _ => pose H2 as H2'; apply subset_union in H2';
+   destruct H2' as [H2' H2'']; apply subset_Qsys in H2' ; try lia end;
+   try match goal with 
+   H2'': NSet.Subset ?a ?b |- _ => pose H2'' as H2''';  apply subset_Qsys in H2'''; try lia end;
+   try rewrite d_reduced_map2; try simpl d_reduced;
+   try rewrite Reduced_ceval_swap_QUnit_one;  
+   try rewrite Reduced_ceval_swap_Qinit;
+   try rewrite Reduced_ceval_swap_QUnit_Ctrl; try lia; auto_wf; try assumption;
+   econstructor; try lia; try assumption; 
+   try match goal with IHmu:_ |- _ => apply IHmu; try assumption end.
+
+
+Local Open Scope nat_scope.
+Lemma Reduced_ceval_swap: forall c s e (mu mu': list (cstate *qstate s e)) l r,
+s<=l /\ l<=r /\ r<=e ->
+NSet.Subset (snd (MVar c)) (Qsys_to_Set l r)->
+WF_dstate_aux mu ->
+ceval_single c mu mu'->
+ceval_single c (d_reduced mu l r )
+(d_reduced mu' l r ).
+Proof. induction c; try Reduced_ceval_swap_solve mu. 
+       { induction mu; intros. inversion_clear H2.
+        simpl. econstructor.
+        destruct a0. inversion H2 ;subst.
+        rewrite d_reduced_map2.
+        simpl d_reduced.
+        rewrite (state_eq_aexp  _ (c,(Reduced q l r) )).
+        econstructor. apply IHmu. assumption.
+        assumption. inversion_clear H1. intuition.
+        assumption. reflexivity.  }
+       intros.  
+       apply (IHc1 _ _ _ mu1 l r) in H8. simpl in H8. apply H8.
+       lia.  apply subset_union in H0. apply H0. 
+       econstructor; try assumption. 
+       apply subset_union in H0. apply H0. 
+       apply WF_ceval with c1 ((sigma, rho) :: mu); try econstructor; try assumption.
+       assumption.
+       {induction mu; intros. inversion H2; subst.
+       simpl. econstructor.
+       inversion H2; subst. 
+       rewrite d_reduced_map2.
+      econstructor. rewrite (state_eq_bexp _  (sigma, rho)).
+      intuition. reflexivity. simpl in H0.   apply subset_union in H0. apply H0.  
+      apply IHmu.  intuition.
+      intuition. inversion_clear H1.  assumption. assumption. 
+      assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
+      reflexivity. rewrite <-H3. apply IHc1. assumption.
+      simpl in H0. apply subset_union in H0.
+       intuition. apply WF_state_dstate_aux.
+        inversion_clear H1.  assumption. assumption. 
+      rewrite d_reduced_map2.
+      apply E_IF_false. rewrite (state_eq_bexp _  (sigma, rho)).
+      intuition. reflexivity. simpl in H0.   apply subset_union in H0. apply H0.  
+      apply IHmu.  intuition.
+      intuition. inversion_clear H1. assumption. assumption. 
+      assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
+      reflexivity. rewrite <-H3. apply IHc2.
+      assumption.  
+      simpl in H0. apply subset_union in H0.
+       intuition.  inversion_clear H1. 
+       apply WF_state_dstate_aux. assumption. 
+      assumption. 
+          }
+      {   intros.  remember <{while b do c end}> as original_command eqn:Horig. 
+      induction H2;  try inversion Horig; subst. 
+       simpl. econstructor.  
+       simpl. rewrite d_reduced_map2.   
+       apply E_While_true with ((d_reduced mu1 l r)). rewrite (state_eq_bexp _  (sigma, rho)).
+       intuition. reflexivity. 
+       apply IHceval_single1; try reflexivity; try assumption. 
+       inversion_clear H1. assumption.
+       assert(d_reduced [(sigma, rho)] l r = [(sigma, Reduced rho l r)]).
+       reflexivity. rewrite <-H3. apply IHc. assumption. apply H0.
+       apply WF_state_dstate_aux.
+        inversion_clear H1.  assumption. assumption.
+        apply IHceval_single3; try reflexivity; try assumption. 
+        eapply WF_ceval; try apply H2_0; try assumption. 
+        apply WF_state_dstate_aux.
+        inversion_clear H1.  assumption.
+      
+        rewrite d_reduced_map2.   
+        apply E_While_false. rewrite (state_eq_bexp _  (sigma, rho)).
+        intuition. reflexivity. assumption.
+        apply IHceval_single; try reflexivity; try assumption. 
+        inversion_clear H1. assumption.
+        }
+      apply (d_reduced_app' _ l r) in H11; try lia. 
+      destruct H11. destruct H1. simpl in H1. 
+      eapply big_app_eq_bound''. rewrite<-H5 in H1. apply H1.
+      intros.
+      rewrite  <-Reduced_ceval_swap_QMeas;try lia; auto_wf; try reflexivity.
+    intros. simpl. apply mixed_super_ge_0; auto_wf. 
+     apply WWF_qstate_to_WF_qstate. apply H2.
+Qed.
+
+Lemma subset_empty':forall a b,
+NSet.Equal a NSet.empty->
+NSet.Subset a b.
+Proof. unfold NSet.Subset. unfold NSet.Equal; intros. 
+       apply H in H0. 
+       apply In_empty in H0. destruct H0.  
+       
+Qed.
+
+Lemma Qsys_to_Set_not_empty:forall s e,
+s<e->
+~ (NSet.Equal (Qsys_to_Set s e) NSet.empty).
+Proof. intros. unfold NSet.Equal. intro. 
+       pose (H0 s). pose (In_Qsys_l_r e s H). destruct a. 
+       apply i in H1. apply In_empty in H1. destruct H1.  
+       
+Qed.
+
+Lemma union_empty:forall x y ,
+  NSet.Equal ( (NSet.union x y)) NSet.empty <->
+  NSet.Equal x NSet.empty /\ NSet.Equal y NSet.empty.
+  Proof.  unfold NSet.Equal. split; intros.  
+   split; split; intros.
+    apply H. apply NSet.union_2. assumption. 
+    inversion_clear H0. 
+    apply H. apply NSet.union_3. assumption.
+    inversion_clear H0.
+    destruct H. 
+    split. intros. apply NSet.union_1 in H1. destruct H1.
+    apply H. assumption.
+    apply H0. assumption.
+    intros. inversion_clear H1. 
+  Qed. 
+
+Lemma ceval_single_classic{s e:nat}:  forall c (mu mu':list (state s e)) l r , 
+NSet.Equal (snd (MVar c)) NSet.empty->
+ceval_single c mu mu'->
+ceval_single c (d_reduced mu l r) (d_reduced mu' l r).
+Proof. induction c. intros. apply ceval_skip_1 in H0. subst. 
+      apply ceval_skip. 
+      induction mu; intros; inversion_clear H0. econstructor.
+      rewrite d_reduced_map2. simpl d_reduced .
+      rewrite (state_eq_aexp _ (sigma, Reduced rho l r)); try reflexivity.
+      econstructor. apply IHmu; try assumption. 
+
+      induction mu; intros; inversion H0; subst. econstructor.  simpl. econstructor.
+      assumption.
+     
+      intros. simpl in H. apply union_empty in H.
+      destruct H.    apply ceval_seq_1 in H0. destruct H0. destruct H0.
+      eapply ceval_seq with (d_reduced x l r). apply IHc1; try assumption.
+      apply IHc2; try assumption.
+
+      induction mu; intros; inversion_clear H0. econstructor.
+      rewrite d_reduced_map2; simpl d_reduced .
+      econstructor. 
+      rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+      simpl in H. apply union_empty in H.  destruct H.   
+      apply subset_empty'. assumption.
+      apply IHmu; try assumption. 
+      simpl in H. apply union_empty in H.  destruct H.   
+      pose (IHc1 [(sigma, rho)] mu'0 ). simpl in c. apply c; try assumption.
+      
+      rewrite d_reduced_map2; simpl d_reduced .
+      apply E_IF_false. 
+      rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+      simpl in H. apply union_empty in H.  destruct H.   
+      apply subset_empty'. assumption.
+      apply IHmu; try assumption. 
+      simpl in H. apply union_empty in H.  destruct H.   
+      pose (IHc2 [(sigma, rho)] mu'0 ). simpl in c. apply c; try assumption.
+
+      intros.  remember <{while b do c end}> as original_command eqn:Horig. 
+    induction H0;  try inversion Horig; subst. 
+    econstructor. rewrite d_reduced_map2; simpl d_reduced . 
+    econstructor. 
+    rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption.
+    apply IHceval_single1; try reflexivity; try assumption.   
+    pose (IHc [(sigma, rho)] mu1 ). simpl in c0. apply c0; try assumption.
+    apply IHceval_single3; try reflexivity; try assumption.
+
+     rewrite d_reduced_map2; simpl d_reduced . 
+    apply E_While_false. 
+    rewrite (state_eq_bexp _ (sigma, rho)); try reflexivity; try assumption. 
+    apply subset_empty'. assumption.
+    apply IHceval_single; try reflexivity; try assumption.   
+   
+    intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption. 
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption.
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. 
+     apply union_empty in H. apply H.
+     intros. simpl in *.  inversion_clear H0. econstructor.
+     pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption. 
+
+       
+Qed.
+
+
+
 
 
 

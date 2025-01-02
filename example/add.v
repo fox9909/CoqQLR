@@ -26,7 +26,7 @@ From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
 From Quan Require Import QFrame.
-Import Basic. Import Ceval_Linear.
+Import Basic. Import Ceval_Prop.
 
 
 

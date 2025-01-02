@@ -329,7 +329,7 @@ Proof. induction f; intros; destruct g. econstructor.
        apply IHf. apply H. assumption. assumption.
 Qed.
 
-Import Ceval_Linear.
+Import Ceval_Prop.
 Theorem rule_sum: forall (nF1 nF2: npro_formula ) c  (p_n:list R),
             (Forall (fun x=> 0 < x %R) p_n)->
              length nF1 = length p_n -> 
