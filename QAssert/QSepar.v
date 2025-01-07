@@ -2278,6 +2278,7 @@ Qed.
 
 (*------------------------------eval_dom---------------------------------------------*)
 
+
 Lemma QExp_eval_dom{ s e:nat}: forall qs c (q:qstate s e),
 QExp_eval qs (c,q) -> s<= fst (Free_QExp' qs) /\ 
 fst (Free_QExp' qs) < snd (Free_QExp' qs) /\ snd (Free_QExp' qs) <=e.
@@ -2746,7 +2747,7 @@ dstate_Separ mu' s0 e0 s1 e1->
 dstate_Separ ((c,q)::mu') s0 e0 s1 e1.
 
 (*------------------mu \modes F => mu is separable--------------------*)
-Lemma seman_eq_two'''{s e:nat}: forall F r c (q:qstate s e),
+Lemma State_eval_separ_r{s e:nat}: forall F r c (q:qstate s e),
 Considered_Formula (F) /\
 (r <= e /\ snd (option_free (Free_State F)) <=r /\ fst (option_free (Free_State F)) < snd (option_free (Free_State F)))->
 WF_qstate q->
@@ -2781,7 +2782,7 @@ Proof. intros F r c q H Hw. intros.
 Qed.
 
 
-Lemma seman_eq_two''{s e:nat}: forall F l  c (q:qstate s e),
+Lemma State_eval_separ_l{s e:nat}: forall F l  c (q:qstate s e),
 Considered_Formula (F) /\
 (s <= l /\ l <= fst (option_free (Free_State F)) /\ fst (option_free (Free_State F)) < snd (option_free (Free_State F)))->
 WF_qstate q->
@@ -2814,7 +2815,7 @@ Proof. intros F l c q H Hw. intros.
 Qed.
 
 
-Lemma r1{s e:nat}: forall (mu : list (cstate *qstate s e)) F l,
+Lemma State_eval_dstate_separ_l{s e:nat}: forall (mu : list (cstate *qstate s e)) F l,
 Considered_Formula F /\
 (s <= l /\ l <= fst (option_free (Free_State F)) /\ fst (option_free (Free_State F)) < snd (option_free (Free_State F)))->
 State_eval_dstate F mu->
@@ -2830,7 +2831,7 @@ Proof. induction mu; intros.
       assert(exists (q1:qstate l (fst (option_free (Free_State F)))) 
       (q2:qstate (fst (option_free (Free_State F))) (snd (option_free (Free_State F)))), 
       (q_combin' q1 q2 (@Reduced s e q l (snd (option_free (Free_State F)))))).
-      apply seman_eq_two'' with c.
+      apply State_eval_separ_l with c.
       assumption. inversion_clear  H1. intuition.
       inversion_clear H0. assumption.
 
@@ -2856,7 +2857,7 @@ Proof. induction mu; intros.
       assert(exists (q1:qstate l (fst (option_free (Free_State F))))
       (q2:qstate (fst (option_free (Free_State F))) (snd (option_free (Free_State F)))), 
       (q_combin' q1 q2 (@Reduced s e q l (snd (option_free (Free_State F)))))).
-      apply seman_eq_two'' with c.
+      apply State_eval_separ_l with c.
       assumption. inversion_clear  H1. intuition.
       inversion_clear H0. assumption. 
       destruct H2. destruct H2. 
@@ -2884,7 +2885,7 @@ Proof. induction mu; intros.
 Qed.
 
 
-Lemma r1'{s e:nat}: forall (mu : list (cstate *qstate s e)) F r,
+Lemma State_eval_dstate_separ_r{s e:nat}: forall (mu : list (cstate *qstate s e)) F r,
 Considered_Formula F /\
 (r <= e /\ snd (option_free (Free_State F)) <=r /\ fst (option_free (Free_State F)) < snd (option_free (Free_State F)))->
 State_eval_dstate F mu->
@@ -2901,7 +2902,7 @@ Proof. induction mu; intros.
       (q1:qstate (fst (option_free (Free_State F))) (snd (option_free (Free_State F))))
       (q2:qstate  (snd (option_free (Free_State F))) r), 
       (q_combin' q1 q2 (@Reduced s e q  (fst (option_free (Free_State F))) r))).
-      apply seman_eq_two''' with c.
+      apply State_eval_separ_r with c.
       assumption. inversion_clear  H1. intuition.
       inversion_clear H0. assumption.
 
@@ -2928,7 +2929,7 @@ Proof. induction mu; intros.
       (q1:qstate (fst (option_free (Free_State F))) (snd (option_free (Free_State F))))
       (q2:qstate  (snd (option_free (Free_State F))) r), 
       (q_combin' q1 q2 (@Reduced s e q  (fst (option_free (Free_State F))) r))).
-      apply seman_eq_two''' with c.
+      apply State_eval_separ_r with c.
       assumption. inversion_clear  H1. intuition.
       inversion_clear H0. assumption. 
       destruct H2. destruct H2. 
@@ -2954,9 +2955,6 @@ Proof. induction mu; intros.
       apply H9.
       inversion_clear H1. assumption.  
 Qed.
-
-
-
 
 (*  ------------------------------mu \models F => mu|_{V} \modesl F -----------*)
 Lemma QExp_free_eval{s e:nat}:forall (qs: QExp) (st: state s e) s' e',
@@ -3271,7 +3269,546 @@ Proof. induction mu; intros. simpl in *.  destruct H0.
        simpl. econstructor.   
        eapply Pure_free_eval'. assumption. apply H1.
        apply IHmu. assumption. assumption.
+Qed.  
+
+
+
+
+(*---------------------------------seman_eq-------------------------------------------*)
+Lemma Pure_dom: forall F, 
+option_beq (Free_State F) None = true ->
+fst (option_free (Free_State F)) = snd (option_free (Free_State F)).
+Proof.  induction F; simpl. intuition.  induction qs; simpl. intro. 
+        discriminate. discriminate.
+        destruct (option_beq (Free_State F1) None)  eqn:E. auto. 
+        destruct (option_beq (Free_State F2) None) eqn:E1. intros. rewrite E in H.  auto.
+        simpl. intros. discriminate. 
+        destruct (option_beq (Free_State F1) None)  eqn:E. auto. 
+        destruct (option_beq (Free_State F2) None) eqn:E1. intros. rewrite E in H.  auto.
+        simpl. intros. discriminate. auto.
+Qed.
+
+
+ 
+
+
+Lemma Reduced_id{s e : nat}: forall (l r : nat) (q : qstate s e),
+s<=r->
+l=r -> 
+r<=e->
+@WF_Matrix (2^(e-s)) (2^(e-s)) q->
+Reduced q l r = c_to_Vector1 (@trace (2^(e-s)) q).
+Proof. intros. rewrite Ptrace_l_r'. rewrite H0. rewrite Nat.sub_diag. simpl.
+rewrite <-trace_base. rewrite big_sum_double_sum.  
+assert(2 ^ (e - r) * 2 ^ (r - s)=2 ^ (e - s)). type_sovle'.  rewrite H3.
+apply big_sum_eq_bounded. intros. Msimpl. f_equal; rewrite mul_1_r. type_sovle'.
+f_equal; type_sovle'. rewrite <-H3. admit. apply base_kron. assumption. lia.  
+Admitted.
+
+  
+Lemma inter_empty:forall x y ,
+NSet.Equal x NSet.empty \/ NSet.Equal y NSet.empty->
+NSet.Equal (NSet.inter x y) NSet.empty.
+Proof. unfold NSet.Equal. intros. 
+      destruct H. 
+      split. intros. apply H. 
+      apply NSet.inter_1 in H0. assumption.
+      intros. inversion_clear H0.
+      split. intros. apply H. 
+      apply NSet.inter_2 in H0. assumption.
+      intros. inversion_clear H0.
 Qed. 
+
+Lemma smean_odot_eq_P{s e:nat}: forall F1 F2 c (q:qstate s e),
+(Free_State F1)= None /\  (Free_State F2)=None ->
+WF_qstate q-> 
+(State_eval (F1 ⊙ F2) (c, q)) <-> 
+exists s1 e1 s2 e2 (q1:qstate s1 e1) (q2:qstate s2 e2), 
+((s<=s1 /\ s1<=e1/\e1=s2/\ s2<=e2 /\ e2<=e)  /\ q_combin' q1 q2 (@Reduced s e q  s1 e2)) /\ 
+State_eval F1 (c, q1) /\ State_eval F2 (c, q2).
+Proof. intros. split; intros. exists s. exists s. exists s. exists s.
+assert( NZ_Mixed_State (I (2^(s-s)))).  rewrite <-Mscale_1_l. apply NZ_Pure_S. lra.
+rewrite Nat.sub_diag. simpl.
+ apply pure_id1.
+exists (I (2^(s-s))).   exists (c_to_Vector1 (@trace (2^(e-s)) q)).
+split.
+ rewrite (Reduced_id s s); try lia; try apply H0; auto_wf.
+ assert( I 1= I (2^(s-s))).   rewrite Nat.sub_diag. simpl. reflexivity. split. destruct H0. lia.     
+  rewrite <-(@kron_1_l (2^(s-s)) (2^(s-s))). 
+  rewrite H3.    econstructor; try reflexivity. 
+         split; try lia. assumption. 
+         unfold c_to_Vector1.  split; try lia. rewrite H3. 
+         apply (@nz_Mixed_State_scale_c  (2 ^ (s - s))). assumption. 
+         apply nz_mixed_state_trace_in01. apply H0. 
+         apply nz_mixed_state_trace_real. apply H0. 
+         unfold c_to_Vector1.   
+         rewrite Nat.sub_diag. simpl. 
+         apply (@WF_scale 1 1). auto_wf. 
+        split.  apply (@Pure_free_eval' s e ) with q. apply H. 
+         simpl in H1. apply H1.
+        apply (@Pure_free_eval' s e ) with q. apply H.  
+        simpl in H1. apply H1. 
+destruct H1. destruct H1. destruct H1. destruct H1. destruct H1.
+destruct H1.  destruct H1. destruct H1. simpl. split. apply inter_empty.
+left. admit.
+split. 
+apply (@Pure_free_eval' x x0 ) with x3. apply H.  apply H2. subst. 
+apply (@Pure_free_eval' x1 x2 ) with x4. apply H.   apply H2. 
+Admitted.
+
+
+Lemma smean_odot_eq_P_l{s e:nat}: forall F1 F2 c (q:qstate s e),
+(Free_State F1)= None /\ (fst (option_free (Free_State F2)) < snd (option_free (Free_State F2))) ->
+WF_qstate q-> 
+(State_eval (F1 ⊙ F2) (c, q)) <-> 
+exists s1 e1 s2 e2 (q1:qstate s1 e1) (q2:qstate s2 e2), 
+( (s<=s1 /\ s1<=e1/\e1=s2/\ s2<=e2 /\ e2<=e)  /\ q_combin' q1 q2 (@Reduced s e q  s1 e2)) /\ 
+State_eval F1 (c, q1) /\ State_eval F2 (c, q2).
+Proof. intros. split; intros. 
+simpl in H1. destruct H1. destruct H2. 
+pose(State_eval_dom F2 c q  H3). destruct o. 
+assert(option_beq (( (Free_State F2))) None = true). rewrite H4. reflexivity.
+ apply Pure_dom in H5.  lia.  
+ destruct H4.  remember (fst (option_free (Free_State F2))) as l. 
+ remember (snd (option_free (Free_State F2))) as r. 
+exists l. exists l. exists l.  exists r.    
+exists (I (2^(l-l))).  exists ((Reduced q l r)). split. split. lia.
+assert((Reduced q l r) = @kron _ _ (2^(r-l)) (2^(r-l)) (I (2 ^ (l - l)))  (Reduced q l r)). 
+rewrite Nat.sub_diag. simpl.  
+ rewrite (@kron_1_l ). reflexivity. apply WF_Reduced. lia. auto_wf. rewrite H6 at 2. 
+ econstructor; try reflexivity.  rewrite Nat.sub_diag. simpl.
+ econstructor. rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+ rewrite Nat.sub_diag. simpl. apply pure_id1. lia. 
+ apply WF_qstate_Reduced. lia. assumption. 
+ split. apply (@Pure_free_eval' s e ) with q. apply H. assumption. 
+ apply (@State_free_eval s e F2 (c,q) l r).  lia. lia. 
+ auto_wf. assumption. destruct H1. destruct H1. destruct H1. destruct H1. destruct H1.
+ destruct H1.  destruct H1. destruct H1. simpl. split. apply inter_empty. admit.
+ split.  apply (@Pure_free_eval' x x0 ) with x3. apply H.  apply H2.
+ 
+  inversion H3; subst. destruct H2. 
+  pose(State_eval_dom F2 c x4 H5). destruct o.  
+  assert(option_beq (( (Free_State F2))) None = true). rewrite H9. reflexivity.
+   apply Pure_dom in H10.  lia. destruct H9.   
+ apply (@State_free_eval s e F2 _ x x2).  lia.  lia.    
+ auto_wf.  simpl.    rewrite <-H4.    
+ rewrite (@State_free_eval x x2 F2 _ x1 x2); try  lia; try auto_wf.   
+ simpl. rewrite Reduced_R; try lia.    
+ rewrite (Reduced_tensor_r _ x3 x4); try auto_wf; try reflexivity. 
+ admit.
+ apply WF_kron;type_sovle';  auto_wf. 
+ apply WF_kron;type_sovle';  auto_wf. 
+Admitted.
+
+
+Lemma smean_odot_eq_P_r{s e:nat}: forall F1 F2 c (q:qstate s e),
+(Free_State F2)= None /\ (fst (option_free (Free_State F1)) < snd (option_free (Free_State F1))) ->
+WF_qstate q-> 
+(State_eval (F1 ⊙ F2) (c, q)) <-> 
+exists s1 e1 s2 e2 (q1:qstate s1 e1) (q2:qstate s2 e2), 
+( (s<=s1 /\ s1<=e1/\e1=s2/\ s2<=e2 /\ e2<=e)  /\ q_combin' q1 q2 (@Reduced s e q  s1 e2)) /\ 
+State_eval F1 (c, q1) /\ State_eval F2 (c, q2).
+Proof. intros. split; intros. 
+simpl in H1. destruct H1. destruct H2. 
+pose(State_eval_dom F1 c q  H2). destruct o. 
+assert(option_beq (( (Free_State F1))) None = true). rewrite H4. reflexivity.
+ apply Pure_dom in H5.  lia.  
+ destruct H4.  remember (fst (option_free (Free_State F1))) as l. 
+ remember (snd (option_free (Free_State F1))) as r. 
+exists l. exists r. exists r.  exists r.    
+  exists ((Reduced q l r)). exists (I (2^(r-r))). split. split. lia.
+assert((Reduced q l r) = @kron (2^(r-l)) (2^(r-l)) _ _  (Reduced q l r) (I (2 ^ (r - r))) ). 
+rewrite Nat.sub_diag. simpl.  
+ rewrite (@kron_1_r). reflexivity.  rewrite H6 at 2. 
+ econstructor; try reflexivity. 
+ apply WF_qstate_Reduced. lia. assumption. 
+ rewrite Nat.sub_diag. simpl.
+ econstructor. rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+ rewrite Nat.sub_diag. simpl. apply pure_id1. lia.  
+ split. 
+ apply (@State_free_eval s e F1 (c,q) l r).  lia. lia. 
+ auto_wf. assumption. apply (@Pure_free_eval' s e ) with q. apply H. assumption. 
+  destruct H1. destruct H1. destruct H1. destruct H1. destruct H1.
+ destruct H1.  destruct H1. destruct H1. simpl. split. apply inter_empty. admit.
+ split.   inversion H3; subst. destruct H2. 
+ pose(State_eval_dom F1 c x3 H2). destruct o.  
+ assert(option_beq (( (Free_State F1))) None = true). rewrite H9. reflexivity.
+  apply Pure_dom in H10.  lia. destruct H9.   
+apply (@State_free_eval s e F1 _ x x2).  lia.  lia.    
+auto_wf.  simpl.    rewrite <-H4.    
+rewrite (@State_free_eval x x2 F1 _ x x1); try  lia; try auto_wf.   
+simpl. rewrite Reduced_L; try lia.    
+rewrite (Reduced_tensor_l _ x3 x4); try auto_wf; try reflexivity. 
+admit.
+apply WF_kron;type_sovle';  auto_wf. 
+apply WF_kron;type_sovle';  auto_wf. 
+ apply (@Pure_free_eval' x1 x2 ) with x4. apply H.  apply H2.
+Admitted.
+
+Definition F1_lt_F2 F1 F2 := 
+(fst (option_free (Free_State F1)) < snd (option_free (Free_State F1)) ->
+fst (option_free (Free_State F2)) < snd (option_free (Free_State F2) ) ->
+(snd (option_free (Free_State F1)) = (fst (option_free (Free_State F2)))) ) .
+
+
+Lemma smean_odot_eq{s e:nat}: forall F1 F2 c (q:qstate s e),
+Considered_Formula (F1 ⊙ F2) ->
+WF_qstate q->
+(State_eval (F1 ⊙ F2) (c, q) /\ F1_lt_F2 F1 F2) <-> 
+exists s1 e1 s2 e2 
+(q1:qstate s1 e1) 
+(q2:qstate s2 e2), 
+((s<=s1 /\ s1<=e1/\e1=s2/\ s2<=e2 /\ e2<=e) /\ 
+q_combin' q1 q2 (@Reduced s e q  s1 e2)) /\ 
+State_eval F1 (c, q1) /\ State_eval F2 (c, q2).  
+Proof. intros.   split; intros. 
+       simpl in H. 
+       destruct (option_beq (Free_State F1) None)  eqn:E. 
+       destruct (option_beq (Free_State F2) None)  eqn:E1.
+       apply smean_odot_eq_P. admit. assumption. apply H1. 
+       apply smean_odot_eq_P_l. admit. assumption. apply H1.
+       destruct (option_beq (Free_State F2) None)  eqn:E1.
+       apply smean_odot_eq_P_r. admit. assumption. apply H1.  
+
+       simpl in H1. destruct H1. destruct H1. destruct H3. 
+       pose (@State_eval_dom s e F1 c q H3). 
+       pose (@State_eval_dom s e F2 c q H4). 
+       
+       destruct H. destruct H5.  
+       assert(Free_State F1 <> None ). apply option_eqb_neq. assumption. 
+       assert(Free_State F2 <> None ). apply option_eqb_neq. assumption.
+       
+       destruct o. destruct H7. assumption. 
+       destruct o0. destruct H8. assumption.  destruct H9.
+       destruct H10.
+
+       destruct H6. 
+       exists (fst (option_free (Free_State F1))). 
+       exists (snd (option_free (Free_State F1))).
+       exists (fst (option_free (Free_State F2))). 
+       exists (snd (option_free (Free_State F2))).
+  
+        assert(Considered_Formula F1 /\
+        snd (option_free (Free_State F2)) <= e /\
+        snd (option_free (Free_State F1)) <= snd (option_free (Free_State F2)) /\
+        fst (option_free (Free_State F1)) < snd (option_free (Free_State F1))).
+        split. assumption. lia. 
+        pose (@State_eval_separ_r s e F1 (snd (option_free (Free_State F2))) c q H13 H0 H3).
+        destruct e0. destruct H14. exists x. exists x0.  split. 
+        split. lia.   rewrite <-H6 . assumption. 
+        inversion H14; subst.  
+        symmetry  in H15. pose H15.
+        apply Reduced_tensor_l in e0;  try  apply WF_Reduced; try lia; auto_wf. 
+        rewrite <-Reduced_L in e0;try  apply WF_Reduced; try lia; auto_wf.
+        apply Reduced_tensor_r in H15; try  apply WF_Reduced; try lia; auto_wf.
+        rewrite <-Reduced_R in H15; try  apply WF_Reduced; try lia; auto_wf.
+        split. 
+        remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F2)))
+       (@snd nat nat (option_free (Free_State F1)))))).
+    
+        rewrite (s_seman_scale_c _ ( (@trace n x0))).  rewrite <-e0. 
+        rewrite Reduced_assoc; try lia. 
+        rewrite <-(@State_free_eval s e F1 (c, q) (fst (option_free (Free_State F1)))
+        (snd (option_free (Free_State F1)))); try lia. assumption. 
+        auto_wf. split. apply nz_mixed_state_trace_gt0. rewrite Heqn. apply H22.
+        apply nz_mixed_state_trace_real. rewrite Heqn. apply H22. 
+        
+        remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F1)))
+       (@fst nat nat (option_free (Free_State F1)))))).
+      
+        rewrite (s_seman_scale_c _ ( (@trace n x))). rewrite <-H6.  rewrite <-H15. 
+        rewrite Reduced_assoc; try lia.  
+        rewrite <-(@State_free_eval s e F2 (c, q) (snd (option_free (Free_State F1)))
+        (snd (option_free (Free_State F2)))); try lia. assumption. 
+        auto_wf. split. apply nz_mixed_state_trace_gt0. rewrite Heqn. apply H19.
+        apply nz_mixed_state_trace_real. rewrite Heqn.  apply H19. 
+        
+      unfold F1_lt_F2 in *. lia.   
+
+       
+        simpl in H.  
+        destruct (option_beq (Free_State F1) None)  eqn:E. 
+        destruct (option_beq (Free_State F2) None)  eqn:E1.
+        split.
+        apply smean_odot_eq_P. admit. assumption.  apply H1. 
+        destruct H1. destruct H1. destruct H1. destruct H1. destruct H1.
+        destruct H1. destruct H1. destruct H2.    
+        apply smean_odot_eq_P_r. admit. assumption. apply H1.  
+ 
+        simpl in H1. destruct H1. destruct H1. destruct H3. 
+        pose (@State_eval_dom s e F1 c q H3). 
+        pose (@State_eval_dom s e F2 c q H4). 
+      
+       assert(Free_State F1 <> None ). intro. 
+       assert(option_beq (Free_State F1) None= true).
+       rewrite H5. reflexivity. apply Pure_dom in H6. lia.
+       assert(Free_State F2 <> None ). intro. 
+       assert(option_beq (Free_State F2) None= true).
+       rewrite H6. reflexivity. apply Pure_dom in H7. lia.
+  
+       destruct (option_beq (Free_State F1) None)  eqn:E.
+       apply option_eqb_neq in H5. rewrite E in H5 . discriminate.
+       destruct (option_beq (Free_State F2) None)  eqn:E1.
+       apply option_eqb_neq in H6. rewrite E1 in H6. discriminate.
+
+
+       pose (@State_eval_dom x x0 F1 c x3 H2). 
+        pose (@State_eval_dom x1 x2 F2 c x4 H3).
+
+       destruct H. destruct H7. 
+       destruct o. destruct H5. assumption. 
+       destruct o0. destruct H6. assumption.  destruct H9.
+       destruct H10. destruct H8.   
+        destruct H1.
+        inversion H13; subst. 
+        simpl. split.   split.  admit.    
+
+
+       
+       split.    
+       apply (@State_free_eval s e F1 _ x x2).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H14. 
+       rewrite (@State_free_eval x x2 F1 _ x x1); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_L; try lia.    
+       rewrite (Reduced_tensor_l _ x3 x4); try auto_wf; try reflexivity.
+       admit.  
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. 
+         
+       
+       apply (@State_free_eval s e F2 _ x x2).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H14. 
+       rewrite (@State_free_eval x x2 F2 _ x1 x2); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_R; try lia. 
+       rewrite (Reduced_tensor_r _ x3 x4); try auto_wf; try reflexivity. 
+       admit. 
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. 
+       lia. lia.   
+
+
+       
+
+       (*  *)
+
+(* Lemma smean_odot_eq_r{s e:nat}: forall F1 F2 c (q:qstate s e),
+Considered_Formula (F1 ⊙ F2) /\
+(s<=  fst (option_free (Free_State F1)) /\
+snd (option_free (Free_State F1)) = (fst (option_free (Free_State F2)))/\
+snd (option_free (Free_State F2)) < e)->
+WF_qstate q->
+State_eval (F1 ⊙ F2) (c, q) <-> 
+exists 
+(q1:qstate (fst (option_free (Free_State F1))) (snd (option_free (Free_State F1))))
+(q2:qstate  (fst (option_free (Free_State F2))) (snd (option_free (Free_State F2)))), 
+(q_combin' q1 q2 (@Reduced s e q  (fst (option_free (Free_State F1))) (snd (option_free (Free_State F2))))) /\ 
+State_eval F1 (c, q1) /\ State_eval F2 (c, q2).
+Proof. intros.  split; intros. simpl in H1. destruct H1. destruct H2.  destruct H.
+       simpl in H. destruct (option_beq (Free_State F1) None) eqn:E.
+       apply Pure_dom in E. rewrite E. destruct H4.  destruct H5. rewrite H5.
+       destruct (option_beq (Free_State F2) None) eqn:E1.
+       apply Pure_dom in E1. rewrite E1. 
+       remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F2)))
+       (@snd nat nat (option_free (Free_State F2)))))).
+       exists (I n). exists (c_to_Vector1 (@trace (2^(e-s)) q)). split.
+         rewrite (@Reduced_id s e ((snd (option_free (Free_State F2))))); try lia; auto_wf.
+         assert(n=1). rewrite Heqn. rewrite Nat.sub_diag.
+         simpl. reflexivity.  rewrite <-(@kron_1_l n n ). rewrite <-H7.
+          rewrite Heqn.  
+           econstructor; try reflexivity. rewrite Nat.sub_diag. simpl.
+          econstructor. rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+          rewrite Nat.sub_diag. simpl. apply pure_id1. lia. 
+         unfold c_to_Vector1.  split.   
+         assert( I 1 = I (2
+         ^ (snd (option_free (Free_State F2)) - snd (option_free (Free_State F2))))).
+         rewrite Nat.sub_diag. simpl. reflexivity. Set Printing All.
+         apply (@nz_Mixed_State_scale_c ((2 
+         ^ (snd (option_free (Free_State F2)) - snd (option_free (Free_State F2)))))).
+         rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+         rewrite Nat.sub_diag. simpl. apply pure_id1.  
+         apply nz_mixed_state_trace_in01. rewrite<- Heqn.
+         rewrite H7.  apply H0. 
+         apply nz_mixed_state_trace_real. rewrite<- Heqn.
+         rewrite H7.  apply H0. lia.  unfold c_to_Vector1. 
+         assert( I 1 = I (n)). rewrite H7. reflexivity. rewrite H8.
+         apply (@WF_scale n n). auto_wf. 
+        split.  apply (@Pure_free_eval' s e ) with q. admit. assumption. 
+        apply (@Pure_free_eval' s e ) with q. admit. assumption.
+  
+       remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@fst nat nat (option_free (Free_State F2)))
+       (@fst nat nat (option_free (Free_State F2)))))). 
+       remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F2)))
+       (@fst nat nat (option_free (Free_State F2)))))).
+       exists (I n).  exists ((Reduced q (fst (option_free (Free_State F2)))
+       (snd (option_free (Free_State F2))))).  
+       split. assert(n=1). rewrite Heqn. rewrite Nat.sub_diag.
+       simpl. reflexivity.  rewrite <-(@kron_1_l n0 n0 ). rewrite <-H7.
+        rewrite Heqn. rewrite Heqn0.   
+        econstructor; try reflexivity. rewrite Nat.sub_diag. simpl.
+        econstructor. rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+        rewrite Nat.sub_diag. simpl. apply pure_id1. lia. 
+        apply WF_qstate_Reduced. pose(Considered_Formula_dom F2 H). 
+       lia. assumption. 
+        rewrite Heqn0.  
+        apply WF_Reduced. pose(Considered_Formula_dom F2 H). lia. auto_wf.  
+        split. apply (@Pure_free_eval' s e ) with q. admit. assumption. 
+        apply (@State_free_eval s e F2 (c,q) (fst (option_free (Free_State F2)))
+        (snd (option_free (Free_State F2)))). pose(Considered_Formula_dom F2 H). lia. lia.
+        auto_wf. assumption.   
+        destruct (option_beq (Free_State F2) None) eqn:E1.
+       apply Pure_dom in E1. rewrite<-E1. destruct H4. destruct H5. rewrite <-H5.   
+       remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F1)))
+       (@snd nat nat (option_free (Free_State F1)))))). 
+       remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F1)))
+       (@fst nat nat (option_free (Free_State F1)))))).
+        exists ((Reduced q (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F1))))).   exists (I n).
+       split. assert(n=1). rewrite Heqn. rewrite Nat.sub_diag.
+       simpl. reflexivity.  rewrite <-(@kron_1_r n0 n0 ). rewrite <-H7.
+        rewrite Heqn. rewrite Heqn0.   
+        econstructor; try reflexivity. 
+        apply WF_qstate_Reduced. pose(Considered_Formula_dom F1 H). lia.
+        assumption.
+        rewrite Nat.sub_diag. simpl.
+        econstructor. rewrite <-Mscale_1_l. apply NZ_Pure_S. lra. 
+        rewrite Nat.sub_diag. simpl. apply pure_id1. lia.   
+        split.
+        apply (@State_free_eval s e F1 (c,q) (fst (option_free (Free_State F1)))
+        (snd (option_free (Free_State F1)))). pose(Considered_Formula_dom F1 H). lia. lia.
+        auto_wf. assumption.   
+        eapply Pure_free_eval'. admit. apply H3. 
+        destruct H. destruct H5.   
+        pose(Considered_Formula_dom F1 H).
+        pose(Considered_Formula_dom F2 H5).
+        pose(@State_eval_dom s e F1 c q H2). destruct o. rewrite H7 in *.
+        simpl in *. discriminate.   
+        assert(Considered_Formula F1 /\
+        snd (option_free (Free_State F2)) <= e /\
+        snd (option_free (Free_State F1)) <= snd (option_free (Free_State F2)) /\
+        fst (option_free (Free_State F1)) < snd (option_free (Free_State F1))).
+        split. assumption. destruct H7. lia.
+        pose (@State_eval_separ_r s e F1 (snd (option_free (Free_State F2))) c q H8 H0 H2).
+        destruct e0. destruct H9. exists x. exists x0.  split. 
+        destruct H4. destruct H10.
+        rewrite <-H10. assumption. 
+        inversion H9; subst.  
+        symmetry  in H10. pose H10.
+        apply Reduced_tensor_l in e0;  try  apply WF_Reduced; try lia; auto_wf. 
+        rewrite <-Reduced_L in e0;try  apply WF_Reduced; try lia; auto_wf.
+        apply Reduced_tensor_r in H10; try  apply WF_Reduced; try lia; auto_wf.
+        rewrite <-Reduced_R in H10; try  apply WF_Reduced; try lia; auto_wf.
+        split. 
+        remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F2)))
+       (@snd nat nat (option_free (Free_State F1)))))).
+        assert(@trace n x0 = (fst (@trace n x0) , snd (@trace n x0))).
+        destruct (@trace n x0). reflexivity. 
+        assert(snd (@trace n x0)= 0%R ). apply nz_mixed_state_trace_real.
+        rewrite Heqn.  apply H17.  rewrite H16 in H15.  rewrite H15 in e0. 
+
+        rewrite (s_seman_scale _ (fst (@trace n x0))). unfold s_scale. simpl in *. 
+        unfold q_scale. unfold RtoC.  rewrite <-e0. 
+        rewrite Reduced_assoc; try lia. 
+        rewrite <-(@State_free_eval s e F1 (c, q) (fst (option_free (Free_State F1)))
+        (snd (option_free (Free_State F1)))); try lia. assumption. 
+        auto_wf. apply nz_mixed_state_trace_gt0. rewrite Heqn. apply H17.
+        
+        remember ((Nat.pow (S (S O)) (Init.Nat.sub
+       (@snd nat nat (option_free (Free_State F1)))
+       (@fst nat nat (option_free (Free_State F1)))))).
+        assert(@trace n x = (fst (@trace n x) , snd (@trace n x))).
+        destruct (@trace n x). reflexivity. 
+        assert(snd (@trace n x)= 0%R ). apply nz_mixed_state_trace_real. 
+        rewrite Heqn. apply H14.   rewrite H16 in H15.  rewrite H15 in H10.
+        destruct H4. destruct H18.  
+
+        rewrite (s_seman_scale _ (fst (@trace n x))). unfold s_scale. simpl in *. 
+        unfold q_scale. unfold RtoC.  rewrite <-H18.  rewrite <-H10. 
+        rewrite Reduced_assoc; try lia.  
+        rewrite <-(@State_free_eval s e F2 (c, q) (snd (option_free (Free_State F1)))
+        (snd (option_free (Free_State F2)))); try lia. assumption. 
+        auto_wf. apply nz_mixed_state_trace_gt0. rewrite Heqn. apply H14.
+
+        destruct H1. destruct H1. destruct H1. 
+        inversion H1; subst. 
+        destruct H.  simpl in H. 
+        simpl. split.  admit.   
+        destruct (option_beq (Free_State F1) None) eqn:E. 
+        assert((Free_State F1)= None). apply Classical_Prop.NNPP. intro.
+        apply option_eqb_neq in H9. rewrite E in H9. discriminate. 
+        apply (Pure_free_eval' _ c x q) in H9; try apply H2. split. assumption.
+        apply Considered_Formula_dom in H. apply Pure_dom in E.
+        destruct H8. destruct H11. 
+       apply (@State_free_eval s e F2 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2)))).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H3. 
+       rewrite (@State_free_eval (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2))) F2 _ (fst (option_free (Free_State F2)))
+       (snd (option_free (Free_State F2)))); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_R; try lia.  rewrite <-H11.  
+       rewrite (Reduced_tensor_r _ x x0); try auto_wf; try reflexivity. 
+
+       admit. rewrite H11. auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. try rewrite H11; auto_wf.
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf.
+      
+       destruct (option_beq (Free_State F2) None) eqn:E1. 
+        assert((Free_State F2)= None). apply Classical_Prop.NNPP. intro.
+        apply option_eqb_neq in H9. rewrite E1 in H9. discriminate. 
+        apply (Pure_free_eval' _ c x0 q) in H9; try apply H2. split.
+        apply Considered_Formula_dom in H. apply Pure_dom in E1.
+        destruct H8. destruct H11. 
+       apply (@State_free_eval s e F1 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2)))).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H3. 
+       rewrite (@State_free_eval (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2))) F1 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F1)))); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_L; try lia.  rewrite <-H11.  
+       rewrite (Reduced_tensor_l _ x x0); try auto_wf; try reflexivity.  
+       admit.  rewrite H11. auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. try rewrite H11; auto_wf.
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. assumption.
+       
+       destruct H. destruct H9. 
+       apply Considered_Formula_dom in H.    
+       apply Considered_Formula_dom in H9. destruct H8. destruct H12.    
+       split.    
+       apply (@State_free_eval s e F1 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2)))).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H3. 
+       rewrite (@State_free_eval (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2))) F1 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F1)))); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_L; try lia.  rewrite <-H12.  
+       rewrite (Reduced_tensor_l _ x x0); try auto_wf; try reflexivity.  
+       admit.  rewrite H12. auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. try rewrite H12; auto_wf.
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf.
+       
+       apply (@State_free_eval s e F2 _ (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2)))).  lia. lia.   
+       auto_wf.  simpl.  rewrite <-H3. 
+       rewrite (@State_free_eval (fst (option_free (Free_State F1)))
+       (snd (option_free (Free_State F2))) F2 _ (fst (option_free (Free_State F2)))
+       (snd (option_free (Free_State F2)))); try  lia; try auto_wf.   
+       simpl. rewrite Reduced_R; try lia.  rewrite <-H12.  
+       rewrite (Reduced_tensor_r _ x x0); try auto_wf; try reflexivity. 
+       admit. rewrite H12. auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf. try rewrite H12; auto_wf.
+       apply WF_kron;type_sovle';  auto_wf. 
+       apply WF_kron;type_sovle';  auto_wf.
+        *)
 
 
 

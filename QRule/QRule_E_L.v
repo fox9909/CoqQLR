@@ -155,21 +155,6 @@ Qed.
   Qed.
   
   
-  
-
-  
-  Lemma inter_empty:forall x y ,
-  NSet.Equal x NSet.empty \/ NSet.Equal y NSet.empty->
-  NSet.Equal (NSet.inter x y) NSet.empty.
-  Proof. unfold NSet.Equal. intros. 
-        destruct H. 
-        split. intros. apply H. 
-        apply NSet.inter_1 in H0. assumption.
-        intros. inversion_clear H0.
-        split. intros. apply H. 
-        apply NSet.inter_2 in H0. assumption.
-        intros. inversion_clear H0.
-  Qed. 
   Lemma  set_eq_trans: forall x y z,
   NSet.Equal x y ->
   NSet.Equal y z->
