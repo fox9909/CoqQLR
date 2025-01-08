@@ -3865,13 +3865,6 @@ apply Par_Pure_State_wedge with (snd (option_free (Free_State F1))); try assumpt
 apply (@Par_Pure_State_reduced ((fst (option_free (Free_State F2))))). lia.
 apply WF_qstate_Reduced. lia.  
 assumption.  
-exists (Reduced q (fst (option_free (Free_State F2)))
-(snd (option_free (Free_State F2)))).
-exists (Reduced q (fst (option_free (Free_State F2)))
-(snd (option_free (Free_State F1)))).
-split. apply WF_qstate_Reduced. lia. assumption. 
-split. apply WF_qstate_Reduced. lia. assumption.
-split. 
 
 assert(WF_qstate ((Reduced q (fst (option_free (Free_State F1)))
 (snd (option_free (Free_State F2)))))).
@@ -3892,7 +3885,30 @@ pose (@qstate_Separ_pure_l''  ((fst (option_free (Free_State F1))) )
 (fst (option_free (Free_State F1)))
 (snd (option_free (Free_State F2))))) H18
 H15 H16). destruct e0. destruct H19. 
-destruct H19. destruct H19. 
+destruct H19. destruct H19.
+
+remember (Reduced q (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F2)))).
+assert(Reduced q0 (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F2))) = 
+@Reduced (fst (option_free (Free_State F1))) (snd (option_free (Free_State F2)))
+ (@kron (2^( (snd (option_free (Free_State F1)))-(fst (option_free (Free_State F1))))) 
+(2^((snd (option_free (Free_State F1)))-(fst (option_free (Free_State F1)))))
+ (2^((snd (option_free (Free_State F2)))-((snd (option_free (Free_State F1)))))) 
+ (2^((snd (option_free (Free_State F2)))-((snd (option_free (Free_State F1))))))
+ x x0) 
+(fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F2)))  
+). rewrite H20. reflexivity. 
+
+exists (Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F2)))).
+exists (Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1)))).
+split. apply WF_qstate_Reduced. lia. assumption. 
+split. apply WF_qstate_Reduced. lia. assumption.
+split.  
+
 
 admit.  
 assumption. 
