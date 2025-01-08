@@ -3626,6 +3626,91 @@ Proof. induction qs; intros. unfold Par_Pure_State.
 Qed.
 
 
+Lemma Par_Pure_State_reduced{ s e: nat}:forall x (q2:qstate x e) ,
+s<=x /\ x<= e ->
+WF_qstate q2->
+(exists (q:qstate s e) (q1:qstate s x), 
+WF_qstate q /\ WF_qstate q1 /\
+q = @kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) q1 q2 /\
+@Par_Pure_State (2^(e-s)) q) ->
+@Par_Pure_State (2^(e-x)) q2.
+Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
+        destruct H0. induction H0.  
+          destruct H1. destruct H1.
+       destruct H1. destruct H4. destruct H5. 
+       destruct H6. destruct H6. destruct H6. destruct H7. 
+       exists ( p)%R. 
+       exists  ρ. split. lra.  split.  assumption. reflexivity.
+       destruct H1. destruct H1.
+       destruct H1. destruct H5. destruct H6. 
+       destruct H7. destruct H7. destruct H7. destruct H8. 
+       rewrite H6 in H9. 
+       rewrite kron_plus_distr_l in H9.
+       rewrite Mscale_kron_dist_r in H9.
+       rewrite Mscale_kron_dist_r in H9. 
+
+       destruct H8. destruct H8. rewrite H10 in H9.
+       assert((NZ_Mixed_State_aux (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1)) ->
+       exists c1 : R, (0 < c1 <= 1)%R /\ (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1)) = c1 .* (x4 × (x4) †)) /\
+      (NZ_Mixed_State_aux (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)) ->
+       exists c2 : R, (0 < c2 <= 1)%R /\ (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)) = c2 .* (x4 × (x4) †))).
+       assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H11.
+       apply (@Mixed_pure' (e-s) (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1))
+       (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2))).
+       apply NZ_Mixed_State_aux_is_Mixed_State_aux.
+       assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H11.
+       apply nz_Mixed_State_scale_aux; try lra. 
+       apply nz_Mixed_State_aux_to_nz_Mix_State.  
+       assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H11.
+       apply mixed_state_kron;  try assumption. apply H5. 
+       apply NZ_Mixed_State_aux_is_Mixed_State_aux.
+       assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H11.
+       apply nz_Mixed_State_scale_aux; try lra. 
+       apply nz_Mixed_State_aux_to_nz_Mix_State.  
+       assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H11.
+       apply mixed_state_kron;  try assumption. apply H5.   assumption.
+       exists x2. auto. destruct H11.
+       assert((NZ_Mixed_State_aux (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1)) )). admit.
+       assert((NZ_Mixed_State_aux (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)) )). admit.
+       apply H11 in H13. apply H12 in H14. destruct H13. destruct H13.
+       destruct H14. destruct H14. 
+       assert( (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)  
+       = ((x6/p2) * (p1/x5)) .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) ).
+       admit. 
+       assert(@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1) x e=
+       ( x6/p2) * (p1/x5) .* (@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) x e)).
+       rewrite H17. rewrite Reduced_scale. reflexivity. 
+       rewrite Reduced_scale in H18.
+       assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H19.
+       rewrite <-Mscale_kron_dist_r in H18. rewrite Reduced_R in H18; try reflexivity.
+       rewrite Reduced_R in H18; try reflexivity. 
+       rewrite (Reduced_tensor_r _ x1 ρ1) in H18; auto_wf; try reflexivity.
+       rewrite (Reduced_tensor_r _ x1 ((x6 / p2 * (p1 / x5) .* ρ2))) in H18; auto_wf; try reflexivity.
+       assert(ρ1 =(x6 / p2 * (p1 / x5) .* ρ2) ). admit.
+       rewrite H19 . rewrite Mscale_assoc.
+        rewrite<- Mscale_plus_distr_l .
+        destruct (IHNZ_Mixed_State2).
+        exists ((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) (p2 .* x1)  ρ2)  ).
+        exists (p2 .* x1). split.  admit. 
+        split. admit.  split. reflexivity.
+        exists ( x6)%R.
+        exists ((x4 × (x4) †)). split. lra.
+        split. econstructor. split. apply H8. reflexivity.
+        rewrite Mscale_kron_dist_l. assumption.
+        destruct H20.
+        exists (  (p1 * (x6 / p2 * (p1 / x5)) + p2) * x7)%R. 
+        exists (x8). split.  admit.
+        split. apply H20. destruct H20. destruct H21.
+        rewrite H22. rewrite Mscale_assoc. rewrite <-RtoC_mult.
+        f_equal. f_equal.  
+        rewrite RtoC_plus. rewrite <-RtoC_mult. 
+        rewrite <-RtoC_div; try lra. rewrite <-RtoC_div; try lra. f_equal. f_equal.
+         rewrite<- RtoC_mult. reflexivity.
+         auto_wf. auto_wf.
+Admitted.
+
+
+
 Lemma State_eval_pure: forall F s e c (q: qstate s e) ,
 Considered_Formula F ->
 WF_qstate q->
@@ -3770,18 +3855,49 @@ snd (option_free (Free_State F2))  )).
 apply Classical_Prop.classic. destruct H10. 
 rewrite min_l; try lia.  rewrite max_r; try lia.
 
-apply Par_Pure_State_wedge with (snd (option_free (Free_State F1))); try assumption.
 pose (State_eval_dom F1 c q H1). 
 destruct o. destruct H3. assumption.
 pose (State_eval_dom F2 c q H2).
-destruct o. destruct H5; assumption. 
-split. intuition. 
+destruct o. destruct H5; assumption.
+destruct H11. destruct H12. 
+
+apply Par_Pure_State_wedge with (snd (option_free (Free_State F1))); try assumption. lia. 
+apply (@Par_Pure_State_reduced ((fst (option_free (Free_State F2))))). lia.
+apply WF_qstate_Reduced. lia.  
+assumption.  
+exists (Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F2)))).
+exists (Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1)))).
+split. apply WF_qstate_Reduced. lia. assumption. 
+split. apply WF_qstate_Reduced. lia. assumption.
 split. 
-apply Considered_Formula_dom. assumption.
-split. lia. destruct H11. destruct H12. lia. 
- admit. 
-rewrite min_l; try lia.  rewrite max_l; try lia.
+
+assert(WF_qstate ((Reduced q (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F2)))))).
+ apply WF_qstate_Reduced. lia. assumption. 
+assert(@Par_Pure_State (2^(((snd (option_free (Free_State F1))))-
+((fst (option_free (Free_State F1))))))
+(Reduced (Reduced q (fst (option_free (Free_State F1)))
+   (snd (option_free (Free_State F2)))) 
+   (fst (option_free (Free_State F1))) (snd (option_free (Free_State F1)))  )).
+rewrite Reduced_assoc; try lia. apply H4. 
+destruct H15.
+assert(((fst (option_free (Free_State F1))) ) <=  
+(snd (option_free (Free_State F1))) <=((snd (option_free (Free_State F2)))))  .
+lia.  
+pose (@qstate_Separ_pure_l''  ((fst (option_free (Free_State F1))) )
+(snd (option_free (Free_State F1))) ((snd (option_free (Free_State F2)))) 
+((Reduced q
+(fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F2))))) H18
+H15 H16). destruct e0. destruct H19. 
+destruct H19. destruct H19. 
+
+admit.  
 assumption. 
+rewrite min_l; try lia.  rewrite max_l; try lia.
+assumption.
 
 assert(( snd (option_free (Free_State F1)) <=
 snd (option_free (Free_State F2))  ) \/
@@ -3792,90 +3908,33 @@ rewrite min_r; try lia.  rewrite max_r; try lia.
 assumption. 
 
 rewrite min_r; try lia.  rewrite max_l; try lia.
-apply Par_Pure_State_wedge with (snd (option_free (Free_State F2))); try assumption.
 pose (State_eval_dom F1 c q H1). 
 destruct o. destruct H3. assumption.
 pose (State_eval_dom F2 c q H2).
 destruct o. destruct H5; assumption. 
-split. intuition. 
-split. lia. split. lia.  destruct H11. destruct H12. lia. 
-assumption. assumption.  
- admit.
-
-
-(* 
-destruct H8.
-destruct H8.
-simpl. rewrite H8. rewrite H9.
-rewrite min_id. rewrite max_id.
-assumption.
-
-destruct H8.
-simpl.
-       pose (min_le ( (fst (option_free (Free_State F1))))
-       (snd (option_free (Free_State F1)))
-       (fst (option_free (Free_State F2)))
-         (snd (option_free (Free_State F2)))).  
-       destruct a.  split.
-pose (Considered_Formula_dom F1 H). lia. 
-split. assumption.
-apply Considered_Formula_dom. assumption.
- rewrite H10. rewrite H9.
-     apply Par_Pure_State_wedge with (snd (option_free (Free_State F1))).
-     pose (State_eval_dom F1 c q H1). 
-     destruct o. destruct H3. assumption.
-     pose (State_eval_dom F2 c q H2).
-     destruct o. destruct H5; assumption. 
-     split. intuition. 
-     split. 
-     apply Considered_Formula_dom. assumption.
-     split. 
-     rewrite H8. 
-     apply Considered_Formula_dom. assumption.
-     intuition. assumption. assumption.
-     rewrite H8.
-     assumption.
-simpl.
-rewrite min_comm.
-rewrite max_comm.
-pose (min_le ( (fst (option_free (Free_State F2))))
-  (snd (option_free (Free_State F2)))
-  (fst (option_free (Free_State F1)))
-    (snd (option_free (Free_State F1)))).  
-  destruct a.  split.
-pose (Considered_Formula_dom F2 H7).  lia. 
-split. assumption.
-apply Considered_Formula_dom. assumption.
-rewrite H10. rewrite H9.
-apply (Par_Pure_State_wedge) with (snd (option_free (Free_State F2))).
-pose (State_eval_dom F1 c q H1).
-destruct o. destruct H3; assumption. 
-pose (State_eval_dom F2 c q H2).
-destruct o. destruct H5; assumption.  
-split. intuition. 
-split. 
-apply Considered_Formula_dom. assumption.
-split. 
-rewrite H8. 
-apply Considered_Formula_dom. assumption.
-intuition. assumption. assumption.
-rewrite H8.
-assumption. 
-  
-apply option_eqb_neq in H5. 
-simpl in *.  rewrite H3 in *.
-rewrite H5 in *. 
-
-   apply H.
-   assumption.
-   apply option_eqb_neq in H3.  *)
+ destruct H11. destruct H12.
+ apply Par_Pure_State_wedge with (snd (option_free (Free_State F2))); try assumption.
+  lia. 
+ 
+  apply (@Par_Pure_State_reduced ((fst (option_free (Free_State F1))))). lia.
+  apply WF_qstate_Reduced. lia.  
+  assumption.  
+  exists (Reduced q (fst (option_free (Free_State F1)))
+  (snd (option_free (Free_State F1)))).
+  exists (Reduced q (fst (option_free (Free_State F1)))
+  (snd (option_free (Free_State F2)))).
+  split. apply WF_qstate_Reduced. lia. assumption. 
+  split. apply WF_qstate_Reduced. lia. assumption.
+  split. admit.  
+  assumption. 
    simpl in *.  rewrite H3 in *.
-   destruct (option_edc (Free_State F2) None).
-   rewrite H4 in *. simpl in *.
-   apply H.  
-   apply option_eqb_neq in H4. rewrite H4 in *.
-   apply H.
-   assumption.
+   destruct (option_beq (Free_State F2) None) eqn:E.
+   destruct H5. rewrite <-option_eqb_eq in E. assumption.
+   apply H. assumption. 
+   apply option_eqb_neq in H3. rewrite H3 in *.
+   destruct (option_beq (Free_State F2) None);
+   apply H. assumption.
+
 
    simpl Free_State.  eapply IHF. apply H. 
    assumption. apply H1. 
