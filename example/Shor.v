@@ -12,6 +12,7 @@ From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Prop.
 From Quan Require Import QAssert.
+From Quan Require Import QSepar.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.

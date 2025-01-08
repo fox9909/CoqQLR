@@ -33,6 +33,180 @@ Local Open Scope rule_scope.
 
 Require Import Arith.
 
+
+Module ContFrac.
+
+Local Open Scope R_scope.
+
+Lemma Legendre_rational_bound :
+forall a b p q : nat,
+       (0 < q)%nat ->
+       (a < b)%nat ->
+       Rabs (a / b - p / q) =0 ->
+       rel_prime p q ->
+       CFq (CF_bound b) a b = q.
+Proof. intros. pose(Legendre_rational' a b p q). 
+       destruct e; try assumption. rewrite H1. apply Rdiv_lt_0_compat; try lra.
+       apply Rmult_gt_0_compat; try lra. apply pow_lt.
+       rewrite IZR_INR_0.
+       apply lt_INR. assumption. 
+       assert(CF_bound b= (CF_bound b) - x + x)%nat.
+       rewrite Nat.sub_add; try lia.
+       rewrite H4. destruct H3. destruct H5.
+       rewrite (nthmodseq_0_CFq (CF_bound b - x) x a b); try assumption.
+       pose (CF_converge'). 
+       apply Classical_Prop.NNPP. 
+       intro. 
+       assert((forall i : nat,
+       (i < x)%nat ->
+       nthcfexp i a b <> 0%nat)).
+       intros.
+       apply (nthmodseq_not_0_nthcfexp_not_0 (x-i) i x);try lia.
+       pose H8.
+       apply e in n; try lia. 
+       
+       rewrite H6 in n. rewrite H5 in n.
+       apply Rcomplements.Rabs_eq_0 in H1.
+       assert( a / b * q - p =0).  
+       apply Rminus_diag_uniq in H1.
+       rewrite H1. apply Rminus_diag_eq.
+       rewrite Rdiv_unfold. rewrite Rmult_assoc.
+       rewrite Rinv_l. rewrite Rmult_1_r. reflexivity.
+       apply Rgt_neq_0. rewrite IZR_INR_0.
+       apply lt_INR. 
+       lia.  
+       rewrite H9 in n. 
+       assert(IZR (signflip (S x)) <> 0).
+       intro. pose (signflip_abs (S x)). 
+       apply eq_IZR_R0 in H10. rewrite H10 in e0.
+       lia.  
+       
+     
+       assert( IZR (signflip (S x)) *
+       (nthmodseq x a b /
+        (nthmodseq (S x) a b * q +
+         nthmodseq x a b * CFq (S x) a b)) <>0).
+         apply Rmult_integral_contrapositive.
+         split. assumption. rewrite Rdiv_unfold. 
+         apply Rmult_integral_contrapositive. 
+         split. rewrite IZR_INR_0. 
+         intro. 
+        
+         apply INR_eq in H11. destruct H7. assumption.
+        apply Rinv_neq_0_compat. 
+        apply Rgt_neq_0.  rewrite <-Rplus_0_l.
+        apply Rplus_le_lt_compat.
+        apply Rmult_le_pos. rewrite IZR_INR_0. 
+        apply le_INR. lia. rewrite IZR_INR_0.
+        apply le_INR. lia.   
+        apply Rmult_gt_0_compat. 
+        rewrite IZR_INR_0.
+        apply lt_INR. lia.
+        rewrite IZR_INR_0. 
+        apply lt_INR. 
+        apply Nat.lt_le_trans with q. lia.
+        rewrite <-H6. 
+        assert( S x = x+1)%nat.
+        rewrite S_add_1. reflexivity. 
+        rewrite H11. rewrite Nat.add_comm. 
+        apply CFq_inc. lia. 
+        destruct H11. lra. 
+Qed.
+
+Lemma Rabs_eq_0: forall a, 
+ a=0%R -> Rabs a= 0%R .
+Proof. intros. rewrite H. apply Rabs_R0. 
+Qed.
+
+
+Lemma real_div_mul : forall x y z : R,
+  y <> 0%R ->
+  (x / y = z)%R ->
+  (x = z * y)%R.
+Proof.
+  intros x y z Hneq Heq.
+  rewrite <-Heq. rewrite Rdiv_unfold.
+  rewrite Rmult_assoc. rewrite Rinv_l. 
+  rewrite (Rmult_1_r). reflexivity.
+  assumption.
+Qed.
+
+Lemma div_INR: forall (x y z:nat), 
+(y<>0%nat)->
+(Rdiv (INR x)  (INR y)) =z ->
+(Rdiv (INR x)  (INR y)) =INR (x/y).
+Proof. intros. simpl. rewrite H0.
+apply real_div_mul in H0.
+rewrite <-mult_INR in H0.
+apply INR_eq in H0. rewrite H0. 
+rewrite Nat.div_mul. reflexivity.
+assumption. 
+apply not_0_INR. assumption.
+Qed.
+
+
+Lemma Z_of_nat_mod : forall m n : nat,
+  (n <> 0 )%nat->
+  Z.of_nat (Nat.modulo m n) = Z.modulo (Z.of_nat m) (Z.of_nat n).
+Proof.
+  intros m n Hnz.
+
+  apply Nat2Z.inj_mod; try lia.
+Qed.
+
+Lemma inj_gcd : forall m n : nat,
+Zis_gcd m n (Nat.gcd m n).
+Proof.  intros.  econstructor.
+       assert( Nat.divide (Nat.gcd m n) m ). 
+       apply Nat.gcd_divide_l. unfold Nat.divide in *. 
+       destruct H.   
+         unfold Z.divide. exists x . rewrite<- Nat2Z.inj_mul.
+        rewrite H at 1. reflexivity. 
+        assert( Nat.divide (Nat.gcd m n) n ). 
+        apply Nat.gcd_divide_r. unfold Nat.divide in *. 
+       destruct H.   
+         unfold Z.divide. exists x . rewrite<- Nat2Z.inj_mul.
+        rewrite H at 1. reflexivity. 
+     
+
+        intros. apply Zdivide_Zabs_inv_l in H. 
+        apply Zdivide_Zabs_inv_l in H0.  
+        assert((0 <= Z.abs x)%Z). lia.  
+         pose (IZN (Z.abs x) H1). destruct e. rewrite H2 in *.
+        apply Zdivide_Zabs_l . rewrite H2. 
+        unfold Z.divide in *. destruct H. destruct H0.
+
+        assert((0 <= x1 * x0)%Z). lia.   
+        
+        pose (Z.le_0_mul x1 x0 H3). destruct o.  destruct H4. 
+         apply IZN in H4. destruct H4.   rewrite H4 in *. 
+         assert((0 <= x2 * x0)%Z). lia.  
+         pose (Z.le_0_mul x2 x0 H6). destruct o.  destruct H7. 
+          apply IZN in H7. destruct H7.   rewrite H7 in *.  
+
+        assert(Nat.divide x0 (Nat.gcd m n) )%nat. 
+        apply Nat.gcd_divide_iff. split; unfold Nat.divide.
+        exists x3.  apply Nat2Z.inj_iff. rewrite H. rewrite Nat2Z.inj_mul. reflexivity.  
+        exists x4. apply Nat2Z.inj_iff. rewrite H0. rewrite Nat2Z.inj_mul. reflexivity. 
+        unfold Nat.divide in *.  destruct H9. 
+        exists x5.  rewrite H9. rewrite Nat2Z.inj_mul. reflexivity.
+         destruct H7.  assert(x0=0)%nat. lia. rewrite H9 in *.
+         exists 0%Z. 
+         rewrite Z.mul_0_r in *. subst. assert( Z0= 0%nat). lia. rewrite H4 in *.  
+         apply inj_eq. 
+          apply Nat.gcd_eq_0. split. apply Nat2Z.inj_iff.  assumption.
+          apply Nat2Z.inj_iff.  assumption.
+          destruct H4. 
+          assert(x0=0)%nat. lia. rewrite H6 in *.
+          exists 0%Z. 
+          rewrite Z.mul_0_r in *. subst. assert( Z0= 0%nat). lia. rewrite H6 in *.  
+          apply inj_eq. 
+           apply Nat.gcd_eq_0. split. apply Nat2Z.inj_iff.  assumption.
+           apply Nat2Z.inj_iff.  assumption.
+Qed.
+End ContFrac.
+
+
 Module Type Param.
 Parameter x:nat.
 Parameter N:nat. 
@@ -155,20 +329,20 @@ Qed.
 Lemma  CF_out_divide: forall s,
 (s<r)%nat->
 CFq (CF_bound (2^t)) (s*2^t /r ) (2^t) =  (r / (Nat.gcd s r))%nat .
-Proof. intros. pose Hr. apply Legendre_rational_bound with (s/ (Nat.gcd s r))%nat.
+Proof. intros. pose Hr. apply ContFrac.Legendre_rational_bound with (s/ (Nat.gcd s r))%nat.
        apply Nat.div_str_pos. split.  
        assert(Nat.gcd s r <> 0)%nat. intro. 
        apply Nat.gcd_eq_0 in H1. destruct H1. unfold r in *. lia.
        lia. pose(Nat.gcd_divide_r s r). apply Nat.divide_pos_le in d. lia. 
        unfold r. lia. apply  Nat.div_lt_upper_bound. unfold r. lia. 
        apply Nat.mul_lt_mono_pos_r. apply pow_gt_0. lia.
-       apply Rabs_eq_0. 
+       apply ContFrac.Rabs_eq_0. 
        apply Rminus_diag_eq. 
        apply eq_trans with (s/r). pose (Ht s H0). destruct e. 
        rewrite Rdiv_unfold in H1. destruct H1. 
        rewrite Rmult_assoc in H2.  rewrite (Rmult_comm (/ r) ) in H2.
        rewrite <-Rmult_assoc in H2.  
-       rewrite <-(div_INR (s*2^t) _ x0). rewrite mult_INR. rewrite pow_INR.
+       rewrite <-(ContFrac.div_INR (s*2^t) _ x0). rewrite mult_INR. rewrite pow_INR.
        repeat rewrite Rdiv_unfold. repeat rewrite Rmult_assoc. f_equal.
        rewrite Rmult_comm. rewrite Rmult_assoc. rewrite Rinv_l. rewrite Rmult_1_r. 
        reflexivity. apply pow_nonzero. rewrite IZR_INR_0. 
@@ -199,7 +373,7 @@ Proof. intros. pose Hr. apply Legendre_rational_bound with (s/ (Nat.gcd s r))%na
        
         rewrite Nat2Z.inj_div.  rewrite Nat2Z.inj_div. 
        apply Zis_gcd_rel_prime. unfold r . lia. 
-       lia. apply inj_gcd. 
+       lia. apply ContFrac.inj_gcd. 
 
 Qed.
 Local Open Scope nat_scope.
@@ -537,7 +711,7 @@ assert(INR(Init.Nat.mul x0 (Nat.pow (S (S O)) t))=
 try rewrite  mult_INR; try f_equal; try     
 rewrite pow_INR;  
 f_equal; rewrite <-H6 in *;
-rewrite (div_INR _ _  x2); try reflexivity;
+rewrite (ContFrac.div_INR _ _  x2); try reflexivity;
 unfold r; try lia; try assumption.  
 apply WF_adjoint. apply HQFT.
 Qed.
@@ -770,8 +944,8 @@ rewrite Rmult_assoc in H4.
 rewrite (Rmult_comm   (/r)) in H3.
 rewrite (Rmult_comm  (/r)) in H4.
 destruct H3. destruct H4.
-rewrite <-(div_INR _ _ x0).
-rewrite <-(div_INR _ _ x1). unfold Rdiv.
+rewrite <-(ContFrac.div_INR _ _ x0).
+rewrite <-(ContFrac.div_INR _ _ x1). unfold Rdiv.
 apply Rmult_lt_compat_r. apply Rinv_0_lt_compat.
 rewrite IZR_INR_0.
 apply lt_INR. unfold r. lia.  
@@ -802,8 +976,8 @@ rewrite Rmult_assoc in H6.
 rewrite (Rmult_comm   (/r)) in H5.
 rewrite (Rmult_comm  (/r)) in H6.
 destruct H5. destruct H6.
-rewrite <-(div_INR _ _ x0) in H4.
-rewrite <-(div_INR _ _ x1) in H4.
+rewrite <-(ContFrac.div_INR _ _ x0) in H4.
+rewrite <-(ContFrac.div_INR _ _ x1) in H4.
 unfold Rdiv in *. 
 apply Rmult_eq_reg_r in H4.
 apply INR_eq in H4.  
