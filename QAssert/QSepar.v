@@ -3625,7 +3625,47 @@ Proof. induction qs; intros. unfold Par_Pure_State.
         assumption.
 Qed.
 
+Local Open Scope R_scope.
+Lemma Rplus_mult_in01: forall (p1 p2 r1 r2:R),
+0 <p1 <=1->
+0 <p2 <=1->
+p1+p2<=1->
+0<r1 <= 1->
+0<r2<= 1->
+0<p1 * r1 + p2 * r2<= 1 .
+Proof. intros. assert(0 <= p1 * r1 + p2 * r2 <= 1). 
+apply Rplus_mult_le_1; try lra. 
+assert( p1 * r1 + p2 * r2 <>0).
+intro. apply Rplus_eq_R0 in H5. destruct H5.
+apply Rmult_integral in H5. lra.
+apply Rmult_le_pos; lra.  
+apply Rmult_le_pos; lra. lra.  
+Qed.
 
+
+Lemma  fst_mult:forall (a:R) (b:C), 
+fst (a * b)%C= a * fst (b) .
+Proof. intros. destruct b. simpl. rewrite Rmult_0_l.
+rewrite Rminus_0_r. reflexivity. 
+       
+Qed.
+
+(* Lemma Rmult_in01_l: forall r1 r2,
+0<r1*r2<=1-> 0<r2<=1 ->
+0<r1<=1 .
+Proof. intros. assert(r1=r1*r2* /r2). rewrite Rmult_assoc.
+rewrite Rinv_r . rewrite Rmult_1_r. reflexivity.
+lra. rewrite H1. apply Rmult_in01. assumption.
+split. 
+apply Rinv_0_lt_compat. lra.
+Rcomplements.Rdiv_le_1
+lra.  
+       
+Qed. *)
+
+
+
+Local Open Scope nat_scope.
 Lemma Par_Pure_State_reduced{ s e: nat}:forall x (q2:qstate x e) ,
 s<=x /\ x<= e ->
 WF_qstate q2->
@@ -3678,8 +3718,6 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
        apply mixed_state_kron. apply H5. assumption. 
        apply H11 in H13. apply H12 in H14. destruct H13. destruct H13.
        destruct H14. destruct H14. 
-       assert( (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)  
-       = ((x5/p1) * (p2/x6)) .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) ).
        assert((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)=(/p1 * x5) .* ((x4 × (x4) †))  ).
         rewrite <-Mscale_assoc. rewrite <-H15. 
         assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H17.
@@ -3689,7 +3727,9 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
         rewrite <-Mscale_assoc. rewrite <-H16. 
         assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H18.
         rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity. 
-        apply C0_fst_neq. simpl. lra. 
+        apply C0_fst_neq. simpl. lra.
+        assert( (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)  
+        = ((x5/p1) * (p2/x6)) .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) ). 
         rewrite H17. rewrite H18. 
         assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H19.
         rewrite Mscale_assoc. 
@@ -3704,42 +3744,60 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
        
        assert(@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1) x e=
        x5 / p1 * (p2 / x6) .* (@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) x e)).
-       rewrite H17. rewrite Reduced_scale. reflexivity. 
-       rewrite Reduced_scale in H18.
-       assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H19.
-       rewrite <-Mscale_kron_dist_r in H18. rewrite Reduced_R in H18; try reflexivity.
-       rewrite Reduced_R in H18; try reflexivity. 
-       rewrite (Reduced_tensor_r _ x1 ρ1) in H18; auto_wf; try reflexivity.
-       rewrite (Reduced_tensor_r _ x1 ((x5 / p1 * (p2 / x6) .* ρ2))) in H18; auto_wf; try reflexivity.
+       rewrite H19. rewrite Reduced_scale. reflexivity. 
+       rewrite Reduced_scale in H20.
+       assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H21.
+       rewrite <-Mscale_kron_dist_r in H20. rewrite Reduced_R in H20; try reflexivity.
+       rewrite Reduced_R in H20; try reflexivity. 
+       rewrite (Reduced_tensor_r _ x1 ρ1) in H20; auto_wf; try reflexivity.
+       rewrite (Reduced_tensor_r _ x1 ((x5 / p1 * (p2 / x6) .* ρ2))) in H20; auto_wf; try reflexivity.
        assert(ρ1 = /(@trace (2^(x-s)) x1) * (@trace (2^(x-s)) x1) .* (x5 / p1 * (p2 / x6) .* ρ2) ) .
        rewrite<- Mscale_assoc.
-       rewrite <-H18. rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity.
+       rewrite <-H20. rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity.
        apply C0_fst_neq. apply Rgt_neq_0. apply nz_mixed_state_trace_gt0. 
        apply H5.    
-       rewrite Cinv_l in H19. rewrite Mscale_1_l in H19.
-       rewrite H19 . rewrite Mscale_assoc.
+       rewrite Cinv_l in H21. rewrite Mscale_1_l in H21.
+       rewrite H21. rewrite Mscale_assoc.
         rewrite<- Mscale_plus_distr_l .
         destruct (IHNZ_Mixed_State2).
         exists ((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) (p2 .* x1)  ρ2)  ).
         exists (p2 .* x1). split. split; try lia. rewrite Mscale_kron_dist_l.
-        assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H20.
+        assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H22.
         apply nz_Mixed_State_scale. apply mixed_state_kron. apply H5. assumption. lra.
         split. split. apply nz_Mixed_State_scale; try lra. apply H5. lia.   split. reflexivity.
         exists ( x6)%R.
         exists ((x4 × (x4) †)). split. lra.
         split. econstructor. split. apply H8. reflexivity.
         rewrite Mscale_kron_dist_l. assumption.
-        destruct H20.
-        exists (  (p1 * (x6 / p2 * (p1 / x5)) + p2) * x7)%R. 
-        exists (x8). split.  admit.
-        split. apply H20. destruct H20. destruct H21.
-        rewrite H22. rewrite Mscale_assoc. rewrite <-RtoC_mult.
-        f_equal. f_equal.  
-        rewrite RtoC_plus. rewrite <-RtoC_mult. 
+        destruct H22. destruct H22. destruct H23. 
+        assert( ( ((p1 * (x5 / p1 * (p2 / x6)) + p2) .* ρ2)) = 
+        ( (((p1 * (x5 / p1 * (p2 / x6)) + p2) * x7)%R .* x8))).
+         rewrite H24.
+        rewrite Mscale_assoc. rewrite <-RtoC_mult.
+        f_equal. f_equal.    rewrite RtoC_plus. rewrite <-RtoC_mult. 
         rewrite <-RtoC_div; try lra. rewrite <-RtoC_div; try lra. f_equal. f_equal.
-         rewrite<- RtoC_mult. reflexivity.
+         rewrite<- RtoC_mult. reflexivity. 
+        
+       exists (  (p1 * (x5 / p1 * (p2 / x6)) + p2) * x7)%R.   exists (x8).
+       split.
+       assert(fst (trace ((p1 * (x5 / p1 * (p2 / x6)) + p2) .* ρ2)) = 
+       fst (trace (((p1 * (x5 / p1 * (p2 / x6)) + p2) * x7)%R .* x8))).
+       rewrite H25. reflexivity.
+       assert(  0< fst ( trace ((p1 * (x5 / p1 * (p2 / x6)) + p2) .* ρ2)) <=1)%R.
+       apply nz_mixed_state_trace_in01. rewrite Mscale_plus_distr_l.
+       rewrite <-Mscale_assoc. rewrite <-H21. econstructor; assumption.
+       rewrite H26 in H27.  rewrite trace_mult_dist in H27.
+       rewrite fst_mult in H27. destruct H23. destruct H23.
+       rewrite H28 in *.  destruct H23.
+       rewrite trace_mult in H27.
+       rewrite inner_trace' in H27. unfold inner_product in H27.
+       rewrite H29 in H27. simpl in H27. rewrite Rmult_1_r in H27. 
+       assumption. 
+        split.  assumption. assumption. 
+        apply C0_fst_neq. apply Rgt_neq_0.
+        apply nz_mixed_state_trace_gt0. apply H5.
          auto_wf. auto_wf.
-Admitted.
+Qed.
 
 Lemma Reduced_tensor{s e : nat}:forall (l r : nat)
  (M1 : qstate s r) (M2 : qstate r e),
