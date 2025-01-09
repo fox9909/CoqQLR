@@ -3670,8 +3670,12 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
        assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H11.
        apply mixed_state_kron;  try assumption. apply H5.   assumption.
        exists x2. auto. destruct H11.
-       assert((NZ_Mixed_State_aux (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1)) )). admit.
-       assert((NZ_Mixed_State_aux (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)) )). admit.
+       assert((NZ_Mixed_State_aux (p1 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1 ρ1)) )).
+       apply nz_Mixed_State_scale_aux; try lra. apply nz_Mixed_State_aux_to_nz_Mix_State.
+       apply mixed_state_kron. apply H5. assumption. 
+       assert((NZ_Mixed_State_aux (p2 .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)) )).
+       apply nz_Mixed_State_scale_aux; try lra. apply nz_Mixed_State_aux_to_nz_Mix_State.
+       apply mixed_state_kron. apply H5. assumption. 
        apply H11 in H13. apply H12 in H14. destruct H13. destruct H13.
        destruct H14. destruct H14. 
        assert( (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)  
@@ -3686,13 +3690,17 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
        rewrite Reduced_R in H18; try reflexivity. 
        rewrite (Reduced_tensor_r _ x1 ρ1) in H18; auto_wf; try reflexivity.
        rewrite (Reduced_tensor_r _ x1 ((x6 / p2 * (p1 / x5) .* ρ2))) in H18; auto_wf; try reflexivity.
-       assert(ρ1 =(x6 / p2 * (p1 / x5) .* ρ2) ). admit.
+       assert(ρ1 =(x6 / p2 * (p1 / x5) .* ρ2) ).
+       
+       admit.
        rewrite H19 . rewrite Mscale_assoc.
         rewrite<- Mscale_plus_distr_l .
         destruct (IHNZ_Mixed_State2).
         exists ((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) (p2 .* x1)  ρ2)  ).
-        exists (p2 .* x1). split.  admit. 
-        split. admit.  split. reflexivity.
+        exists (p2 .* x1). split. split; try lia. rewrite Mscale_kron_dist_l.
+        assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H20.
+        apply nz_Mixed_State_scale. apply mixed_state_kron. apply H5. assumption. lra.
+        split. split. apply nz_Mixed_State_scale; try lra. apply H5. lia.   split. reflexivity.
         exists ( x6)%R.
         exists ((x4 × (x4) †)). split. lra.
         split. econstructor. split. apply H8. reflexivity.
@@ -3709,7 +3717,37 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
          auto_wf. auto_wf.
 Admitted.
 
+Lemma Reduced_tensor{s e : nat}:forall (l r : nat)
+ (M1 : qstate s r) (M2 : qstate r e),
+ s<=l/\l<=r <=e->
+@WF_Matrix (2^(r-s)) (2^(r-s)) M1 ->
+@WF_Matrix (2^(e-r)) (2^(e-r))  M2 ->
+@Reduced s e (@kron (2^(r-s)) (2^(r-s)) (2^(e-r)) (2^(e-r)) M1 M2)  l e = 
+@kron  (2^(r-l)) (2^(r-l)) (2^(e-r)) (2^(e-r)) (Reduced M1 l r) M2. 
 
+Proof. intros. rewrite Reduced_R; try reflexivity; auto_wf.
+rewrite Reduced_R; try reflexivity; auto_wf.
+unfold R_reduced.
+assert(( 2 ^ (r - l)) = (1 * 2 ^ (r - l))).
+rewrite Nat.mul_1_l. reflexivity. destruct H2.
+rewrite kron_Msum_distr_r.
+apply big_sum_eq_bounded. intros.
+apply Logic.eq_trans with 
+(⟨ x ∣_ (2 ^ (l - s)) ⊗ I (2 ^ (r - l)) ⊗ I (2 ^ (e - r)) × (M1 ⊗ M2)
+× (∣ x ⟩_ (2 ^ (l - s)) ⊗ I (2 ^ (r - l)) ⊗ I (2 ^ (e - r)))).
+f_equal; try repeat rewrite mul_1_l; type_sovle'. f_equal; type_sovle'.
+apply Logic.eq_trans with (⟨ x ∣_ (2 ^ (l - s)) ⊗ I (2 ^ (r - l)) ⊗ I (2 ^ (e - r))).
+rewrite kron_assoc; auto_wf.
+f_equal;type_sovle'. rewrite id_kron. f_equal; type_sovle'.
+f_equal; rewrite mul_1_l. reflexivity.
+apply Logic.eq_trans with (∣ x ⟩_ (2 ^ (l - s)) ⊗ I (2 ^ (r - l)) ⊗ I (2 ^ (e - r))).
+rewrite kron_assoc; auto_wf.
+f_equal;type_sovle'. rewrite id_kron. f_equal; type_sovle'.
+f_equal; rewrite mul_1_l. reflexivity.
+rewrite kron_mixed_product.
+rewrite kron_mixed_product.
+Msimpl. f_equal; rewrite mul_1_l; reflexivity.   
+Qed.
 
 Lemma State_eval_pure: forall F s e c (q: qstate s e) ,
 Considered_Formula F ->
@@ -3903,15 +3941,26 @@ assert(Reduced q0 (fst (option_free (Free_State F2)))
 
 exists (Reduced q (fst (option_free (Free_State F2)))
 (snd (option_free (Free_State F2)))).
-exists (Reduced q (fst (option_free (Free_State F2)))
-(snd (option_free (Free_State F1)))).
+exists (/@trace (2^((snd (option_free (Free_State F1)))-
+(fst (option_free (Free_State F2)))))
+((Reduced x (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1))))) .* (Reduced x (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1))))).
 split. apply WF_qstate_Reduced. lia. assumption. 
-split. apply WF_qstate_Reduced. lia. assumption.
-split.  
+split. split. apply nz_Mixed_State_aux_to01'.
+apply nz_Mixed_State_aux_to_nz_Mix_State. apply WF_qstate_Reduced. lia. assumption. lia. 
+split.  rewrite Reduced_tensor in H22; try lia; auto_wf.
+rewrite Heqq0 in H22. rewrite Reduced_assoc in H22; try lia.
+rewrite H22. rewrite Mscale_kron_dist_l.
+rewrite <-Mscale_kron_dist_r.  f_equal. 
+apply Reduced_tensor_r in H20; auto_wf.
+rewrite <-Reduced_R in H20; try reflexivity; auto_wf.
+rewrite Heqq0 in H20. rewrite Reduced_assoc in H20; try reflexivity; try lia. 
+rewrite H20. rewrite Reduced_trace; try lia; auto_wf.
+rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity.
+apply C0_fst_neq. apply Rgt_neq_0. apply nz_mixed_state_trace_gt0.
+apply H19.    assumption.
 
-
-admit.  
-assumption. 
 rewrite min_l; try lia.  rewrite max_l; try lia.
 assumption.
 
@@ -3932,17 +3981,68 @@ destruct o. destruct H5; assumption.
  apply Par_Pure_State_wedge with (snd (option_free (Free_State F2))); try assumption.
   lia. 
  
-  apply (@Par_Pure_State_reduced ((fst (option_free (Free_State F1))))). lia.
-  apply WF_qstate_Reduced. lia.  
-  assumption.  
-  exists (Reduced q (fst (option_free (Free_State F1)))
-  (snd (option_free (Free_State F1)))).
-  exists (Reduced q (fst (option_free (Free_State F1)))
-  (snd (option_free (Free_State F2)))).
-  split. apply WF_qstate_Reduced. lia. assumption. 
-  split. apply WF_qstate_Reduced. lia. assumption.
-  split. admit.  
-  assumption. 
+  
+apply (@Par_Pure_State_reduced ((fst (option_free (Free_State F1))))). lia.
+apply WF_qstate_Reduced. lia.  
+assumption.  
+
+assert(WF_qstate ((Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1)))))).
+ apply WF_qstate_Reduced. lia. assumption. 
+assert(@Par_Pure_State (2^(((snd (option_free (Free_State F2))))-
+((fst (option_free (Free_State F2))))))
+(Reduced (Reduced q (fst (option_free (Free_State F2)))
+   (snd (option_free (Free_State F1)))) 
+   (fst (option_free (Free_State F2))) (snd (option_free (Free_State F2)))  )).
+rewrite Reduced_assoc; try lia. assumption. 
+destruct H15.
+assert(((fst (option_free (Free_State F2))) ) <=  
+(snd (option_free (Free_State F2))) <=((snd (option_free (Free_State F1)))))  .
+lia.  
+pose (@qstate_Separ_pure_l''  ((fst (option_free (Free_State F2))) )
+(snd (option_free (Free_State F2))) ((snd (option_free (Free_State F1)))) 
+((Reduced q
+(fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1))))) H18
+H15 H16). destruct e0. destruct H19. 
+destruct H19. destruct H19.
+
+remember (Reduced q (fst (option_free (Free_State F2)))
+(snd (option_free (Free_State F1)))).
+assert(Reduced q0 (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F1))) = 
+@Reduced (fst (option_free (Free_State F2))) (snd (option_free (Free_State F1)))
+ (@kron (2^( (snd (option_free (Free_State F2)))-(fst (option_free (Free_State F2))))) 
+(2^((snd (option_free (Free_State F2)))-(fst (option_free (Free_State F2)))))
+ (2^((snd (option_free (Free_State F1)))-((snd (option_free (Free_State F2)))))) 
+ (2^((snd (option_free (Free_State F1)))-((snd (option_free (Free_State F2))))))
+ x x0) 
+(fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F1)))  
+). rewrite H20. reflexivity. 
+
+exists (Reduced q (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F1)))).
+exists (/@trace (2^((snd (option_free (Free_State F2)))-
+(fst (option_free (Free_State F1)))))
+((Reduced x (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F2))))) .* (Reduced x (fst (option_free (Free_State F1)))
+(snd (option_free (Free_State F2))))).
+split. apply WF_qstate_Reduced. lia. assumption. 
+split. split. apply nz_Mixed_State_aux_to01'.
+apply nz_Mixed_State_aux_to_nz_Mix_State. apply WF_qstate_Reduced. lia. assumption. lia. 
+split.  rewrite Reduced_tensor in H22; try lia; auto_wf.
+rewrite Heqq0 in H22. rewrite Reduced_assoc in H22; try lia.
+rewrite H22. rewrite Mscale_kron_dist_l.
+rewrite <-Mscale_kron_dist_r.  f_equal. 
+apply Reduced_tensor_r in H20; auto_wf.
+rewrite <-Reduced_R in H20; try reflexivity; auto_wf.
+rewrite Heqq0 in H20. rewrite Reduced_assoc in H20; try reflexivity; try lia. 
+rewrite H20. rewrite Reduced_trace; try lia; auto_wf.
+rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity.
+apply C0_fst_neq. apply Rgt_neq_0. apply nz_mixed_state_trace_gt0.
+apply H19.    assumption.
+
    simpl in *.  rewrite H3 in *.
    destruct (option_beq (Free_State F2) None) eqn:E.
    destruct H5. rewrite <-option_eqb_eq in E. assumption.

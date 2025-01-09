@@ -2317,11 +2317,11 @@ Qed.
 
 (* ((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
  snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c)))))) *)
-
+(*Assume that F1 F2 F2 c all have continues dom and qfree(F1) cap qMVar(c) <> emptyset *)
 Definition Considered_F_c (F1 F2 F3:State_formula) c:=
 (~NSet.Equal ((snd (MVar c))) (NSet.empty) -> NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1))))/\
-Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3 
-/\ ((NSet.Empty (snd (Free_state F1))) \/ ~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))).
+(Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3) /\ 
+((NSet.Empty (snd (Free_state F1))) \/ ~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))).
 
 Lemma r1:forall F c, 
 Considered_Formula F->
@@ -2779,7 +2779,7 @@ apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
 rewrite Heql. rewrite Heqr.  
 apply equal_trans with ( NSet.inter (snd (Free_state F1))(snd (Free_state F3))); try assumption.
 apply inter_eq.  rewrite Considered_Formula_min; try apply HF3. 
-destruct HF3. destruct H16. 
+destruct HF3. destruct H16. destruct H16. 
 pose (Considered_Formula_max F1 H16).  
 apply add_sub_eq_nz' in e0. rewrite <-e0. 
 apply Considered_Formula_set_eq. assumption.
@@ -2850,16 +2850,17 @@ intro. destruct H16.  apply Free_State_None_empty.
 rewrite H18. reflexivity.        lia.      
 apply inter_empty_to_QSys in H8; try apply HF3.
 destruct H8. destruct HF3.  destruct H19.
-destruct H20.  destruct H21.  destruct H22. 
- rewrite <-empty_Empty in H22. rewrite option_eqb_neq in H10.
+destruct H20.  
+ rewrite <-empty_Empty in H20. rewrite option_eqb_neq in H10.
   apply Free_State_not_empty in H10; try assumption. destruct H10. assumption.
-apply r2 in H22; try assumption.  
+  apply H19.
+apply r2 in H20; try assumption.  
 
 assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
-apply Considered_Formula_not_empty_dom; try assumption. 
+apply Considered_Formula_not_empty_dom; try apply H19. 
 intro. destruct H16.  apply Free_State_None_empty.
-rewrite H23. reflexivity. 
-lia. apply H18. assumption. apply add_sub_lt_r.
+rewrite H21. reflexivity.  
+lia. apply H19. apply H18. assumption. apply add_sub_lt_r.
 apply Free_State_snd_gt_0; try apply HF3. 
 intro. destruct H16.  apply Free_State_None_empty.
 rewrite H18. reflexivity.   lia. 
@@ -2877,12 +2878,12 @@ apply max_lub_iff.
 split. lia. 
 apply inter_empty_to_QSys in H8; try apply HF3. 
 destruct H8. lia. 
-destruct HF3. destruct H19. destruct H20.  destruct H21.
-pose (Considered_Formula_dom F3 H21) . 
-destruct H22. 
-rewrite <-empty_Empty in H22. rewrite option_eqb_neq in H10.
+destruct HF3. destruct H19. destruct H19.  destruct H21.
+pose (Considered_Formula_dom F3 H22) . 
+destruct H20. 
+rewrite <-empty_Empty in H20. rewrite option_eqb_neq in H10.
   apply Free_State_not_empty in H10; try assumption. destruct H10. assumption.
-apply r2 in H22; try assumption.   lia. apply H18. assumption. 
+apply r2 in H20; try assumption.   lia. apply H18. assumption. 
 rewrite <-empty_Empty.
 apply Free_State_not_empty; try apply HF3. 
 apply option_eqb_neq. assumption. 

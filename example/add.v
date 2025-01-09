@@ -269,27 +269,29 @@ Proof.
 eapply rule_seq. eapply rule_QInit. simpl sub.  
 eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
 eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (2) >[ 1, 2]).
-unfold Considered_Formula_F_c.
-simpl. intuition. simpl.  
+unfold Considered_F_c.
+simpl. intuition. left. apply NSet.empty_1. simpl.  
 split. eapply rule_QInit. split. apply inter_empty. left.
-reflexivity. lia.  
+reflexivity. apply Qsys_inter_empty';try lia.  
 
 (*QUnit*)
 eapply rule_seq. eapply rule_qframe with (F2:=QExp_s 0 1 ∣+⟩).
-unfold Considered_Formula_F_c.
-simpl. lia. simpl.  split. 
+unfold Considered_F_c. 
+simpl;  rewrite Qsys_inter_empty'; try lia. intuition.
+ split. 
 eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
 unfold U_v. simpl.  rewrite kron_1_l; auto_wf.
-rewrite kron_1_r; auto_wf. Msimpl.  apply implies_refl.
+rewrite kron_1_r; auto_wf. Msimpl.  apply implies_refl. simpl.
 split. apply inter_empty. left.
-reflexivity. lia.  
+reflexivity. rewrite Qsys_inter_empty'; try  lia.  
 
 eapply rule_seq.
 eapply rule_qframe' with (F2:=QExp_s 1 2 ∣+⟩).
-unfold Considered_Formula_F_c.
-simpl. lia. simpl.  
-split. eapply rule_conseq_l'. 
+unfold Considered_F_c.
+simpl;  rewrite Qsys_inter_empty'; try lia. intuition. 
+simpl; split; try rewrite Qsys_inter_empty'; try lia.
+eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
 unfold U_v. simpl.  rewrite kron_1_l; auto_wf.
 rewrite kron_1_r; auto_wf. Msimpl.  apply implies_refl.

@@ -836,32 +836,60 @@ Proof.
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotE.
        apply rule_qframe'; [ | split; try eapply rule_QInit].
-      unfold Considered_Formula_F_c.
-       simpl. intuition.  simpl.
-       split. apply inter_empty. left. reflexivity. right.  
-        rewrite H2. lia. } 
+      unfold Considered_F_c.
+      simpl. rewrite H2. rewrite H3. 
+      rewrite Nat.sub_add; try lia.  
+      split. try reflexivity. split;  try lia. 
+      left. apply NSet.empty_1.   
+        
+       simpl. rewrite Qsys_inter_empty'; try lia. 
+       split. apply inter_empty. left. reflexivity. left. lia.   
+       } 
         eapply rule_seq.
       {eapply rule_conseq_l.  apply rule_OdotE. 
       apply rule_qframe'; [ | split; try eapply rule_QInit].
-      unfold Considered_Formula_F_c. simpl. intuition. 
-       simpl.  split. apply inter_empty. left. apply union_empty.
-       split; reflexivity. right. rewrite H4.  rewrite max_r; try lia. }
+      unfold Considered_F_c. simpl. 
+      rewrite H4. rewrite H5. rewrite Nat.sub_add; try lia. 
+      split; try reflexivity. split. lia. left. apply NSet.empty_1. 
+       simpl.  split. apply inter_empty. right. reflexivity.
+       eapply equal_trans; try apply inter_comm.
+       eapply equal_trans; try apply inter_union_dist.
+        apply union_empty. split; rewrite Qsys_inter_empty'; try lia. 
+       }
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
        eapply rule_qframe'; 
        [ | split; [eapply rule_qframe; [| split; try eapply rule_QUnit_One' ] | ] ].
-       unfold Considered_Formula_F_c. simpl.   lia. 
-       unfold Considered_Formula_F_c. simpl.   lia. lia.  
+       unfold Considered_F_c. simpl.  rewrite H2. rewrite H3.
+       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
+       right. intro. 
+       eapply equal_trans in H6; try symmetry; try apply inter_union_dist.
+        apply union_empty in H6. destruct H6. rewrite Qsys_inter_empty' in H6; try lia. 
+       unfold Considered_F_c. simpl.  
+       rewrite H2. rewrite H3.
+       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
+       right. intro. 
+        rewrite Qsys_inter_empty' in H6; try lia. lia.  
        simpl.  split. apply inter_empty. left. reflexivity.
-       left. rewrite H3. lia.  simpl. 
-       split. apply inter_empty. left. reflexivity. 
-       right. rewrite H2. lia. }
+       rewrite Qsys_inter_empty'; try lia.  simpl. 
+       split. apply inter_empty. left. reflexivity.
+       rewrite Qsys_inter_empty'; try lia.   }
         assert(m=n+m-n). lia. destruct H6.  rewrite U_vb. 
         eapply rule_seq.
       {eapply rule_qframe;[|split; try eapply rule_QUnit_One'].
-       unfold Considered_Formula_F_c.  simpl. lia. lia.   
+       unfold Considered_F_c.   
+       simpl.  
+       rewrite H0. rewrite H1.
+       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
+       right. intro. 
+        rewrite Qsys_inter_empty' in H6; try lia.
+        lia.   
        simpl.  split. apply inter_empty. left. apply union_empty.
-       split; reflexivity. left. rewrite H1. rewrite min_l; try lia. } 
+       split; reflexivity. 
+       eapply equal_trans;try apply inter_comm.
+       eapply equal_trans; try apply inter_union_dist.
+       apply union_empty. split; rewrite Qsys_inter_empty'; try lia. 
+       } 
         assert(n=n-0). lia. destruct H6. rewrite Had_N'. 
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
@@ -870,8 +898,8 @@ Proof.
        [apply rule_Separ | assert(m=n+m-n); try lia; destruct H6;
        assert(n=n-0); try lia; destruct H6;
        rewrite simpl_HB; apply rule_QUnit_Ctrl ] ] | ] ].
-       unfold Considered_Formula_F_c.  simpl.
-       split. right.  destruct a. 
+       unfold Considered_F_c.  simpl.
+       split.  right.  destruct a. 
        pose (Qsys_to_Set_not_empty 0 n H6). 
        pose (Qsys_to_Set_not_empty n (n+m) H). 
        pose (max_union (Qsys_to_Set 0 n)
@@ -888,7 +916,7 @@ Proof.
        apply Qsys_to_Set_not_empty. lia.   } 
        rewrite simpl_Uf. eapply rule_seq.
       {apply rule_qframe;[|split; try eapply rule_QUnit_One'].
-      unfold Considered_Formula_F_c. simpl. lia. lia.  
+      unfold Considered_F_c. simpl. lia. lia.  
       split. apply inter_empty. left. reflexivity.
       simpl. left. rewrite H1. lia. } 
        assert(n=n-0). lia. destruct H6. assert(n+m=n+m-0). lia.

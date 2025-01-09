@@ -272,7 +272,7 @@ Local Open Scope nat_scope.
   rewrite Rdiv_unfold. rewrite Rmult_1_l.
   split; try lia. apply nz_Mixed_State_aux_to01.
   apply nz_Mixed_State_aux_to_nz_Mix_State.  apply H14. 
-  pose (@Par_Pure_State_kron s e q x). 
+  pose (@qstate_Separ_pure' s e q x). 
   assert((Reduced q s x) = (Reduced m s x)).
   rewrite Heqq. rewrite Reduced_assoc; try lia; try assumption.
   reflexivity. 
