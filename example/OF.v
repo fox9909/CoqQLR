@@ -376,6 +376,7 @@ Proof. intros. pose Hr. apply ContFrac.Legendre_rational_bound with (s/ (Nat.gcd
        lia. apply ContFrac.inj_gcd. 
 
 Qed.
+
 Local Open Scope nat_scope.
 Lemma HU_s: 
   / √ r .*  (big_sum (fun s:nat=> Us s) (r) ) =(∣ 1 ⟩_ (2^L)).
@@ -1390,23 +1391,35 @@ Proof.
 
      *eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
       eapply rule_qframe'; [|split; try apply rule_QInit].
-      unfold Considered_Formula_F_c; simpl; intuition.
-      split. apply inter_empty. left. reflexivity.
-      simpl. right.  rewrite H0. lia. 
+      unfold Considered_F_c; simpl. rewrite H0. rewrite H1.
+      rewrite Nat.sub_add; try lia. 
+      split;[reflexivity| split ;[lia | ] ]. 
+      rewrite <-empty_Empty. intuition.
+      simpl. split. apply inter_empty. left. reflexivity.
+      rewrite Qsys_inter_empty'; try lia. 
 
       *eapply rule_seq.
       eapply rule_qframe; simpl; [|split; try apply rule_QUnit_One'].
-      unfold Considered_Formula_F_c; simpl. intuition. lia.  
-      split. apply inter_empty. left. reflexivity.
-      left.  rewrite H3.  lia.  
+      unfold Considered_F_c; simpl. 
+      simpl. rewrite H2. rewrite H3.
+      rewrite Nat.sub_add; try lia. 
+      split;[reflexivity| split ;[lia | ] ]. 
+     rewrite Qsys_inter_empty'; try lia. lia. 
+      simpl. split. apply inter_empty. left. reflexivity.
+      rewrite Qsys_inter_empty'; try lia. 
+
       unfold U_v; repeat rewrite Nat.sub_diag; rewrite Nat.sub_0_r; simpl;
       rewrite kron_1_l; auto_wf; rewrite kron_1_r; auto_wf; rewrite Had_N.
 
       *eapply rule_seq.
       eapply rule_qframe'; simpl; [|split; try apply rule_QUnit_One'].
-      unfold Considered_Formula_F_c ; simpl. intuition. lia.  
-      split. apply inter_empty. left. reflexivity.
-      right. rewrite H0; lia.  
+      unfold Considered_F_c ; simpl. 
+      simpl. rewrite H0. rewrite H1.
+      rewrite Nat.sub_add; try lia. 
+      split;[reflexivity| split ;[lia | ] ]. 
+       rewrite Qsys_inter_empty'; try lia. lia. 
+      simpl. split. apply inter_empty. left. reflexivity.
+      rewrite Qsys_inter_empty'; try lia. 
       pose HU_plus. destruct a2. assert(L=t + L - t). lia. 
       unfold U_v; repeat rewrite Nat.sub_diag;
       simpl; rewrite kron_1_l; auto_wf; try rewrite kron_1_r; auto_wf; destruct H6; try rewrite H5.

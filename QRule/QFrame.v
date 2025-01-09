@@ -2317,11 +2317,12 @@ Qed.
 
 (* ((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
  snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c)))))) *)
-(*Assume that F1 F2 F2 c all have continues dom and qfree(F1) cap qMVar(c) <> emptyset *)
+(*Assume that F1 F2 F2 c all have continues dom and qfree(F1) cap qMVar(c) <> emptyset, when they are not all empty set *)
 Definition Considered_F_c (F1 F2 F3:State_formula) c:=
 (~NSet.Equal ((snd (MVar c))) (NSet.empty) -> NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1))))/\
 (Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3) /\ 
-((NSet.Empty (snd (Free_state F1))) \/ ~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))).
+(~(NSet.Empty (snd (Free_state F1))) -> ~(NSet.Empty (snd (MVar c))) ->
+~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))).
 
 Lemma r1:forall F c, 
 Considered_Formula F->
@@ -2790,8 +2791,6 @@ apply  Free_State_snd_gt_0; try apply H16; try assumption.
 reflexivity.
 
 
- 
-
 apply dstate_eval_dom  in c0.
 destruct c0.    apply subset_empty'.
 apply Free_State_None_empty. rewrite H15. reflexivity. 
@@ -2849,21 +2848,21 @@ apply Free_State_snd_gt_0; try apply HF3.
 intro. destruct H16.  apply Free_State_None_empty.
 rewrite H18. reflexivity.        lia.      
 apply inter_empty_to_QSys in H8; try apply HF3.
-destruct H8. destruct HF3.  destruct H19.
-destruct H20.  
- rewrite <-empty_Empty in H20. rewrite option_eqb_neq in H10.
-  apply Free_State_not_empty in H10; try assumption. destruct H10. assumption.
-  apply H19.
-apply r2 in H20; try assumption.  
+destruct H8. destruct HF3.  destruct H19.  
+
+apply r2 in H20; try assumption; try apply H19. 
 
 assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
 apply Considered_Formula_not_empty_dom; try apply H19. 
 intro. destruct H16.  apply Free_State_None_empty.
 rewrite H21. reflexivity.  
-lia. apply H19. apply H18. assumption. apply add_sub_lt_r.
-apply Free_State_snd_gt_0; try apply HF3. 
-intro. destruct H16.  apply Free_State_None_empty.
-rewrite H18. reflexivity.   lia. 
+lia.  apply H18. assumption. rewrite <-empty_Empty. apply Free_State_not_empty.
+apply H19. apply option_eqb_neq. assumption. rewrite <-empty_Empty. assumption.
+
+assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
+apply Considered_Formula_not_empty_dom; try apply HF3.
+rewrite option_eqb_neq.
+apply Free_State_not_empty. apply HF3. assumption. lia.  
 
 rewrite <-empty_Empty.
 apply Free_State_not_empty; try apply HF3. 
@@ -2880,10 +2879,12 @@ apply inter_empty_to_QSys in H8; try apply HF3.
 destruct H8. lia. 
 destruct HF3. destruct H19. destruct H19.  destruct H21.
 pose (Considered_Formula_dom F3 H22) . 
-destruct H20. 
-rewrite <-empty_Empty in H20. rewrite option_eqb_neq in H10.
-  apply Free_State_not_empty in H10; try assumption. destruct H10. assumption.
-apply r2 in H20; try assumption.   lia. apply H18. assumption. 
+rewrite <-empty_Empty in H20. 
+apply r2 in H20; try assumption.    lia.
+ apply H18. assumption. 
+ rewrite option_eqb_neq in H10.
+  apply Free_State_not_empty in H10; try assumption.
+  rewrite <-empty_Empty. assumption.
 rewrite <-empty_Empty.
 apply Free_State_not_empty; try apply HF3. 
 apply option_eqb_neq. assumption. 
@@ -2927,13 +2928,20 @@ Proof. intros.
 Qed.
 
 
-Theorem rule_qframe'': forall (P1 P2 P3: Pure_formula) c,
-Considered_F_c P1 P2 P3 c->
-         ({{P1}} c {{P2}}) /\  (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 
-         ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
+Theorem rule_qframe_P: forall (P1 P2 P3: Pure_formula) c,
+({{P1}} c {{P2}}) /\ (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 
+->  {{P3 /\p P1}} c {{P3 /\p P2}}.
 Proof. 
-intros. eapply rule_conseq; try apply rule_OdotO.
-eapply rule_qframe'. assumption. 
- split.   apply H0. split. apply H0.
-simpl. apply inter_empty. left. reflexivity. 
+intros. unfold hoare_triple in *. intros. apply SAnd_PAnd_eq. 
+apply SAnd_PAnd_eq in H1.
+rewrite sat_assert_conj in *. split. destruct H1.
+rewrite sat_Assert_to_State  in *. inversion_clear H0.
+destruct mu as [mu IHmu].
+destruct mu' as [mu' IHmu']. simpl in *.
+econstructor.  
+eapply WF_ceval.  apply H3. apply H4.
+simpl. 
+apply rule_f_classic with c mu. unfold Considered_Formula. auto.
+left. simpl. reflexivity. assumption. inversion_clear H1.  assumption.
+assumption. apply H. destruct H. eapply H. apply H0. apply H1.
 Qed.

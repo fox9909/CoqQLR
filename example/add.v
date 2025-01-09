@@ -269,8 +269,8 @@ Proof.
 eapply rule_seq. eapply rule_QInit. simpl sub.  
 eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
 eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (2) >[ 1, 2]).
-unfold Considered_F_c.
-simpl. intuition. left. apply NSet.empty_1. simpl.  
+unfold Considered_F_c. 
+simpl. repeat rewrite <-empty_Empty. intuition. 
 split. eapply rule_QInit. split. apply inter_empty. left.
 reflexivity. apply Qsys_inter_empty';try lia.  
 
@@ -289,13 +289,13 @@ reflexivity. rewrite Qsys_inter_empty'; try  lia.
 eapply rule_seq.
 eapply rule_qframe' with (F2:=QExp_s 1 2 ∣+⟩).
 unfold Considered_F_c.
-simpl;  rewrite Qsys_inter_empty'; try lia. intuition. 
-simpl; split; try rewrite Qsys_inter_empty'; try lia.
+simpl; repeat rewrite<-empty_Empty; rewrite Qsys_inter_empty'; try lia. intuition. 
+split; simpl; repeat rewrite<-empty_Empty; try rewrite Qsys_inter_empty'; try lia.
 eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
 unfold U_v. simpl.  rewrite kron_1_l; auto_wf.
 rewrite kron_1_r; auto_wf. Msimpl.  apply implies_refl.
-split. apply inter_empty. left.
+split.  apply inter_empty. left.
 reflexivity. lia.  
 
 eapply rule_conseq_l. eapply rule_odotT.
@@ -314,7 +314,7 @@ simpl. apply rule_ConjE. split. apply rule_PT.
 apply rule_Conj_two.  apply Assn_true_P. simpl. unfold not. apply In_empty.
 apply rule_Conj_two.  apply Assn_true_P. simpl. unfold not. apply In_empty.
 apply rule_PT.
-
+ 
 eapply rule_QMeas ; try lia; auto_wf.
 unfold U_v. simpl.
 rewrite (H 0). rewrite (H 1).

@@ -3679,20 +3679,44 @@ Proof. intros. unfold Par_Pure_State in *. unfold WF_qstate in H0.
        apply H11 in H13. apply H12 in H14. destruct H13. destruct H13.
        destruct H14. destruct H14. 
        assert( (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)  
-       = ((x6/p2) * (p1/x5)) .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) ).
-       admit. 
+       = ((x5/p1) * (p2/x6)) .* (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) ).
+       assert((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1)=(/p1 * x5) .* ((x4 × (x4) †))  ).
+        rewrite <-Mscale_assoc. rewrite <-H15. 
+        assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H17.
+        rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity. 
+        apply C0_fst_neq. simpl. lra. 
+        assert((@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2)=(/p2 * x6) .* ((x4 × (x4) †))  ).
+        rewrite <-Mscale_assoc. rewrite <-H16. 
+        assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H18.
+        rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity. 
+        apply C0_fst_neq. simpl. lra. 
+        rewrite H17. rewrite H18. 
+        assert(2^(e-s)=2^(x-s)*(2^(e-x))). type_sovle'. destruct H19.
+        rewrite Mscale_assoc. 
+        repeat rewrite Cdiv_unfold. rewrite <-Cmult_assoc. 
+        assert((p2 * / x6) * (/ p2 * x6) = C1)%C. 
+        rewrite <-Cmult_assoc.  
+          rewrite (Cmult_comm _ x6 ). rewrite Cmult_assoc.
+          rewrite Cmult_assoc. rewrite <-(Cmult_assoc p2 ).
+          rewrite Cinv_l. Csimpl. rewrite Cinv_r. reflexivity.
+          apply C0_fst_neq. simpl. lra. apply C0_fst_neq. simpl. lra.
+          rewrite H19. Csimpl. rewrite Cmult_comm. reflexivity.  
+       
        assert(@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ1) x e=
-       ( x6/p2) * (p1/x5) .* (@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) x e)).
+       x5 / p1 * (p2 / x6) .* (@Reduced s e (@kron (2^(x-s)) (2^(x-s)) (2^(e-x))  (2^(e-x)) x1  ρ2) x e)).
        rewrite H17. rewrite Reduced_scale. reflexivity. 
        rewrite Reduced_scale in H18.
        assert(2^(x-s)*(2^(e-x))=2^(e-s)). type_sovle'. destruct H19.
        rewrite <-Mscale_kron_dist_r in H18. rewrite Reduced_R in H18; try reflexivity.
        rewrite Reduced_R in H18; try reflexivity. 
        rewrite (Reduced_tensor_r _ x1 ρ1) in H18; auto_wf; try reflexivity.
-       rewrite (Reduced_tensor_r _ x1 ((x6 / p2 * (p1 / x5) .* ρ2))) in H18; auto_wf; try reflexivity.
-       assert(ρ1 =(x6 / p2 * (p1 / x5) .* ρ2) ).
-       
-       admit.
+       rewrite (Reduced_tensor_r _ x1 ((x5 / p1 * (p2 / x6) .* ρ2))) in H18; auto_wf; try reflexivity.
+       assert(ρ1 = /(@trace (2^(x-s)) x1) * (@trace (2^(x-s)) x1) .* (x5 / p1 * (p2 / x6) .* ρ2) ) .
+       rewrite<- Mscale_assoc.
+       rewrite <-H18. rewrite Mscale_assoc. rewrite Cinv_l. Msimpl. reflexivity.
+       apply C0_fst_neq. apply Rgt_neq_0. apply nz_mixed_state_trace_gt0. 
+       apply H5.    
+       rewrite Cinv_l in H19. rewrite Mscale_1_l in H19.
        rewrite H19 . rewrite Mscale_assoc.
         rewrite<- Mscale_plus_distr_l .
         destruct (IHNZ_Mixed_State2).

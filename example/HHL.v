@@ -819,6 +819,25 @@ lia. simpl. lia. simpl. lia. simpl. lia. apply Hv_n. assert(0<2^n). apply pow_gt
 auto_wf. 
 Qed.
 
+Lemma Qsys_union: forall (s x e:nat), 
+s< x < e->
+NSet.Equal ((NSet.union (Qsys_to_Set s x) (Qsys_to_Set x e))) 
+((Qsys_to_Set s e)).
+Proof. unfold NSet.Equal. intros. split; intros. 
+        apply NSet.union_1 in H0. destruct H0;
+        apply In_Qsys in H0; try lia;
+        apply In_Qsys; try lia.
+        assert(a<x0\/ ~(a<x0)). apply Classical_Prop.classic.
+        destruct H1.
+        apply NSet.union_2.
+        apply In_Qsys in H0; try lia;
+        apply In_Qsys; try lia.
+        apply NSet.union_3.
+        apply In_Qsys in H0; try lia;
+        apply In_Qsys; try lia.
+Qed.
+
+
 
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
 Proof. 
@@ -839,8 +858,8 @@ Proof.
       unfold Considered_F_c.
       simpl. rewrite H2. rewrite H3. 
       rewrite Nat.sub_add; try lia.  
-      split. try reflexivity. split;  try lia. 
-      left. apply NSet.empty_1.   
+      split. try reflexivity. split;  try lia. rewrite <-empty_Empty.
+      intuition. 
         
        simpl. rewrite Qsys_inter_empty'; try lia. 
        split. apply inter_empty. left. reflexivity. left. lia.   
@@ -850,11 +869,10 @@ Proof.
       apply rule_qframe'; [ | split; try eapply rule_QInit].
       unfold Considered_F_c. simpl. 
       rewrite H4. rewrite H5. rewrite Nat.sub_add; try lia. 
-      split; try reflexivity. split. lia. left. apply NSet.empty_1. 
+      split; try reflexivity. split. lia.
+       rewrite <-empty_Empty. intuition. 
        simpl.  split. apply inter_empty. right. reflexivity.
-       eapply equal_trans; try apply inter_comm.
-       eapply equal_trans; try apply inter_union_dist.
-        apply union_empty. split; rewrite Qsys_inter_empty'; try lia. 
+       rewrite Qsys_union; try lia.   rewrite Qsys_inter_empty'; try lia. 
        }
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
@@ -862,14 +880,10 @@ Proof.
        [ | split; [eapply rule_qframe; [| split; try eapply rule_QUnit_One' ] | ] ].
        unfold Considered_F_c. simpl.  rewrite H2. rewrite H3.
        rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-       right. intro. 
-       eapply equal_trans in H6; try symmetry; try apply inter_union_dist.
-        apply union_empty in H6. destruct H6. rewrite Qsys_inter_empty' in H6; try lia. 
-       unfold Considered_F_c. simpl.  
-       rewrite H2. rewrite H3.
+       rewrite Qsys_union; try lia.  rewrite Qsys_inter_empty'; try lia. 
+       unfold Considered_F_c. simpl.  rewrite H2. rewrite H3.
        rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-       right. intro. 
-        rewrite Qsys_inter_empty' in H6; try lia. lia.  
+        rewrite Qsys_inter_empty'; try lia. lia.  
        simpl.  split. apply inter_empty. left. reflexivity.
        rewrite Qsys_inter_empty'; try lia.  simpl. 
        split. apply inter_empty. left. reflexivity.
@@ -878,17 +892,12 @@ Proof.
         eapply rule_seq.
       {eapply rule_qframe;[|split; try eapply rule_QUnit_One'].
        unfold Considered_F_c.   
-       simpl.  
-       rewrite H0. rewrite H1.
+       simpl.   rewrite H0. rewrite H1.
        rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-       right. intro. 
-        rewrite Qsys_inter_empty' in H6; try lia.
-        lia.   
+         rewrite Qsys_inter_empty'; try lia. lia.   
        simpl.  split. apply inter_empty. left. apply union_empty.
        split; reflexivity. 
-       eapply equal_trans;try apply inter_comm.
-       eapply equal_trans; try apply inter_union_dist.
-       apply union_empty. split; rewrite Qsys_inter_empty'; try lia. 
+       rewrite Qsys_union; try lia.  rewrite Qsys_inter_empty'; try lia. 
        } 
         assert(n=n-0). lia. destruct H6. rewrite Had_N'. 
         eapply rule_seq.
@@ -899,26 +908,31 @@ Proof.
        assert(n=n-0); try lia; destruct H6;
        rewrite simpl_HB; apply rule_QUnit_Ctrl ] ] | ] ].
        unfold Considered_F_c.  simpl.
-       split.  right.  destruct a. 
+       split. destruct a.   
        pose (Qsys_to_Set_not_empty 0 n H6). 
-       pose (Qsys_to_Set_not_empty n (n+m) H). 
+       pose (Qsys_to_Set_not_empty n (n+m) H).
        pose (max_union (Qsys_to_Set 0 n)
        (Qsys_to_Set n (n + m))). destruct a. destruct H9.
        rewrite H10; try assumption. 
        pose (min_union (Qsys_to_Set 0 n)
        (Qsys_to_Set n (n + m))). destruct a. destruct H12.
-       rewrite H13; try assumption. lia. lia. lia.     
-      simpl. split. apply inter_empty. left. reflexivity.
-      left. pose (max_union (Qsys_to_Set 0 n) (Qsys_to_Set n (n + m))). destruct a0.
-      destruct H7. clear H6.  clear H7. rewrite H8. 
-       rewrite H1. rewrite H3. rewrite max_r; try lia.
-       apply Qsys_to_Set_not_empty. lia.
-       apply Qsys_to_Set_not_empty. lia.   } 
+       rewrite H13; try assumption.
+       rewrite H0.  rewrite H1.  rewrite H2. rewrite H3. 
+        rewrite max_r; try lia.  
+        rewrite (Nat.sub_add  1 (n+m)); try lia. simpl.
+        rewrite Qsys_union; try lia. reflexivity. 
+      split. lia.  rewrite Qsys_union; try lia.
+      rewrite Qsys_inter_empty'; try lia.   lia.     
+      simpl. split. apply inter_empty. left. reflexivity. 
+      rewrite Qsys_union; try lia. rewrite Qsys_inter_empty'; try lia.   } 
        rewrite simpl_Uf. eapply rule_seq.
       {apply rule_qframe;[|split; try eapply rule_QUnit_One'].
-      unfold Considered_F_c. simpl. lia. lia.  
-      split. apply inter_empty. left. reflexivity.
-      simpl. left. rewrite H1. lia. } 
+      unfold Considered_F_c. simpl.
+      rewrite H0. rewrite H1. rewrite Nat.sub_add; try lia.
+      rewrite Qsys_inter_empty'; try lia. split; try reflexivity; try lia.   
+       lia. simpl.  
+      split. apply inter_empty. left. reflexivity. 
+      rewrite Qsys_inter_empty'; try lia.  } 
        assert(n=n-0). lia. destruct H6. assert(n+m=n+m-0). lia.
       destruct H6. rewrite simpl_QFT'. eapply rule_seq.
       {eapply rule_conseq_l. apply rule_odotT. 

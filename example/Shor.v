@@ -345,7 +345,7 @@ Proof. unfold Shor.
         apply rule_ConjE. split. apply rule_PT. apply Assn_true_P. simpl. unfold not. apply In_empty.
 
        eapply rule_conseq_r'.
-       eapply rule_qframe''.
+       eapply rule_qframe_P.
        split.  apply rule_PAssgn.
        
        simpl. apply inter_empty. left.
@@ -361,7 +361,7 @@ Proof. unfold Shor.
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.
-          eapply rule_qframe''. 
+          eapply rule_qframe_P. 
           split.   eapply rule_Clet. 
           
           simpl. apply inter_empty. left.
@@ -392,7 +392,7 @@ Proof. unfold Shor.
           try match goal with 
           H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
-          eapply rule_qframe''.
+          eapply rule_qframe_P.
           split.  apply rule_PAssgn.
           
           simpl. apply inter_empty. left.
@@ -415,7 +415,7 @@ Proof. unfold Shor.
            /\p (BEq ((Nat.gcd x N)) 1))).
            classic_slove_2.
 
-           apply rule_qframe''. 
+           apply rule_qframe_P. 
            split.  eapply rule_conseq_l; try
            apply OF.OF_correctness; try apply rule_PT. 
            simpl. apply inter_empty. left.
@@ -440,7 +440,7 @@ Proof. unfold Shor.
             eapply rule_conseq_r'.
            
 
-          eapply rule_qframe''.
+          eapply rule_qframe_P.
           split.  apply rule_PAssgn.
          
           
@@ -472,7 +472,7 @@ Proof. unfold Shor.
           destruct H5; simpl in H0; destruct H0.
 
          eapply rule_conseq_r'.
-         eapply rule_qframe''.
+         eapply rule_qframe_P.
          split.  apply rule_PAssgn.
          
 
@@ -496,7 +496,7 @@ Proof. unfold Shor.
           {eapply rule_conseq_l. apply rule_AndT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.  
-          eapply rule_qframe''. 
+          eapply rule_qframe_P. 
           split.   eapply rule_Clet. 
           
           simpl. apply inter_empty. right.
@@ -518,7 +518,7 @@ try discriminate end;
 try match goal with 
 H:NSet.In ?b NSet.empty |- _ => eapply In_empty; apply H end.
           eapply rule_conseq_r'.
-          eapply rule_qframe''.
+          eapply rule_qframe_P.
           split.  apply rule_PAssgn. 
 
           simpl. apply inter_empty. left.
