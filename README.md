@@ -17,8 +17,7 @@ Then, cd to the root of the project directory and enter the following commands i
 A file named Makefile will be generated. After that, enter ```make``` in the commandline. If no error message occurs, the installation is complete.
 # Structure
 
-![The relationship between different file](https://github.com/fox9909/C_Q_LocalReasoning/Relationship.png)
-
+![The relationship between different file](./Relationship.png)
 
 * **Quantumlib**: A project about Coq library for reasoning about quantum programs realized by [QuantumLib](https://github.com/inQWIRE/QuantumLib.git).
 
