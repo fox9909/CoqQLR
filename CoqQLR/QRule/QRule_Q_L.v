@@ -16,15 +16,14 @@ Require Import Coq.Arith.Peano_dec.
 
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import QIMP_L.
-From Quan Require Import QAssert.
+From Quan Require Import QAssert_L.
 From Quan Require Import Mixed_State.
 From Quan Require Import QSepar.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_I_L.
 Import Reduced.
-Import Forall_two.
 Import Basic.
 Import Ceval_Prop.
 Local Open Scope nat_scope.
@@ -718,15 +717,6 @@ Proof.
       apply WF_NZ_Mixed. apply H1.
 Qed.
 
-
-
-
-(* Lemma  big_sum_0_0: forall (f:nat-> Vector 1) n0,
-(big_sum f n0) 0 0 =  big_sum (fun x=>  (f x) 0 0) n0  .
-Proof. intros. induction n0. simpl. unfold Zero. reflexivity.
-        simpl. unfold ".+". f_equal. assumption.
-Qed. *)
-
 Lemma dstate_to_list_app{s e:nat}: forall (mu1 mu2: list (dstate s e)),
 dstate_to_list (mu1++ mu2) = (dstate_to_list mu1) ++ (dstate_to_list mu2).
 Proof. induction mu1; intros. simpl. reflexivity.
@@ -742,9 +732,6 @@ Proof. induction n_0. intros. simpl. reflexivity.
        intros. simpl.  rewrite dstate_to_list_app. 
        rewrite IHn_0. simpl.  reflexivity.
 Qed.
-
-Require Import Forall_two.
-  
 
 Local Open Scope nat_scope.
 
@@ -812,42 +799,6 @@ Proof.  induction n0; intros; inversion_clear H; inversion_clear H0.
       f_equal. 
     apply H1. lia.
 Qed.
-  
-
-(* 
-Lemma big_add_emit_0{s e:nat}: forall n (p_n:nat-> R) (F_n:nat->  (R* State_formula)) (mu_n:nat-> (dstate s e)) pF mu,
-(forall i : nat, i< n-> p_n i <> 0%R -> sat_State (mu_n i) (snd (F_n i)))->
-emit_0 (fun_to_list p_n n) (fun_to_list F_n n) pF->
-emit_0 (fun_to_list p_n n) (fun_to_list mu_n n) mu->
-(Forall_two (fun i j => sat_State i (snd j)) mu pF).
-Proof. induction n; intros. inversion_clear H0.
-       inversion_clear H1. econstructor.
-       simpl in H0. simpl in H1.
-       pose (emit_0_exsist (fun_to_list p_n n) (fun_to_list F_n n)).
-       pose (emit_0_exsist [p_n n] [F_n n]).
-       destruct e0; destruct e1;
-       repeat rewrite fun_to_list_length; try reflexivity.
-       assert(pF = x ++ x0).
-       eapply emit_0_app; [apply H2| apply H3 | apply H0].
-       pose (emit_0_exsist (fun_to_list p_n n) (fun_to_list mu_n n)).
-       pose (emit_0_exsist [p_n n] [mu_n n]).
-       destruct e0; destruct e1;
-       repeat rewrite fun_to_list_length; try reflexivity.
-       assert(mu = x1 ++ x2).
-       eapply emit_0_app; [apply H5| apply H6 | apply H1].
-       rewrite H4. rewrite H7.
-       apply Forall_two_app. apply IHn with p_n F_n mu_n; try assumption.
-       intros. apply H. lia. assumption.
-       inversion_clear H3;
-       inversion_clear H6;
-       inversion_clear H9; inversion_clear H10.
-       econstructor.
-       lra. lra.
-       econstructor. apply H. lia. assumption. 
-       econstructor.
-Qed. *)
-
-
 
 
 Lemma  big_sum_mult_l_R: forall r (f:nat-> R) n,
@@ -1278,21 +1229,6 @@ Proof. intros. inversion_clear H.  inversion_clear H4.
           simpl. intros. split; apply H11; try assumption.
           simpl. intros. split; apply H11; try assumption.
 Qed.
-       
-
-
-(* 
-Lemma emit_0_neq_0: forall (f h: list R) ,
-Forall (fun x1 : R => (0 <= x1)%R) f->
-emit_0 f f h->
-Forall (fun x1 : R => (0 < x1)%R) h.
-Proof. induction f; intros; inversion_clear H0;
-       inversion_clear H;
-       try econstructor. apply IHf; try assumption.
-       lra. 
-       apply IHf; try assumption.
-Qed. *)
-
 
 
 Theorem rule_Meas_aux'':forall s' e' s e (v: Vector (2^(e-s))) x (P :nat-> (Pure_formula))

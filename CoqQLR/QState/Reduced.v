@@ -11,7 +11,7 @@ From Coq Require Import Init.Nat.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import Mixed_State.
 
 Delimit Scope C_scope with C.
@@ -286,7 +286,7 @@ Proof. intros. unfold WF_qstate in *.
       lia. auto_wf. lia.
 Qed.
 
-(* properties*)
+(*properties*)
 Lemma Reduced_Zero{s' e'}: forall l r,
 @Reduced s' e' Zero l r = Zero.
 Proof. unfold Reduced.  intros.
@@ -379,7 +379,6 @@ Qed.
 
 
 Locate plus_assoc.
-(*l是左边的维数， m是右边的维数*)
 Local Open Scope nat_scope.
 
 Lemma  minus_S: forall (n l:nat), n- (S l)=n-l-1 .

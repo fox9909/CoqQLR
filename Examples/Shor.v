@@ -7,18 +7,17 @@ From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Prop.
-From Quan Require Import QAssert.
+From Quan Require Import QAssert_L.
 From Quan Require Import QSepar.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
 From Quan Require Import QFrame.
-From Quan Require Import Forall_two.
 From Quan Require Import add.
 From Quan Require Import HHL.
 From Quan Require Import OF.
@@ -51,7 +50,7 @@ Definition y:nat := 3.
 Parameter random: nat -> nat -> nat.
 Hypothesis Hran: forall a b, (a-1 < random a b) /\ (random a b < b+1).
 
-(*Shor程序*)
+(*Shor's Program*)
 Definition Shor :=
   let N2 := (N mod 2) in
   let b2 (x:nat) :=(BAnd (BEq (AMod z ' 2) 0 )  (BNeq ((AMod (APlus (APow x (ADiv z ' 2)) 1) N)) 0)) in
@@ -80,28 +79,28 @@ Definition Shor :=
 
 Import Sorted.
 
-(*N是一个合数*)
+(*N is a composite number*)
 Definition Cop (N:nat) := exists a, 2<=a /\ a<=(N-1) /\ Nat.modulo N a =0.
 
-(*gcd (x^(z/2)-1)  N 是非平凡因子*)
+(*gcd (x^(z/2)-1)  N is a nontrivial factor of N*)
 Definition F_1(y x N:nat): Pure_formula := ((BEq y ' (((Nat.gcd (x ^ (r / 2) - 1) N)))) 
 /\p (BNeq y ' 1) /\p (BNeq y ' N)).
 
-(*gcd (x^(z/2)+1)  N 是非平凡因子*)
+(*gcd (x^(z/2)+1)  N is a nontrivial factor of N*)
 Definition F_2(y x N:nat): Pure_formula := ((BEq y ' (((Nat.gcd (x ^ (r / 2) + 1) N)))) 
 /\p (BNeq y ' 1) /\p (BNeq y ' N)).
 
-(*gcd x N 是非平凡因子*)
+(*gcd x N is a nontrivial factor of N*)
 Definition F_3(y x N:nat): Pure_formula := ((BEq y ' (Nat.gcd x N)) /\p (BNeq y ' N)).
 
-(*（gcd (x^(z/2)-1)  N） 或 （gcd (x^(z/2)+1)  N） 第一有一个是非平凡因子*)
+(*either（gcd (x^(z/2)-1)  N） or （gcd (x^(z/2)+1)  N） is a nontrivial factor of N*)
 Definition Big_hypose (x z N:nat): Pure_formula:= 
   (BAnd (BNeq (AGcd  (AMinus (APow x (ADiv z ' 2)) 1) N) N)  
   (BNeq (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) 1)) \/p 
   (BAnd (BNeq (AGcd  (APlus (APow x (ADiv z ' 2)) 1) N) N)  
   (BNeq (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) 1)).
 
-(*平方差公式*)
+(*square variance*)
 Lemma pow_sub: forall x y:nat, (y<=x) -> (x)^2 -(y^2)= (x+y)*(x-y).
 Proof.  intros. rewrite Nat.mul_add_distr_r. repeat rewrite Nat.mul_sub_distr_l. 
        simpl. repeat rewrite Nat.mul_1_r. 
@@ -279,8 +278,6 @@ Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
         simpl in H0. destruct H0.  destruct H1.
 Qed.
 
-
-(* Definition a :=4 . *)
 
 Lemma BAnd_split: forall (b1 b2:bool),
 (if (b1&&b2) then True else False) ->

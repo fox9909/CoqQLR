@@ -14,8 +14,8 @@ From Quan Require Import QIMP_L.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 Import Basic.
-From Quan Require Import QState.
-From Quan Require Import QAssert.
+From Quan Require Import QState_L.
+From Quan Require Import QAssert_L.
 From Quan Require Import Reduced.
 From Quan Require Import Mixed_State.
 From Quan Require Import QSepar.
@@ -914,7 +914,7 @@ Proof. induction g; intros; inversion H;subst.
         intuition. intuition.
 Qed.  
 
-Require Import Forall_two.
+
 Lemma swap_and{s e:nat} :forall  (g:list (R* State_formula))  (P: (dstate s e) -> (R*State_formula) -> Prop)
 (f:(list (dstate s e))) i,
 (Forall_two P f g)->

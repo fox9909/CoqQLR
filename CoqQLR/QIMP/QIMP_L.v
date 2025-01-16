@@ -6,14 +6,10 @@ Require Import
   Coq.FSets.FMapList
   Coq.Structures.OrderedTypeEx.
 
-
-(* From Quan Require Import QMatrix.
-From Quan Require Import QVector.
-From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import Reduced.
 From Quan Require Import Basic.
 
@@ -60,9 +56,8 @@ Notation "x * y"   := (AMult x y) (in custom com at level 40, left associativity
 Notation "x / y"   := (ADiv x y) (in custom com at level 40, left associativity).
 Notation "x % y"   := (AMod x y) (in custom com at level 40, left associativity).
 Notation "x ^ y"   := (APow x y) (in custom com at level 30, left associativity).
-(*Notation "'true'"  := true (at level 1).*)
+
 Notation "'true'"  := BTrue (in custom com at level 0).
-(*Notation "'false'" := false (at level 1).*)
 Notation "'false'" := BFalse (in custom com at level 0).
 Notation "x < y"  := (BLt x y) (in custom com at level 70, no associativity).
 Notation "x > y"   := (BGt x y) (in custom com at level 70, no associativity).
@@ -208,22 +203,6 @@ Fixpoint MVar (c:com): (CSet * QSet) :=
 
 
 (*-----------------------Semantics------------------------------------*)
-
-(* (* Fixpoint ord' n a N :=
-  match n with
-  | O => O
-  | S n' => match (ord' n' a N) with
-           | O => (if (a ^ n mod N =? 1) then n else O)
-           | _ => ord' n' a N
-           end
-  end. *)
-
-Require Import Coq.ZArith.Znumtheory.
-Definition ϕ (n : nat) :=
-big_sum (fun x => if rel_prime_dec x n then 1%nat else 0%nat) n.
-Definition ord a N := ord' (ϕ N) a N. 
-
-Require Import Psatz ZArith Znumtheory. *)
 Local Open Scope nat_scope.
 
 Fixpoint aeval{s e:nat} (st: state s e) 
@@ -299,10 +278,6 @@ Mixed_State_aux ρ -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
 #[export] Hint Resolve WF_Mixed_aux : wf_db.
 
-(* Lemma  Mixed_State_aux_eq{n:nat}: forall (q1 q2: Square (2^n)),
-q1 = q2 -> Mixed_State_aux q1 -> Mixed_State_aux q2 .
-Proof. intros. rewrite <-H. assumption.
-Qed. *)
 
 Lemma d_reduced_app{ s e :nat}: forall n l r(f: nat -> list (cstate *qstate s e)),
 (d_reduced  (big_app

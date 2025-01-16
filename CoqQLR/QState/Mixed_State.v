@@ -16,7 +16,7 @@ From Quan Require Export Quantum.
 From Quan Require Export Complex.
 From Quan Require Import Basic.
 
-(*-------------------------------------------------------------------------*)
+(*--------------------------------Mixed State-----------------------------------------*)
 
 Notation Density n := (Matrix n n) (only parsing). 
 
@@ -727,8 +727,6 @@ Proof.
     [ H : ?x = ?y |- _] => assert (H': fst x = fst y) by (rewrite H; easy); clear H
     end.
     simpl in H'. 
-    (* rewrite <- H'.    
-    split. *)
     + unfold Rminus. rewrite <- Ropp_mult_distr_r. rewrite Ropp_involutive.
       rewrite <- Rplus_0_r at 1. rewrite Rmult_0_l. rewrite Ropp_0.
         apply Rplus_le_compat. assert((0*0)%R=0%R). apply Rmult_0_r.
@@ -991,6 +989,7 @@ Proof. intros.
        split.
        apply Mix_S_aux; assumption. assumption.
 Qed.
+
 (*Vec is Mix_stated_aux*)
 Local Open Scope nat_scope.
 Lemma Vector_State_snd_0: forall n (x: Vector (n)),
@@ -1205,8 +1204,8 @@ Proof. induction n0.
      assumption.   }
 Qed.
 
-(*----------------------------------------------------------------------------*)
-(*Import Lemma*)
+(*--------------------------------nz_mixed_pure--------------------------------------------*)
+
 Require Import Complex.
 Lemma real_gt_0_aux:forall a b c : R, 0 < a -> 0 < b -> a = (b * c)%R -> 0 < c.
 Proof. intuition. 
@@ -1357,7 +1356,7 @@ rewrite trace_mult.
 rewrite inner_trace'. reflexivity.
 Qed.
 
-Lemma Mixed_State_mult_trace_le_1:forall {n} (ρ1 :Density n),
+Lemma mixed_mult_trace_le_1:forall {n} (ρ1 :Density n),
 Mixed_State ρ1->
 forall (ρ2: Density n),
 Mixed_State ρ2 ->
@@ -1483,7 +1482,7 @@ lra.
 Qed.
 
 
-Lemma nz_Mixed_State_mult_trace_lt_1:forall {n} (ρ1 :Density n),
+Lemma nz_mixed_mult_trace_lt_1:forall {n} (ρ1 :Density n),
 NZ_Mixed_State ρ1->
 forall (ρ2: Density n),
 NZ_Mixed_State ρ2 ->
@@ -1538,7 +1537,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
        apply Rmult_in01''.
        rewrite Mmult_assoc.
        rewrite <-(Mmult_assoc x).
-       apply  Mixed_State_mult_trace_le_1.
+       apply  mixed_mult_trace_le_1.
        apply NZ_Mixed_State_is_Mixed_State.
        apply Pure_NZ_Mixed. econstructor. 
        split. apply H0. reflexivity. 
@@ -1554,7 +1553,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
        apply Rmult_in01''.
        rewrite Mmult_assoc.
        rewrite <-(Mmult_assoc x).
-       apply  Mixed_State_mult_trace_le_1.
+       apply  mixed_mult_trace_le_1.
        apply NZ_Mixed_State_is_Mixed_State.
        apply Pure_NZ_Mixed. econstructor. 
        split. apply H0. reflexivity. 
@@ -1600,7 +1599,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       apply Rplus_mult_lt_1; try lra.
       split. apply Cmod_ge_0.
       assumption. 
-      apply Mixed_State_mult_trace_le_1.
+      apply mixed_mult_trace_le_1.
       apply NZ_Mixed_State_is_Mixed_State.
       apply nz_Mixed_State_scale.  
       apply Pure_NZ_Mixed. assumption.
@@ -1609,7 +1608,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       apply Rplus_mult_lt_1; try lra.
       split. apply Cmod_ge_0.
       assumption. 
-      apply Mixed_State_mult_trace_le_1.
+      apply mixed_mult_trace_le_1.
       apply NZ_Mixed_State_is_Mixed_State.
       apply nz_Mixed_State_scale.  
       apply Pure_NZ_Mixed. assumption.
@@ -1729,7 +1728,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       apply Rplus_mult_lt_1; try lra.
       split. apply Cmod_ge_0.
       assumption. 
-      apply Mixed_State_mult_trace_le_1.
+      apply mixed_mult_trace_le_1.
       apply NZ_Mixed_State_is_Mixed_State.
       assumption.  apply NZ_Mixed_State_is_Mixed_State. assumption.
        assumption.
@@ -1738,7 +1737,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       apply Rplus_mult_lt_1; try lra.
       split. apply Cmod_ge_0.
       assumption. 
-      apply Mixed_State_mult_trace_le_1.
+      apply mixed_mult_trace_le_1.
       apply NZ_Mixed_State_is_Mixed_State.
       assumption.  apply NZ_Mixed_State_is_Mixed_State. assumption.
        assumption.
@@ -1746,7 +1745,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
 Qed.
 
 
-Lemma Mixed_sqrt_trace: forall {n} (ρ1 ρ2: Density n) (p1 p2: R), 
+Lemma nz_mixed_sqrt_trace: forall {n} (ρ1 ρ2: Density n) (p1 p2: R), 
 0<p1<=1->
 0<p2<=1->
 p1+p2<=1->
@@ -1781,13 +1780,13 @@ Proof. intros. rewrite Mmult_plus_distr_l.
          apply Rplus_le_lt_compat.
          apply Rmult_le_compat_l.
          apply Rmult_le_pos; lra.
-         apply Mixed_State_mult_trace_le_1;
+         apply mixed_mult_trace_le_1;
          apply NZ_Mixed_State_is_Mixed_State;
          assumption. 
 
          apply Rmult_lt_compat_l.
          apply Rmult_gt_0_compat; lra.
-         apply nz_Mixed_State_mult_trace_lt_1; try
+         apply nz_mixed_mult_trace_lt_1; try
          assumption. intros. destruct H5.
          destruct H6. exists (/x).
          rewrite <-H5. rewrite Mscale_assoc.
@@ -1800,14 +1799,14 @@ Proof. intros. rewrite Mmult_plus_distr_l.
          apply Rplus_lt_le_compat.
          apply Rmult_lt_compat_l.
          apply Rmult_gt_0_compat; lra.
-         apply nz_Mixed_State_mult_trace_lt_1;
+         apply nz_mixed_mult_trace_lt_1;
           try
          assumption. 
 
 
          apply Rmult_le_compat_l.
          apply Rmult_le_pos; lra.
-         apply Mixed_State_mult_trace_le_1;
+         apply mixed_mult_trace_le_1;
          apply NZ_Mixed_State_is_Mixed_State;
          assumption.
          repeat rewrite Rmult_1_r.
@@ -1833,7 +1832,7 @@ Proof. intros. rewrite Mmult_plus_distr_l.
          apply Rmult_le_pos; lra. lra.
 Qed.
 
-Lemma Pure_sqrt_trace: forall {n} (ρ: Density n), 
+Lemma pure_sqrt_trace: forall {n} (ρ: Density n), 
 Pure_State ρ-> (trace (Mmult (ρ)  (ρ)))=1.  
 Proof. intros. inversion_clear H.
        destruct H0. inversion_clear H. 
@@ -1909,7 +1908,7 @@ rewrite RtoC_inv.
 Qed.
 
 
-Lemma Mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
+Lemma nz_mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
 NZ_Mixed_State ρ1 ->
 NZ_Mixed_State ρ2 ->
 NZ_Mixed_State (ρ1 .+  ρ2)->
@@ -1967,7 +1966,7 @@ Proof. intros.
      apply Rplus_lt_0_compat; apply nz_mixed_state_Cmod_1; assumption.
 
     assert(Cmod (trace (Mmult (Cmod (trace ρ1) .* m .+ Cmod (trace ρ2) .* m0)  (Cmod (trace ρ1) .* m .+ Cmod (trace ρ2) .* m0)))<1).
-    apply Mixed_sqrt_trace.  
+    apply nz_mixed_sqrt_trace.  
     apply nz_mixed_state_Cmod_1. assumption.
     apply  nz_mixed_state_Cmod_1. assumption.
     rewrite <-nz_mixed_state_Cmod_plus.
@@ -1991,7 +1990,7 @@ Proof. intros.
      assumption. lra.
      apply H4.
     assert(trace (Mmult (φ  × φ†)  (φ  × φ†))=1).
-    apply Pure_sqrt_trace. econstructor.
+    apply pure_sqrt_trace. econstructor.
     split. apply H2. reflexivity. 
     assert (Cmod (trace (Mmult (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0) (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0)))=
              Cmod (trace (Mmult (φ  × φ†)  (φ  × φ†)))).

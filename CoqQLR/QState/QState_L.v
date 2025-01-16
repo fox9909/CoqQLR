@@ -12,9 +12,6 @@ Require Import Coq.MSets.MSetWeakList.
 Require Import Coq.FSets.FSetList.
 Require Import QArith.
 Import QArith.QOrderedType.
-(*From Quan Require Import QMatrix.
-From Quan Require Import QVector.
-From Quan Require Import PVector1. *)
 From Quan Require Import Matrix.
 From Quan Require Import Mixed_State.
 
@@ -74,7 +71,7 @@ Fixpoint equal (m m' :cstate) { struct m } : bool :=
       end
    | _, _ => false
   end.
-(*--------------------------定义Cstate_as_OT---------------------------*)
+(*--------------------------Cstate_as_OT---------------------------*)
 
 Module Cstate_as_OT  <: OrderedType.
 
@@ -746,9 +743,6 @@ Proof. intros. destruct mu. intuition. simpl.
 Qed.
 
 
-
-
-
 Lemma WWF_dstate_aux_to_WF_dstate_aux{s e}: forall (mu: list (cstate *qstate s e)),
 WWF_dstate_aux mu /\ d_trace_aux mu <=1 <-> WF_dstate_aux mu.
 Proof.  intros. split; intros. induction mu. apply WF_nil. 
@@ -1224,7 +1218,6 @@ Proof. induction mu_n; simpl in*; split; intros; try econstructor; inversion_cle
        apply IHmu_n. apply H1.
 Qed.
 
-From Quan Require Import Forall_two.
 Lemma WWF_dstate_big_dapp{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) (mu:dstate s e), 
 Forall_two (fun x y=> 0<y -> WWF_dstate x) mu_n p_n->
 big_dapp' (p_n) mu_n mu->
@@ -1854,9 +1847,8 @@ Proof. intros. assert(p=0\/p<>0). apply Classical_Prop.classic.
 Qed.
 
 
-(*--------------------------------------------------------------------*)
+(*-------------------------------dstate equal-------------------------------------*)
 
-(*dstate equal*) 
 Lemma dstate_1{s e:nat}: forall (mu: list (cstate *qstate s e))
 (t x:cstate) (q:qstate s e),
 Sorted (Raw.PX.ltk (elt:=qstate s e)) ((t, q) :: mu)->
@@ -2061,21 +2053,6 @@ Qed.
 
 
 (*-------------------------big_d_app-------------------------------------------*)
-
-(* Lemma big_dapp'_to_app{s e:nat}: forall (p_n:list R) (mu_n:list (dstate s e)) ,  
-length p_n= length mu_n->
-(Forall (fun x => 0<x%R) p_n)->
-big_dapp' p_n mu_n (big_dapp p_n mu_n).
-Proof.  induction p_n; intros. inversion H0; subst. destruct mu_n.
- simpl. apply big_app_nil. discriminate H.
- destruct mu_n. discriminate H. 
-  simpl.  apply big_app_cons. 
-  apply d_scalar_r. inversion_clear H0.
-  lra. apply IHp_n. injection H. intuition.
-  inversion_clear H0.
-assumption.
-Qed. *)
-
 Lemma  big_dapp_exsist {s e:nat} : forall (p_n:list R) (mu_n:list (dstate s e)),
 length p_n = length mu_n ->
 exists mu, big_dapp' p_n mu_n mu.
@@ -2140,19 +2117,6 @@ Lemma  big_dapp_nil'{s e:nat}: forall g (f:list (dstate s e)) (d:dstate s e),
   destruct H;
   discriminate H.
   Qed.
-
-(* Lemma  big_dapp_nil{s e:nat}: forall g (f:list (dstate s e)),
-g=[]\/f=[] -> dstate_eq (big_dapp g f ) (d_empty s e) .
-Proof. intros. destruct H. simpl. destruct g; destruct f.
-    simpl. unfold dstate_eq ;try reflexivity.
-    simpl. unfold dstate_eq ;try reflexivity. 
-    discriminate H. discriminate H. 
-    simpl. destruct g; destruct f.
-    simpl. unfold dstate_eq ;try reflexivity.
-    discriminate H.
-    simpl. unfold dstate_eq ;try reflexivity. 
-    discriminate H. 
-Qed. *)
 
 Lemma big_map2_length{s e:nat}: forall p_n (mu_n:list (list (state s e))) (mu:(list (state s e))),
 big_map2' p_n mu_n mu -> length p_n = length mu_n.
@@ -2234,161 +2198,6 @@ big_dapp' q_n mu_n mu .
 Proof. induction p_n; intros; destruct mu_n; destruct q_n; inversion_clear H0; try econstructor;
         try inversion_clear H. rewrite H0 in *. assumption. auto.
 Qed.
-
-#[export] Hint Resolve WF_d_app' : DState.
-
-(*-----------------------------------------------------------*)
-
-(* 
-Inductive emit_0{A:Type}:(list R) -> (list A)-> (list A)->Prop:=
-|emit_nil: emit_0 [] [] []
-|emit_cons_0: forall hf hg f g d,  (hf = 0)%R -> emit_0 f g d ->
-                                        emit_0 (hf::f) (hg::g) d
-|emit_cons: forall hf hg f g d,  (hf <> 0)%R -> emit_0 f g d ->
-                                        emit_0 (hf::f) (hg::g) (hg::d).
-
-Lemma  emit_0_exsist{A:Type}:forall (f:list R) (g:list A),
-length f = length g->
-exists d, emit_0 f g d.
-Proof. induction f; intros; destruct g.
-       exists []. econstructor.
-       discriminate H. discriminate H.
-       injection H. intros.
-       apply IHf in H0. destruct H0.
-       destruct (Req_dec a 0).
-       exists x. econstructor; try assumption.  
-       exists (a0:: x). apply emit_cons; try assumption.
-Qed.
-
-Lemma big_map2_emit_0{ s e:nat}:forall (f:list R) (g:list (list (state s e))) (mu:list (state s e)) r_n mu_n,
-  big_map2' f g mu->
-  (emit_0 f f r_n) ->
-  (emit_0 f g mu_n) ->
-  (exists mu', and (mu= mu') (big_map2' r_n mu_n mu')).
-  Proof. induction f; intros; destruct g;
-         inversion_clear H; inversion_clear H0; inversion_clear H1.
-         exists [].
-         split. reflexivity.
-         econstructor.
-         inversion H2; subst. 
-         apply (IHf _ _  r_n mu_n) in H3; try assumption.
-         destruct H3.
-         exists x. split. rewrite map2_nil_l. apply H.
-         apply H. lra.  rewrite H in *. lra.
-         rewrite H0 in *. lra.  
-         apply (IHf _ _  d0 d1) in H3; try assumption.
-         destruct H3. destruct H1.
-         exists ( r +l x).
-         split. f_equal. assumption. 
-        econstructor; try assumption.  
-  Qed.
-
-  Lemma  emit_0_dstate_to_list{s e:nat}: forall (f:list R)(g:list (dstate s e)) mu_n,
-  emit_0 f g mu_n -> emit_0 f (dstate_to_list g) (dstate_to_list mu_n).
-   Proof. induction f; intros; inversion H; subst. econstructor.
-          simpl. econstructor. reflexivity. 
-          apply IHf. assumption.
-          simpl. 
-          apply emit_cons. assumption.
-          apply IHf. assumption.
-  Qed.
-  
-
-  Lemma big_dapp_emit_0{ s e:nat}:forall (f:list R) (g:list (dstate s e)) (mu:dstate s e) r_n mu_n,
-  big_dapp' f g mu->
-  (emit_0 f f r_n) ->
-  (emit_0 f g mu_n) ->
-  (exists mu', and (dstate_eq mu mu') (big_dapp' r_n mu_n mu')).
-  Proof. induction f; intros; destruct g;
-         inversion_clear H; inversion_clear H0; inversion_clear H1.
-         exists ((d_empty s e)).
-         split. apply dstate_eq_refl.
-         econstructor.
-         inversion H2; subst. 
-         apply (IHf _ _  r_n mu_n) in H3; try assumption.
-         destruct H3.
-         exists x. split.
-         apply dstate_eq_trans with d0. 
-         apply d_app_empty_l.
-         intuition. intuition.
-         lra. rewrite H in *. lra.
-         rewrite H0 in *. lra.  
-         apply (IHf _ _  d1 d2) in H3; try assumption.
-         destruct H3. destruct H1.
-         exists (d_app r  x).
-         split. apply d_app_eq; auto. try reflexivity.
-        econstructor; try assumption.  
-  Qed.
-
-
-  Lemma emit_0_eq(A:Type):forall (p_n:list R) (g_n :list A) g1 g2,
-emit_0 p_n g_n g1->
-emit_0 p_n g_n g2->
-g1= g2.
-Proof. induction p_n; destruct g_n; intros.
-       inversion_clear H. inversion_clear H0.
-       reflexivity.
-       inversion_clear H. inversion_clear H.
-       inversion H; subst; inversion H0; subst.
-       apply IHp_n with g_n; try assumption.
-       lra. lra. 
-       f_equal; apply IHp_n with g_n; try assumption.  
-Qed.
-
-
-Lemma emit_0_app{A:Type}:forall (p_n1 p_n2 :list R) (g_n1 g_n2:list A) g1 g2 g,
-emit_0 p_n1 g_n1 g1->
-emit_0 p_n2 g_n2 g2->
-emit_0 (p_n1++p_n2) (g_n1++g_n2) g->
-g= g1++g2.
-Proof. induction p_n1; destruct g_n1; intros.
-       simpl in *. 
-       inversion_clear H. simpl. 
-       apply emit_0_eq with p_n2 g_n2; try assumption.
-       inversion_clear H. inversion_clear H.
-       inversion_clear H; simpl in H1;
-       inversion_clear H1. 
-       eapply IHp_n1; [apply H3 | apply H0| apply H4].
-       lra. lra. 
-       simpl. f_equal.  
-       eapply IHp_n1; [apply H3 | apply H0| apply H4].
-Qed. *)
-
-Fixpoint fun_to_list{G:Type} (g: nat-> G) (n_0 : nat) : list (G) := 
-  match n_0 with
-  | 0 => []
-  | S n' => (fun_to_list g n') ++ [g n']
-  end. 
-
-Lemma fun_to_list_length{G:Type}: forall (g: nat-> G) (n_0 : nat),
-length (fun_to_list g n_0) = n_0.
-Proof. induction n_0. simpl. reflexivity.
-        simpl. rewrite app_length. rewrite IHn_0. 
-        simpl. intuition.
-Qed.
-
-(* Local Open Scope nat_scope.
-From Quan Require Import Forall_two.
-Lemma emit_0_dtrace{s e:nat}: forall (p_n:list R)  (mu_n:list (dstate s e)) (mu:dstate s e) ( mu':list (dstate s e)),
-(Forall_two (fun p_i mu_i=> p_i <> 0%R -> d_trace mu_i = d_trace mu ) p_n mu_n)->
-emit_0 p_n mu_n mu'->
-Forall (fun mu_i : dstate s e => d_trace mu_i = d_trace mu) mu'.
-Proof. induction p_n; destruct mu_n ; intros;
-       inversion_clear H0;inversion_clear H. econstructor.
-       apply IHp_n with mu_n; try assumption.    
-       econstructor. apply H0. assumption. 
-       apply IHp_n with mu_n; try assumption.  
-Qed. *)
-
-#[export] Hint Resolve WF_state_dstate WF_dstate_eq WWF_dstate_aux_to_WF_dstate_aux: DState.
-(*------------WF_d_scale-------------------*)
-
-#[export] Hint Resolve WF_d_scale WF_d_scale_aux  WF_dstate_empty 
-WWF_d_scale_aux: DState.
-(*------------------WF_d_app------------------------------*)
-
-
-#[export] Hint Resolve  WF_d_app WF_d_app_aux WWF_d_app_aux: DState. 
 
 
 

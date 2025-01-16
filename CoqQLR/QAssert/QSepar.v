@@ -17,9 +17,9 @@ Require Import Coq.Arith.Peano_dec.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import QIMP_L.
-From Quan Require Import QAssert.
+From Quan Require Import QAssert_L.
 From Quan Require Import Reduced.
 From Quan Require Import Basic.
 From Quan Require Import Ceval_Prop.
@@ -266,7 +266,7 @@ Proof. intros. destruct H2. destruct H2.
       rewrite NZ_Mixed_State_aux_equiv' in H.
       rewrite NZ_Mixed_State_aux_equiv' in H0.
       destruct H; destruct H0.
-      apply Mixed_pure in H4.
+      apply nz_mixed_pure in H4.
       destruct H4. destruct H4.
       destruct H4. destruct H5.
       split. intros. 
@@ -495,7 +495,7 @@ Proof. intros q Hs. intros H H0. induction H.
        unfold L_reduced in H4.
 
        
-       (*第一步*)
+       (*step 1*)
        assert(forall i : nat, i< (2 ^ (e - x)) ->
        (((@Mmult _ (2^(x-s) * 2^(e-x)) 1 (I (2 ^ (x - s)) ⊗ ⟨ i ∣_ (2^(e - x)))  x3) = Zero) \/ 
        (exists p, and (0<p<=1)%R ((I (2 ^ (x - s)) ⊗ ⟨ i ∣_ (2^(e - x)) × (x3 × (x3) †)
@@ -557,7 +557,7 @@ Proof. intros q Hs. intros H H0. induction H.
        apply Vector_nz_Mix_State_aux. destruct H1. auto_wf.
        assumption.
 
-       (* 第二步*)
+       (*step 2*)
        assert(forall i : nat,i< (2 ^ (e - x))-> 
        ((@Mmult _ (2^(x-s) * 2^(e-x)) 1 (I (2 ^ (x - s)) ⊗ ⟨ i ∣_ (2^(e - x)))  x3) = Zero) \/
        exists c : C, 
@@ -666,7 +666,7 @@ Proof. intros q Hs. intros H H0. induction H.
        assumption.   destruct H1. assumption.
 
 
-       (*第三步*)
+       (*step 3*)
        assert(forall i : nat, (i<(2^(e-x)))->
        ((big_sum (fun r=> (x3 (r*(2^(e-x))+ i)%nat 0) .* (Base_vec (2^(x-s)) r) ) (2^(x-s))) = Zero) 
        \/
@@ -682,7 +682,7 @@ Proof. intros q Hs. intros H H0. induction H.
        split. intuition. rewrite<-H8.
        assumption. assumption.
        
-       (* 第四步*)
+       (*step 4*)
       assert(exists i, and (i< 2 ^ (e - x))  ((big_sum
       (fun r : nat => x3 (r * 2 ^ (e - x) + i)%nat 0 .* ∣ r ⟩_ (2^(x - s)))
       (2 ^ (x - s))) <> Zero)).
@@ -712,7 +712,7 @@ Proof. intros q Hs. intros H H0. induction H.
        assert(forall k, (k<(2^(e-x)))-> (exists lamda, forall j, 
        j < 2 ^ (x - s) ->
        (x3 (j * (2^(e-x)) + k) 0) = Cmult lamda (x3 (j * (2^(e-x))+ x1) 0))).
-       (* 这里应该选择哪个 不是全0 的i*)
+       (*find i such that the coefficent not all 0*)
        intros. destruct H10.
        pose (H9 k H11). 
        pose (H9 x1 H10 ). 
@@ -742,9 +742,6 @@ Proof. intros q Hs. intros H H0. induction H.
         rewrite Cdiv_unfold. 
        rewrite <-Cmult_assoc. rewrite Cinv_l.
        rewrite Cmult_1_r. reflexivity. assumption.
-       (* unfold not. intros. injection H18.
-       intros. apply sqrt_eq_0 in H19. lra. lra.
-       apply sqrt_neq_0_compat. lra.*)
        subst.  
        repeat rewrite Msum_Csum in *.
         rewrite (big_sum_unique  (x3 (j * 2 ^ (e - x) + k) 0)) in H16.
@@ -765,14 +762,14 @@ Proof. intros q Hs. intros H H0. induction H.
         rewrite Cmult_0_r. reflexivity.
         assumption.
         
-       (*第四步*)
+       (*step 6*)
        assert(exists (v1 : Vector (2^(x-s))) (v2 : Vector (2^(e-x))),
        and (WF_Matrix v1 /\ WF_Matrix v2) 
         (kron  v1 v2 = x3)).
        apply vector_Separ.  destruct H1. 
        assert(e-s= x - s + (e - x)).
        lia. destruct H13.  apply H1.
-       (*这里继续找 x i j 不等于0 的那个j 作为分布*) 
+       (*find j such that x i j <>0*) 
    assert( exists r, and (r < (2 ^ (x - s)) ) (x3 (r * 2 ^ (e - x) + x1) 0 <> 0%R)).
    destruct H10. apply (@big_sum_not_0 (2^(x-s)) ((fun r : nat => x3 (r * 2 ^ (e - x) + x1) 0 .* ∣ r ⟩_ (2^(x - s))))
    (2^(x-s))) in H12. destruct H12.
@@ -1255,7 +1252,7 @@ intros q Hs. intros H H0. induction H.
        unfold L_reduced in H4.
 
        
-       (*第一步*)
+       (*step 1*)
        assert(forall i : nat, i< (2 ^ (x - s)) ->
        (((@Mmult _ (2^(x-s) * 2^(e-x)) 1 ((⟨ i ∣_ (2^(x - s))) ⊗  I (2 ^ (e - x)))  x3) = Zero) \/ 
        (exists p, and (0<p<=1)%R ((( ⟨ i ∣_ (2^(x - s))) ⊗  I (2 ^ (e - x)) × (x3 × (x3) †)
@@ -1317,7 +1314,7 @@ intros q Hs. intros H H0. induction H.
        apply Vector_nz_Mix_State_aux. destruct H1. auto_wf.
        assumption.
 
-       (* 第二步*)
+       (*step 2*)
        assert(forall i : nat,i< (2 ^ (x - s))-> 
        ((@Mmult _ (2^(x-s) * 2^(e-x)) 1 (⟨ i ∣_ (2^(x - s)) ⊗ I (2 ^ (e - x)))  x3) = Zero) \/
        exists c : C, 
@@ -1354,7 +1351,7 @@ intros q Hs. intros H H0. induction H.
        rewrite Mmult_assoc. 
         f_equal; lia.   
    
-      (*第三步*)
+      (*step 3*)
        assert(forall i, i < 2 ^ (x - s) ->  
        (@Mmult _ (2^(x-s) * 2^(e-x)) 1 (⟨ i ∣_ (2^(x - s)) ⊗ I (2 ^ (e - x)))  x3)=
        big_sum
@@ -1419,7 +1416,7 @@ intros q Hs. intros H H0. induction H.
         destruct H1. assumption. 
 
 
-       (*第四步*)
+       (*step 4*)
        assert(forall i : nat, (i<(2^(x-s)))->
        ((big_sum (fun r=> (x3 (i*(2^(e-x))+ r)%nat 0) .* (Base_vec (2^(e-x)) r) ) (2^(e-x))) = Zero) 
        \/
@@ -1435,7 +1432,7 @@ intros q Hs. intros H H0. induction H.
        split. intuition. rewrite<-H8.
        assumption. assumption. 
        
-       (* 第五步*)
+       (*step 5*)
       assert(exists i, and (i< 2 ^ (x - s))  ((big_sum
       (fun r : nat => x3 (i * 2 ^ (e - x) + r)%nat 0 .* ∣ r ⟩_ (2^(e - x)))
       (2 ^ (e - x))) <> Zero)).
@@ -1466,7 +1463,7 @@ intros q Hs. intros H H0. induction H.
        assert(forall j, (j<(2^(x-s)))-> (exists lamda, forall k, 
        k < 2 ^ (e - x) ->
        (x3 (j * (2^(e-x)) + k) 0) = Cmult lamda (x3 (x1 * (2^(e-x))+ k) 0))).
-       (* 这里应该选择哪个 不是全0 的i*)
+       (*find i such that the coefficent not all 0*)
        intros. destruct H10.
        pose (H9 j H11). 
        pose (H9 x1 H10 ). 
@@ -1496,9 +1493,6 @@ intros q Hs. intros H H0. induction H.
         rewrite Cdiv_unfold. 
        rewrite <-Cmult_assoc. rewrite Cinv_l.
        rewrite Cmult_1_r. reflexivity. assumption.
-       (* unfold not. intros. injection H18.
-       intros. apply sqrt_eq_0 in H19. lra. lra.
-       apply sqrt_neq_0_compat. lra.*)
        subst.  
        repeat rewrite Msum_Csum in *.
         rewrite (big_sum_unique  (x3 (j* 2 ^ (e - x) + k) 0)) in H16.
@@ -1519,14 +1513,14 @@ intros q Hs. intros H H0. induction H.
         rewrite Cmult_0_r. reflexivity.
         assumption.
         
-       (*第四步*)
+       (*step 6*)
        assert(exists (v1 : Vector (2^(x-s))) (v2 : Vector (2^(e-x))),
        and (WF_Matrix v1 /\ WF_Matrix v2) 
         (kron  v1 v2 = x3)).
        apply vector_Separ.  destruct H1. 
        assert(e-s= x - s + (e - x)).
        lia. destruct H13.  apply H1.
-       (*这里继续找 x i j 不等于0 的那个j 作为分布*) 
+       (*find j such that x i j <>0*) 
    assert( exists r, and (r < (2 ^ (e - x)) ) (x3 (x1 * 2 ^ (e - x) + r) 0 <> 0%R)).
    destruct H10. apply (@big_sum_not_0 (2^(e-x)) ((fun r : nat => x3 (x1 * 2 ^ (e - x) + r) 0 .* ∣ r ⟩_ (2^(x - s))))
    (2^(e-x))) in H12. destruct H12.
@@ -2675,7 +2669,6 @@ option_nat (NSet.max_elt (NSet.union x y)) = max (option_nat (NSet.max_elt x))
  apply (@NSet.max_elt_2 _ _ a) in H0; try assumption. lia.
  rewrite H3. reflexivity. lia. Qed. 
 
-(*   *)
 
 Lemma Qsys_to_Set_empty: forall s,
 Qsys_to_Set_aux s s (NSet.empty)= NSet.empty .
@@ -3219,9 +3212,6 @@ Proof. induction F; intros; simpl in *. destruct H0. apply NSet.empty_1.
        assert(option_nat (NSet.min_elt (snd (Free_state F1)))<=(option_nat (NSet.min_elt (snd (Free_state F2))))
        \/ ~option_nat (NSet.min_elt (snd (Free_state F1)))<=(option_nat (NSet.min_elt (snd (Free_state F2)))) ).
        apply Classical_Prop.classic. destruct H4.
-       (* assert(option_nat (NSet.max_elt (snd (Free_state F1)))<=(option_nat (NSet.max_elt (snd (Free_state F2))))
-       \/ ~option_nat (NSet.max_elt (snd (Free_state F1)))<=(option_nat (NSet.max_elt (snd (Free_state F2)))) ).
-       apply Classical_Prop.classic. destruct H5.  *)
        assert(i <= (option_nat (NSet.max_elt (snd (Free_state F1))))
        \/ ~ i <= (option_nat (NSet.max_elt (snd (Free_state F1))))).
        apply Classical_Prop.classic. destruct H5.   
@@ -3232,13 +3222,6 @@ Proof. induction F; intros; simpl in *. destruct H0. apply NSet.empty_1.
       intro. rewrite <-empty_Empty in H6.  
       destruct n0. assumption.  
        rewrite min_r in H1. 
-       (* assert(option_nat (NSet.max_elt (snd (Free_state F1)))<=(option_nat (NSet.max_elt (snd (Free_state F2))))
-       \/ ~option_nat (NSet.max_elt (snd (Free_state F1)))<=(option_nat (NSet.max_elt (snd (Free_state F2)))) ).
-       apply Classical_Prop.classic. destruct H5. 
-       rewrite max_r in *.    
-       apply NSet.union_3. apply IHF2; try lia; try assumption. 
-       intro. rewrite <-empty_Empty in H6.  
-       destruct n0. assumption. assumption. assumption.    *)
        assert(i <= (option_nat (NSet.max_elt (snd (Free_state F2))))
        \/ ~ i <= (option_nat (NSet.max_elt (snd (Free_state F2))))).
        apply Classical_Prop.classic. destruct H5. 
@@ -3384,7 +3367,6 @@ Qed.
 
 
 (*------------------------------eval_dom---------------------------------------------*)
-
 
 Lemma QExp_eval_dom{ s e:nat}: forall qs c (q:qstate s e),
 QExp_eval qs (c,q) -> s<= fst (Free_QExp' qs) /\ 
@@ -3532,7 +3514,6 @@ Qed.
 
 (*-------------------------------------------------eval pure-------------------------*)
 
-
 Lemma QExp_eval_pure: forall qs s e c (q: qstate s e) ,
 Considered_QExp qs ->
 WF_qstate q->
@@ -3649,21 +3630,6 @@ Proof. intros. destruct b. simpl. rewrite Rmult_0_l.
 rewrite Rminus_0_r. reflexivity. 
        
 Qed.
-
-(* Lemma Rmult_in01_l: forall r1 r2,
-0<r1*r2<=1-> 0<r2<=1 ->
-0<r1<=1 .
-Proof. intros. assert(r1=r1*r2* /r2). rewrite Rmult_assoc.
-rewrite Rinv_r . rewrite Rmult_1_r. reflexivity.
-lra. rewrite H1. apply Rmult_in01. assumption.
-split. 
-apply Rinv_0_lt_compat. lra.
-Rcomplements.Rdiv_le_1
-lra.  
-       
-Qed. *)
-
-
 
 Local Open Scope nat_scope.
 Lemma Par_Pure_State_reduced{ s e: nat}:forall x (q2:qstate x e) ,
@@ -4415,7 +4381,6 @@ Proof. induction qs; split; intros.
 Qed.
 
 
-
 Lemma min_max_eq: forall x1 x2 y1 y2,
 min x1 x2= max y1 y2->
 x1<=y1 /\ x2<=y2->
@@ -4460,7 +4425,6 @@ rewrite H3 in *. discriminate H.
 eapply IHF. apply H. simpl in H0. rewrite (state_eq_aexp _ (c, q)). apply H0.
 reflexivity.
 Qed. 
-
 
 
 Lemma State_free_eval{s e:nat}:forall (F: State_formula) (st: state s e) s' e',
@@ -4683,7 +4647,6 @@ Qed.
 
 (*---------------------------------seman_eq-------------------------------------------*)
 
-
 Lemma Reduced_id{s e : nat}: forall (l r : nat) (q : qstate s e),
 s<=r->
 l=r -> 
@@ -4714,7 +4677,6 @@ Proof. unfold NSet.Equal. intros.
       apply NSet.inter_2 in H0. assumption.
       intros. inversion_clear H0.
 Qed. 
-
 
 Lemma smean_odot_eq_P{s e:nat}: forall F1 F2 c (q:qstate s e),
 (Free_State F1)= None /\  (Free_State F2)=None ->

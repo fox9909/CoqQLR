@@ -9,17 +9,16 @@ From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import Reduced.
 From Quan Require Import QIMP_L.
 From Quan Require Import Ceval_Prop.
-From Quan Require Import QAssert.
+From Quan Require Import QAssert_L.
 From Quan Require Import QRule_E_L.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
 From Quan Require Import QFrame.
-From Quan Require Import Forall_two.
 From Quan Require Import add.
 From Quan Require Import HHL.
 From Quan Require Import ContFrac.
@@ -909,20 +908,6 @@ Qed.
          auto.
 Qed.
 
-
-
-
-
-
-
-
-
-
-(* Lemma Cmult_pow: forall c , 
-c * c= c² .
-Proof.
-  
-Qed. *)
 
 Lemma s_r_t_relation: forall i, 
 i< r -> i*(2^t) /r < (2^t).

@@ -10,7 +10,7 @@ Require Import
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import Reduced.
 From Quan Require Import Basic.
 From Quan Require Import QIMP_L.
@@ -1376,7 +1376,6 @@ Proof. induction p_n. simpl in *. rewrite sum_over_list_nil.
 Qed.
 
 Local Open Scope R_scope.
-Require Import Forall_two.
 Fixpoint big_dapp{s e:nat} (g:list R) (f:list (dstate s e))  : dstate s e := 
 match g ,f with 
 |[], [] => d_empty s e
@@ -2057,8 +2056,6 @@ Proof. induction c. intros. apply ceval_skip_1 in H0. subst.
      apply union_empty in H. apply H.
      intros. simpl in *.  inversion_clear H0. econstructor.
      pose (Qsys_to_Set_not_empty s0 e0). destruct n. lia. assumption. 
-
-       
 Qed.
 
 

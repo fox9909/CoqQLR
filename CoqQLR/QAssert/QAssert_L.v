@@ -14,8 +14,9 @@ From Coq Require Import Lia.
 From Quan Require Import QIMP_L.
 From Quan Require Import Matrix.
 From Quan Require Import Quantum.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 Require Import Reduced.
+Require Import Basic.
 
 
 (*-------------------------------Synatx------------------------------------*)
@@ -39,7 +40,6 @@ Inductive State_formula :Type:=
 |SOdot (F1 F2:State_formula)
 |SAnd (F1 F2:State_formula)
 |SAssn (i:nat) (a:aexp) (F:State_formula).
-(* |SNot (F:State_formula) *)
 
 
 Definition pro_formula := list (R * State_formula).
@@ -52,14 +52,6 @@ match n_0 with
 | 0 => []
 | S n' =>(big_pOplus f g n')  ++ [(f n', g n')]
 end.   
-
-
-(* Inductive big_pOplus': (nat -> R)-> ( nat -> State_formula)-> (nat) -> pro_formula-> Prop := 
-|big_pOplus_nil : forall f g, big_pOplus' f g 0 []
-|big_pOplus_0: forall f g n pF, ((f n)= 0)%R -> big_pOplus' f g (n) pF
-                                         ->big_pOplus' f g (S n) pF
-|big_pOplus_cons: forall f g n pF, ((f n) <> 0)%R ->  big_pOplus' f g (n) pF
-                                                ->big_pOplus' f g (S n) (pF  ++ [(f n, g n)]). *)
 
 Fixpoint big_Oplus  (g : nat -> State_formula) (n_0 : nat) : npro_formula := 
 match n_0 with
@@ -103,7 +95,6 @@ Declare Scope assert_scope.
 Bind Scope assert_scope with Pure_formula.
 Bind Scope assert_scope with QExp.
 Bind Scope assert_scope with State_formula.
-(* Bind Scope assert_scope with probabilistic_formula. *)
 Bind Scope assert_scope with pro_formula.
 Bind Scope assert_scope with Assertion.
 Delimit Scope assert_scope with npro_formula.
@@ -111,15 +102,12 @@ Open Scope assert_scope.
 
 Notation " 'univer' x P " :=(PUniver x P)(at level 80) :assert_scope.
 
-(* Notation "  |emp>" := (QExp_nil)(at level 70) :assert_scope. *)
 Notation "| v >[ s - e ]" := (QExp_s s e v) (at level 80) :assert_scope.
 
 Infix " ⊗*  " := (QExp_t)(at level 80) :assert_scope. 
 
-(* Notation "~ F" := (SNot F ) : assert_scope. *)
 Notation "F1 /\s F2" := (SAnd F1  F2) (at level 80): assert_scope.
 Notation " F1 ⊙ F2" := (SOdot F1 F2)(at level 80):assert_scope.
-(* Notation " F [ X |-> a ] " := (Assn_sub X a F)   (at level 10) : assert_scope. *)
 
 Fixpoint big_Sand (g: nat->  (State_formula )) (n : nat) : State_formula := 
 match n with
@@ -155,7 +143,9 @@ Qed.
 Definition d_update_cstate {s e:nat} i a (mu:dstate s e) := 
   StateMap.Build_slist (d_update_cstate_sorted i a (StateMap.this mu)
   (StateMap.sorted mu)).
+
 (*----------------------------------FreeV--------------------------------------*)
+
 Local Open Scope assert_scope.
 Import QIMP_L.
 
@@ -184,8 +174,7 @@ Fixpoint Free_state (F: State_formula) : (CSet * QSet):=
     |SOdot F1 F2=> (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
     |SAnd F1 F2 => (NSet.union (fst (Free_state F1)) (fst(Free_state F2)), NSet.union (snd (Free_state F1))  (snd (Free_state F2)))
     |SAssn i a F => (NSet.union (fst (Free_state F)) (Free_aexp a), snd (Free_state F))
-    (* |SNot F'=> Free_state F'
-    | Assn_sub X a F => Free_state F *)
+
   end.
 
 Fixpoint Free_pro(pF: pro_formula): (CSet * QSet) :=
@@ -258,7 +247,6 @@ Fixpoint State_eval{s e:nat} (F:State_formula) (st:state s e): Prop:=
 State_eval F1 st /\ State_eval F2 st
 |SAnd F1 F2 => State_eval F1 st /\ State_eval F2 st
 |SAssn i a F => State_eval F (s_update_cstate i (aeval st a) st)
-(* |SNot F => ~(State_eval F st) *)
 end).
 
 Definition  State_eval_dstate{s e:nat} (F:State_formula) (mu:list (cstate *(qstate s e))): Prop:=
@@ -268,7 +256,6 @@ Definition  State_eval_dstate{s e:nat} (F:State_formula) (mu:list (cstate *(qsta
   end. 
 
 Local Open Scope R_scope.
-From Quan Require Import Forall_two.
 Inductive sat_State {s e:nat}:(dstate s e) -> (State_formula)-> Prop:=
 |sat_F: forall (mu:dstate s e) F,  WF_dstate mu 
                                    -> State_eval_dstate F (StateMap.this mu)
@@ -295,7 +282,7 @@ Inductive sat_Assert {s e:nat}: (dstate s e)-> (Assertion)-> Prop:=
                    -> sat_Assert mu (Assn_sub i a D).
 
 
-(*--------------------------------------------------------------*)
+(*----------------------------properties----------------------------------*)
 
 Lemma get_pro_formula_length: forall pF, 
 length (get_pro_formula pF) = length pF .
@@ -386,19 +373,6 @@ Proof. induction x; intros. simpl. rewrite sum_over_list_nil.
     rewrite IHx. rewrite Rplus_assoc. reflexivity.
 Qed.  
 
-(* Lemma  big_pOplus_exsist: forall n (f:nat-> R) (g:nat->State_formula),
-exists pF, big_pOplus' f g  n pF.
-Proof. induction n; intros. exists [].
-       econstructor. pose (IHn f g).
-       destruct e. 
-       destruct (Req_dec (f n) 0 ).
-       exists x. econstructor. assumption.
-       assumption.
-       exists (x ++ [(f n, g n)]).
-       apply big_pOplus_cons . assumption.
-       assumption.
-Qed. *)
-
 Lemma big_pOplus_length: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat),
 length (big_pOplus f g n_0) = n_0.
 Proof. induction n_0. simpl. reflexivity.
@@ -416,19 +390,6 @@ Proof. intros.  induction n0. simpl. apply Forall_nil.
     econstructor. simpl. apply  H. apply Forall_nil.
 Qed.
 
-(* Lemma  Forall_big_pOplus': forall n0  (f1:nat-> R) f2  pF,
-(forall i, (0 <= f1 i)%R)-> 
-(big_pOplus' f1 f2 n0 pF )->
-Forall (fun x0 : R  => (0 <= x0)%R) (get_pro_formula pF).
-Proof.  induction n0; intros;
-     inversion_clear H0.
-     apply Forall_nil. 
-     apply IHn0 with f1 f2; try assumption. rewrite get_pro_app.
-     apply Forall_app. split. apply IHn0 with f1 f2; try assumption.
-    econstructor. simpl. apply  H. apply Forall_nil.
-Qed.
-   *)
-
 Lemma  sum_over_list_big_pOplus: forall (f1:nat-> R) f2 n0,
 sum_over_list (get_pro_formula (big_pOplus  f1 f2 n0))=
 big_sum f1 n0.
@@ -440,24 +401,18 @@ Proof. intros. induction n0. simpl. rewrite sum_over_list_nil.
     simpl. reflexivity.
 Qed.
 
-(* Lemma  sum_over_list_big_pOplus': forall n0 (f1:nat-> R) f2 pF,
-(big_pOplus' f1 f2 n0 pF) ->
-sum_over_list (get_pro_formula pF)=
-big_sum f1 n0.
-Proof. induction n0; intros; inversion_clear H.
-    simpl.
-    rewrite sum_over_list_nil.
-    reflexivity.
-    simpl. rewrite H0. rewrite Rplus_0_r.
-    apply IHn0 with f2; assumption.
-    simpl. rewrite get_pro_app. rewrite sum_over_list_app. 
-    f_equal.  apply IHn0 with f2; assumption.
-     simpl.
-     rewrite sum_over_list_cons.
-    rewrite sum_over_list_nil. rewrite Rplus_0_r.
-    simpl. reflexivity.
-Qed. *)
+Fixpoint fun_to_list{G:Type} (g: nat-> G) (n_0 : nat) : list (G) := 
+  match n_0 with
+  | 0 => []
+  | S n' => (fun_to_list g n') ++ [g n']
+  end. 
 
+Lemma fun_to_list_length{G:Type}: forall (g: nat-> G) (n_0 : nat),
+length (fun_to_list g n_0) = n_0.
+Proof. induction n_0. simpl. reflexivity.
+        simpl. rewrite app_length. rewrite IHn_0. 
+        simpl. intuition.
+Qed.
 
 Lemma big_pOplus_get_pro: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat),
 get_pro_formula (big_pOplus f g n_0) = fun_to_list f n_0.
@@ -478,54 +433,6 @@ Lemma big_pOplus_get_npro: forall  (f : nat -> R) (g : nat -> State_formula) (n_
   fun_to_list F_n n = big_Oplus F_n n.
   Proof. induction n; intros; simpl; try f_equal; auto.
   Qed.
-
-
-(* Lemma big_pOplus'_get_pro: forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) pF r_n,
-(big_pOplus' f g n_0 pF) ->
-(emit_0 (fun_to_list f n_0) ((fun_to_list f n_0)) r_n)->
-get_pro_formula pF=r_n.
-Proof. induction n_0; intros. inversion_clear H. inversion_clear H0.
-        reflexivity.
-       inversion_clear H; simpl in H0;
-       pose (emit_0_exsist (fun_to_list f n_0) (fun_to_list f n_0));
-       destruct e; try rewrite fun_to_list_length; try reflexivity.
-       apply (emit_0_app _ _ _ _  x []) in H0; try assumption.
-       rewrite app_nil_r in H0. 
-       rewrite H0.    
-       apply IHn_0 ; try assumption. 
-       econstructor. assumption. econstructor.
-       
-       apply (emit_0_app _ _ _ _  x [f n_0]) in H0; try assumption.
-       rewrite H0. rewrite get_pro_app. f_equal.     
-       apply IHn_0 ; try assumption. 
-       apply emit_cons. assumption. econstructor.
-Qed. *)
-
-
-
-(* 
-  Lemma big_pOplus_get_npro': forall  (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) pF F_n,
-  (big_pOplus' f g n_0 pF)->
-  (emit_0 (fun_to_list f n_0) (fun_to_list g n_0) F_n)->
-  pro_to_npro_formula pF = F_n.
-  Proof. induction n_0; intros. 
-       inversion_clear H. inversion_clear H0.
-        reflexivity.
-       inversion_clear H; simpl in H0;
-       pose (emit_0_exsist (fun_to_list f n_0) (fun_to_list g n_0));
-       destruct e; try repeat rewrite fun_to_list_length; try reflexivity.
-       apply (emit_0_app _ _ _ _  x []) in H0; try assumption.
-       rewrite app_nil_r in H0. 
-       rewrite H0.    
-       apply IHn_0 ; try assumption. 
-       econstructor. assumption. econstructor.
-       
-       apply (emit_0_app _ _ _ _  x [g n_0]) in H0; try assumption.
-       rewrite H0. rewrite pro_to_npro_formula_app. f_equal.     
-       apply IHn_0 ; try assumption. 
-       apply emit_cons. assumption. econstructor.
-  Qed. *)
-
 
 (*--------------------------------------------------------------*)
 
@@ -1473,7 +1380,7 @@ Proof. induction qs; intros s0 e0 c q1 q2 q' Hq1 Hq2 Hq'; intros.
        rewrite trace_I. reflexivity.
       rewrite Mscale_plus_distr_r in H3.
       rewrite Reduced_plus in H3.
-      apply (@Mixed_pure (2^(e-s))
+      apply (@nz_mixed_pure (2^(e-s))
       (Reduced ((R1 / Cmod (trace (q1 .+ q2)))%R .* q1) s e) 
       (Reduced ((R1 / Cmod (trace (q1 .+ q2)))%R .* q2) s e) ) in H3.
       destruct H3. destruct H3.

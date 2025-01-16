@@ -15,6 +15,8 @@ From Quan Require Export Matrix.
 From Quan Require Export Quantum.
 From Quan Require Export Complex.
 
+(*Basis Vector*)
+
 Definition Base_vec(n:nat) (i:nat): Vector n := 
     fun x y => match x, y with 
             | j, 0 => if j=?i then C1 else C0
@@ -172,8 +174,7 @@ Proof.
        left. lia. left. lia.
 Qed.     
 
-  
-(* Require Import Coq.Structures.OrderedTypeEx. *)
+
 Local Open Scope nat_scope.
 Lemma  big_sum_i: forall (f:nat-> C) (n i:nat), 
 (forall y, y <> i -> f y = C0)-> ( i < n -> big_sum f n= f i).
@@ -541,67 +542,44 @@ Proof. intros. prep_matrix_equality. unfold kron.
 Qed.
 
 
+(*Forall_two*)
 
-(* 
- *)
-
-
-
-
-
-
-(* Local Open Scope C_scope.
+Inductive Forall_two{A B:Type}: (A ->B-> Prop)-> (list A) -> (list B) -> Prop:=
+|Forall_two_nil: forall P, Forall_two P [] []
+|Forall_two_cons: forall (P:A-> B-> Prop) l1h l1t l2h l2t, 
+                  P l1h l2h-> Forall_two P l1t l2t ->  Forall_two P (l1h::l1t) (l2h:: l2t).
 
 
-Lemma fst_mult: forall (r: R) (c: C),
- fst(r * c)= (r * fst c)%R.
-Proof. intros. destruct c. 
-      simpl. rewrite Rmult_0_l.
-      rewrite Rminus_0_r. reflexivity.
-Qed. *)
+Lemma Forall_two_length_eq{ A B:Type}: forall P (l1:list A) (l2:list B),
+Forall_two P l1 l2 ->
+length l1= length l2.
+Proof. induction l1; destruct l2; intros; inversion_clear H; try reflexivity.
+       simpl. auto.
+Qed.
 
 
-(* Lemma trace_mult: forall (n:nat) (A B :Square n),
-trace(Mmult A B) =trace (Mmult B A).
-Proof. intros. unfold trace. unfold Mmult. 
-       rewrite big_sum_swap_order. 
-       apply big_sum_eq. apply functional_extensionality.
-       intros. apply big_sum_eq. apply functional_extensionality.
-       intros.
-apply Cmult_comm. 
-Qed. *)
+Lemma Forall_two_app{A B:Type}:forall (P:A-> B-> Prop)  (f1: list A) (g1: list B )  (f2: list A) 
+  (g2: list B) ,
+  (Forall_two P f1 g1)->
+  (Forall_two P f2 g2)->
+  (Forall_two P (f1++f2) (g1++g2)).
+  Proof.  induction f1; destruct g1; simpl; intros; inversion_clear H.
+          assumption. 
+          econstructor. assumption.
+          apply IHf1. intuition. intuition.
+Qed.
+                  
 
-(*trace*)
-(* 
-
-
-
-
-
-
-
- *)
-
-
-(*  *)
-
-(*  *)
-
-(* 
-
-
- *)
-
-
-
-
-
-(*  *)
-
-
-
-
-
-
-
-
+Lemma Forall_two_Conj{A B:Type }:forall (P Q: A ->B->Prop) (f :list A) (g:list B),
+((Forall_two P f g) /\ (Forall_two Q f g))<->
+(Forall_two (fun i j=> P i j /\ Q i j) f g).
+Proof. induction f; intros; destruct g; split;intros;  try econstructor; inversion_clear H.
+       econstructor. econstructor.  
+       inversion_clear H0. inversion_clear H1.  
+       inversion_clear H0. inversion_clear H1.  
+       try split; try assumption. 
+       inversion_clear H0. inversion_clear H1.
+       apply IHf; split; try assumption. 
+       econstructor. apply H0. apply IHf. assumption.
+       econstructor. apply H0. apply IHf. assumption.
+Qed.

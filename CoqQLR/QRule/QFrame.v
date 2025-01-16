@@ -18,9 +18,9 @@ From Quan Require Import Matrix.
 From Quan Require Import Quantum.
 From Quan Require Import Basic.
 From Quan Require Import Mixed_State.
-From Quan Require Import QState.
+From Quan Require Import QState_L.
 From Quan Require Import QIMP_L.
-From Quan Require Import QAssert.
+From Quan Require Import QAssert_L.
 From Quan Require Import Reduced.
 From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_E_L.
@@ -2315,8 +2315,7 @@ rewrite H1. rewrite H2. simpl.
 rewrite In_Qsys. lia. lia.    
 Qed. 
 
-(* ((option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
- snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c)))))) *)
+
 (*Assume that F1 F2 F2 c all have continues dom and qfree(F1) cap qMVar(c) <> emptyset, when they are not all empty set *)
 Definition Considered_F_c (F1 F2 F3:State_formula) c:=
 (~NSet.Equal ((snd (MVar c))) (NSet.empty) -> NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1))))/\
@@ -2683,8 +2682,6 @@ destruct o. clear H11.
 assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
 apply Classical_Prop.classic. 
 destruct H11.
-(* apply inter_empty. left. 
-apply Free_State_None_empty. *)
 
 pose H1. 
 apply (@Pure_free_dstate s e) with (l:=s) (r:=s) in s0; try assumption.
@@ -2835,12 +2832,7 @@ apply Qsys_inter_empty; try lia.
 rewrite Heql. rewrite Heqr.
  destruct H17.
 
-
- (*    *)
-
 left. 
-(* assert(~ NSet.Empty (snd (Free_state F3))). 
-intro. destruct H16. rewrite empty_Empty. assumption.  *)
 apply min_glb_lt_iff. 
 rewrite <-Considered_Formula_max; try apply HF3.
 split. apply add_sub_lt_r. 
