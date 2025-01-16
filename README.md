@@ -17,9 +17,12 @@ Then, cd to the root of the project directory and enter the following commands i
 A file named Makefile will be generated. After that, enter ```make``` in the commandline. If no error message occurs, the installation is complete.
 # Structure
 
-![The relationship between different file](./Figures/Relationship.png)
+![The relationship between different file](./Figures/Relationship.svg)
 
-* **Quantumlib**: A project about Coq library for reasoning about quantum programs realized by [QuantumLib](https://github.com/inQWIRE/QuantumLib.git).
+* **Quantumlib**: A project about Coq library for reasoning about quantum programs realized by [QuantumLib](https://github.com/inQWIRE/QuantumLib.git). We primarily utilize three key folders from it: 
+  + **Summation**: about summation operations.
+  + **Matrix**: about matrix computations.
+  + **Quantum**: about quantum computing. 
 
 * **QState**: A folder about state.
 
@@ -47,5 +50,4 @@ A file named Makefile will be generated. After that, enter ```make``` in the com
 
 * **Examples**:  A folder containing various examples. 
 
-     + **ContFrac**: A file about Continued Fraction Algorithm, realized by 
-         [SQIR](https://github.com/inQWIRE/SQIR.git).
+* **ContFrac**: A file about Continued Fraction Algorithm, realized by [SQIR](https://github.com/inQWIRE/SQIR.git).
