@@ -47,5 +47,5 @@ A file named Makefile will be generated. After that, enter ```make``` in the com
 
 * **example**:  A folder containing various examples. 
 
-     + ContFrac: A file about Continued Fraction Algorithm, realized by 
+     + **ContFrac**: A file about Continued Fraction Algorithm, realized by 
          [SQIR](https://github.com/inQWIRE/SQIR.git).
