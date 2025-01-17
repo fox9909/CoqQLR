@@ -19,7 +19,7 @@ From Quan Require Import QRule_Q_L.
 From Quan Require Import QRule_I_L.
 From Quan Require Import QSepar.
 From Quan Require Import QFrame.
-From Quan Require Import add.
+From Quan Require Import addM.
 From Quan Require Import HHL.
 From Quan Require Import ContFrac.
 

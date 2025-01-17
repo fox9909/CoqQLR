@@ -8,7 +8,7 @@ coqQ_LR is currently compatible with Coq 8.16---8.19.
 
 First, download the project: 
 
-```git clone https://github.com/fox9909/C_Q_LocalReasoning.git``` 
+```git clone https://github.com/fox9909/C_Q_LocalReasoning.git```
 
 Then, cd to the root of the project directory and enter the following commands in the commandline:
 
