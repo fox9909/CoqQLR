@@ -176,9 +176,6 @@ Definition v2: nat := 1.
 Definition v:nat :=2.
 
 
-Notation "v ' " := (AId v) (at level 0, no associativity): com_scope.
-
-
 Definition addM : com :=
   <{ [[0 1]] :Q= 0 ;
      [[1 2]] :Q= 0 ; 
@@ -186,10 +183,10 @@ Definition addM : com :=
      hadamard [[1 2]];
      v1 :=M [[0 1]];
      v2 :=M [[1 2]];
-     v := v1 ' + v2 '}>.
+     v := (AId v1) + (AId v2) }>.
 
-Definition P1 (i:nat):=  BEq (v1 ') i.
-Definition P2 (i:nat):= BEq (v2 ') i.
+Definition P1 (i:nat):=  BEq (AId v1) i.
+Definition P2 (i:nat):= BEq (AId v2) i.
 Definition P2_0 (i:nat):Pure_formula :=  (P1 0) /\p (BEq (v2 ') i).
 Definition P2_1 (i:nat):Pure_formula  :=  (P1 1) /\p (BEq (v2 ') i).
 

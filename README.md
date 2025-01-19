@@ -10,11 +10,7 @@ First, download the project:
 
 ```git clone https://github.com/fox9909/C_Q_LocalReasoning.git```
 
-Then, cd to the root of the project directory and enter the following commands in the commandline:
-
-```coq_makefile -f _CoqProject -o Makefile```
-
-A file named Makefile will be generated. After that, enter ```make``` in the commandline. If no error message occurs, the installation is complete.
+After that, enter ```make``` in the commandline. If no error message occurs, the installation is complete.
 # Structure
 
 ![The relationship between different file](./Figures/Relationship.svg)
