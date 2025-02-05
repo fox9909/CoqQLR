@@ -119,7 +119,7 @@ Ltac seman_sovle:=
   rewrite sat_Assert_to_State in *;
    rewrite seman_find in *;
    try match goal with 
-   H: WF_dstate ?mu /\ StateMap.this ?mu <> [] /\ 
+   H: WF_dstate ?mu /\ WF_formula ?P /\ 
         (forall x:cstate, d_find x ?mu <> Zero ->?Q)
    |-_ => destruct H as [H11 H12]; destruct H12 as [H21 H22];
    split; try assumption; split; try assumption; intros
@@ -180,7 +180,8 @@ Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
        pose Hr.  bdestruct (1 <? x); try destruct H. 
        bdestruct (x <? N); try destruct H2.
        unfold r in *.     unfold x in *.  unfold N in *.
-       destruct a as [a0 ]. destruct H2.   bdestruct (c_find z x0 =? p.r). 
+       destruct a as [a0 ]. destruct H2.
+          bdestruct (c_find z x0 =? p.r). 
        rewrite H5 in *. 
        bdestruct ((p.r mod 2 =? 0)). 
        assert(1= 1 mod p.N). rewrite Nat.mod_small. reflexivity. 
@@ -355,7 +356,7 @@ Proof. unfold Shor.
     
         }
        eapply rule_seq with (((  (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
-          {eapply rule_conseq_l. apply rule_AndT.
+          {eapply rule_conseq_l. apply rule_ConjT.
           eapply rule_conseq_l. apply SAnd_PAnd_eq.
           eapply rule_conseq_r'.
           eapply rule_qframe_P. 
@@ -369,9 +370,8 @@ Proof. unfold Shor.
           implies_trans_solve 0 rule_Conj_split_r.  
         classic_slove_1;
         pose (Hran 2 (N-1)); try rewrite <-H0 in a; destruct a;
-        rewrite <-Nat.ltb_lt in *; simpl in *; rewrite Nat.sub_add in *;  try rewrite H1; try rewrite H2; auto.
-        pose p.H. unfold N. lia.  
-
+        rewrite <-Nat.ltb_lt in *; simpl in *; rewrite Nat.sub_add in *;  try rewrite H1; try rewrite H2; auto;
+        pose p.H; unfold N; lia.  
         }
           eapply rule_seq with (( ( (BLt 1 x ) /\p (BLt x ((N)))))
           /\p ((F_1 y x N) \/p (F_2 y x N) \/p F_3 y x N)).
@@ -490,15 +490,22 @@ Proof. unfold Shor.
            unfold State_eval.  left. right.
            apply H. assumption.
          eapply rule_seq with ( (( (BLt (1) x) /\p (BLt (x) ((ANum (N))))))). 
-          {eapply rule_conseq_l. apply rule_AndT.
-          eapply rule_conseq_l. apply SAnd_PAnd_eq.
-          eapply rule_conseq_r'.  
-          eapply rule_qframe_P. 
-          split.   eapply rule_Clet. 
+          {eapply rule_conseq_l. apply rule_PT.
+          eapply rule_conseq_r;
+          try eapply rule_Clet.
+          assert(2-1<random 2 (N - 1)<N-1+1).
+          apply Hran. simpl in H. rewrite Nat.sub_add in H; try lia. 
+         
           
-          simpl. apply inter_empty. right.
-         reflexivity.
-          classic_slove_1.
+          (* simpl. apply inter_empty. left.
+          apply union_empty. split.
+          apply union_empty. split.  right.
+         reflexivity. *)
+          classic_slove_1;
+          rewrite <-H1 in H; destruct H.  
+          apply Nat.ltb_lt in H. rewrite H. auto. 
+          apply Nat.ltb_lt in H2. rewrite H2. auto. 
+
         }
         {eapply rule_conseq_l with ((((( (BLt 1 x )/\p (BLt x (ANum (N))))))) 
         /\p PAssn y ((AGcd x N)) (BEq y ' ((AGcd x N)))).

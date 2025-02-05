@@ -1266,15 +1266,6 @@ Proof.  intros. inversion_clear H1.
        rewrite Rmult_1_r. lra. lra.  
 Qed.
 
-Lemma Forall_two_impli{A B:Type }:forall (P Q : A -> B -> Prop) (f:list A) (g:list B),
-(forall i j, P i j -> Q i j)-> 
-(Forall_two P f g) ->(Forall_two Q f g).
-Proof. induction f; intros; destruct g. econstructor. 
-       inversion_clear H0. inversion_clear H0. 
-       inversion_clear H0.
-      econstructor; try assumption. apply H; try assumption.
-       apply IHf. apply H. assumption.
-Qed.
 
 
 Lemma d_trace_le_1_big_dapp{s e:nat}: forall (p_n:list  R) (mu_n:list (dstate s e)) (mu:dstate s e), 
@@ -1471,7 +1462,7 @@ Proof. intros (mu1,IHmu1) (mu2 , IHmu2) x.
 Qed.  
 
 
-Lemma d_app_find{s e:nat}:  forall (mu1 mu2:dstate s e) x , 
+Lemma d_find_app{s e:nat}:  forall (mu1 mu2:dstate s e) x , 
 d_find x (d_app mu1 mu2)= (d_find x mu1) .+ (d_find x mu2).
 Proof.   
         intros.  assert((StateMap.In (elt:=qstate s e) x mu1 \/
@@ -1503,6 +1494,7 @@ Qed.
 
 
 (*--------------------------d_scale----------------------------------------*)
+(*d_scale exists*)
 Lemma d_scale_aux_exsits{s e:nat}: forall r (mu: list (state s e)),
 exists (mu':list (state s e)), d_scale_aux r mu mu' .
 Proof. intros. assert(r=0 \/ r<>0). apply classic. 
@@ -1525,6 +1517,8 @@ Proof. intros. assert(r=0 \/ r<>0). apply classic.
    exists (d_scale_not_0  r mu). apply d_scalar_r. assumption.
 Qed.
 
+
+(*d_scale empty or 0*)
 Lemma d_scale_not_0_nil{s e:nat}: forall (mu:dstate s e) p, 
 this (d_scale_not_0 p mu) = nil <-> this mu = [].
 Proof. intros (mu, IHmu) p. 
@@ -1571,6 +1565,15 @@ Lemma d_scale_not_0_empty{s e:nat}: forall p,
    dstate_eq (d_scale_not_0 p (d_empty s e)) (d_empty s e).
 Proof. intros . unfold d_empty. unfold dstate_eq.
      unfold d_scale_not_0. simpl. unfold Raw.empty. reflexivity.
+Qed.
+
+Lemma d_scale_empty{s e:nat}: forall a (mu:dstate s e), 
+d_scale a (d_empty s e) mu->
+dstate_eq mu (d_empty s e).
+Proof. intros. 
+       inversion_clear H.
+       reflexivity. 
+       apply d_scale_not_0_empty.
 Qed.
 
 (*scale 1 *)
@@ -2052,7 +2055,7 @@ Proof. split. apply d_eq_1. assumption. assumption.
 Qed. 
 
 
-(*-------------------------big_d_app-------------------------------------------*)
+(*-------------------------some propertiws about big_dapp-------------------------------------------*)
 Lemma  big_dapp_exsist {s e:nat} : forall (p_n:list R) (mu_n:list (dstate s e)),
 length p_n = length mu_n ->
 exists mu, big_dapp' p_n mu_n mu.

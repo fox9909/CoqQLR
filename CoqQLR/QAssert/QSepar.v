@@ -2670,13 +2670,6 @@ option_nat (NSet.max_elt (NSet.union x y)) = max (option_nat (NSet.max_elt x))
  rewrite H3. reflexivity. lia. Qed. 
 
 
-Lemma Qsys_to_Set_empty: forall s,
-Qsys_to_Set_aux s s (NSet.empty)= NSet.empty .
-Proof.  destruct s. simpl. reflexivity. simpl.
-      assert(S s <? S s = false).
-      rewrite ltb_ge. lia. 
-      rewrite H. reflexivity.  
-Qed.
 
 
 Lemma Qsys_to_Set_min_max: forall s e,
@@ -3502,15 +3495,16 @@ Proof. induction F; intros.
 Qed.
 
 
-Lemma dstate_eval_dom{ s e:nat}: forall F (mu:list (cstate * qstate s e)),
+ Lemma dstate_eval_dom{ s e:nat}: forall F (mu:list (cstate * qstate s e)),
+mu <> [] ->
 State_eval_dstate F mu  -> ( (Free_State F)= None )\/ 
 let a:= option_free ((Free_State F)) in 
 (s<=fst a /\ fst a < snd a /\ snd a <=e).
-Proof. induction mu; intros. destruct H.
-     inversion H; subst. destruct a. 
-     apply State_eval_dom with c q.
-     assumption. 
-Qed.
+Proof. induction mu; intros.  destruct H. reflexivity.
+inversion H0; subst. destruct a. 
+apply State_eval_dom with c q.
+assumption.  
+Qed. 
 
 (*-------------------------------------------------eval pure-------------------------*)
 
@@ -4199,7 +4193,7 @@ WF_dstate_aux mu ->
 (dstate_Separ (d_reduced mu l (snd (option_free (Free_State F)))) 
 l (fst (option_free (Free_State F))) (fst (option_free (Free_State F))) (snd (option_free (Free_State F)))).
 Proof. induction mu; intros. 
-      simpl. intuition.
+      simpl. econstructor. 
       destruct mu. 
       destruct a. 
       simpl.
@@ -4227,7 +4221,7 @@ Proof. induction mu; intros.
       reflexivity. intuition.
 
       econstructor.
-      destruct a. destruct p.
+      destruct a. destruct p. 
 
       simpl.
       assert(exists (q1:qstate l (fst (option_free (Free_State F))))
@@ -4258,7 +4252,7 @@ Proof. induction mu; intros.
       inversion_clear H0.
       apply H9.
       inversion_clear H1. assumption.  
-Qed.
+Qed. 
 
 
 Lemma State_eval_dstate_separ_r{s e:nat}: forall (mu : list (cstate *qstate s e)) F r,
@@ -4269,8 +4263,8 @@ WF_dstate_aux mu ->
 (dstate_Separ (d_reduced mu  (fst (option_free (Free_State F))) r) 
 (fst (option_free (Free_State F))) (snd (option_free (Free_State F))) (snd (option_free (Free_State F))) r).
 Proof. induction mu; intros. 
-      simpl. intuition.
-      destruct mu. 
+      simpl. econstructor. 
+       destruct mu. 
       destruct a. 
       simpl.
 
@@ -4297,8 +4291,8 @@ Proof. induction mu; intros.
       rewrite Mplus_0_l.
       reflexivity. intuition.
 
-      econstructor.
-      destruct a. destruct p.
+      econstructor. 
+      destruct a. 
 
       simpl.
       assert(exists 
@@ -4330,7 +4324,7 @@ Proof. induction mu; intros.
       inversion_clear H0.
       apply H9.
       inversion_clear H1. assumption.  
-Qed.
+Qed. 
 
 (*  ------------------------------mu \models F => mu|_{V} \modesl F -----------*)
 Lemma QExp_free_eval{s e:nat}:forall (qs: QExp) (st: state s e) s' e',
@@ -4584,50 +4578,51 @@ WF_Matrix_dstate mu ->
 State_eval_dstate F mu <-> 
 State_eval_dstate F (d_reduced mu s' e').
 Proof. induction mu; intros. simpl. intuition.
-       destruct mu; destruct a. 
-       split; intros.
-       inversion_clear H2. 
-       econstructor.
-       apply (State_free_eval _ (c, q)).  
-       assumption. assumption. 
-       inversion_clear H1. intuition.
-       assumption. econstructor.
-       
-       inversion_clear H2.
-       econstructor.
-       apply (State_free_eval _ (c, q)) in H3.
-       assumption. assumption. assumption.
-       inversion_clear H1. intuition.
-       econstructor.
+destruct mu; destruct a. 
+split; intros.
+inversion_clear H2. 
+econstructor.
+apply (State_free_eval _ (c, q)).  
+assumption. assumption. 
+inversion_clear H1. intuition.
+assumption. econstructor.
 
-       split; intros.
-       inversion_clear H2.
-       econstructor. 
-       apply (State_free_eval _ (c, q)).  
-       assumption. assumption. 
-       inversion_clear H1. intuition.
-       assumption.
-       rewrite <-State_eval_dstate_Forall in H4. 
-       rewrite (IHmu _ s' e') in H4.
-       rewrite <-State_eval_dstate_Forall.
-       apply H4. destruct p.  discriminate.
-       assumption. assumption. 
-       inversion_clear H1. intuition.
-       discriminate. 
-       
-       econstructor. 
-       inversion_clear H2.
-       apply (State_free_eval _ (c, q)) in H3.  
-       assumption. assumption. assumption. 
-       inversion_clear H1. intuition.
-       destruct p. 
-       inversion_clear H2.
-       rewrite <-State_eval_dstate_Forall. 
-       rewrite (IHmu _ s' e').
-       simpl. assumption. assumption.
-       assumption.
-       inversion_clear H1. intuition.
-       discriminate.
+inversion_clear H2.
+econstructor.
+apply (State_free_eval _ (c, q)) in H3.
+assumption. assumption. assumption.
+inversion_clear H1. intuition.
+econstructor.
+
+split; intros.
+inversion_clear H2.
+econstructor. 
+apply (State_free_eval _ (c, q)).  
+assumption. assumption. 
+inversion_clear H1. intuition.
+assumption.
+rewrite <-State_eval_dstate_Forall in H4. 
+rewrite (IHmu _ s' e') in H4.
+rewrite <-State_eval_dstate_Forall.
+apply H4. destruct p.  discriminate.
+assumption. assumption. 
+inversion_clear H1. intuition.
+discriminate. 
+
+econstructor. 
+inversion_clear H2.
+apply (State_free_eval _ (c, q)) in H3.  
+assumption. assumption. assumption. 
+inversion_clear H1. intuition.
+destruct p. 
+inversion_clear H2.
+rewrite <-State_eval_dstate_Forall. 
+rewrite (IHmu _ s' e').
+simpl. assumption. assumption.
+assumption.
+inversion_clear H1. intuition.
+discriminate.
+      
 Qed.
 
 
@@ -4635,14 +4630,14 @@ Lemma Pure_free_dstate{s e s' e':nat}:forall  (F: State_formula)  (mu : list (st
 (Free_State F)= None-> 
 State_eval_dstate F mu -> 
 State_eval_dstate F (d_reduced mu l r).
-Proof. induction mu; intros. simpl in *.  destruct H0.
-       destruct a.   inversion_clear H0.  destruct mu.
-       simpl in *. econstructor.  
-       eapply Pure_free_eval'. assumption. apply H1.
-       econstructor. destruct s0.   
-       simpl. econstructor.   
-       eapply Pure_free_eval'. assumption. apply H1.
-       apply IHmu. assumption. assumption.
+Proof. induction mu; intros. simpl in *. assumption. 
+destruct a.   inversion_clear H0.  destruct mu.
+simpl in *. econstructor.  
+eapply Pure_free_eval'. assumption. apply H1.
+econstructor. destruct s0.   
+simpl. econstructor.   
+eapply Pure_free_eval'. assumption. apply H1.
+apply IHmu. assumption. assumption.
 Qed.  
 
 (*---------------------------------seman_eq-------------------------------------------*)

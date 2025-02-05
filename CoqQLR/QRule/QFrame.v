@@ -30,7 +30,7 @@ From Quan Require Import QSepar.
 
 Local Open Scope com_scope.
 Local Open Scope nat_scope.
-
+Local Open Scope rule_scope.
 
 
 (*---------------------------------------------dstate_Separ preserve-----------------------------------------*)
@@ -418,10 +418,12 @@ Ltac dstate_Separ_preserve_solve_1 F:=
        try match goal with 
        H2: NSet.Subset ?a ?b \/ NSet.Subset ?c ?d |- _ => destruct H2 as [H2|H2];
        simpl in H2 end. 
+
        Ltac r3_solve_2:=     
        try econstructor; try reflexivity; try
        assumption; try apply dstate_Separ_nil;
-       try match goal with 
+       dom_solve.
+       (* try match goal with 
        H2: NSet.Subset (NSet.union ?a ?b) ?c |- _ => apply subset_union in H2;
        destruct H2 as [H2 H2']; apply subset_Qsys in H2 end; 
        try match goal with 
@@ -429,7 +431,7 @@ Ltac dstate_Separ_preserve_solve_1 F:=
        try match goal with 
        H: WF_Unitary ?U |- _ => try apply H end;  
        try match goal with 
-       H: forall i, WF_Unitary (?U i) |- _ => try apply H end.
+       H: forall i, WF_Unitary (?U i) |- _ => try apply H end. *)
 
 Lemma dstate_Separ_preserve{s e:nat}: forall c s0 e0 s1 e1
 (mu mu':list (cstate *qstate s e)) F ,
@@ -521,8 +523,8 @@ induction c.
     apply IHceval_single1; try reflexivity. inversion_clear H1. assumption.
     assumption. apply H3. 
     apply dstate_Separ_map2. assumption. 
-    inversion_clear H1. econstructor; try assumption. apply H9.
-    apply H10. apply H11. econstructor.
+    inversion_clear H1. econstructor; try assumption. apply H8.
+    apply H9. apply H10. econstructor.
     apply IHceval_single; try reflexivity. inversion_clear H1. assumption.
     assumption. apply H3.
 -- { induction mu; intros mu' F Hs ; intros. inversion  H; subst. intuition.  
@@ -541,181 +543,6 @@ induction c.
    [try apply dstate_Separ_QMeas_r| try apply dstate_Separ_QMeas_l];
    r3_solve_2.  }
 Qed.
-
-
-
-(*------------------------------------------ceval_dom---------------------------------------**)
-Lemma ceval_not_nil{ s e:nat}: forall c (mu mu': list (cstate * qstate s e)), 
-WF_dstate_aux mu->
-ceval_single c mu mu' ->
-mu<>[]
-->mu'<>[].
-Proof.  intros. induction H0;
-try match goal with 
-H: [] <> []  |- _ => destruct H; try reflexivity end; try discriminate; 
-try apply map2_app_not_nil; try left; try discriminate; try auto.
-intro. assert(d_trace_aux mu'' =0%R). rewrite H4. reflexivity.
-erewrite QMeas_trace in H5; try apply H0; try apply H3; try assumption; try lia;
-try apply WWF_qstate_to_WF_qstate; try inversion_clear H; try assumption.
-apply WF_qstate_in_01 in H6. unfold s_trace in *. simpl in *.
-unfold q_trace in *.  rewrite H5 in H6. lra.
-apply IHceval_single2. eapply WF_ceval. apply H. apply H0_.
-apply  IHceval_single1. assumption. discriminate. 
-eapply IHceval_single2. apply WF_state_dstate_aux. inversion_clear H.
-assumption. discriminate.
-eapply IHceval_single2. apply WF_state_dstate_aux. inversion_clear H.
-assumption. discriminate.  inversion_clear H. 
-assert(WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
-apply IHceval_single3. eapply WF_ceval. apply H. apply H0_0.
- apply IHceval_single2. assumption. discriminate. 
-Qed.
-
-Lemma  subset_union': forall x y z, 
-NSet.Subset x z /\ NSet.Subset y z ->NSet.Subset (NSet.union x y) z.
-Proof. intros. unfold NSet.Subset in *. 
-       destruct H.  intros. apply NSet.union_1 in H1.
-       destruct H1.  
-       apply H. 
-       assumption.
-       apply H0. 
-       assumption.
-       
-Qed.
-
-
-Lemma subset_empty: forall a, NSet.Subset NSet.empty a.
-Proof. intros.  pose (NSet.empty_1). unfold NSet.Empty in e.
-       unfold NSet.Subset. intros. apply e in H. destruct H.
-Qed.
-
-
-Lemma Qsys_subset: 
-forall r s e l  : nat,
-s <=l /\ l <= r /\ r <= e
-->NSet.Subset (Qsys_to_Set l r) (Qsys_to_Set s e).
-Proof.
-       unfold Qsys_to_Set. induction r; intros. 
-       pose (NSet.empty_1). unfold NSet.Empty in e0.
-      simpl. apply subset_empty.
-      simpl. 
-      destruct H. destruct H0.
-      assert(l=S r \/ l<> S r).
-      apply Classical_Prop.classic.
-      destruct H2.
-      rewrite H2. 
-       assert(S r <? S r =false).
-       apply ltb_ge. lia. 
-       rewrite H3. apply subset_empty. 
-       assert(l < S r).
-       lia. apply Lt_n_i in H3. 
-       rewrite H3.
-       unfold NSet.Subset.
-       intros.
-       unfold NSet.Subset in IHr.
-       assert(a= r \/ a<>r).
-       apply Classical_Prop.classic.
-       destruct H5. rewrite H5 in *.
-       apply In_Qsys. lia.  
-       lia. 
-       assert(l = r \/ l<>r).  
-       apply Classical_Prop.classic .
-       destruct H6. rewrite H6 in *.
-       rewrite Qsys_to_Set_empty in H4.
-       apply NSet.add_3 in H4.
-       pose(NSet.empty_1). unfold NSet.Empty in e0.
-       apply e0 in H4. destruct H4. 
-        lia. 
-       apply IHr with l.
-       lia.
-       apply NSet.add_3 in H4.
-       assumption.
-       lia.  
-Qed.
-
-
-Lemma ceval_single_dom{ s e:nat}: forall c (mu mu': list (cstate * qstate s e)) , 
-WF_dstate_aux mu->
-ceval_single c mu mu' ->
-mu <> [] ->
-~NSet.Equal (snd (MVar c)) NSet.empty ->
-NSet.Subset (snd (MVar c)) (Qsys_to_Set s e).
-Proof. induction c. intros  mu mu' Hw H Hnil H0; intros.
-simpl in *. try destruct H0; try reflexivity.
--intros. try destruct H2; try reflexivity.
--intros. try destruct H2; try reflexivity.
--intros  mu mu' Hw H Hnil H0; intros.
-apply ceval_seq_1 in H; destruct H. 
-simpl in *.   apply union_not_empty in H0.
-assert(NSet.Equal (snd (MVar c1)) NSet.empty \/ ~NSet.Equal (snd (MVar c1)) NSet.empty ).
-apply Classical_Prop.classic.  
-destruct H1. destruct H0. destruct H0. assumption. 
-rewrite union_empty_refl_l; try assumption.
-assert(WF_dstate_aux x). eapply WF_ceval. apply Hw. apply H. 
-eapply IHc2; try assumption.  apply H2.  apply H. 
-eapply ceval_not_nil. apply Hw. apply H. assumption. 
-assert(NSet.Equal (snd (MVar c2)) NSet.empty \/ ~NSet.Equal (snd (MVar c2)) NSet.empty ).
-apply Classical_Prop.classic.  
-destruct H2. 
-rewrite union_empty_refl_r; try assumption.
-eapply IHc1; try assumption. apply Hw. apply H. assumption. 
-apply subset_union'. split.
-eapply IHc1; try assumption. apply Hw. apply H. assumption.
-assert(WF_dstate_aux x). eapply WF_ceval. apply Hw. apply H. 
-eapply IHc2; try assumption. apply H3.   apply H. 
-eapply ceval_not_nil. apply Hw. apply H. assumption. 
-
--induction mu; intros mu' Hw H Hnil H0; intros.
- inversion H; subst. destruct Hnil. reflexivity.
- inversion H; subst;
- simpl in *;    apply union_not_empty in H0;
- assert(NSet.Equal (snd (MVar c1)) NSet.empty \/ ~NSet.Equal (snd (MVar c1)) NSet.empty );
- try apply Classical_Prop.classic.  
- destruct H1. destruct H0. destruct H0. assumption.   
- rewrite union_empty_refl_l; try assumption. 
- assert(NSet.Equal (snd (MVar c2)) NSet.empty \/ ~NSet.Equal (snd (MVar c2)) NSet.empty ).
- apply Classical_Prop.classic.  
- destruct H2.  
- rewrite union_empty_refl_r; try assumption. 
- inversion_clear Hw. 
- assert(WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
- eapply IHc1; try assumption. apply H7. apply H10. discriminate.  
- apply subset_union'. split; try assumption.  
- inversion_clear Hw. 
- assert(WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
- eapply IHc1; try assumption. apply H7. apply H10. discriminate. 
-
-destruct H1. destruct H0. destruct H0. assumption.   
- rewrite union_empty_refl_l; try assumption. 
- inversion_clear Hw. 
- assert(WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
- eapply IHc2; try assumption. apply H5. apply H10. discriminate.
- assert(NSet.Equal (snd (MVar c2)) NSet.empty \/ ~NSet.Equal (snd (MVar c2)) NSet.empty ).
- apply Classical_Prop.classic.  
- destruct H2.  
- rewrite union_empty_refl_r; try assumption. 
- apply subset_union'. split; try assumption.
- inversion_clear Hw. 
- assert(WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
- eapply IHc2; try assumption. apply H7. apply H10. discriminate.
-
--intros. remember <{while b do c end}> as original_command eqn:Horig. 
-   induction H0;  try inversion Horig; subst. destruct H1. reflexivity.
-   
-   simpl in H2.  eapply IHc; try assumption; try apply H0_0.
-   apply WF_state_dstate_aux. inversion_clear H. assumption. discriminate. 
-   simpl. assumption. 
-
--intros  mu mu' Hw H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
- simpl. apply Qsys_subset; try lia.  
-
--intros  mu mu' Hw H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
-simpl. apply Qsys_subset; try lia.  
-intros  mu mu' Hw H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
- simpl. apply subset_union'. split; apply Qsys_subset; try lia. 
-
--intros  mu mu' Hw H Hnil H0; intros. inversion H; subst. destruct Hnil. reflexivity.
-simpl. apply Qsys_subset; try lia.  
-Qed. 
 
 
 
@@ -848,7 +675,6 @@ rewrite QUnit_Ctrl_trace; auto_wf; try lia. reflexivity. assumption.
 
 apply H1.    
 Qed.
-
 
 
 Lemma Reduced_QUnit_Ctrl_l{ s e:nat}: forall c (q:qstate s e)  s0' e0' s1' e1' (U:nat -> Square (2^(e1'-s1'))) s0 e0 s1 e1,
@@ -1222,41 +1048,6 @@ Proof. intros.
 Qed.
 
 
-Ltac quan_solve c q:=
-       try  match goal with 
-       H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
-       try  match goal with 
-       H:ceval_single ?x [] ?z |-_ => inversion_clear H; try rewrite map2_nil_r  end;
-       try  match goal with 
-       H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
-       try  match goal with 
-       H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
-       try apply Nat.eq_dec;  try rewrite d_reduced_map2;
-       try  match goal with 
-       H:State_eval_dstate ?x ?z |-_ => inversion_clear H end;
-       try match goal with 
-       H2: NSet.Subset ?a ?b |- _ =>simpl in H2 end;
-       try match goal with 
-       H2: NSet.Subset (NSet.union ?a ?b) ?c |- _ => pose H2 as H2'; apply subset_union in H2';
-       destruct H2' as [H2' H2'']; apply subset_Qsys in H2' end;
-       try match goal with 
-       H2'': NSet.Subset ?a ?b |- _ => pose H2'' as H2''';  apply subset_Qsys in H2''' end;  try lia;
-       assert(WF_dstate_aux [(c,q)]); try apply WF_state_dstate_aux;
-       try inversion_clear Hw; try assumption;
-       try  match goal with 
-       H:dstate_Separ ?x ?y ?z ?k ?j|-_ => inversion H; subst; clear H end.
-       
-
-Ltac d_seman_app_solve s e  i:=
-try apply d_seman_app_aux; try  apply WF_d_reduced; try lia;
-try eapply WF_ceval  with _ _ ;
-try apply ceval_Qinit; try apply ceval_QUnit_One;
-try apply ceval_QUnit_Ctrl ; try match goal with
-H: big_app' ?f ?n ?mu'' |- _  => try apply (ceval_QMeas _ _ s e i mu''); try assumption end;
-try  match goal with 
-H:ceval_single ?x ?y ?z |-_ => try apply H end; try assumption.
-
-
 Lemma State_eval_dstate_reduced_meas_l{s e:nat}:forall s0 e0 s2 c (q:qstate s e) mu i F, 
 NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar <{ i :=M [[s0 e0]] }>)))
   NSet.empty ->
@@ -1382,6 +1173,36 @@ eapply (big_app_seman ((2 ^ (e0 - s0))) (fun j : nat =>
 Qed.
 
 
+Ltac quan_solve c q:=
+  try  match goal with 
+  H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
+  try  match goal with 
+  H:ceval_single ?x [] ?z |-_ => inversion_clear H; try rewrite map2_nil_r  end;
+  try  match goal with 
+  H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
+  try  match  goal with 
+  H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
+  try apply Nat.eq_dec;  try rewrite d_reduced_map2;
+  try  match goal with 
+  H:State_eval_dstate ?x ?z |-_ => inversion_clear H end;
+  assert(WF_dstate_aux [(c,q)]); try apply WF_state_dstate_aux;
+  try inversion_clear Hw; try assumption;
+  try  match goal with 
+  H:dstate_Separ ?x ?y ?z ?k ?j|-_ => inversion H; subst; clear H end.
+       
+
+Ltac d_seman_app_solve s e  i :=
+  try apply d_seman_app_aux; try  apply WF_d_reduced;
+  try eapply WF_ceval  with _ _ ;
+  try apply ceval_Qinit; try apply ceval_QUnit_One;
+  try apply ceval_QUnit_Ctrl ; try match goal with
+  H: big_app' ?f ?n ?mu'' |- _  => try apply (ceval_QMeas _ _ s e i mu''); try assumption end;
+  try  match goal with 
+  H:ceval_single ?x ?y ?z |-_ => try apply H end; try assumption;
+  try apply WF_state_dstate_aux;
+  try inversion_clear Hw; try assumption.
+
+
 Lemma State_eval_dstate_reduced_l{s e:nat}: forall c s0 e0 s1 e1
 (mu mu':list (cstate *qstate s e)) F ,
 s <= s1 /\ s1 <= e1 <= e->
@@ -1464,7 +1285,7 @@ destruct p. simpl. assumption. }
    destruct a. inversion H; subst; clear H;
    rewrite d_reduced_map2;
    inversion_clear H3.
-   destruct mu. inversion H13;subst.
+   destruct mu. inversion H12;subst.
    simpl. repeat rewrite map2_nil_r.
    apply IHc1 with s0 e0 [(c,q)].
    assumption.
@@ -1509,7 +1330,7 @@ destruct p. simpl. assumption. }
    destruct p. 
    simpl. assumption.
 
-   destruct mu. inversion H13;subst.
+   destruct mu. inversion H12;subst.
    simpl. repeat rewrite map2_nil_r.
    apply IHc2 with s0 e0 [(c,q)].
    assumption.
@@ -1557,8 +1378,8 @@ destruct p. simpl. assumption. }
    destruct p. 
    simpl. assumption. }
 {  intros. remember <{while b do c end}> as original_command eqn:Horig. 
-   induction H1;  try inversion Horig; subst.
-   simpl in H5. destruct H5. inversion_clear H0. clear H8. 
+   induction H1;  try inversion Horig; subst.  
+   simpl in *. assumption. inversion_clear H0. clear H8. 
    assert( WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
    assert( dstate_Separ [(sigma, rho)] s0 e0 s1 e1). inversion_clear H2.
    econstructor; try assumption. apply H11. apply H12. apply H13. econstructor.
@@ -1586,13 +1407,13 @@ destruct p. simpl. assumption. }
    apply IHceval_single1; try assumption. 
    inversion_clear H2. assumption. inversion_clear H5. destruct p. simpl.
    assumption.
-   inversion_clear H0. clear H10. 
+   inversion_clear H0. clear H9. 
    assert( WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
    assert(WF_dstate_aux mu' ).
    apply WF_ceval with <{ while b do c end }> mu; try assumption.
    assert( dstate_Separ [(sigma, rho)] s0 e0 s1 e1). inversion_clear H2.
-   econstructor; try assumption. apply H14. apply H15. apply H16. econstructor. 
-   destruct mu.  inversion_clear H7. rewrite map2_nil_r. 
+   econstructor; try assumption. apply H13. apply H14. apply H15. econstructor. 
+   destruct mu.  inversion_clear H6. rewrite map2_nil_r. 
     inversion_clear H5.  
     simpl. econstructor. assumption. econstructor.
     rewrite d_reduced_map2. 
@@ -1609,67 +1430,123 @@ destruct p. simpl. assumption. }
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
  {destruct a.  
+       
 
- destruct mu; quan_solve c q;
- [try econstructor;try econstructor;
- try rewrite (Reduced_QInit_r c _ _ _  s s2); try assumption;
- try econstructor; try reflexivity; try assumption; try lia | d_seman_app_solve s e i]; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QInit_r c _ _ _  s s2); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
+destruct mu.    quan_solve c q. 
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QInit_r c _ _ _  s s2); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i.   
+
+dom_solve.  
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QInit_r c _ _ _  s s2); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. 
+
+try  match goal with 
   IHmu: _ |-_ =>
-  apply IHmu; destruct p; try assumption end.
-   }  }
+  apply IHmu; destruct p; try assumption end.  
+
+
+
+ }  }
 
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
  {destruct a.
  
- destruct mu; quan_solve c q.
- try econstructor;try econstructor.
-  try rewrite (Reduced_QUnit_one_r c _ _ _  _ s s2); try assumption;
- try econstructor; try reflexivity; try assumption; try lia.
- d_seman_app_solve s e i; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QUnit_one_r c _ _ _  _ s s2); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
+ destruct mu.    quan_solve c q. 
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_one_r c _ _ _ _ s s2); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+simpl in H4. apply subset_Qsys in H4; try lia.  
+simpl in H. lia.  
+
+simpl in *. apply subset_Qsys in H2; try lia. 
+apply H. apply H.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i. 
+
+dom_solve. dom_solve. simpl.   
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_one_r c _ _ _  _ s s2); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. dom_solve. dom_solve.
+
+try  match goal with 
   IHmu: _ |-_ =>
-  apply IHmu; destruct p; try assumption end.
+  apply IHmu; destruct p; try assumption end. 
   }  }
 
 
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
- {destruct a. 
+ {destruct a.
  
- destruct mu; quan_solve c q. 
- try econstructor;try econstructor;
-  try rewrite (Reduced_QUnit_Ctrl_r c _ _ _ _ _  _ s s3); try assumption;
- try econstructor; try reflexivity; try assumption; try lia. 
- d_seman_app_solve s e i; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QUnit_Ctrl_r c _ _ _  _ _ _ s s3); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
+ destruct mu.    quan_solve c q. 
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_Ctrl_r c _ _ _ _ _ _ s s3); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+simpl in *. dom_solve.   
+simpl in *. 
+apply subset_union in H2.
+apply subset_union in H4.
+destruct H2. destruct H4.  
+dom_solve. apply H. apply H.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i. 
+
+dom_solve. dom_solve. simpl.   
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_Ctrl_r c _ _ _  _ _ _ s s3); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. dom_solve. dom_solve.
+
+try  match goal with 
   IHmu: _ |-_ =>
   apply IHmu; destruct p; try assumption end. 
   }  }
 
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
- {destruct a.
+ {
+  destruct a.
  
- destruct mu; quan_solve c q. 
+ destruct mu.    quan_solve c q. 
+
  eapply (State_eval_dstate_reduced_meas_l s0 e0 _ c _ _ i); try apply H3; try assumption;  try lia;
  try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+ dom_solve. dom_solve. dom_solve.
+
+quan_solve c q. 
 
 
- d_seman_app_solve s e i; try apply H3. eapply (ceval_QMeas  c  _ s0 e0 i); try apply H13; try lia.
- try econstructor;try econstructor;
+d_seman_app_solve s e i; try apply H5. eapply (ceval_QMeas  c  _ s0 e0 i); try apply H13; try lia.
+dom_solve. apply H12. 
  eapply (State_eval_dstate_reduced_meas_l s0 e0 _ c _ _ i); try apply H3; try assumption;  try lia;
  try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+ dom_solve. dom_solve. dom_solve. 
  try  match goal with 
   IHmu: _ |-_ =>
   apply IHmu; destruct p; try assumption end. 
@@ -1706,7 +1583,7 @@ Proof. induction c.
    intros. rewrite c_update_find_not.
    reflexivity.
    unfold not.
-   intros. rewrite<-H5 in *.
+   intros. rewrite<-H7 in *.
    apply (In_inter_empty _ _ i) in H1.
    destruct H1. assumption. 
    apply NSet.add_1. reflexivity.
@@ -1775,7 +1652,7 @@ destruct p. simpl. assumption. }
    destruct a. inversion H; subst; clear H;
    rewrite d_reduced_map2;
    inversion_clear H3.
-   destruct mu. inversion H13;subst.
+   destruct mu. inversion H12;subst.
    simpl. repeat rewrite map2_nil_r.
    apply IHc1 with s1 e1 [(c,q)].
    assumption.
@@ -1820,7 +1697,7 @@ destruct p. simpl. assumption. }
    destruct p. 
    simpl. assumption.
 
-   destruct mu. inversion H13;subst.
+   destruct mu. inversion H12;subst.
    simpl. repeat rewrite map2_nil_r.
    apply IHc2 with s1 e1 [(c,q)].
    assumption.
@@ -1869,7 +1746,7 @@ destruct p. simpl. assumption. }
    simpl. assumption. }
 { intros. remember <{while b do c end}> as original_command eqn:Horig. 
 induction H1;  try inversion Horig; subst.
-simpl in H5. destruct H5. inversion_clear H0. clear H8. 
+simpl in *. assumption.  inversion_clear H0. clear H8. 
 assert( WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
 assert( dstate_Separ [(sigma, rho)] s0 e0 s1 e1). inversion_clear H2.
 econstructor; try assumption. apply H11. apply H12. apply H13. econstructor.
@@ -1897,13 +1774,13 @@ simpl. econstructor. assumption. econstructor.
 apply IHceval_single1; try assumption. 
 inversion_clear H2. assumption. inversion_clear H5. destruct p. simpl.
 assumption.
-inversion_clear H0. clear H10. 
+inversion_clear H0. clear H9. 
 assert( WF_dstate_aux [(sigma, rho)]). apply WF_state_dstate_aux. assumption.
 assert(WF_dstate_aux mu' ).
 apply WF_ceval with <{ while b do c end }> mu; try assumption.
 assert( dstate_Separ [(sigma, rho)] s0 e0 s1 e1). inversion_clear H2.
-econstructor; try assumption. apply H14. apply H15. apply H16. econstructor.
-destruct mu.  inversion_clear H7. rewrite map2_nil_r. 
+econstructor; try assumption. apply H13. apply H14. apply H15. econstructor.
+destruct mu.  inversion_clear H6. rewrite map2_nil_r. 
  inversion_clear H5.  
  simpl. econstructor. assumption. econstructor.
  rewrite d_reduced_map2. 
@@ -1915,71 +1792,127 @@ simpl. econstructor. assumption. econstructor.
 apply IHceval_single; try assumption. 
 inversion_clear H2. assumption. inversion_clear H5. destruct p. simpl.
 assumption. }
+
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
  {destruct a.  
+       
 
- destruct mu; quan_solve c q;
- [try econstructor;try econstructor;
- try rewrite (Reduced_QInit_l c _ _ _ _ _ s2 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia | d_seman_app_solve s e i]; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QInit_l c _ _ _ _ _ s2 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
+destruct mu.    quan_solve c q. 
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QInit_l c _ _ _ _ _ s2 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i.   
+
+dom_solve.  
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QInit_l c _ _ _ _ _ s2 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. 
+
+try  match goal with 
   IHmu: _ |-_ =>
-  apply IHmu; destruct p; try assumption end.
-   }  }
+  apply IHmu; destruct p; try assumption end.  
+
+
+
+ }  }
 
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
  {destruct a.
  
- destruct mu; quan_solve c q.
- try econstructor;try econstructor.
-  try rewrite (Reduced_QUnit_one_l c _ _ _  _ _ _ s2 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia.
- d_seman_app_solve s e i; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QUnit_one_l c _ _ _  _ _ _ s2 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
-  IHmu: _ |-_ =>
-  apply IHmu; destruct p; try assumption end.
-  }  }
+ destruct mu.    quan_solve c q. 
 
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_one_l c _ _ _  _ _ _ s2 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
 
-{induction mu; intros mu' F Hs Hw; intros.
-{inversion  H; subst. intuition.  }
- {destruct a. 
- 
- destruct mu; quan_solve c q. 
- try econstructor;try econstructor;
-  try rewrite (Reduced_QUnit_Ctrl_l c _ _ _ _ _  _ _ _  s3 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia.
- d_seman_app_solve s e i; 
- try econstructor;try econstructor;
- try rewrite (Reduced_QUnit_Ctrl_l c _ _ _ _ _  _ _ _ s3 e); try assumption;
- try econstructor; try reflexivity; try assumption; try lia; try econstructor;
- try  match goal with 
+simpl in H4. apply subset_Qsys in H4; try lia.  
+simpl in H. lia.  
+
+simpl in *. apply subset_Qsys in H2; try lia. 
+apply H. apply H.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i. 
+
+dom_solve. dom_solve. simpl.   
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_one_l c _ _ _  _ _ _ s2 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. dom_solve. dom_solve.
+
+try  match goal with 
   IHmu: _ |-_ =>
   apply IHmu; destruct p; try assumption end. 
-
   }  }
+
 
 {induction mu; intros mu' F Hs Hw; intros.
 {inversion  H; subst. intuition.  }
  {destruct a.
  
- destruct mu; quan_solve c q. 
+ destruct mu.    quan_solve c q. 
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_Ctrl_l c _ _ _ _ _  _ _ _  s3 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+simpl in *. dom_solve.   
+simpl in *. 
+apply subset_union in H2.
+apply subset_union in H4.
+destruct H2. destruct H4.  
+dom_solve. apply H. apply H.
+
+quan_solve c q. 
+
+d_seman_app_solve s e i. 
+
+dom_solve. dom_solve. simpl.   
+
+try econstructor;try econstructor;
+try rewrite (Reduced_QUnit_Ctrl_l c _ _ _ _ _  _ _ _  s3 e); try assumption;
+try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+
+dom_solve. dom_solve. dom_solve. dom_solve.
+
+try  match goal with 
+  IHmu: _ |-_ =>
+  apply IHmu; destruct p; try assumption end. 
+  }  }
+
+{induction mu; intros mu' F Hs Hw; intros.
+{inversion  H; subst. intuition.  }
+ {
+  destruct a.
+ 
+ destruct mu.    quan_solve c q. 
+
  eapply (State_eval_dstate_reduced_meas_r s0 e0 _ c _ _ i); try apply H3; try assumption;  try lia;
  try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+ dom_solve. dom_solve. 
+
+quan_solve c q. 
 
 
- d_seman_app_solve s e i; try apply H3. eapply (ceval_QMeas  c  _ s0 e0 i); try apply H13; try lia.
- try econstructor;try econstructor;
+d_seman_app_solve s e i; try apply H5. eapply (ceval_QMeas  c  _ s0 e0 i); try apply H13; try lia.
+dom_solve. apply H12. 
  eapply (State_eval_dstate_reduced_meas_r s0 e0 _ c _ _ i); try apply H3; try assumption;  try lia;
  try econstructor; try reflexivity; try assumption; try lia; try econstructor.
+ dom_solve. dom_solve. 
  try  match goal with 
   IHmu: _ |-_ =>
   apply IHmu; destruct p; try assumption end. 
@@ -2093,36 +2026,32 @@ inversion_clear H0.  assumption.
   lra. 
 Qed.
 
-Ltac rule_f_classic_sovle s e c q i mu:=
-       destruct mu; 
- try  match goal with 
- H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
- try  match goal with 
- H:ceval_single ?x [] ?z |-_ => inversion_clear H end;
- try  match goal with 
- H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
- try  match goal with 
- H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
- try apply Nat.eq_dec;
- try  match goal with 
- H:State_eval_dstate ?x ?z |-_ => inversion_clear H; try rewrite map2_nil_r end; try econstructor;try econstructor;
- [try apply rule_f_classic_meas with s e c q i; try assumption | ];
-  try apply (@Pure_free_eval' s e s e) with q; try assumption;
- assert(WF_dstate_aux [(c,q)]); try apply WF_state_dstate_aux;
- try inversion_clear Hw; try assumption;
- apply d_seman_app_aux; 
- try eapply WF_ceval  with _ _ ;
- try apply ceval_Qinit; try apply ceval_QUnit_One;
- try apply ceval_QUnit_Ctrl ; try match goal with
- H: big_app' ?f ?n ?mu'' |- _  => apply (ceval_QMeas c q s e i mu''); try assumption end;
- try  match goal with 
- H:ceval_single ?x ?y ?z |-_ => apply H end; try assumption; try econstructor;try econstructor;
- [try apply rule_f_classic_meas with s e c q i; try assumption; try econstructor | ]; 
- try apply (@Pure_free_eval' s e s e) with q; try assumption; try econstructor;
-   match goal with 
-   IHmu: _ |-_ =>
-  apply IHmu; try left; try assumption end.
-
+Ltac rule_f_classic_sovle s0 e0 c q i mu:=
+  destruct mu; 
+try  match goal with 
+H:ceval_single ?x ?y ?z |-_ => inversion H; subst; clear H end;
+try  match goal with 
+H:ceval_single ?x [] ?z |-_ => inversion_clear H end;
+try  match goal with 
+H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H end;
+try  match goal with 
+H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct H end;
+try apply Nat.eq_dec;
+try  match goal with 
+H:State_eval_dstate ?x ?z |-_ => inversion_clear H; try rewrite map2_nil_r end; try econstructor;try econstructor;
+ [try apply rule_f_classic_meas with s0 e0 c q i; try assumption | ];
+ try apply (@Pure_free_eval' s0 e0 s0 e0) with q; try assumption;
+assert(WF_dstate_aux [(c,q)]); try apply WF_state_dstate_aux;
+try inversion_clear Hw; try assumption;
+ d_seman_app_solve s0 e0 i; try dom_solve;
+[ try match goal with 
+H : big_app' ?f ?n ?mu |-_ => 
+apply rule_f_classic_meas with s0 e0 c q i
+end ; try assumption; try econstructor  ];
+try apply (@Pure_free_eval' s0 e0 s0 e0) with q; try assumption; try econstructor;
+try match goal with 
+  IHmu: _ |-_ =>
+ apply IHmu; try left; try assumption end. 
 
 
 Lemma rule_f_classic: forall   c s e (mu mu':list (cstate * qstate s e )) F,
@@ -2135,7 +2064,7 @@ NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty) ->
 State_eval_dstate F mu'.
 Proof. induction c. 
 -intros. apply ceval_skip_1 in H3. subst. assumption.
--induction mu; intros. destruct H2. 
+-induction mu; intros. inversion_clear H3. assumption.
  destruct mu; inversion H3; subst.
  inversion_clear H10. simpl. econstructor.
   inversion_clear H2.  apply rule_f_classic_assn; try assumption. econstructor.
@@ -2150,7 +2079,8 @@ Proof. induction c.
    econstructor. 
    inversion_clear H1. inversion_clear H2.
    apply IHmu; try assumption. 
--induction mu; intros. destruct H2. destruct a0. inversion H3; subst. assumption.  
+-induction mu; intros. inversion_clear H3. assumption.
+  destruct a0. inversion H3; subst. assumption.  
 -intros. simpl in H0. rewrite union_empty in H0.
  simpl in H4. rewrite inter_union_dist in H4.
  apply union_empty in H4. 
@@ -2158,15 +2088,16 @@ Proof. induction c.
  apply IHc2 with x; try assumption; try apply H3; try apply H4.  destruct H0; [ left|right];  apply H0. 
  apply WF_ceval with c1 mu; try assumption; try apply H3. 
  apply IHc1 with mu; try assumption; try apply H3; try apply H4. destruct H0; [ left|right];  apply H0.
-- induction mu; intros. destruct H2.
+- induction mu; intros. inversion_clear H3. assumption. 
    inversion_clear H2. inversion_clear  H1.
    inversion H3; subst; destruct mu;
-  [inversion_clear H16| | inversion_clear H16|]; try rewrite map2_nil_r.
+  [inversion_clear H15| | inversion_clear H15|]; try rewrite map2_nil_r.
   simpl in *;  rewrite inter_union_dist in H4;
   rewrite union_empty in H0; apply union_empty in H4;
   apply IHc1 with [(sigma, rho)]; 
   try apply WF_state_dstate_aux; try assumption; try apply H4. destruct H0; [ left|right];  apply H0.
   econstructor. assumption. econstructor.
+
   apply d_seman_app_aux. apply WF_ceval with c1 [(sigma, rho)];
   try assumption.
   apply WF_state_dstate_aux; try assumption. 
@@ -2197,7 +2128,7 @@ Proof. induction c.
   apply IHmu; try assumption; try apply H4.
 
 -intros.  remember <{while b do c end}> as original_command eqn:Horig. 
-induction H3;  try inversion Horig; subst.  destruct H2.
+induction H3;  try inversion Horig; subst. assumption. 
 destruct mu. inversion_clear H3_. rewrite map2_nil_r.
 apply IHceval_single3; try reflexivity; try assumption.
 eapply WF_ceval; try apply H3_0. assumption.  
@@ -2218,43 +2149,66 @@ inversion_clear H2. econstructor. assumption. econstructor.
 inversion_clear H1. inversion_clear H2.
 apply IHceval_single1; try reflexivity; try assumption.
 
-destruct mu. inversion_clear H6. rewrite map2_nil_r. assumption.
+destruct mu. inversion_clear H5. rewrite map2_nil_r. assumption.
 assert( WF_dstate_aux [(sigma, rho)]).
 apply WF_state_dstate_aux. inversion_clear H1. assumption.
 assert( WF_dstate_aux mu'). inversion_clear H1.
-eapply WF_ceval; try apply H6; try assumption.  
+eapply WF_ceval; try apply H5; try assumption.  
 apply d_seman_app_aux; try assumption.  
 inversion_clear H2. econstructor. assumption. econstructor.
 inversion_clear H1. inversion_clear H2.
 apply IHceval_single; try reflexivity; try assumption.
 
-{  induction mu; intros mu2 F Hs Hm Hw; intros.
-{inversion  H.  }
- {destruct Hm. destruct a.  rule_f_classic_sovle s0 e0 c q s mu. 
+{  induction mu; intros mu2 F Hs Hm Hw; intros. 
+{ inversion_clear H0. assumption. }
+ {destruct Hm. destruct a.
+ rule_f_classic_sovle s0 e0 c q s mu.
  simpl in H2. inversion_clear H0.
  apply Qsys_to_Set_not_empty in H2; try lia. 
+ dom_solve. 
 }  }
 -{  induction mu; intros mu2 F Hs Hm Hw; intros.
-{inversion  H.  }
-{destruct Hm. destruct a. rule_f_classic_sovle s0 e0 c q s mu.  
+{ inversion_clear H0. assumption.  }
+{destruct Hm. destruct a.
+
+ rule_f_classic_sovle s0 e0 c q s mu.  
 inversion_clear H0.
-apply Qsys_to_Set_not_empty in H2; try lia. 
+apply Qsys_to_Set_not_empty in H2; try lia. dom_solve. 
 } }
 
   {  induction mu; intros mu2 F Hs Hm Hw; intros.
-  {inversion  H.  }
+  {  inversion_clear H0. assumption. }
   {destruct Hm. destruct a. 
   rule_f_classic_sovle s e c q s mu.
   inversion_clear H0. simpl in H2. rewrite union_empty in H2. 
   destruct H2.
-  apply Qsys_to_Set_not_empty in H2; try lia. 
+  apply Qsys_to_Set_not_empty in H2; try lia. dom_solve. 
 } }
 
 {induction mu; intros mu2 F Hs Hm Hw; intros.
-{inversion  H.  }
-{destruct Hm. destruct a.    rule_f_classic_sovle s e c q i mu.
+{  inversion_clear H0. assumption.  }
+{destruct Hm. destruct a.
+
+quan_solve c q.
+apply d_seman_app_aux. 
+eapply WF_ceval; try 
+eapply (ceval_QMeas _ _ s e i mu''). 
+apply H. dom_solve. apply H11. 
+eapply WF_ceval; try apply H10. 
+assumption. 
+
+apply rule_f_classic_meas with s e c q i; try assumption.
+dom_solve.
+
+apply IHmu; try assumption. left. try assumption.
+
+destruct mu. simpl. eapply State_eval_WF_formula.
+apply H0. 
+apply H3.
+
 inversion_clear H0.
  apply Qsys_to_Set_not_empty in H2; try lia. 
+ dom_solve. 
  }}  
 Qed.
 
@@ -2316,116 +2270,22 @@ rewrite In_Qsys. lia. lia.
 Qed. 
 
 
-(*Assume that F1 F2 F2 c all have continues dom and qfree(F1) cap qMVar(c) <> emptyset, when they are not all empty set *)
-Definition Considered_F_c (F1 F2 F3:State_formula) c:=
-(~NSet.Equal ((snd (MVar c))) (NSet.empty) -> NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1))))/\
-(Considered_Formula F1 /\ Considered_Formula F2 /\Considered_Formula F3) /\ 
-(~(NSet.Empty (snd (Free_state F1))) -> ~(NSet.Empty (snd (MVar c))) ->
-~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))).
-
-Lemma r1:forall F c, 
-Considered_Formula F->
-~NSet.Equal (snd (Free_state F)) (NSet.empty) -> 
-~NSet.Equal ((snd (MVar c))) (NSet.empty) -> 
-NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1)))->
-NSet.Equal (NSet.inter (snd (Free_state F)) (snd (MVar c)) ) (NSet.empty) -> 
-(snd (option_free (Free_State F)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
-(option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F))).
-Proof. intros. 
-  
-     assert(NSet.Equal
-    (NSet.inter (Qsys_to_Set (fst (option_free (Free_State F)))
-    (snd (option_free (Free_State F))))
-    (Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c))))
-          ((option_nat (NSet.max_elt (snd (MVar c))))+1)))
-    NSet.empty).  eapply equal_trans; [| apply H3]. apply inter_eq.
-    rewrite Considered_Formula_min. 
-    assert(snd (option_free (Free_State F))= option_nat (NSet.max_elt (snd (Free_state F))) +1).
-    symmetry.
-    apply add_sub_eq_nz'.  apply Free_State_snd_gt_0;try apply H.
-    rewrite option_eqb_neq.
-    apply Free_State_not_empty; try apply H. intro. 
-     destruct H0. assumption. 
-     apply Considered_Formula_max. apply H. rewrite H4.
-    apply Considered_Formula_set_eq; try rewrite <-empty_Empty; try apply H.
-    assumption. apply H. symmetry. assumption.
-   
-    apply Free_State_not_empty in H0; try apply H. 
-    apply option_eqb_neq in H0. apply Considered_Formula_not_empty_dom in H0; try apply H.
-    pose(min_le_max (snd (MVar c))).
-    apply Qsys_inter_empty' in H4; try assumption; try lia.    
-Qed.
-
-
-Lemma Qsys_inter_empty: forall s e x, 
-s<e->
-(option_nat (NSet.max_elt x) <s) \/
-(e<=option_nat (NSet.min_elt x)) ->
-NSet.Equal (NSet.inter (Qsys_to_Set s e) x ) NSet.empty.
-Proof. intros. assert(NSet.Empty x \/ ~(NSet.Empty x)).
-       apply Classical_Prop.classic. 
-       destruct H1. apply inter_empty. right. rewrite empty_Empty. assumption.
-       unfold NSet.Equal in *. intros. split; intros.
-       pose H1.  apply min_not_empty in n. 
-       apply max_not_empty in H1. destruct n. destruct H1.
-       rewrite H1 in *. rewrite H3 in *. simpl in *. 
-       apply (@NSet.max_elt_2 _ _ a)in H1.
-       apply (@NSet.min_elt_2 _ _ a)in H3.
-       apply NSet.inter_1 in H2. 
-       apply In_Qsys in H2; try lia.   
-       apply NSet.inter_2 in H2. assumption. 
-       apply NSet.inter_2 in H2. assumption.
-       apply In_empty in H2. destruct H2. 
-Qed.
-
-
-Lemma r2: forall F1 c, 
-Considered_Formula F1->
-NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1)))->
-~(NSet.Equal (NSet.inter (snd (MVar c)) ((snd (Free_state F1)))) (NSet.empty))->
-( (option_nat (NSet.max_elt (snd (MVar c)))) >= fst (option_free (Free_State F1)) /\
-snd (option_free (Free_State F1)) >= ((option_nat (NSet.min_elt (snd (MVar c)))))) .
-Proof. intros.  
-      assert(( (Free_State F1)<> None)). intro. 
-      apply option_eqb_eq in H2.
-      apply Free_State_None_empty  in H2.
-      destruct H1. apply inter_empty. right. assumption.
-       assert (~((option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F1))  \/
-       (snd (option_free (Free_State F1)) <= (option_nat (NSet.min_elt (snd (MVar c))))))).
-       intro. apply (Qsys_inter_empty) in H3; try apply Considered_Formula_not_empty_dom; try assumption.
-       destruct H1.  eapply equal_trans with 
-       ((NSet.inter  (snd (Free_state F1)) (snd (MVar c)))); try apply inter_comm.
-       eapply equal_trans ; try apply H3. apply inter_eq; try reflexivity.
-       symmetry. 
-       rewrite Considered_Formula_min; try assumption. 
-       assert(snd (option_free (Free_State F1))= option_nat (NSet.max_elt (snd (Free_state F1))) +1).
-       symmetry.
-       apply add_sub_eq_nz'.  apply Free_State_snd_gt_0;try  assumption.  
-     
-        apply Considered_Formula_max. apply H. rewrite H1.
-       apply Considered_Formula_set_eq; try assumption.
-       apply option_eqb_neq in H2.
-       apply Free_State_not_empty in H2. intro. destruct H2. 
-       rewrite empty_Empty. assumption. assumption. 
-      lia.  
-Qed.
-
-
 Lemma rule_f: forall  F c s e (mu mu':list (cstate * qstate s e )) ,
-NSet.Equal ((snd (MVar c))) ((Qsys_to_Set (option_nat (NSet.min_elt (snd (MVar c)))) ((option_nat (NSet.max_elt (snd (MVar c))))+1)))->
 (Considered_Formula F /\ ~NSet.Equal (snd (Free_state F)) (NSet.empty) )->
 WF_dstate_aux mu ->
 State_eval_dstate F mu->
 ceval_single c mu mu'-> 
 ~NSet.Equal (snd (MVar c)) NSet.empty ->
 NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty) ->
-NSet.Equal (NSet.inter (snd (Free_state F)) (snd (MVar c))) (NSet.empty)->
+(snd (option_free (Free_State F)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
+(option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F))) ->
 State_eval_dstate F mu'.
 Proof. 
-    intros F c s e mu mu' H'. intros. assert( mu<>[]). destruct mu. simpl in H1.
-    destruct H1. discriminate.  apply (@ceval_single_dom s e c mu mu' H0 ) in H6; try assumption.
+    intros F c s e mu mu'. intros.
+    destruct mu.  inversion_clear H2. assumption. 
+   pose H2 as H6.
+    apply (@ceval_single_dom s e c  (p::mu) mu') in H6; try assumption.
     apply Subset_min_max_In in H6; try lia; try assumption.  
-    eapply r1 in H5; try assumption; try apply H.
     assert((Free_State F) <> None). apply option_eqb_neq. apply Free_State_not_empty; apply H.
     destruct H.
     pose(Considered_Formula_not_empty_dom F H H7) as H''.    
@@ -2437,8 +2297,8 @@ Proof.
     fst (option_free (Free_State F)) <= snd (option_free (Free_State F)) /\
     snd (option_free (Free_State F)) <=
     option_nat (NSet.max_elt (snd (MVar c))) + 1 <= e).
-    split. apply dstate_eval_dom in H1.
-    destruct H1. destruct H7. assumption.  apply H1.
+    split. apply dstate_eval_dom in H1. 
+    destruct H1. destruct H7. assumption.  apply H1. discriminate. 
     split. lia. split. lia.  split.
     apply le_trans with (option_nat (NSet.min_elt (snd (MVar c)))).
     assumption.
@@ -2450,7 +2310,7 @@ Proof.
     (fst (option_free (Free_State F))) (option_nat (NSet.max_elt (snd (MVar c)))+ 1)); try lia.   
     remember ( (d_reduced mu' (fst (option_free (Free_State F)))
     (option_nat (NSet.max_elt (snd (MVar c)))+ 1))).
-    remember ((d_reduced mu
+    remember ((d_reduced (p::mu)
     (fst (option_free (Free_State F)))
     (option_nat (NSet.max_elt (snd (MVar c))) + 1))).
     apply State_eval_dstate_reduced_r with c (snd (option_free (Free_State F)))
@@ -2479,7 +2339,7 @@ Proof.
     apply State_dstate_free_eval; try assumption; try lia. 
      apply WF_NZ_Mixed_dstate; assumption.
     apply WF_NZ_Mixed_dstate.
-    apply WF_ceval with c mu. 
+    apply WF_ceval with c (p::mu). 
     assumption. assumption.
 
     assert(s <= option_nat (NSet.min_elt (snd (MVar c))) /\
@@ -2490,8 +2350,8 @@ Proof.
     split. apply le_trans with (option_nat  (NSet.max_elt (snd (MVar c)))).
     apply min_le_max. lia.  split. assumption. 
     apply dstate_eval_dom in H1. destruct H1. rewrite H1 in *.
-    simpl in *.  lia.
-    apply H1.  
+    simpl in *.  lia. 
+    apply H1. discriminate.  
     rewrite (State_dstate_free_eval _ _ (fst (option_free (Free_State F)))
     (snd (option_free (Free_State F)))); try lia. 
     rewrite <-(d_reduced_assoc   mu' 
@@ -2500,7 +2360,7 @@ Proof.
     remember ((d_reduced mu'
     (option_nat (NSet.min_elt (snd (MVar c))))
     (snd (option_free (Free_State F))))).
-    remember ((d_reduced mu
+    remember ((d_reduced (p::mu)
     (option_nat (NSet.min_elt (snd (MVar c))))
     (snd (option_free (Free_State F))))).
     apply State_eval_dstate_reduced_l with c (option_nat (NSet.min_elt (snd (MVar c))))
@@ -2529,392 +2389,89 @@ Proof.
     apply State_dstate_free_eval; try assumption; try lia. 
      apply WF_NZ_Mixed_dstate; assumption.
     apply WF_NZ_Mixed_dstate.
-    apply WF_ceval with c mu. 
+    apply WF_ceval with c (p::mu). 
     assumption. assumption.
 
 Qed.
 
-(*-----------------------------------------------------------------------------------*)
-
-
-Lemma subset_inter_empty: forall x y z,
-NSet.Equal (NSet.inter x y) (NSet.empty)->
-NSet.Subset z x->
-NSet.Equal (NSet.inter z y) (NSet.empty).
-Proof. unfold NSet.Equal in *. unfold NSet.Subset in *. intros. split; intros. 
-       apply H. apply NSet.inter_3. apply H0. apply NSet.inter_1 with y. 
-       assumption. apply NSet.inter_2 with z. assumption.
-       apply In_empty in H1. 
-      destruct H1.  
-       
-Qed.
-
-
-
-Lemma WF_lt: forall s e (mu:list (state s e)),
-mu <> [] ->
-WF_dstate_aux mu -> s<=e .
-Proof. induction mu; intros. destruct H. reflexivity.  
-      destruct a. inversion_clear H0. unfold WF_state in H1. 
-      unfold WF_qstate in H1. lia.        
-       
-Qed.
- 
-
-Lemma Subset_min_max_In': forall a b, 
-(forall i, option_nat (NSet.min_elt b)<= i /\ i <= option_nat (NSet.max_elt b) ->
-NSet.In i b)->
-option_nat (NSet.min_elt b) <= option_nat (NSet.min_elt a) ->
-option_nat (NSet.max_elt a) <= option_nat (NSet.max_elt b)->
-NSet.Subset a b.
-Proof. unfold NSet.Subset. intros a b H' . intros. 
-       assert((NSet.Empty a)\/ ~(NSet.Empty a)).
-       apply Classical_Prop.classic. destruct H2.
-       apply min_empty in H2.  pose H2.
-       apply NSet.min_elt_3 in e. unfold NSet.Empty in e. 
-       apply e in H1. destruct H1. 
-       pose H2.
-       apply  min_not_empty in n.
-       destruct n. pose H3. 
-       apply (@NSet.min_elt_2 _ _ a0) in e; try assumption.
-       apply  max_not_empty in H2.
-       destruct H2. pose H2. 
-       apply (@NSet.max_elt_2 _ _ a0) in e0; try assumption.
-       apply H'. split.  
-       apply le_trans with (option_nat (NSet.min_elt a)).
-       assumption. rewrite H3. simpl. lia. 
-       apply le_trans with (option_nat (NSet.max_elt a)).
-       rewrite H2. simpl. lia. assumption.    
-Qed.
-
-
-
-Lemma inter_empty: forall a b,
-NSet.Equal a (NSet.empty) \/
-NSet.Equal b (NSet.empty) ->
-NSet.Equal (NSet.inter a b) (NSet.empty).
-Proof. unfold NSet.Equal. intros. split; intros. 
-       destruct H. apply H. eapply NSet.inter_1. 
-       apply H0. 
-       apply H. eapply NSet.inter_2. 
-       apply H0. 
-       apply In_empty in H0. destruct H0.    
-Qed.
-
-
-Lemma add_sub_lt_r: forall m n p, 
-m>=n->
-m<p+n-> m-n<p.
-Proof. destruct p; intros. simpl. lia. lia.     
-Qed.
-
-
 
 Import Sorted.
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
-Considered_F_c F1 F2 F3 c-> 
+NSet.Equal (NSet.inter (snd (Free_state F2)) (snd (Free_state F3))) NSet.empty ->
+Considered_Formula F3->
 ({{F1}} c {{F2}}) 
 /\ (NSet.Equal (NSet.inter (fst (Free_state F3)) (fst (MVar c))) (NSet.empty) )
-/\ NSet.Equal (NSet.inter (snd (Free_state F3)) (snd (MVar c))) (NSet.empty)
+/\ ((snd (option_free (Free_State F3)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
+(option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F3))))
 -> {{F1 ⊙ F3}} c {{F2 ⊙ F3}}. 
-Proof.  unfold hoare_triple. intros F1 F2 F3 c HF3. intros. destruct H. 
-        unfold Considered_F_c in HF3.
-        assert(StateMap.this mu<>[]) as H'. 
-        eapply WF_sat_Assert. apply H1. 
+Proof.  unfold hoare_triple. intros F1 F2 F3 c HF3. intros. destruct H0. 
+        
+        assert(StateMap.this mu= [] \/ StateMap.this mu<>[] ) as H'.
+        apply Classical_Prop.classic. destruct H' as[H'| H'].
+        pose H2. apply sat_assert_odot in s0. destruct s0.
+        eapply H0 in H4; try apply H1. 
+        rewrite sat_Assert_to_State in *.
+        apply sat_State_WF_formula in H2. 
+        apply sat_State_WF_formula in H4.
+        inversion_clear H1. rewrite H' in *. 
+        inversion H7; subst. 
+        rewrite <-sat_Assert_to_State. 
+        apply sat_Assert_empty. simpl. split. econstructor.
+        simpl in H2.
+        simpl. split; try assumption. split; try apply  H2; try assumption.
+        econstructor. discriminate. auto. 
+       
         assert(sat_Assert mu F1 -> sat_Assert mu' F2).
-        apply H. assumption. 
+        apply H0. assumption. 
         destruct mu as [mu IHmu].
         destruct mu' as [mu' IHmu']. 
         
-        inversion_clear H0. simpl in H5.
+        inversion_clear H1. simpl in *.
         repeat rewrite sat_Assert_to_State in *.
-        inversion_clear H1.  simpl in *.
-        econstructor. eapply WF_ceval. apply H4. apply H5. 
-         simpl in *.
-        pose H6.
-        rewrite State_eval_odot in s0.
+        inversion_clear H2.  simpl in *.
+
+        econstructor. eapply WF_ceval. apply H1. apply H6. 
+        simpl in *. 
+        rewrite State_eval_odot in H7.
         rewrite State_eval_odot.
-        destruct s0. destruct H7.
+         destruct H7. destruct H7.
         split. 
         assert(sat_Assert (StateMap.Build_slist IHmu') F2).
-        apply H with (StateMap.Build_slist IHmu).
+        apply H0 with (StateMap.Build_slist IHmu).
         apply E_com. assumption. assumption.  rewrite sat_Assert_to_State.
         econstructor. assumption. assumption.
         rewrite sat_Assert_to_State in *.
         inversion_clear H9. assumption.
         split. 
+      
         destruct (option_edc (Free_State F3) None).
         apply rule_f_classic with c mu; try left;
-        try assumption.  apply HF3. apply H2.
+        try assumption; try apply H3. 
+
         assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~NSet.Equal (snd (MVar c)) NSet.empty ).
-apply Classical_Prop.classic.  
-destruct H10. apply rule_f_classic with c mu; try right; try assumption. 
-apply HF3. apply H2.
-        apply rule_f  with  c mu; try assumption.  apply HF3. assumption. 
-        split. apply HF3. 
-        apply dstate_eval_dom in H7. destruct H7. destruct H9.
-        assumption.  
- apply option_eqb_neq in H9. apply Free_State_not_empty; intuition.   apply H2. apply H2.
+        apply Classical_Prop.classic.  
+        destruct H10. apply rule_f_classic with c mu; try right; try assumption.
+        try apply H3. 
 
-
-assert(forall (s e : nat) (mu mu' : list (state s e)),
-WF_dstate_aux mu->
-Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) mu->
-ceval_single c mu mu' -> State_eval_dstate F1 mu -> State_eval_dstate F2 mu').
-intros.
-assert(Sorted (StateMap.Raw.PX.ltk (elt:=qstate s0 e0)) mu'0).
-apply ceval_sorted with c mu0; try assumption.
-assert(ceval c (StateMap.Build_slist H10) (StateMap.Build_slist H13)).
-econstructor. assumption.
-simpl. assumption.   
-assert(sat_Assert (StateMap.Build_slist H10) F1).
-apply sat_Assert_to_State. econstructor.
-assumption. assumption.
-pose (H s0 e0 (StateMap.Build_slist H10) (StateMap.Build_slist H13) H14 H15).
-rewrite sat_Assert_to_State in s1. 
-inversion_clear s1. assumption. 
-
-
-assert(Free_State F1 = None \/ ~(Free_State F1 = None )).
-apply Classical_Prop.classic. destruct H10. 
-pose (dstate_eval_dom  F1 mu H1). 
-destruct o. clear H11. 
-assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
-apply Classical_Prop.classic. 
-destruct H11.
-
-pose H1. 
-apply (@Pure_free_dstate s e) with (l:=s) (r:=s) in s0; try assumption.
-pose H5. 
-assert(ceval_single c (d_reduced mu s s)
-(d_reduced mu' s s)) as c1.
-apply ceval_single_classic; try assumption.
-
-apply H9 in c1; try apply WF_d_reduced; try apply (@d_reduced_sort s e); try lia; try assumption .
-
-apply subset_inter_empty with (Qsys_to_Set s s); try assumption.
-apply inter_empty. left.  rewrite empty_Empty. apply Qsys_to_Set_empty'. lia.
-apply dstate_eval_dom in c1.  destruct c1. 
-apply subset_empty'. apply Free_State_None_empty. rewrite H12. reflexivity. destruct H12.
-lia.    pose (WF_lt s e mu H' H0 ). lia.    
-
-remember ( (option_nat (NSet.min_elt ((snd (MVar c)))) ) ) as l.
-remember ( (option_nat (NSet.max_elt ((snd (MVar c)))) +1) ) as r.
-assert(l<r). rewrite Heqr. rewrite Heql.  
-pose (min_le_max (snd (MVar c))).   lia.    
-pose (ceval_single_dom c mu mu' H0 H5 H' H11).
-apply Subset_min_max_In in s0; try assumption.  
-assert(s <= l /\ l <= r <= e). 
-rewrite Heql. rewrite Heqr. lia.
-
-assert (NSet.Equal (snd (Free_state F3)) NSet.empty \/ (~NSet.Equal (snd (Free_state F3)) NSet.empty)).
-apply Classical_Prop.classic. destruct H14.
-apply inter_empty. right.  assumption.
-
-
-destruct H2. apply r1 in H15; 
-try rewrite <-Heql; try rewrite<- Heqr; try apply HF3; try assumption. 
-
-pose H1.  
-apply (@Pure_free_dstate s e) with (l:=l) (r:=r) in s1; try assumption.
-pose H5.
-apply Reduced_ceval_swap with (l:=l) (r:=r) in c0; try assumption.
-apply H9 in c0; try apply WF_d_reduced; try apply (@d_reduced_sort s e); try lia; try assumption .
-
-apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
-apply Qsys_inter_empty; try lia.  
-rewrite Heql. rewrite Heqr.
- 
-destruct H15.
-
-left.   
-rewrite <-Considered_Formula_max; try apply HF3.
-apply add_sub_lt_r.  
-apply Free_State_snd_gt_0; try apply HF3. 
-intro. destruct H14. 
-apply Free_State_None_empty. rewrite H16. reflexivity. lia.
-
-right.
-rewrite <-Considered_Formula_min; try apply HF3. lia. 
-
-apply dstate_eval_dom  in c0. 
-destruct c0.  apply subset_empty'.
-apply Free_State_None_empty. rewrite H16. reflexivity. 
-pose (Qsys_to_Set_min_max l r H12). destruct a. 
-apply Subset_min_max_In'; 
-intros; try rewrite H17 in *; try rewrite H18 in *.
-apply In_Qsys; try lia.  
-rewrite <-Considered_Formula_min; try apply HF3. destruct H16. lia. 
-rewrite <-Considered_Formula_max; try apply HF3. destruct H16. lia.
- 
-pose (Qsys_to_Set_min_max l r H12). destruct a. 
-apply Subset_min_max_In';
-intros; try rewrite H16 in *; try rewrite H17 in *.
-apply In_Qsys; try lia. lia. lia.  
-
-rewrite H10 in *. simpl in *. lia.  
-pose (dstate_eval_dom  F1 mu H1). 
-destruct o. destruct H10. assumption. 
-
-(* Free_State F1 <> None*)
-assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~ NSet.Equal (snd (MVar c)) NSet.empty).
-apply Classical_Prop.classic. 
-destruct H12. 
-remember ( (fst (option_free (Free_State F1)))) as l.
-remember ( (snd (option_free (Free_State F1)))) as r.
-assert(l<r). rewrite Heqr. rewrite Heql. destruct H11.  lia.   
-assert(s <= l /\ l <= r <= e). 
-rewrite Heql. rewrite Heqr. destruct H11. lia. 
-
-pose H1.  
-apply State_dstate_free_eval with (s':=l) (e':=r) in s0; try apply (@WF_NZ_Mixed_dstate s e); try assumption.
-assert(ceval_single c (d_reduced mu l r)
-(d_reduced mu' l r)) as c0.
-apply ceval_single_classic; try assumption. 
-apply H9 in c0; try apply WF_d_reduced; try apply (@d_reduced_sort s e); try lia; try assumption .
-
-apply subset_inter_empty with (Qsys_to_Set l r); try assumption.  
-rewrite Heql. rewrite Heqr.  
-apply equal_trans with ( NSet.inter (snd (Free_state F1))(snd (Free_state F3))); try assumption.
-apply inter_eq.  rewrite Considered_Formula_min; try apply HF3. 
-destruct HF3. destruct H16. destruct H16. 
-pose (Considered_Formula_max F1 H16).  
-apply add_sub_eq_nz' in e0. rewrite <-e0. 
-apply Considered_Formula_set_eq. assumption.
-apply option_eqb_neq in H10. 
-apply Free_State_not_empty in H10; try assumption. 
-intro. destruct H10. rewrite empty_Empty. assumption.   
-apply  Free_State_snd_gt_0; try apply H16; try assumption. 
-reflexivity.
-
-
-apply dstate_eval_dom  in c0.
-destruct c0.    apply subset_empty'.
-apply Free_State_None_empty. rewrite H15. reflexivity. 
-pose (Qsys_to_Set_min_max l r H13). destruct a. 
-apply Subset_min_max_In'; 
-intros; try rewrite H15 in *; try rewrite H16 in *.
-apply In_Qsys; try lia.   
-rewrite <-Considered_Formula_min; try apply HF3. destruct H15. lia. 
-rewrite <-Considered_Formula_max; try apply HF3. destruct H15. lia.
- 
-rewrite Heql.
-rewrite Heqr. lia.  
-
-remember (min (option_nat (NSet.min_elt ((snd (MVar c)))) ) (fst (option_free (Free_State F1)))) as l.
-remember (max (option_nat (NSet.max_elt ((snd (MVar c)))) +1) (snd (option_free (Free_State F1)))) as r.
-
-
-pose(dstate_eval_dom F1 mu H1). 
-destruct o. destruct H10. assumption. 
-assert(l<r). rewrite Heqr. rewrite Heql. destruct H13. lia.    
-pose (ceval_single_dom c mu mu' H0 H5 H' H12).
-apply Subset_min_max_In in s0; try assumption.  
-assert(s <= l /\ l <= r <= e). 
-rewrite Heql. rewrite Heqr. destruct H13. lia.
-
-   
-pose H1.
-apply State_dstate_free_eval with (s':=l) (e':=r) in s1; try apply (@WF_NZ_Mixed_dstate s e); try assumption.
-pose H5.
-apply Reduced_ceval_swap with (l:=l) (r:=r) in c0; try assumption.
-apply H9 in c0; try apply WF_d_reduced; try apply (@d_reduced_sort s e); try lia; try assumption .
-
-
-
-assert (NSet.Equal (snd (Free_state F3)) NSet.empty \/ (~NSet.Equal (snd (Free_state F3)) NSet.empty)).
-apply Classical_Prop.classic. destruct H16.
-apply inter_empty. right.  assumption.
-
-destruct H2. apply r1 in H17; try apply HF3; try assumption.
-apply subset_inter_empty with (Qsys_to_Set l r); try assumption.
-apply Qsys_inter_empty; try lia.  
-rewrite Heql. rewrite Heqr.
- destruct H17.
-
-left. 
-apply min_glb_lt_iff. 
-rewrite <-Considered_Formula_max; try apply HF3.
-split. apply add_sub_lt_r. 
-apply Free_State_snd_gt_0; try apply HF3. 
-intro. destruct H16.  apply Free_State_None_empty.
-rewrite H18. reflexivity.        lia.      
-apply inter_empty_to_QSys in H8; try apply HF3.
-destruct H8. destruct HF3.  destruct H19.  
-
-apply r2 in H20; try assumption; try apply H19. 
-
-assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
-apply Considered_Formula_not_empty_dom; try apply H19. 
-intro. destruct H16.  apply Free_State_None_empty.
-rewrite H21. reflexivity.  
-lia.  apply H18. assumption. rewrite <-empty_Empty. apply Free_State_not_empty.
-apply H19. apply option_eqb_neq. assumption. rewrite <-empty_Empty. assumption.
-
-assert(fst (option_free (Free_State F3))<snd (option_free (Free_State F3))).
-apply Considered_Formula_not_empty_dom; try apply HF3.
-rewrite option_eqb_neq.
-apply Free_State_not_empty. apply HF3. assumption. lia.  
-
-rewrite <-empty_Empty.
-apply Free_State_not_empty; try apply HF3. 
-apply option_eqb_neq. assumption. 
-rewrite <-empty_Empty.
-assumption.
-
-right.
-rewrite <-Considered_Formula_min; try apply HF3.
-
-apply max_lub_iff.
-split. lia. 
-apply inter_empty_to_QSys in H8; try apply HF3. 
-destruct H8. lia. 
-destruct HF3. destruct H19. destruct H19.  destruct H21.
-pose (Considered_Formula_dom F3 H22) . 
-rewrite <-empty_Empty in H20. 
-apply r2 in H20; try assumption.    lia.
- apply H18. assumption. 
- rewrite option_eqb_neq in H10.
-  apply Free_State_not_empty in H10; try assumption.
-  rewrite <-empty_Empty. assumption.
-rewrite <-empty_Empty.
-apply Free_State_not_empty; try apply HF3. 
-apply option_eqb_neq. assumption. 
-rewrite <-empty_Empty. assumption.
-
-
-apply dstate_eval_dom  in c0.
-destruct c0. apply subset_empty'.  
-apply  Free_State_None_empty. rewrite H18. reflexivity.
-pose (Qsys_to_Set_min_max l r H14). destruct a. 
-apply Subset_min_max_In'; 
-intros; try rewrite H19 in *; try rewrite H20 in *.
-apply In_Qsys; try lia.   
-rewrite <-Considered_Formula_min; try apply HF3. destruct H18. lia. 
-rewrite <-Considered_Formula_max; try apply HF3. destruct H18. lia.
- 
-pose (Qsys_to_Set_min_max l r H14). destruct a. 
-apply Subset_min_max_In';
-intros; try rewrite H16 in *; try rewrite H17 in *.
-apply In_Qsys; try lia. lia. lia.
-
-rewrite Heql.
-rewrite Heqr. 
-split.  
-apply  le_min_r. 
-apply le_max_r. 
+        apply rule_f  with  c mu; try assumption.
+        split. assumption.
+        apply Free_State_not_empty. assumption.
+        rewrite <-option_eqb_neq. intuition. apply H3.
+        apply H3. assumption.
 Qed.
 
 
 Theorem rule_qframe': forall (F1 F2 F3: State_formula) c,
-Considered_F_c F1 F2 F3 c ->
+NSet.Equal (NSet.inter (snd (Free_state F2)) (snd (Free_state F3))) NSet.empty ->
+Considered_Formula F3->
 ({{F1}} c {{F2}}) 
 /\ (NSet.Equal (NSet.inter (fst (Free_state F3)) (fst (MVar c))) (NSet.empty) )
-/\ NSet.Equal (NSet.inter (snd (Free_state F3)) (snd (MVar c))) (NSet.empty)
+/\ ((snd (option_free (Free_State F3)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
+(option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F3))))
 ->  {{F3 ⊙ F1}} c {{F3 ⊙ F2}}.
 Proof. intros.
  eapply rule_conseq. apply rule_qframe.
- apply H. split. apply H0.   apply H0. 
+ apply H. assumption. split. apply H1.   apply H1. 
  apply rule_OdotC.
  apply rule_OdotC.
 Qed.
@@ -2923,17 +2480,8 @@ Qed.
 Theorem rule_qframe_P: forall (P1 P2 P3: Pure_formula) c,
 ({{P1}} c {{P2}}) /\ (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 
 ->  {{P3 /\p P1}} c {{P3 /\p P2}}.
-Proof. 
-intros. unfold hoare_triple in *. intros. apply SAnd_PAnd_eq. 
-apply SAnd_PAnd_eq in H1.
-rewrite sat_assert_conj in *. split. destruct H1.
-rewrite sat_Assert_to_State  in *. inversion_clear H0.
-destruct mu as [mu IHmu].
-destruct mu' as [mu' IHmu']. simpl in *.
-econstructor.  
-eapply WF_ceval.  apply H3. apply H4.
-simpl. 
-apply rule_f_classic with c mu. unfold Considered_Formula. auto.
-left. simpl. reflexivity. assumption. inversion_clear H1.  assumption.
-assumption. apply H. destruct H. eapply H. apply H0. apply H1.
-Qed.
+Proof.
+intros. eapply rule_conseq; try apply rule_OdotO. 
+apply rule_qframe'. simpl. apply inter_empty. left. reflexivity.
+simpl. auto. simpl. split. apply H. split. apply H. left. lia.
+Qed. 

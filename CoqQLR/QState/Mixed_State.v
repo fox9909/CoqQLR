@@ -146,7 +146,7 @@ Qed.
 
 
 
-(*Uρ is mixed*)
+(*U × ρ is mixed*)
 Lemma pure_state_vector_unitary_pres : forall {n} (ϕ : Vector n) (U : Square n),
   Pure_State_Vector ϕ -> WF_Unitary U -> Pure_State_Vector (U × ϕ).
 Proof. 
@@ -1241,10 +1241,12 @@ Qed.
 
 Lemma Cauchy_Schwartz_ver1' : forall {n} (u v : Vector n),
 WF_Matrix v ->WF_Matrix u->
-v<>Zero-> u <> Zero ->
+u<>Zero->
 ((exists c, c .*  u = v) -> False)->
   (Cmod ⟨u,v⟩)^2 < (fst ⟨u,u⟩) * (fst ⟨v,v⟩).
-Proof. intros n u v Hw Hu H01 H02 Hc. intros.  
+Proof. intros n u v Hw Hu H02 Hc. intros.
+      assert(v<>Zero)as H01. 
+      intro. destruct Hc. exists 0. Msimpl. rewrite H. reflexivity.
        - assert (H := CS_key_lemma u v).
          apply real_gt_0_aux in H.
          lra.  assert(0 <=
@@ -1509,7 +1511,6 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       apply Rlt_le_trans with (fst ⟨ x0, x0 ⟩ * fst ⟨ x, x ⟩)%R.
       apply Cauchy_Schwartz_ver1'.
       apply H0. apply H3.  
-      apply Pure_State_Vector_not_Zero. assumption.
       apply Pure_State_Vector_not_Zero. assumption.
       intro. destruct H2.  destruct H5. 
       rewrite<-H2. exists (/ (x1* x1 ^*)).

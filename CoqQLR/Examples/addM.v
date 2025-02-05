@@ -164,6 +164,26 @@ Qed.
 #[export] Hint Rewrite @kron_mixed_product @Norm0 @Norm1 @NormH @norm_kron  @MmultH_xplus using (auto 100 with wf_db): M_db.
 
 
+Lemma Pure_State_Vector_xplus:
+Pure_State_Vector ∣+⟩ .
+Proof. unfold Pure_State_Vector. unfold "∣+⟩".
+       split; auto_wf. 
+       rewrite Mscale_adj.
+       rewrite Mplus_adjoint.
+       rewrite Mscale_mult_dist_r.
+       rewrite Mscale_mult_dist_l.
+       rewrite Mscale_assoc.
+       rewrite Mmult_plus_distr_l.
+       repeat rewrite Mmult_plus_distr_r.
+       rewrite<- base_qubit0.
+       rewrite<- base_qubit1.
+        repeat rewrite base_inner_1; try lia. 
+       repeat rewrite base_inner_0; try lia.
+       unfold c_to_Vector1. Msimpl.
+       solve_matrix.
+Qed.
+
+
 (*---------------------------------------addM-----------------------------------------------*)
 
 Local Open Scope com_scope.
@@ -197,7 +217,7 @@ Ltac seman_sovle:=
   rewrite sat_Assert_to_State in *;
    rewrite seman_find in *;
    try match goal with 
-   H: WF_dstate ?mu /\ StateMap.this ?mu <> [] /\ 
+   H: WF_dstate ?mu /\ WF_formula ?P /\ 
         (forall x:cstate, d_find x ?mu <> Zero ->?Q)
    |-_ => destruct H as [H11 H12]; destruct H12 as [H21 H22];
    split; try assumption; split; try assumption; intros
@@ -255,6 +275,11 @@ match i with
 end.
 
 
+Ltac addM_WF_formula_solve:=
+  simpl; split; [auto | split ;[ right; try rewrite <-base_qubit0;
+try rewrite <-base_qubit1; assert(4=2*2) as H'; try lia; try rewrite H'; 
+apply pure_state_vector_kron; try apply Pure_State_Vector_base; try lia |  lia ] ].
+
 Local Open Scope nat_scope.
 Lemma correctness_addM:  
 {{ BTrue }}
@@ -265,29 +290,27 @@ Proof.
 (*QInit*)
 eapply rule_seq. eapply rule_QInit. simpl sub.  
 eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
-eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (2) >[ 1, 2]).
-unfold Considered_F_c. 
-simpl. repeat rewrite <-empty_Empty. intuition. 
+eapply rule_qframe' with (F2:= | ∣ 0 ⟩_ (2) >[ 1, 2]); simpl; try lia. 
+apply Qsys_inter_empty'; try lia.
 split. eapply rule_QInit. split. apply inter_empty. left.
-reflexivity. apply Qsys_inter_empty';try lia.  
+reflexivity. lia.  
 
 (*QUnit*)
-eapply rule_seq. eapply rule_qframe with (F2:=QExp_s 0 1 ∣+⟩).
-unfold Considered_F_c. 
-simpl;  rewrite Qsys_inter_empty'; try lia. intuition.
+eapply rule_seq.
+eapply rule_qframe with (F2:=QExp_s 0 1 ∣+⟩);
+simpl;  try apply Qsys_inter_empty'; try lia.
  split. 
 eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
 unfold U_v. simpl.  rewrite kron_1_l; auto_wf.
 rewrite kron_1_r; auto_wf. Msimpl.  apply implies_refl. simpl.
 split. apply inter_empty. left.
-reflexivity. rewrite Qsys_inter_empty'; try  lia.  
+reflexivity. try  lia.  
 
 eapply rule_seq.
-eapply rule_qframe' with (F2:=QExp_s 1 2 ∣+⟩).
-unfold Considered_F_c.
-simpl; repeat rewrite<-empty_Empty; rewrite Qsys_inter_empty'; try lia. intuition. 
-split; simpl; repeat rewrite<-empty_Empty; try rewrite Qsys_inter_empty'; try lia.
+eapply rule_qframe' with (F2:=QExp_s 1 2 ∣+⟩);
+simpl; try apply Qsys_inter_empty'; try lia. 
+split.
 eapply rule_conseq_l'. 
 eapply rule_QUnit_One; auto_wf; lia. 
 unfold U_v. simpl.  rewrite kron_1_l; auto_wf.
@@ -313,6 +336,8 @@ apply rule_Conj_two.  apply Assn_true_P. simpl. unfold not. apply In_empty.
 apply rule_PT.
  
 eapply rule_QMeas ; try lia; auto_wf.
+apply pure_state_vector_kron; try apply Pure_State_Vector_xplus.
+
 unfold U_v. simpl.
 rewrite (H 0). rewrite (H 1).
 Msimpl.   
@@ -338,13 +363,19 @@ eapply rule_sum_pro with (pF1:=([((/ 2)%R, P2_0 0 /\s | ∣0⟩ ⊗ ∣0⟩ >[ 0
 ((/ 2)%R,P2_1 1 /\s | ∣1⟩ ⊗ ∣1⟩ >[ 0, 2])]));
 simpl.  econstructor. lra. econstructor. lra. econstructor.
 econstructor. lra. econstructor. lra. econstructor.
+
+
+econstructor;[ | econstructor ;[ |econstructor] ]; simpl;
+split; auto; split; auto_wf; lia. 
+econstructor;[ | econstructor ;[ |econstructor] ]; simpl;
+split; auto; split; auto_wf; lia.   
 lra.
 eapply rule_conseq_l with 
 ( | ∣0⟩ ⊗ ∣+⟩ >[ 0, 2] /\s big_Sand (fun i : nat => PAssn v2 i (P2_0 i)) 2).
 unfold P2_0. unfold P1. simpl.
 
 implies_trans_solve 0 (rule_ConjC);
-apply rule_CconjCon; try apply implies_refl; 
+apply rule_ConjCon; try apply implies_refl; 
 apply rule_Conj_two; try apply rule_Conj_two;
 try apply rule_PT;
 implies_trans_solve 1 (Assn_conj_P);
@@ -360,12 +391,15 @@ destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
+apply pure_state_vector_kron; 
+try rewrite <-base_qubit0; try apply Pure_State_Vector_base; try apply Pure_State_Vector_xplus; try lia.  
 unfold U_v. simpl.
 assert (forall i:nat,( ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (∣ i ⟩_ (2)  × (∣ i ⟩_ (2)) †))
            (I (1))) (∣0⟩ ⊗ ∣+⟩))) ) =
            (I 2 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †) ⊗ I 1 × (∣0⟩ ⊗ ∣+⟩))).
-reflexivity. 
- rewrite (H0 0). rewrite (H0 1). Msimpl.
+reflexivity.
+
+rewrite (H0 0). rewrite (H0 1). Msimpl.
 assert ((
 (@Mmult (2*2*1) (2*2*1) (1*1) (I 2 ⊗ ∣1⟩⟨1∣)
       (∣0⟩ ⊗ ∣+⟩)))= (I 2 ⊗ ∣1⟩⟨1∣ × (∣0⟩ ⊗ ∣+⟩)))%R.
@@ -399,7 +433,7 @@ eapply rule_conseq_l with
 simpl.
 
 implies_trans_solve 0 (rule_ConjC);
-apply rule_CconjCon; try apply implies_refl; 
+apply rule_ConjCon; try apply implies_refl; 
 apply rule_Conj_two; try apply rule_Conj_two;
 try apply rule_PT;
 implies_trans_solve 1 (Assn_conj_P);
@@ -416,6 +450,8 @@ destruct H0. apply NSet.add_3 in H0. eapply In_empty. apply H0.
 
 eapply rule_conseq_r'.
 eapply rule_QMeas ; try lia; auto_wf.
+apply pure_state_vector_kron; 
+try rewrite <-base_qubit1; try apply Pure_State_Vector_base; try apply Pure_State_Vector_xplus; try lia.  
 unfold U_v. simpl.
 assert (forall i:nat,(
   ((@Mmult 4 4 1  (@kron 4 4 1 1 (I 2 ⊗ (∣ i ⟩_ (2) × (∣ i ⟩_ (2)) †))
@@ -471,7 +507,13 @@ eapply rule_sum. econstructor. lra. econstructor.  lra.
 econstructor. lra. econstructor.  lra. econstructor.
 simpl. reflexivity.
 
-unfold P2_0. unfold P2_1. unfold P1.  
+econstructor; simpl; try split; auto; try split; auto_wf; try lia.  
+econstructor; simpl; try split; auto; try split; auto_wf; try lia.  
+econstructor; simpl; try split; auto; try split; auto_wf; try lia.  
+econstructor; simpl; try split; auto; try split; auto_wf; try lia.  
+
+
+unfold P2_0. unfold P2_1. unfold P1.
 
 econstructor; try apply Forall_two_cons; 
 try apply Forall_two_cons;
@@ -481,8 +523,7 @@ try eapply rule_SAssgn;
 implies_trans_solve 1 Assn_comm;
 implies_trans_solve 1 Assn_conj_F; simpl; try unfold not; try apply In_empty;
 implies_trans_solve 1 rule_ConjC;
-eapply rule_CconjCon; try apply implies_refl;
-
+eapply rule_ConjCon; try apply implies_refl;
 
 classic_slove_aux.
 
@@ -493,7 +534,9 @@ eapply rule_OCon with (nF2:=
   [( SPure <{ v ' = 0 }> );
            (SPure <{ v ' = 1 }> );
            (SPure <{ v ' = 1 }>);
-           (SPure <{ v ' = 2 }>) ]).  
+           (SPure <{ v ' = 2 }>) ]).
+
+econstructor;[|econstructor;[|econstructor;[|econstructor] ] ]; simpl; try auto.
 rewrite pro_to_npro_formula_length.
 rewrite get_pro_formula_length. reflexivity.
 rewrite Heqpost; simpl; try lia;
@@ -509,7 +552,8 @@ eapply rule_OCon with (nF2:=
    (SPure <{ v ' =  1 }> );
     (SPure <{ v ' =  1 }> );
    (SPure <{ v ' <>  1 }>) ]); try reflexivity;
-try simpl; classic_slove. 
+try simpl; classic_slove.
+econstructor;[|econstructor;[|econstructor;[|econstructor] ] ]; simpl; try auto.
 simpl.  OpLusC_OMerge_sovle 2 1.
 OpLusC_OMerge_sovle 0 1.
 assert(( / 4 +  / 4)%R= (/2)%R).

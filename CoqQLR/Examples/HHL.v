@@ -134,7 +134,7 @@ Parameter delt_n:nat->nat.
 Hypothesis Hmn: ( (n>0)%nat /\ (m>0)%nat).
 Hypothesis HA: WF_Matrix A .
 Hypothesis Hb: WF_Matrix b /\ norm b =1.
-Hypothesis Hv_n:forall j, WF_Matrix (v_n j) /\ norm (v_n j)=1.
+Hypothesis Hv_n: (forall j, WF_Matrix (v_n j) /\ norm (v_n j)=1) /\ (forall i j, i<> j->(v_n i) †  × v_n j = C0).
 Hypothesis (Hlamda: forall j, lamda_n j <> 0).
 Hypothesis HB_decom: big_sum (fun j=>(b_n j) .* (v_n j)) (2^m)= b.
 Hypothesis HA_decom: big_sum (fun j=>(lamda_n j) .* Mmult (v_n j) (adjoint (v_n j))) (2^m)= A.
@@ -152,7 +152,7 @@ Hypothesis (Ht: forall j:nat, and (delt_n j < 2^n)%nat  ((lamda_n j * t/ (2*PI))
 
 Definition  U_f (i:nat):= exp_U U i.
 Definition  phi (j:nat):= (lamda_n j * t) / (2 * PI).
-Definition  phi' (j:nat) := ((phi j) * (2^n))%R.
+Definition  phi' (j:nat) := ((phi j) * (2^n)).
 Definition  adj_Uf (i:nat) := adjoint (U_f i).
 
 Definition  U_c (j:nat): Matrix 2 2:=
@@ -838,6 +838,132 @@ Proof. unfold NSet.Equal. intros. split; intros.
 Qed.
 
 
+Lemma norm_Uc:forall x0,
+((√ (1 - c ^ 2 / phi' x0 ^ 2) .* ∣ 0 ⟩_ (2)
+.+ c / phi' x0 .* ∣ 1 ⟩_ (2)) †
+× (√ (1 - c ^ 2 / phi' x0 ^ 2) .* ∣ 0 ⟩_ (2)
+  .+ c / phi' x0 .* ∣ 1 ⟩_ (2)))=C1 .
+Proof. intros.  pose HU_c. destruct a.
+destruct H0.
+pose Ht. destruct (a x0).
+unfold phi'. unfold phi.
+rewrite H3. 
+rewrite <-(H1 (delt_n x0)).
+assert(Pure_State_Vector ∣ 0 ⟩_ (2)). apply Pure_State_Vector_base.
+lia.  
+pose (pure_state_vector_unitary_pres (∣ 0 ⟩_ (2))  (U_c (delt_n x0))
+H4 (H ((delt_n x0))) ).
+destruct p. rewrite H6. unfold c_to_Vector1. Msimpl. reflexivity.
+apply INR_not_0.
+rewrite <-H3. 
+apply Rmult_integral_contrapositive_currified; try lra.
+apply Rmult_integral_contrapositive.
+split. apply Rmult_integral_contrapositive_currified.
+apply Hlamda.  pose Ht'. lra. apply Rinv_neq_0_compat.
+apply Rmult_integral_contrapositive. 
+split. lra. apply PI_neq0. apply pow_nonzero.
+lra.
+Qed.
+
+
+Lemma pure_state_vector_meas:
+Pure_State_Vector
+(big_sum (fun i : nat => b_n i .* ∣ 0 ⟩_ (2 ^ n) ⊗ v_n i
+      ⊗ (√ (1 - c ^ 2 / phi' i ^ 2)
+         .* ∣ 0 ⟩_ (2)
+         .+ c / phi' i .* ∣ 1 ⟩_ (2))) 
+     (2 ^ m)).
+Proof.
+
+unfold Pure_State_Vector. split.
+apply WF_Msum. intros.
+apply WF_kron; type_sovle'.
+apply WF_kron;type_sovle'. 
+apply WF_scale. apply WF_base. apply pow_gt_0.
+apply Hv_n. auto_wf.
+pose Hb. pose HB_decom. 
+remember ((fun i : nat =>
+(b_n i .* ∣ 0 ⟩_ (2 ^ n) ⊗ v_n i
+ ⊗ (√ (1 - c ^ 2 / phi' i ^ 2)
+    .* ∣ 0 ⟩_ (2)
+    .+ c / phi' i .* ∣ 1 ⟩_ (2))) )).
+rewrite Msum_adjoint.
+assert ((fun i : nat =>
+@adjoint (2 ^ n * 2 ^ m * 2) 1 (m0 i))=
+(fun i : nat =>
+@adjoint (2 ^ n * 2 ^ m * 2) (1 * 1 * 1) (m0 i))).
+apply functional_extensionality; intros. f_equal.
+rewrite H.
+rewrite Mmult_Msum_distr_r.
+erewrite big_sum_eq_bounded;
+[| intros; rewrite Mmult_Msum_distr_l; try reflexivity ].
+
+erewrite big_sum_eq_bounded;
+[ | intros; apply big_sum_unique; exists x0 ; split; try lia; split;[reflexivity|] ].
+erewrite (big_sum_eq_bounded _ (fun x0 => (b_n x0 .* v_n x0) † × (b_n x0 .* v_n x0))).
+destruct a.  
+rewrite <-e in H1.
+apply norm_1_pure_vec in H1.
+destruct H1.
+rewrite Msum_adjoint in H2.  
+rewrite Mmult_Msum_distr_r in H2.
+erewrite big_sum_eq_bounded in H2;
+[| intros; rewrite Mmult_Msum_distr_l; try reflexivity ].
+erewrite big_sum_eq_bounded in H2;
+[ | intros; apply big_sum_unique; exists x0 ; split; try lia; split;[reflexivity|] ].
+apply H2.
+intros. rewrite Mscale_adj. rewrite Mscale_mult_dist_r.
+rewrite Mscale_mult_dist_l. rewrite Mscale_assoc.
+pose Hv_n. destruct a. rewrite H7; try lia. 
+unfold c_to_Vector1.
+Msimpl. reflexivity.  
+apply WF_Msum. intros. apply WF_scale. apply Hv_n.
+
+ intros ; rewrite Heqm0; rewrite Mscale_kron_dist_l; rewrite <-Mscale_kron_dist_r ;
+repeat rewrite kron_adjoint;
+remember (⟨ 0 ∣_ (2 ^ n) ⊗ (b_n x0 .* v_n x0) †
+⊗ (√ (1 - c ^ 2 / phi' x0 ^ 2) .* ∣ 0 ⟩_ (2)
+   .+ c / phi' x0 .* ∣ 1 ⟩_ (2)) †);
+remember ((∣ 0 ⟩_ (2 ^ n) ⊗ (b_n x0 .* v_n x0)
+⊗ (√ (1 - c ^ 2 / phi' x0 ^ 2) .* ∣ 0 ⟩_ (2)
+   .+ c / phi' x0 .* ∣ 1 ⟩_ (2)))).
+
+assert( (@Mmult 1 (2 ^ n * 2 ^ m * 2) 1 m1 m2) = @Mmult (1 * 1 * 1)
+(2 ^ n * 2 ^ m * 2)  (1 * 1 * 1) m1 m2);
+[ f_equal | ]. rewrite H1; rewrite Heqm1; rewrite Heqm2;
+repeat rewrite kron_mixed_product;
+rewrite base_inner_1.
+ rewrite norm_Uc.
+unfold c_to_Vector1;
+Msimpl. reflexivity.
+apply WF_mult. apply WF_adjoint.
+apply WF_scale. apply Hv_n.
+apply WF_scale. apply Hv_n.
+apply pow_gt_0. 
+
+intros. rewrite Heqm0. 
+repeat rewrite kron_adjoint.
+rewrite Mscale_adj.
+rewrite Mplus_adjoint.
+repeat rewrite Mscale_adj.
+remember ((b_n x0) ^* .* ⟨ 0 ∣_ (2 ^ n) ⊗ (v_n x0) †
+⊗ ((√ (1 - c ^ 2 / phi' x0 ^ 2)) ^* .* ⟨ 0 ∣_ (2)
+   .+ (c / phi' x0) ^* .* ⟨ 1 ∣_ (2)));
+remember ((b_n x' .* ∣ 0 ⟩_ (2 ^ n) ⊗ v_n x'
+⊗ (√ (1 - c ^ 2 / phi' x' ^ 2) .* ∣ 0 ⟩_ (2)
+   .+ c / phi' x' .* ∣ 1 ⟩_ (2))));
+
+assert( (@Mmult 1 (2 ^ n * 2 ^ m * 2) 1 m1 m2) = @Mmult (1 * 1 * 1)
+(2 ^ n * 2 ^ m * 2)  (1 * 1 * 1) m1 m2).
+f_equal. rewrite H3.
+rewrite Heqm1. rewrite Heqm2.
+repeat rewrite kron_mixed_product.
+pose Hv_n. destruct a0. rewrite H5; try lia. 
+unfold c_to_Vector1.
+Msimpl. reflexivity.  
+Qed.
+
+
 
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
 Proof. 
@@ -854,85 +980,68 @@ Proof.
       {eapply rule_conseq_l. apply rule_PT. eapply rule_QInit. }  
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotE.
-       apply rule_qframe'; [ | split; try eapply rule_QInit].
-      unfold Considered_F_c.
-      simpl. rewrite H2. rewrite H3. 
-      rewrite Nat.sub_add; try lia.  
-      split. try reflexivity. split;  try lia. rewrite <-empty_Empty.
-      intuition. 
-        
-       simpl. rewrite Qsys_inter_empty'; try lia. 
-       split. apply inter_empty. left. reflexivity. left. lia.   
+       apply rule_qframe'; [simpl | simpl | split; try eapply rule_QInit].
+        apply Qsys_inter_empty'; try lia. lia.
+        simpl.   split;  try lia.  apply inter_empty. left. reflexivity. 
        } 
         eapply rule_seq.
       {eapply rule_conseq_l.  apply rule_OdotE. 
-      apply rule_qframe'; [ | split; try eapply rule_QInit].
-      unfold Considered_F_c. simpl. 
-      rewrite H4. rewrite H5. rewrite Nat.sub_add; try lia. 
-      split; try reflexivity. split. lia.
-       rewrite <-empty_Empty. intuition. 
-       simpl.  split. apply inter_empty. right. reflexivity.
-       rewrite Qsys_union; try lia.   rewrite Qsys_inter_empty'; try lia. 
+      apply rule_qframe'; [simpl | simpl | split; try eapply rule_QInit]; try lia; try simpl.
+      rewrite inter_union_dist. apply union_empty.
+      split;  rewrite Qsys_inter_empty'; try lia. 
+      split. apply inter_empty. right. reflexivity.
+      rewrite H4. rewrite H5. lia.
        }
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
        eapply rule_qframe'; 
-       [ | split; [eapply rule_qframe; [| split; try eapply rule_QUnit_One' ] | ] ].
-       unfold Considered_F_c. simpl.  rewrite H2. rewrite H3.
-       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-       rewrite Qsys_union; try lia.  rewrite Qsys_inter_empty'; try lia. 
-       unfold Considered_F_c. simpl.  rewrite H2. rewrite H3.
-       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-        rewrite Qsys_inter_empty'; try lia. lia.  
-       simpl.  split. apply inter_empty. left. reflexivity.
-       rewrite Qsys_inter_empty'; try lia.  simpl. 
+       [simpl  | simpl | split; [eapply rule_qframe; [ simpl | simpl | split; try eapply rule_QUnit_One' ] | ] ]; try simpl; try lia.
+       rewrite inter_comm.
+       rewrite inter_union_dist. apply union_empty.
+      split;  rewrite Qsys_inter_empty';  lia. 
+      rewrite Qsys_inter_empty'; try lia. 
+      split. apply inter_empty. right. reflexivity.
+      rewrite H2. rewrite H3. lia. 
        split. apply inter_empty. left. reflexivity.
-       rewrite Qsys_inter_empty'; try lia.   }
+       rewrite H2. rewrite H3. lia. 
+        }
         assert(m=n+m-n). lia. destruct H6.  rewrite U_vb. 
         eapply rule_seq.
-      {eapply rule_qframe;[|split; try eapply rule_QUnit_One'].
-       unfold Considered_F_c.   
-       simpl.   rewrite H0. rewrite H1.
-       rewrite Nat.sub_add; try lia. split; try reflexivity. split; try  lia.
-         rewrite Qsys_inter_empty'; try lia. lia.   
-       simpl.  split. apply inter_empty. left. apply union_empty.
-       split; reflexivity. 
-       rewrite Qsys_union; try lia.  rewrite Qsys_inter_empty'; try lia. 
+      {eapply rule_qframe;[ | |split; try eapply rule_QUnit_One']; try simpl; try lia.
+      rewrite inter_union_dist. apply union_empty.
+      split;  rewrite Qsys_inter_empty';  lia.
+         split. apply inter_empty. left. apply union_empty.
+       split; reflexivity.
+       rewrite H0. rewrite H1. lia.  
        } 
         assert(n=n-0). lia. destruct H6. rewrite Had_N'. 
         eapply rule_seq.
       {eapply rule_conseq_l. apply rule_OdotA.
        eapply rule_qframe;
-       [ |split; [eapply rule_conseq_l; [apply rule_odotT | eapply rule_conseq_l;
+       [| |split; [eapply rule_conseq_l; [apply rule_odotT | eapply rule_conseq_l;
        [apply rule_Separ | assert(m=n+m-n); try lia; destruct H6;
        assert(n=n-0); try lia; destruct H6;
-       rewrite simpl_HB; apply rule_QUnit_Ctrl ] ] | ] ].
-       unfold Considered_F_c.  simpl.
-       split. destruct a.   
-       pose (Qsys_to_Set_not_empty 0 n H6). 
-       pose (Qsys_to_Set_not_empty n (n+m) H).
-       pose (max_union (Qsys_to_Set 0 n)
-       (Qsys_to_Set n (n + m))). destruct a. destruct H9.
-       rewrite H10; try assumption. 
-       pose (min_union (Qsys_to_Set 0 n)
-       (Qsys_to_Set n (n + m))). destruct a. destruct H12.
-       rewrite H13; try assumption.
-       rewrite H0.  rewrite H1.  rewrite H2. rewrite H3. 
-        rewrite max_r; try lia.  
-        rewrite (Nat.sub_add  1 (n+m)); try lia. simpl.
-        rewrite Qsys_union; try lia. reflexivity. 
-      split. lia.  rewrite Qsys_union; try lia.
-      rewrite Qsys_inter_empty'; try lia.   lia.     
-      simpl. split. apply inter_empty. left. reflexivity. 
-      rewrite Qsys_union; try lia. rewrite Qsys_inter_empty'; try lia.   } 
+       rewrite simpl_HB; apply rule_QUnit_Ctrl ] ] | ] ]; try simpl; try lia.
+       rewrite Qsys_inter_empty';  lia.  
+      split. apply inter_empty. left. reflexivity.
+       destruct a.   
+      pose (Qsys_to_Set_not_empty 0 n H6). 
+      pose (Qsys_to_Set_not_empty n (n+m) H).
+      pose (max_union (Qsys_to_Set 0 n)
+      (Qsys_to_Set n (n + m))). destruct a. destruct H9.
+      rewrite H10; try assumption. 
+      pose (min_union (Qsys_to_Set 0 n)
+      (Qsys_to_Set n (n + m))). destruct a. destruct H12.
+      rewrite H13; try assumption.
+      rewrite H0.  rewrite H1.  rewrite H2. rewrite H3. 
+       rewrite max_r; try lia.  
+          } 
        rewrite simpl_Uf. eapply rule_seq.
-      {apply rule_qframe;[|split; try eapply rule_QUnit_One'].
-      unfold Considered_F_c. simpl.
-      rewrite H0. rewrite H1. rewrite Nat.sub_add; try lia.
-      rewrite Qsys_inter_empty'; try lia. split; try reflexivity; try lia.   
-       lia. simpl.  
-      split. apply inter_empty. left. reflexivity. 
-      rewrite Qsys_inter_empty'; try lia.  } 
+      {apply rule_qframe;[ | |split; try eapply rule_QUnit_One']; try simpl; try lia.
+      rewrite Qsys_inter_empty';  lia.  
+      split. apply inter_empty. left. reflexivity.
+      rewrite H0. rewrite H1. lia. 
+      } 
        assert(n=n-0). lia. destruct H6. assert(n+m=n+m-0). lia.
       destruct H6. rewrite simpl_QFT'. eapply rule_seq.
       {eapply rule_conseq_l. apply rule_odotT. 
@@ -948,20 +1057,39 @@ Proof.
      {apply rule_QUnit_One'. lia. }  rewrite simpl_QFT. eapply rule_seq.
      {eapply rule_QUnit_Ctrl. lia. }  rewrite simpl_Uf'. eapply rule_seq.
      {apply rule_QUnit_One'. lia. } rewrite simpl_H.
-     {eapply rule_conseq. eapply rule_QMeas with (s:=0) (e:=n+m+1)(P:=P).  lia. 
+     {eapply rule_conseq;
+      [eapply rule_QMeas with (s:=0) (e:=n+m+1)(P:=P);
+     [  | ] | apply rule_Conj_two; [ apply implies_refl | ]  | ] .
+       lia. 
+       assert((2 ^ n * 2 ^ m * 2)=(2 ^ (n + m + 1 - 0))).
+       rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
+       simpl. reflexivity. destruct H6.
+       apply pure_state_vector_meas. 
        rewrite add_sub_eq. unfold P. simpl. 
-      apply rule_Conj_two. apply implies_refl.
-      implies_trans_solve 0 rule_PT.  
-      apply rule_Conj_two; try apply rule_Conj_two;try apply rule_PT; try apply Assn_true_P;
+      (* apply rule_Conj_two. 
+      implies_trans_solve 0 rule_PT.   *)
+      apply rule_Conj_two; try apply rule_Conj_two;
+      try apply rule_PT;  implies_trans_solve 0 rule_PT; try apply Assn_true_P;
        unfold not; simpl;  apply In_empty.
       rewrite add_sub_eq. unfold P. simpl. 
       eapply implies_trans.  
       eapply  rule_Oplus. simpl.
-      eapply rule_OCon'. simpl. econstructor.
+      eapply rule_OCon'.
+      econstructor; simpl; auto.
+    
+      econstructor. simpl.
+       split; try split; try lia.
+       apply WF_kron;  try apply WF_kron; try lia; try auto_wf.
+       rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
+       simpl. reflexivity. apply WF_base. apply pow_gt_0.
+       apply Hx.
+        econstructor.
+      simpl. econstructor.
+     
       implies_trans_solve 0 rule_ConjC.
-        eapply rule_CconjCon. apply rule_PT. apply implies_refl.
+        eapply rule_ConjCon. apply rule_PT. apply implies_refl.
        econstructor.  implies_trans_solve 0 rule_ConjC.
-        eapply rule_CconjCon.     rewrite simpl_QMeas.
+        eapply rule_ConjCon.     rewrite simpl_QMeas.
     apply implies_refl.
         classic_slove_aux. econstructor. } }
   { implies_trans_solve 0 rule_OdotE.
@@ -985,7 +1113,11 @@ assert([(1%R, <{ true }> /\s <{ (v) ' = 0 }>);
 (0%R, s0 /\s <{ ~ (v) ' = 0 }>)]=
 swap_list [(0%R, s0 /\s <{ ~ (v) ' = 0 }>); (1%R, <{ true }> /\s <{ (v) ' = 0 }>)] 0 ).
 reflexivity. rewrite H7. apply rule_POplusC. apply sat_Pro_State'.
-rewrite sat_Assert_to_State. assumption. }
+rewrite sat_Assert_to_State. split; try assumption. simpl in *.
+split; auto. rewrite Heqs0. simpl.
+split; try lia. apply WF_kron; try apply WF_kron;  try apply WF_base; try apply pow_gt_0; try lia;
+try apply Hx. rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
+ simpl. reflexivity.   }
   { implies_trans_solve 0 rule_Conj_split_l.    
      assert(1=(1 * 1)). lia. destruct H6.
     assert(2^(n+m-0)=2 ^ n * 2 ^ m). type_sovle'. destruct H6. 

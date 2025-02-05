@@ -723,7 +723,7 @@ Ltac seman_sovle:=
   rewrite sat_Assert_to_State in *;
    rewrite seman_find in *;
    try match goal with 
-   H: WF_dstate ?mu /\ StateMap.this ?mu <> [] /\ 
+   H: WF_dstate ?mu /\ WF_formula ?P /\ 
         (forall x:cstate, d_find x ?mu <> Zero ->?Q)
    |-_ => destruct H as [H11 H12]; destruct H12 as [H21 H22];
    split; try assumption; split; try assumption; intros
@@ -1280,8 +1280,43 @@ Proof.   pose Hr. pose HtL. pose H. pose Hr.
          apply s_r_t_relation. assumption.  
          intros.   apply s_r_t_relation. assumption. 
 
-         simpl.
-         econstructor. try rewrite big_pOplus_get_pro. 
+         simpl. econstructor.
+         simpl. rewrite big_pOplus_get_npro.
+         rewrite <-fun_to_list_big_Oplus_eq.
+         apply Forall_fun_to_list.
+         intros.
+         simpl. split; auto. 
+        split; try lia.
+        unfold U_v. simpl. Msimpl.
+        apply WF_scale. 
+        apply WF_mult.
+        apply WF_kron; type_sovle'.
+        rewrite Nat.mul_1_l.
+        apply WF_mult.
+        apply WF_base. apply s_r_t_relation. lia.
+        apply WF_adjoint. 
+        apply WF_base. apply s_r_t_relation. lia.
+        auto_wf. 
+        assert(2 ^ t * 2 ^ L = 1 * 2 ^ t * 2 ^ (t + L - t)).
+        rewrite Nat.add_comm. rewrite Nat.add_sub.
+        rewrite Nat.mul_1_l. reflexivity.
+        destruct H4. 
+        
+        apply WF_scale. apply WF_Msum.
+        intros. 
+
+        apply WF_kron; type_sovle'.
+         auto_wf.  
+         apply WF_base. apply s_r_t_relation. lia.
+         apply WF_Us. 
+         apply WF_mult.
+        apply WF_base. apply s_r_t_relation. lia.
+        apply WF_adjoint. 
+        apply WF_base. apply s_r_t_relation. lia.
+        
+       
+         econstructor.
+          try rewrite big_pOplus_get_pro. 
          apply Forall_fun_to_list. intros. apply pow2_ge_0.
          rewrite sum_over_list_big_pOplus.   
          rewrite (@big_sum_eq_bounded R (R_is_monoid) _ (fun i:nat => (/r)%R)).
@@ -1302,7 +1337,13 @@ Proof.   pose Hr. pose HtL. pose H. pose Hr.
           simpl. rewrite Rmult_1_r.  rewrite sqrt_sqrt. reflexivity.   unfold r.
          rewrite IZR_INR_0.   apply le_INR. lia. apply sqrt_neq_0_compat.
          rewrite IZR_INR_0.   apply lt_INR. lia.   assumption. 
-          apply rule_OCon''. repeat  rewrite big_pOplus_get_pro. reflexivity.
+          apply rule_OCon''.
+          rewrite big_pOplus_get_npro.
+          rewrite <-fun_to_list_big_Oplus_eq.
+          apply Forall_fun_to_list.
+          intros. simpl. auto.
+         
+          repeat  rewrite big_pOplus_get_pro. reflexivity.
           repeat rewrite big_pOplus_get_npro. repeat rewrite <-fun_to_list_big_Oplus_eq.
           apply Forall_two_forall. intros. apply rule_Conj_split_l.
 Qed.
@@ -1327,6 +1368,82 @@ assert(a / b0 < a).
     apply Nat.div_lt; try lia. lia.  
   
 Qed.
+
+
+Lemma times_1_I:forall (n:nat), 
+times_n (I 1) n = n .* I 1 .
+Proof. induction n; intros. Msimpl. reflexivity.
+rewrite S_O_plus_INR.
+simpl . rewrite IHn.
+solve_matrix.
+Qed.
+
+
+Lemma pure_state_vector_meas':
+Pure_State_Vector
+  (/ √ r
+   .* big_sum
+        (fun s : nat =>
+         ∣ s * 2 ^ t / r ⟩_ (2 ^ t) ⊗ Us s) r) .
+Proof. unfold Pure_State_Vector. 
+split.
+apply WF_scale. apply WF_Msum.
+intros. apply WF_kron; type_sovle'.
+apply WF_base. apply s_r_t_relation. lia.
+apply WF_Us.
+rewrite Mscale_adj.
+rewrite Msum_adjoint.
+rewrite Mscale_mult_dist_r.
+rewrite Mscale_mult_dist_l.
+rewrite Mscale_assoc.
+rewrite Mmult_Msum_distr_r.
+erewrite big_sum_eq_bounded;
+[| intros; rewrite Mmult_Msum_distr_l; try reflexivity ].
+erewrite big_sum_eq_bounded;
+[ | intros; apply big_sum_unique; exists x0 ; split; try lia; split;[reflexivity|] ].
+erewrite (big_sum_eq_bounded _ (fun x0 => C1 .* I 1)).
+Msimpl. rewrite big_sum_constant. 
+rewrite times_1_I.
+pose Hr.
+rewrite<- RtoC_inv; try unfold r; try apply sqrt_neq_0_compat; try rewrite IZR_INR_0; try apply lt_INR; try lia.   
+rewrite Cmult_comm.
+rewrite Cconj_R.
+
+rewrite  RtoC_mult.
+rewrite Mscale_assoc.
+rewrite <-Rinv_mult_distr_depr; 
+try apply sqrt_neq_0_compat; try rewrite IZR_INR_0; try apply lt_INR; try lia.   
+rewrite sqrt_sqrt; try lra. rewrite RtoC_mult.
+rewrite Rinv_l. Msimpl. reflexivity.
+rewrite IZR_INR_0.
+apply not_0_INR. lia. 
+
+rewrite IZR_INR_0. apply le_INR. lia.
+
+
+intros. 
+rewrite kron_adjoint.
+rewrite kron_mixed_product.
+rewrite base_inner_1. Msimpl.
+pose H. destruct a. 
+pose (norm_Us x0 H0 H1) .
+assert(WF_Matrix (Us x0)).
+apply WF_Us. 
+pose (norm_1_pure_vec (Us x0) H3 e).
+destruct p. rewrite H5. unfold c_to_Vector1. Msimpl.
+ reflexivity. 
+
+apply s_r_t_relation. lia.
+intros. 
+rewrite kron_adjoint.
+rewrite kron_mixed_product.
+rewrite base_inner_0. unfold c_to_Vector1.
+ Msimpl. reflexivity.
+ apply i_j_neq; try lia. 
+ apply s_r_t_relation. lia.
+ apply s_r_t_relation. lia.
+Qed.
+
 
 
 Theorem OF_correctness: 
@@ -1355,8 +1472,9 @@ Proof.
        rewrite Nat.mod_small in H5; try rewrite Nat.mul_1_r in *; try lra.
        rewrite H5 in *. lia. lia. assert(1<r). unfold r in *. lia.     
 
-      seman_sovle; destruct H6; unfold Pure_eval in *;
-      unfold beval in *; unfold aeval in *; unfold fst in *; 
+      seman_sovle; [simpl; auto| | ];
+       destruct H6; unfold Pure_eval in *;
+      unfold beval in *; unfold aeval in *; unfold fst in *;
       bdestruct (c_find z x0 =? 1).   
       try rewrite H8.
       try apply Nat.ltb_lt in H5; try rewrite H5;  try auto.
@@ -1375,36 +1493,26 @@ Proof.
      *eapply rule_seq. eapply rule_conseq_l;try apply rule_QInit; apply rule_PT.
 
      *eapply rule_seq. eapply rule_conseq_l. apply rule_OdotE.
-      eapply rule_qframe'; [|split; try apply rule_QInit].
-      unfold Considered_F_c; simpl. rewrite H0. rewrite H1.
-      rewrite Nat.sub_add; try lia. 
-      split;[reflexivity| split ;[lia | ] ]. 
-      rewrite <-empty_Empty. intuition.
-      simpl. split. apply inter_empty. left. reflexivity.
+      eapply rule_qframe'; [ | |split; try apply rule_QInit]; try simpl; try lia.
       rewrite Qsys_inter_empty'; try lia. 
+       split. apply inter_empty. left. reflexivity.
+       rewrite H0. rewrite H1. lia. 
+    
 
       *eapply rule_seq.
-      eapply rule_qframe; simpl; [|split; try apply rule_QUnit_One'].
-      unfold Considered_F_c; simpl. 
-      simpl. rewrite H2. rewrite H3.
-      rewrite Nat.sub_add; try lia. 
-      split;[reflexivity| split ;[lia | ] ]. 
-     rewrite Qsys_inter_empty'; try lia. lia. 
-      simpl. split. apply inter_empty. left. reflexivity.
+      eapply rule_qframe; simpl;  [ | | split; try apply rule_QUnit_One']; try simpl; try lia.
       rewrite Qsys_inter_empty'; try lia. 
-
+      split. apply inter_empty. left. reflexivity.
+      rewrite H2. rewrite H3. lia. 
+    
       unfold U_v; repeat rewrite Nat.sub_diag; rewrite Nat.sub_0_r; simpl;
       rewrite kron_1_l; auto_wf; rewrite kron_1_r; auto_wf; rewrite Had_N.
 
       *eapply rule_seq.
-      eapply rule_qframe'; simpl; [|split; try apply rule_QUnit_One'].
-      unfold Considered_F_c ; simpl. 
-      simpl. rewrite H0. rewrite H1.
-      rewrite Nat.sub_add; try lia. 
-      split;[reflexivity| split ;[lia | ] ]. 
-       rewrite Qsys_inter_empty'; try lia. lia. 
-      simpl. split. apply inter_empty. left. reflexivity.
-      rewrite Qsys_inter_empty'; try lia. 
+      eapply rule_qframe'; simpl; [ | |split; try apply rule_QUnit_One']; try simpl; try lia. 
+      rewrite Qsys_inter_empty'; try lia.
+      split. apply inter_empty. left. reflexivity.
+      rewrite H0. rewrite H1. lia. 
       pose HU_plus. destruct a2. assert(L=t + L - t). lia. 
       unfold U_v; repeat rewrite Nat.sub_diag;
       simpl; rewrite kron_1_l; auto_wf; try rewrite kron_1_r; auto_wf; destruct H6; try rewrite H5.
@@ -1424,10 +1532,19 @@ Proof.
       rewrite simpl_QFT'.
 
       * eapply rule_seq. 
-      eapply rule_conseq_l'.
-      eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P); try lia.
-      apply rule_Conj_two. 
-      apply implies_refl. implies_trans_solve 0  rule_PT.
+      (* eapply rule_conseq_l'.
+      eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P); try lia. *)
+      eapply rule_conseq_l';
+      [eapply rule_QMeas with (s:=0) (e:=t+L)(P:=P);
+     [  | ] | apply rule_Conj_two; [ apply implies_refl | ]   ] .
+       lia. 
+       assert((2 ^ t * 2 ^ L )=(2 ^ (t+L- 0))).
+       rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
+       simpl. reflexivity. destruct H6.
+       apply pure_state_vector_meas'. 
+      (* apply rule_Conj_two. 
+      apply implies_refl.  *)
+      implies_trans_solve 0  rule_PT.
       rewrite Nat.sub_0_r. unfold P.    
       apply big_Sand_Assn_true.   
       intros. simpl. unfold not. apply In_empty.
@@ -1442,7 +1559,9 @@ Proof.
       (ANpro [ SPure ((BLt (z) '  r )) ; SPure (BEq (z) ' r)])).
       apply implies_trans with (Assn_sub z (Afun CFq (CF_bound (2 ^ t)) (z') ' (2 ^ t)) 
       (big_Oplus (fun s : nat => <{ (z) ' =  r / (AGcd s r) }>) r)).
-      apply Assn_sub_Plus. rewrite <-fun_to_list_big_Oplus_eq. 
+      apply Assn_sub_Plus. rewrite <-fun_to_list_big_Oplus_eq.
+      apply Forall_fun_to_list. intros. simpl. auto.
+      rewrite <-fun_to_list_big_Oplus_eq.
       rewrite <-fun_to_list_big_Oplus_eq.  apply Forall_two_forall.
       intros. seman_sovle. unfold Pure_eval in *. unfold beval in *. 
       unfold aeval in *. unfold s_update_cstate. unfold fst in *.
@@ -1466,12 +1585,20 @@ Proof.
       unfold assert_implies. intros. rewrite sat_Assert_to_State in H6.
       rewrite seman_find in H6.
    
+
       apply sat_State_Npro; try apply H6. 
+      split; simpl; auto. 
 
       apply rule_assgn.
       eapply rule_conseq_l'. apply rule_assgn. 
-      unfold b'.  simpl. apply Assn_sub_Plus. econstructor. 
+      unfold b'.  simpl. apply Assn_sub_Plus.
+       econstructor.
+      simpl. auto. 
+      econstructor.
+      simpl. auto. econstructor.
 
+
+      econstructor.
       eapply implies_trans with (<{  (z) ' < r }> /\s (SAssn b <{ x ^ (z) ' % N }> <{ (b) ' <> 1 }>)).
       apply rule_Conj_two. apply implies_refl.
       rule_solve. intros. apply H8 in H18.
@@ -1509,7 +1636,8 @@ Proof.
 
       implies_trans_solve 0 SAnd_PAnd_eq. 
       unfold assert_implies; intros;
-      apply sat_NPro_State. assumption.
+      apply sat_NPro_State. split; try assumption.
+      simpl. auto.
 
       apply rule_Conj_split_l. 
 Qed.

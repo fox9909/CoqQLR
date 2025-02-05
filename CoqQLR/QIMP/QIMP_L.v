@@ -162,6 +162,7 @@ Fixpoint Free_bexp (b:bexp):CSet:=
  Fixpoint Var (c:com): (CSet * QSet) :=
   match c with
     |<{ x:=a }> => (NSet.add x (Free_aexp a), NSet.empty)
+    |Clet x a =>(NSet.add x NSet.empty, NSet.empty)
     |<{ c1;c2 }> => (NSet.union (fst (Var c1)) (fst (Var c2)), NSet.union (snd (Var c1)) (snd (Var c2))) 
     |<{ if b then c1 else c2 end }>
          => (NSet.union (Free_bexp b) (NSet.union (fst (Var c1)) (fst (Var c2))), 
@@ -183,6 +184,7 @@ Local Open Scope com_scope.
 Fixpoint MVar (c:com): (CSet * QSet) :=
   match c with
     |<{ x:=a }> => (NSet.add x NSet.empty, NSet.empty)
+    |Clet x a =>(NSet.add x NSet.empty, NSet.empty)
     |<{ c1;c2 }> => (NSet.union (fst (MVar c1)) (fst (MVar c2)), NSet.union (snd (MVar c1)) (snd (MVar c2))) 
     |<{ if b then c1 else c2 end }>
          => ((NSet.union (fst (MVar c1)) (fst (MVar c2))), 
@@ -199,8 +201,6 @@ Fixpoint MVar (c:com): (CSet * QSet) :=
          => (NSet.add x (NSet.empty), Qsys_to_Set s e  )
     |_=>(NSet.empty, NSet.empty)
   end.
-
-
 
 (*-----------------------Semantics------------------------------------*)
 Local Open Scope nat_scope.
@@ -346,8 +346,6 @@ Definition QUnit_Ctrl_fun{s' e':nat} (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1
 
 Local Open Scope nat_scope.
 
-
-
 Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):= 
 (q_update (((I (2^(s-s'))) ⊗ (∣ j ⟩_ (2^(e-s)) × (⟨ j ∣_ (2^(e-s)))) ⊗ (I (2^(e'-e))))) rho).
 
@@ -358,8 +356,29 @@ Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):=
   |Some x => x
    end .
 
+
+Fixpoint WF_com (c:com):= 
+  match c with
+  |Clet i a =>  i=a
+  |<{ c1;c2 }> => WF_com c1 /\ WF_com c2
+  |<{ if b then c1 else c2 end }>
+       =>  WF_com c1 /\ WF_com c2
+  |<{while b do c end}>
+       =>  WF_com c
+  |<{ [[ s e ]]:Q=0 }>
+       =>s<e
+  | QUnit_One s e U   
+       => s<e  /\ (WF_Unitary U)
+  | QUnit_Ctrl s0 e0 s1 e1 U  
+       =>((s0<e0)/\ (e0<=s1) /\ (s1<e1)) /\ (forall i,WF_Unitary (U i))
+  |<{ x :=M [[ s e]] }>
+       => s < e
+  |_=>True
+end.
+
+
   Inductive ceval_single{s' e':nat}: com-> list (cstate * (qstate s' e' )) -> list (cstate * (qstate s' e')) -> Prop:=
-  |E_nil:  forall  c, ceval_single c nil nil
+  |E_nil:  forall c, WF_com c -> NSet.Subset (snd (MVar c)) (Qsys_to_Set s' e') -> ceval_single c nil nil
   |E_Skip sigma rho mu:  ceval_single <{skip}> ((sigma,rho)::mu) ((sigma,rho)::mu)
   |E_Asgn sigma rho mu: forall x a mu', 
                    ceval_single (CAsgn x a) mu mu'
@@ -367,26 +386,20 @@ Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):=
                     (StateMap.Raw.map2 option_app 
                     [((c_update x (aeval (sigma, rho) a) sigma), rho)] 
                     mu')
-  |Elet sigma rho mu : forall (x a:nat) ,  let x:= a in 
-                   ceval_single (Clet x a) ((sigma,rho)::mu) ((sigma,rho)::mu)
-  |E_Qinit sigma rho mu: forall mu'(s e:nat), s'<=s/\ s<e /\ e<=e'->
-                   ceval_single (QInit s e) mu mu'
+  |Elet sigma rho mu : forall (x a:nat), let x:= a in ceval_single (Clet x a) ((sigma,rho)::mu) ((sigma,rho)::mu)
+  |E_Qinit sigma rho mu: forall mu'(s e:nat),
+                   ceval_single (QInit s e) mu mu' 
                    -> ceval_single (QInit s e) ((sigma,rho)::mu) 
                    (StateMap.Raw.map2 option_app [(sigma, (QInit_fun s e rho))] mu')
   |E_Qunit_One sigma rho mu: forall mu' (s e:nat) (U: Square (2^(e-s))), 
-                   (s'<=s/\s<e /\ e<=e')
-                 ->(WF_Unitary U)
-                 -> ceval_single (QUnit_One s e U) mu mu'
+                  ceval_single (QUnit_One s e U) mu mu'
                 -> ceval_single (QUnit_One s e U) ((sigma,rho)::mu) 
                 (StateMap.Raw.map2 option_app [(sigma, QUnit_One_fun s e U rho)] mu')
   |E_QUnit_Ctrl sigma rho mu: forall mu' (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1))), 
-                  (s'<=s0) /\ (s0<e0)/\ (e0<=s1) /\ (s1<e1) /\ (e1<=e')
-                   ->(forall i,WF_Unitary (U i))
-                   -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'
+                   ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'
                    -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) ((sigma,rho)::mu) 
                 (StateMap.Raw.map2 option_app [(sigma, (QUnit_Ctrl_fun s0 e0 s1 e1 U rho))] mu')
   |E_Meas sigma rho mu: forall mu' mu'' (i:nat) (s e:nat),
-                (s'<=s/\s<e /\ e<=e') ->
                   ceval_single (QMeas i s e) mu mu'->
                   (big_app' (fun j:nat=> 
                   ((c_update i j sigma), (QMeas_fun s e j rho)) ) 
@@ -400,14 +413,12 @@ Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):=
                   ->ceval_single (<{c1;c2}>) ((sigma,rho)::mu) mu2
   |E_IF_true sigma rho mu: forall (mu' mu'':list (cstate * (qstate s' e'))) c1 c2 b, 
                         (beval (sigma, rho) b)=true
-                        -> NSet.Subset (snd (MVar c2)) (Qsys_to_Set s' e')
                         ->ceval_single (CIf b c1 c2) mu mu''
                         ->ceval_single c1 ([(sigma,rho)]) mu'
                         ->ceval_single (CIf b c1 c2) ((sigma,rho)::mu)  
                            (StateMap.Raw.map2 option_app mu' mu'')
   |E_IF_false sigma rho mu: forall (mu' mu'':list (cstate * (qstate s' e'))) c1 c2 b, 
                       (beval (sigma, rho) b)=false
-                      -> NSet.Subset (snd (MVar c1)) (Qsys_to_Set s' e')
                       ->ceval_single (CIf b c1 c2) mu mu''
                       ->ceval_single c2 ([(sigma,rho)]) mu'
                       ->ceval_single (CIf b c1 c2) ((sigma,rho)::mu)  
@@ -421,19 +432,18 @@ Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):=
                            (StateMap.Raw.map2 option_app mu' mu'')
   |E_While_false sigma rho mu: forall (mu':list (cstate * (qstate s' e'))) c b, 
                       (beval (sigma, rho) b)=false
-                      -> NSet.Subset (snd (MVar c)) (Qsys_to_Set s' e') 
                       ->ceval_single (CWhile b c) mu mu'
                       ->ceval_single (CWhile b c) ((sigma,rho)::mu)  
                        (StateMap.Raw.map2 option_app [(sigma,rho)] mu').
 
 Inductive ceval{s e:nat}: com -> dstate s e-> dstate s e->Prop:=
   |E_com:  forall c (mu mu':dstate s e), 
-          WF_dstate mu-> 
-        (ceval_single c (StateMap.this mu) (StateMap.this mu'))->
+          WF_dstate mu-> (ceval_single c (StateMap.this mu) (StateMap.this mu'))->
           ceval c mu mu'.
 
-
 (*-----------------------------------Ceval-----------------------------------------------*)
+
+
 Lemma super_0{ m n:nat}: forall (M:Matrix m n),
 super M Zero = Zero .
 Proof. intros. unfold super. Msimpl. reflexivity.
@@ -1170,8 +1180,6 @@ rewrite <-(@super_sum (2 ^ (e' - s'))). reflexivity.
 Qed.  
 
 
-
-
 Lemma QUnit_Ctrl_fun_sum{s' e':nat}: forall n s0 e0 s1 e1 U (q: nat-> qstate s' e'), 
 QUnit_Ctrl_fun s0 e0 s1 e1  U (big_sum q n) =
 big_sum (fun i => QUnit_Ctrl_fun s0 e0 s1 e1  U (q i)) n .
@@ -1187,7 +1195,6 @@ rewrite <-(@super_sum (2 ^ (e' - s'))). reflexivity.
 Qed.
 
 (*-------------------------------ceval---------------------------------*)
-
 Lemma ceval_nil{s e:nat}: forall (mu:list (cstate * qstate s e)) c,
 ceval_single c [] mu-> mu=nil.
 Proof. intros. inversion H ;subst; try reflexivity.
@@ -1198,22 +1205,29 @@ ceval_single <{skip}> mu mu'->mu=mu'.
 Proof.   induction mu; intros; inversion H; subst; try
         reflexivity. Qed.
 
-Lemma ceval_skip{s e:nat}: forall (mu:list (cstate *qstate s e)),
-ceval_single <{skip}> mu mu.
-Proof. induction mu; intros. apply E_nil.
- destruct a.
-apply E_Skip.
+Lemma  subset_union: forall x y z, NSet.Subset (NSet.union x y) z ->
+NSet.Subset x z /\ NSet.Subset y z.
+Proof. intros. unfold NSet.Subset in *. 
+        split. intros. 
+        apply H. apply NSet.union_2.
+        assumption.
+        intros. apply H. apply NSet.union_3.
+        assumption.
+        
 Qed.
 
-Lemma ceval_seq{s e:nat}: forall c1 c2 (mu mu' mu'':list (cstate *qstate s e)),
-ceval_single c1 mu mu'->
-ceval_single c2 mu' mu''->
-ceval_single <{c1;c2}> mu mu''.
-Proof. induction mu. intros. inversion H;subst.
-inversion H0;subst.
-apply E_nil.
-intros.  destruct a. apply E_Seq with mu'.
-intuition. intuition. 
+Lemma subset_empty: forall a, NSet.Subset NSet.empty a.
+Proof. intros.  pose (NSet.empty_1). unfold NSet.Empty in e.
+        unfold NSet.Subset. intros. apply e in H. destruct H.
+Qed.
+
+
+Lemma ceval_skip{s e:nat}: forall (mu:list (cstate *qstate s e)),
+ceval_single <{skip}> mu mu.
+Proof. induction mu; intros. apply E_nil . simpl. auto. simpl. 
+apply subset_empty. 
+ destruct a.
+apply E_Skip.
 Qed.
 
 Lemma ceval_seq_1{s e: nat }: forall 
@@ -1222,18 +1236,180 @@ ceval_single <{ c1; c2 }> mu mu' ->
 exists mu1,
 and (ceval_single c1 mu mu1)
 (ceval_single c2 mu1 mu').
-Proof. induction mu; intros; inversion H; subst.
-       exists nil. split. econstructor. econstructor.
+Proof. induction mu; intros; inversion H; subst. simpl in *.
+       exists nil. split. econstructor. apply H0.
+       apply subset_union in H1. apply H1. econstructor. apply H0.
+       apply subset_union in H1. apply H1.
        exists mu1. intuition. 
 Qed.
 
+Lemma  subset_union': forall x y z, 
+NSet.Subset x z /\ NSet.Subset y z ->NSet.Subset (NSet.union x y) z.
+Proof. intros. unfold NSet.Subset in *. 
+       destruct H.  intros. apply NSet.union_1 in H1.
+       destruct H1.  
+       apply H. 
+       assumption.
+       apply H0. 
+       assumption.
+       
+Qed.
+
+
+Lemma ceval_seq{s e:nat}: forall c1 c2 (mu mu' mu'':list (cstate *qstate s e)),
+ceval_single c1 mu mu'->
+ceval_single c2 mu' mu''->
+ceval_single <{c1;c2}> mu mu''.
+Proof. induction mu. intros.
+inversion H; subst.
+inversion H0; subst.
+econstructor.  simpl. auto.
+simpl. 
+apply subset_union'. auto.
+intros. destruct a.   apply E_Seq with mu'.
+intuition. intuition. 
+Qed.
+
+Lemma In_empty: forall s, NSet.In s NSet.empty -> False .
+Proof. intros. pose (NSet.empty_1). unfold NSet.Empty in *. 
+        apply e in H. destruct H.
+Qed.
+
+Lemma In_Qsys: forall r l s, 
+l<r->
+NSet.In s (Qsys_to_Set l r)<-> l<=s<r.
+Proof. unfold Qsys_to_Set. 
+induction r; intros.
+lia.
+destruct l.
+simpl. split. intros.
+bdestruct (s=?r).
+rewrite H1. 
+lia.
+destruct r.  
+apply NSet.add_3 in H0.
+simpl in H0.
+apply In_empty in H0.
+destruct H0.
+ intuition.
+apply NSet.add_3 in H0.
+apply IHr in H0. lia. 
+lia.
+intuition.
+intros.
+bdestruct (s=?r).
+rewrite H1.
+apply NSet.add_1.
+reflexivity.
+destruct r. 
+assert(s=0). lia.
+rewrite H2.  
+apply NSet.add_1.
+reflexivity.
+apply NSet.add_2.
+apply IHr. lia.  
+lia.
+
+
+simpl.  pose H.
+apply Lt_n_i in l0.
+rewrite l0.
+
+bdestruct (S l <?r).
+split; intros.
+bdestruct (s=? r).
+rewrite H2. lia.
+apply NSet.add_3 in H1.
+apply IHr in H1.
+lia. intuition. intuition.
+
+bdestruct (s=? r).
+rewrite H2. apply NSet.add_1. reflexivity.
+apply NSet.add_2. 
+apply IHr . assumption.
+lia. 
+
+assert(forall l r, l>=r ->(Qsys_to_Set_aux l r NSet.empty = NSet.empty)).
+intros. induction r0. 
+ simpl. reflexivity.
+ simpl. 
+ assert(l1 <? S r0 = false).
+ apply Nat.ltb_ge. 
+ assumption.
+ rewrite H2. reflexivity.
+rewrite H1.
+bdestruct (s=? r).
+rewrite H2.
+split;intros. lia.
+apply NSet.add_1. reflexivity.
+split; intros. 
+apply NSet.add_3 in H3.
+apply In_empty in H3.
+destruct H3.
+intuition.
+lia. 
+assumption.    
+Qed.
+
+Lemma Qsys_to_Set_empty: forall s,
+Qsys_to_Set_aux s s (NSet.empty)= NSet.empty .
+Proof.  destruct s. simpl. reflexivity. simpl.
+      assert(S s <? S s = false).
+      rewrite Nat.ltb_ge. lia. 
+      rewrite H. reflexivity.  
+Qed.
+
+
+Lemma Qsys_subset: 
+forall r s e l  : nat,
+s <=l /\ l <= r /\ r <= e
+->NSet.Subset (Qsys_to_Set l r) (Qsys_to_Set s e).
+Proof.
+       unfold Qsys_to_Set. induction r; intros. 
+       pose (NSet.empty_1). unfold NSet.Empty in e0.
+      simpl. apply subset_empty.
+      simpl. 
+      destruct H. destruct H0.
+      assert(l=S r \/ l<> S r).
+      apply Classical_Prop.classic.
+      destruct H2.
+      rewrite H2. 
+       assert(S r <? S r =false).
+       apply Nat.ltb_ge. lia. 
+       rewrite H3. apply subset_empty. 
+       assert(l < S r).
+       lia. apply Lt_n_i in H3. 
+       rewrite H3.
+       unfold NSet.Subset.
+       intros.
+       unfold NSet.Subset in IHr.
+       assert(a= r \/ a<>r).
+       apply Classical_Prop.classic.
+       destruct H5. rewrite H5 in *.
+       apply In_Qsys. lia.  
+       lia. 
+       assert(l = r \/ l<>r).  
+       apply Classical_Prop.classic .
+       destruct H6. rewrite H6 in *.
+       rewrite Qsys_to_Set_empty in H4.
+       apply NSet.add_3 in H4.
+       pose(NSet.empty_1). unfold NSet.Empty in e0.
+       apply e0 in H4. destruct H4. 
+        lia. 
+       apply IHr with l.
+       lia.
+       apply NSet.add_3 in H4.
+       assumption.
+       lia.  
+Qed.
 
 Lemma  ceval_Qinit{s' e':nat}: forall c (q:qstate s' e') s e, 
 s' <= s /\ s < e <= e' ->
 ceval_single (QInit s e) ([(c,q)]) 
    ([(c, (QInit_fun s e q))]).
 Proof. 
-intros. apply  (@E_Qinit s' e' c q nil nil).  lia. econstructor.
+intros. apply  (@E_Qinit s' e' c q nil nil). econstructor. 
+simpl. lia. simpl. apply Qsys_subset; try lia.  
 Qed.
 
 
@@ -1243,8 +1419,8 @@ WF_Unitary U->
 ceval_single (QUnit_One s e U) ([(c,q)]) 
    ([(c, (QUnit_One_fun s e U q))]).
 Proof. 
-intros. apply  (@E_Qunit_One s' e' c q nil nil).  lia.
-assumption. econstructor.
+intros. apply  (@E_Qunit_One s' e' c q nil nil).  
+ econstructor. simpl. split. lia. assumption. apply Qsys_subset; try lia.  
 Qed.
 
 
@@ -1254,8 +1430,9 @@ Lemma  ceval_QUnit_Ctrl{s' e':nat}: forall c (s0 e0 s1 e1:nat) (q:qstate s' e') 
  -> ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) ([(c,q)]) 
  ([(c, (QUnit_Ctrl_fun s0 e0 s1 e1 U q))]).
 Proof. 
-intros. apply  (@E_QUnit_Ctrl s' e' c q nil nil).  lia.
-assumption. econstructor.
+intros. apply  (@E_QUnit_Ctrl s' e' c q nil nil).  
+ econstructor. simpl. split. lia. assumption.
+simpl. apply subset_union'. split; apply Qsys_subset; try lia.   
 Qed.
 
 Lemma ceval_QMeas{s' e':nat}: forall c (q:qstate s' e') s e j mu, 
@@ -1266,8 +1443,88 @@ s' <= s /\ s < e <= e' ->
  ceval_single (QMeas j s e ) ([(c,q)])  mu.
 Proof. 
 intros. rewrite<-map2_nil_r.
-apply  (@E_Meas s' e' c q nil nil ).  lia. econstructor.
+apply  (@E_Meas s' e' c q nil nil ).   econstructor.
+simpl. lia. apply Qsys_subset; try lia.   
 assumption.
+Qed.
+
+Require Import Coq.Logic.Eqdep_dec.
+Require Import Coq.Arith.Peano_dec.
+
+
+Lemma WF_com_ceval{s e:nat}: forall c (mu mu':list (state s e)) ,
+ceval_single c mu mu' ->
+WF_com c.
+Proof. induction c.
+- intros; simpl; auto.
+-intros; simpl; auto.
+-intros; inversion H;subst;
+  try simpl in H; try auto; try lia. inversion_clear H. subst.
+  simpl. intuition. 
+-intros. apply ceval_seq_1 in H. destruct H. destruct H.
+eapply IHc1 in H. 
+eapply IHc2 in H0. split; auto. 
+-induction mu; intros. inversion_clear H.
+ assumption.
+ inversion_clear H;
+ apply IHmu in H1; assumption.
+-intros. remember <{while b do c end}> as original_command eqn:Horig. 
+induction H;  try inversion Horig; subst.
+assumption. apply IHceval_single3. reflexivity.
+apply IHceval_single . reflexivity.
+-induction mu; intros. inversion_clear H. assumption.
+inversion_clear H.
+  eapply IHmu. apply H0.
+-induction mu; intros. inversion_clear H. assumption.
+  inversion H; subst. apply inj_pair2_eq_dec in H3.
+  apply inj_pair2_eq_dec in H3. destruct H3. 
+    eapply IHmu. apply H6.
+    apply Nat.eq_dec. apply Nat.eq_dec.
+-induction mu; intros. inversion_clear H. assumption.
+inversion H; subst. apply inj_pair2_eq_dec in H5.
+apply inj_pair2_eq_dec in H5. destruct H5. 
+eapply IHmu. apply H8.
+  apply Nat.eq_dec. apply Nat.eq_dec.
+  -induction mu; intros. inversion_clear H. assumption.
+  inversion_clear H.
+    eapply IHmu. apply H0.
+Qed.
+
+
+Lemma ceval_single_dom{ s e:nat}: forall c (mu mu': list (cstate * qstate s e)) , 
+ceval_single c mu mu' ->
+NSet.Subset (snd (MVar c)) (Qsys_to_Set s e).
+Proof. induction c.
+- intros  mu mu'  ; intros; simpl; try apply subset_empty.
+-intros  mu mu'  ; intros; simpl; try apply subset_empty.
+-intros  mu mu'  ; intros; simpl; try apply subset_empty.
+-intros. apply ceval_seq_1 in H. destruct H. destruct H.
+ apply IHc1 in H. apply IHc2 in H0.
+ apply subset_union'. auto.
+-induction mu; intros mu' H; intros.
+ inversion H; subst. assumption.
+ inversion H; subst;
+ apply IHmu in H7; assumption.
+-intros. remember <{while b do c end}> as original_command eqn:Horig. 
+induction H;  try inversion Horig; subst.
+assumption. apply IHceval_single3. reflexivity.
+apply IHceval_single . reflexivity.
+induction mu; intros. inversion_clear H. assumption.
+inversion_clear H.
+  eapply IHmu. apply H0.
+-induction mu; intros. inversion_clear H. assumption.
+  inversion H; subst. apply inj_pair2_eq_dec in H3.
+  apply inj_pair2_eq_dec in H3. destruct H3. 
+    eapply IHmu. apply H6.
+    apply Nat.eq_dec. apply Nat.eq_dec.
+-induction mu; intros. inversion_clear H. assumption.
+inversion H; subst. apply inj_pair2_eq_dec in H5.
+apply inj_pair2_eq_dec in H5. destruct H5. 
+eapply IHmu. apply H8.
+  apply Nat.eq_dec. apply Nat.eq_dec.
+  -induction mu; intros. inversion_clear H. assumption.
+  inversion_clear H.
+    eapply IHmu. apply H0.  
 Qed.
 
 
@@ -1574,9 +1831,93 @@ rewrite (QMeas_trace s e i n c rho) ; try lia; try
 try apply WWF_qstate_to_WF_qstate; try assumption.
 Qed.
 
+Lemma In_Qsys_l_r: forall r l , 
+l<r->
+NSet.In l (Qsys_to_Set l r) /\
+NSet.In (r-1) (Qsys_to_Set l r).
+Proof. unfold Qsys_to_Set. induction r; induction l; intros; simpl.
+ lia. lia.   
+ simpl. split. destruct r.
+ simpl.  
+ apply NSet.add_1. reflexivity.
+ apply NSet.add_2. 
+ eapply IHr. lia.  
+ rewrite Nat.sub_0_r.
+ apply NSet.add_1. reflexivity.
+ destruct r. lia.  
+ pose H.
+ apply Lt_n_i in l0. rewrite l0.
+ split.
+ bdestruct (l =? r).
+ rewrite H0. apply NSet.add_1.
+ reflexivity.
+ apply NSet.add_2.
+ apply IHr. lia.  
+ rewrite Nat.sub_0_r.
+ apply NSet.add_1.
+ reflexivity.    
+Qed.
 
-Require Import Coq.Logic.Eqdep_dec.
-Require Import Coq.Arith.Peano_dec.
+Lemma subset_Qsys:forall s e l r, 
+l<r-> 
+NSet.Subset (Qsys_to_Set l r) (Qsys_to_Set s e ) ->
+ s<=l /\ r<=e.
+Proof. intro. intro. intro. intro. intro. 
+apply NF_1. intros.
+ apply Classical_Prop.not_and_or in H0.
+unfold not. intros. 
+destruct H0. unfold not in H0.
+assert(s>l). intuition. 
+unfold NSet.Subset in H1.
+pose (H1 l). 
+assert(NSet.In l (Qsys_to_Set s e)).
+apply i. apply In_Qsys_l_r. assumption.
+apply In_Qsys in H3. lia.
+assert(s<e\/ ~ (s<e)).
+apply Classical_Prop.classic.
+destruct H5. assumption.
+assert(s >= e). lia.
+apply Nat.ltb_ge in H6.
+unfold Qsys_to_Set in H3.
+destruct e.  
+simpl in H3.  
+apply In_empty in H3.
+destruct H3.
+ simpl in H3. rewrite H6 in H3.
+ apply In_empty in H3. destruct H3.
+
+assert(r>e). intuition. 
+unfold NSet.Subset in H1.
+pose (H1 (r-1)). 
+assert(NSet.In (r-1) (Qsys_to_Set s e)).
+apply i. apply In_Qsys_l_r. assumption.
+apply In_Qsys in H3. lia.
+assert(s<e\/ ~ (s<e)).
+apply Classical_Prop.classic.
+destruct H5. assumption.
+assert(s >= e). lia.
+apply Nat.ltb_ge in H6.
+unfold Qsys_to_Set in H3.
+destruct e.  
+simpl in H3.  
+apply In_empty in H3.
+destruct H3.
+ simpl in H3. rewrite H6 in H3.
+ apply In_empty in H3. destruct H3.
+Qed.
+
+Ltac dom_solve :=
+  try match goal with 
+  H: ceval_single ?a ?b ?c |- _ => 
+  pose H as H'; pose H as H'';
+  apply WF_com_ceval in H'; try apply H';
+   apply ceval_single_dom in H''; simpl in * end;
+ try repeat match goal with 
+ H: NSet.Subset (NSet.union ?a ?b) ?c |-_ =>
+  apply subset_union in H; destruct H end;
+  try repeat  match goal with 
+ H: NSet.Subset ?a ?b |-_ =>
+   apply subset_Qsys in H; try lia; try intuition; auto_wf end.
 
 Ltac WWF_ceval_solve s e mu :=
   induction mu; intros; try match goal with 
@@ -1596,7 +1937,9 @@ try match goal with
 H': big_app' ?f ?n ?mu'' |- _ => apply (WWF_dstate_big_app') in H' end;
 try intros; try apply mixed_super_ge_0'; auto_wf; 
 try lia| try match goal with 
-IHmu: _ |- _ => apply IHmu end ]; try assumption.
+IHmu: _ |- _ => apply IHmu end ]; try assumption;
+dom_solve.
+
 
 
 Lemma WF_ceval'{s e:nat} : forall c (mu mu':list (cstate *qstate s e)), 
@@ -1633,7 +1976,8 @@ Proof. induction c; try WWF_ceval_solve s e mu.
  apply WWF_d_app_aux. apply WF_cons'. inversion_clear H.
  unfold WWF_state in *. unfold WWF_qstate  in *.
  simpl in *. assumption.  apply WF_nil'.
- apply IHceval_single. inversion_clear H. assumption.  intuition. 
+ apply IHceval_single. inversion_clear H. assumption.  intuition.
+
 Qed. 
 
 
@@ -1678,16 +2022,16 @@ H: existT ?a ?b ?c = existT ?x ?y ?z|-_ => apply inj_pair2_eq_dec in H; destruct
 try apply Nat.eq_dec;
       
       d_trace_app_solve; simpl; try rewrite Rplus_0_r; unfold s_trace; unfold q_trace;
-       simpl; f_equal; try match goal with IHmu:_ |- _ => eapply IHmu end; try assumption .
+       simpl; f_equal; try match goal with IHmu:_ |- _ => eapply IHmu end; try assumption; dom_solve.
 
 
 Local Open Scope com_scope.
 Lemma ceval_trace_Qinit{s' e'}: forall  (mu mu':list (cstate * qstate s' e')) s e,
 WWF_dstate_aux mu->
 ceval_single (QInit s e) mu mu'-> (d_trace_aux mu = d_trace_aux mu').
-Proof.  ceval_trace_sovle mu. 
-       try rewrite QInit_trace; try lia; try apply WF_NZ_Mixed_aux; try apply H0; try reflexivity.
-       apply H7.
+Proof.  ceval_trace_sovle mu.
+       try rewrite QInit_trace; try lia; try apply WF_NZ_Mixed_aux; try apply H0; try reflexivity; dom_solve.
+       apply H6. 
 Qed.
 
 
@@ -1696,7 +2040,7 @@ WWF_dstate_aux mu->
 ceval_single (QUnit_One s e U) mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof. ceval_trace_sovle mu.   
   rewrite QUnit_One_trace; try lia; try apply WF_NZ_Mixed_aux; try apply H0; try assumption.
-f_equal.  apply H9.
+f_equal.   apply H7. 
 Qed.
 
 
@@ -1706,7 +2050,7 @@ ceval_single (QUnit_Ctrl s0 e0 s1 e1 U) mu mu'-> (d_trace_aux mu = d_trace_aux m
 Proof. 
 ceval_trace_sovle mu. 
 rewrite QUnit_Ctrl_trace; try lia; try apply WF_NZ_Mixed_aux; try apply H0; try assumption.
-f_equal.  apply H11. 
+f_equal.  apply H9. 
 Qed.
 
 
@@ -1716,8 +2060,8 @@ ceval_single <{ i :=M [[s e]] }> mu mu'-> (d_trace_aux mu = d_trace_aux mu').
 Proof.  
 ceval_trace_sovle mu.
 symmetry.
-eapply (@QMeas_trace s' e' s e i); try lia; try assumption; apply H9.  
-apply H8.
+eapply (@QMeas_trace s' e' s e i); try lia; try assumption; apply H8.  
+apply H7.
 Qed.
 
 

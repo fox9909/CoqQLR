@@ -29,12 +29,8 @@ Notation "⟨ i ∣_ n " := (adjoint (Base_vec n i)) (at level 0) :matrix_scope.
 Local Open Scope nat_scope.
 Lemma WF_base: forall n i, i < n -> WF_Matrix (∣ i ⟩_ n) .
 Proof. intros. 
-     unfold WF_Matrix. intros.
-     destruct i. intuition. intuition.
-     intuition. unfold Base_vec. destruct y. bdestruct(x=?0). intuition.
-     reflexivity. reflexivity.   unfold Base_vec. destruct y. intuition.
-     reflexivity. unfold Base_vec. destruct y. bdestruct(x=?S i). intuition.
-     reflexivity. reflexivity.
+     unfold WF_Matrix. intros; unfold Base_vec; destruct y; try reflexivity. 
+     assert(x<>i). lia. apply Nat.eqb_neq in H1. rewrite H1. reflexivity.
 Qed.
 #[export]Hint Resolve WF_base: wf_db.
 
@@ -582,4 +578,25 @@ Proof. induction f; intros; destruct g; split;intros;  try econstructor; inversi
        apply IHf; split; try assumption. 
        econstructor. apply H0. apply IHf. assumption.
        econstructor. apply H0. apply IHf. assumption.
+Qed.
+
+Lemma Forall_two_impli{A B:Type }:forall (P Q : A -> B -> Prop) (f:list A) (g:list B),
+(forall i j, P i j -> Q i j)-> 
+(Forall_two P f g) ->(Forall_two Q f g).
+Proof. induction f; intros; destruct g. econstructor. 
+       inversion_clear H0. inversion_clear H0. 
+       inversion_clear H0.
+      econstructor; try assumption. apply H; try assumption.
+       apply IHf. apply H. assumption.
+Qed.
+
+
+Lemma Forall_two_map{A B C:Type }:forall (P : A -> B -> Prop) (Q:A->C->Prop) (f:list A) (g:list B)  (f2: B -> C),
+(forall i j, P i j -> Q i (f2 j))-> 
+(Forall_two P f g) ->(Forall_two Q f (map (fun i=> f2 i) g)).
+Proof. induction f; intros; destruct g; simpl. econstructor. 
+       inversion_clear H0. inversion_clear H0. 
+       inversion_clear H0.
+      econstructor; try assumption. apply H; try assumption.
+       apply IHf. apply H. assumption.
 Qed.
