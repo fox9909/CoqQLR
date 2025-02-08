@@ -273,15 +273,8 @@ Local Open Scope nat_scope.
   Proof.  rule_solve. auto_wf.  
    assert( (2 ^ (x - s)) * (2 ^ (e - x)) = 2^(e-s)).
   type_sovle'. destruct H18.  
-  (* destruct H0. left. rewrite H0. apply kron_0_l.
-   destruct H2. rewrite H2. left. apply kron_0_r.
-  right. *)
    apply (@pure_state_vector_kron 
   (2 ^ (x - s)) (2 ^ (e - x)) ). intuition. intuition.
-  (* assert( (2 ^ (x - s)) * (2 ^ (e - x)) = 2^(e-s)).
-  type_sovle'. destruct H16. 
-   apply (@pure_state_vector_kron 
-  (2 ^ (x - s)) (2 ^ (e - x)) ). intuition. intuition. *)
   assert(WF_qstate (d_find x0 mu)).
   apply WF_dstate_per_state; try assumption.  
   remember (((R1 / Cmod (trace (d_find x0 mu)))%R .* d_find x0 mu)).
@@ -1329,23 +1322,6 @@ apply WWF_dstate_aux_to_WF_dstate_aux.
 assumption.
 Qed.
 
-
-(* Local Open Scope assert_scope.
-Lemma dstate_eq_not_nil: forall s e (mu mu':dstate s e),
-dstate_eq mu mu' -> StateMap.this mu <> []
-->StateMap.this mu' <> [].
-Proof. intros s e(mu,IHmu) (mu', IHmu').
-       unfold dstate_eq.
-       induction mu; induction mu'.
-       - simpl. intuition  .
-       -simpl. intuition.
-       -simpl. destruct a. intuition. 
-       -simpl. destruct a. destruct a0.
-        intros. discriminate.
-Qed. *)
-
-(*Some properties about the relationship between 
-proformula, nproformula and Stateformula*)
 
 Lemma sat_Pro_State{s e:nat}: forall (mu:dstate s e) F0 F1,
 sat_Pro mu [(0, F0); (1, F1)] <-> 

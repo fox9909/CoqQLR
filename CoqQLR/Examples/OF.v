@@ -1532,8 +1532,7 @@ Proof.
       rewrite simpl_QFT'.
 
       * eapply rule_seq. 
-      (* eapply rule_conseq_l'.
-      eapply rule_QMeas with (s:=0) (e:=t+L) (P:=P); try lia. *)
+  
       eapply rule_conseq_l';
       [eapply rule_QMeas with (s:=0) (e:=t+L)(P:=P);
      [  | ] | apply rule_Conj_two; [ apply implies_refl | ]   ] .
@@ -1542,8 +1541,6 @@ Proof.
        rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
        simpl. reflexivity. destruct H6.
        apply pure_state_vector_meas'. 
-      (* apply rule_Conj_two. 
-      apply implies_refl.  *)
       implies_trans_solve 0  rule_PT.
       rewrite Nat.sub_0_r. unfold P.    
       apply big_Sand_Assn_true.   

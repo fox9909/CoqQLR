@@ -275,10 +275,7 @@ Proof. unfold hoare_triple. intros.
        apply H0 with mu. intuition. intuition.
 Qed.
 
-
 (*Absurd*)
-
-
 
 Theorem rule_Absurd: forall D c, 
 WF_assert D

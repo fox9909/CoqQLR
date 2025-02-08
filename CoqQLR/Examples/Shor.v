@@ -495,12 +495,7 @@ Proof. unfold Shor.
           try eapply rule_Clet.
           assert(2-1<random 2 (N - 1)<N-1+1).
           apply Hran. simpl in H. rewrite Nat.sub_add in H; try lia. 
-         
-          
-          (* simpl. apply inter_empty. left.
-          apply union_empty. split.
-          apply union_empty. split.  right.
-         reflexivity. *)
+     
           classic_slove_1;
           rewrite <-H1 in H; destruct H.  
           apply Nat.ltb_lt in H. rewrite H. auto. 

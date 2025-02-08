@@ -248,17 +248,6 @@ State_eval_dstate (QExp_s s  e  (U_v s' e' s e U† v) ) mu->
 State_eval_dstate (QExp_s s  e  v ) mu'.
 Proof. intros s' e' s e U v s0 e0 mu. induction mu; intros.
       inversion H2; subst. simpl in *.  split. assumption. lia. 
-  (* -- simpl in *. lia.  simpl in H3. destruct H3. econstructor; try assumption.
-  destruct H3. left. 
-  rewrite <-(U_v_inv  U v). rewrite H3.
-  unfold U_v. Msimpl. reflexivity. try dom_solve. apply H4.
-  assumption.
-   right. 
-  rewrite <-(U_v_inv  U); try dom_solve; try assumption. 
-  apply pure_state_vector_unitary_pres.
-  assumption.
-  assert(2 ^ (s' - s) * 2 ^ (e' - s') * 2 ^ (e - e')= 2 ^ (e - s)).
-  type_sovle'. destruct H5.  repeat apply kron_unitary; auto; try apply id_unitary.  *)
   -- destruct mu. inversion H2; subst. inversion H10; subst. 
      apply inj_pair2_eq_dec in H7. apply inj_pair2_eq_dec in H7.
      destruct H7. rewrite map2_nil_r in *.
@@ -320,13 +309,6 @@ inversion_clear H0. destruct mu. destruct mu'. simpl in *.
 inversion H3; subst. 
 rewrite sat_Assert_to_State in *. inversion_clear H1. simpl in *. econstructor. econstructor.
 simpl. split. apply WF_U_v; try  lia. apply H6.  apply H0. lia.    
- (* split. destruct H6.
- destruct H1. rewrite H1. unfold U_v. Msimpl.
- left. reflexivity. right. apply pure_state_vector_unitary_pres. apply H1.
-assert(2^(s'-s) * 2^(e'-s')* 2^(e-e')=2^(e-s)). type_sovle'.
-destruct H7.  
-apply kron_unitary. apply kron_unitary. apply id_unitary. dom_solve.
-apply id_unitary. apply H6. *)
 assert(v= U_v s' e' s e (adjoint U1) (U_v s' e' s e U1 v) ).
 unfold U_v. 
 assert(2^(s'-s) * 2^(e'-s')* 2^(e-e')=2^(e-s)). dom_solve. 
@@ -440,14 +422,6 @@ Proof.  induction mu; intros  mu' H H0 . intros. inversion H1; subst.
   apply WF_kron; type_sovle'; auto_wf. 
   apply WF_kron; type_sovle'; auto_wf. 
   apply H3. apply H2. lia.   
-
-    (* econstructor. destruct H2.
-  assert((2 ^ (s0 - s) * 2 ^ (e0 - s0) * 2 ^ (e - e0))%nat=(2 ^ (e - s))%nat ).
-  dom_solve. destruct H6.
-  destruct H2. rewrite H2. unfold UCtrl_v. Msimpl.
-  left. reflexivity. right. apply pure_vector_UCtrl. dom_solve. dom_solve.
-  assert((2 ^ (s0 - s) * 2 ^ (e0 - s0) * 2 ^ (e - e0))%nat=(2 ^ (e - s))%nat ).
-  dom_solve. destruct H6. assumption. apply H2.  *)
   -- destruct mu; intros. inversion H1; subst. inversion H11; subst. 
      apply inj_pair2_eq_dec in H8. apply inj_pair2_eq_dec in H8.
      destruct H8. rewrite map2_nil_r in *.
@@ -917,32 +891,6 @@ split; try lia.
 apply WF_scale.
 apply WF_U_v; try lia. apply H0.
 auto_wf. 
-
-
-(* assert((U_v s' e' s e
-(∣ i ⟩_ (2 ^ (e' - s')) × ⟨ i ∣_ (2 ^ (e' - s'))) v) = Zero \/
-~((U_v s' e' s e
-(∣ i ⟩_ (2 ^ (e' - s')) × ⟨ i ∣_ (2 ^ (e' - s'))) v) = Zero)).
-apply Classical_Prop.classic. destruct H2.
-rewrite H2. Msimpl. split; try lia.
-left. reflexivity.
-
-split; try lia. rewrite RtoC_inv.
-right. 
-assert(2^(e-s)=2^(s'-s) * 2^(e'-s') * 2^(e-e')); type_sovle'; destruct H3.
- remember ((U_v s' e' s e
- (∣ i ⟩_ (2 ^ (e' - s')) × ⟨ i ∣_ (2 ^ (e' - s'))) v)).
-apply (@normalize_Pure_State_Vector  (2^(e-s)) m).
-rewrite Heqm. apply WF_U_v. lia. apply H0.
-auto_wf. intro. apply norm_zero_iff_zero in H3.
-destruct H2. assumption.  
-rewrite Heqm. apply WF_U_v. lia. apply H0.
-auto_wf.
-intro. apply norm_zero_iff_zero in H3.
-destruct H2. assumption.
-apply WF_U_v. lia. apply H0.
-auto_wf. *)
-
 split.
 rewrite big_pOplus_get_pro.
 apply Forall_fun_to_list.   intros.

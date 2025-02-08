@@ -1,3 +1,4 @@
+
 Require Import Reals.
 Require Import Coquelicot.Complex.
 Require Import Strings.String.
@@ -375,7 +376,6 @@ Fixpoint WF_com (c:com):=
        => s < e
   |_=>True
 end.
-
 
   Inductive ceval_single{s' e':nat}: com-> list (cstate * (qstate s' e' )) -> list (cstate * (qstate s' e')) -> Prop:=
   |E_nil:  forall c, WF_com c -> NSet.Subset (snd (MVar c)) (Qsys_to_Set s' e') -> ceval_single c nil nil

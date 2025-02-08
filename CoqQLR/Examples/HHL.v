@@ -1066,8 +1066,6 @@ Proof.
        simpl. reflexivity. destruct H6.
        apply pure_state_vector_meas. 
        rewrite add_sub_eq. unfold P. simpl. 
-      (* apply rule_Conj_two. 
-      implies_trans_solve 0 rule_PT.   *)
       apply rule_Conj_two; try apply rule_Conj_two;
       try apply rule_PT;  implies_trans_solve 0 rule_PT; try apply Assn_true_P;
        unfold not; simpl;  apply In_empty.
