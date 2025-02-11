@@ -455,7 +455,7 @@ Proof. induction p1; intros. destruct mu_n1. simpl.
        apply IHp1. injection H. intuition.
        assumption.
        apply dstate_eq_sym.
-       apply d_app_assoc'.
+       apply d_app_assoc.
 Qed.
 
 Lemma  big_dapp_scale{ s e:nat}: forall  pF1 p1 (mu_n: list (dstate s e)),

@@ -331,12 +331,7 @@ Proof. intros. destruct H2. destruct H2.
         assumption. apply Rinv_0_lt_compat. lra.
         lra. rewrite H4. destruct H1. rewrite trace_mult.
         rewrite H5. rewrite trace_I. rewrite Cmod_1. lra.
-        lra. 
-       rewrite H4.
-       apply Pure_NZ_Mixed. 
-       econstructor. split. apply H1.
-       reflexivity.
-       assumption.
+        lra. assumption.
 
        rewrite H0 in *. rewrite Mplus_0_r in H3.
        split. intros. exists x. intuition.

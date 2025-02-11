@@ -467,12 +467,12 @@ Proof. induction g. intros.
         apply dstate_eq_trans with 
         ((d_app (d_app (d_scale_not_0 a a0)  (d_scale_not_0 r d)) (big_dapp g f ))).
         apply dstate_eq_sym.
-        apply d_app_assoc'.  
+        apply d_app_assoc.  
         apply dstate_eq_trans with 
         ((d_app (d_app  (d_scale_not_0 r d) (d_scale_not_0 a a0)) (big_dapp g f ))).
         apply d_app_eq. apply d_app_comm.
         unfold dstate_eq. reflexivity.
-        apply d_app_assoc'.
+        apply d_app_assoc.
         intros. 
         simpl. destruct g; destruct f. 
         simpl. reflexivity.
@@ -500,7 +500,7 @@ Proof. induction g; intros; inversion H;subst.
         inversion H6; subst. inversion H9 ; subst.
         apply dstate_eq_trans with ((d_app (d_app r r2) d2)).
         apply dstate_eq_sym.
-        apply d_app_assoc'. 
+        apply d_app_assoc. 
         apply dstate_eq_trans with ((d_app (d_app r1 r3) d)).
         apply d_app_eq. 
        apply dstate_eq_trans with ((d_app r2 r)).
@@ -511,7 +511,7 @@ Proof. induction g; intros; inversion H;subst.
        apply d_scale_eq with hd hd a. 
        apply dstate_eq_refl. assumption. assumption.
        apply big_dapp_eq with g td. assumption. assumption.
-       apply d_app_assoc'. 
+       apply d_app_assoc. 
        destruct g; destruct td. simpl in *.
        apply big_dapp_eq with ([a]) ([hd]). 
        assumption. assumption.
@@ -549,12 +549,12 @@ Proof. induction g; intros; inversion H;subst.
           split. 
           apply dstate_eq_trans with ((d_app (d_app r r1) d1)).
           apply dstate_eq_sym.
-          apply d_app_assoc'. 
+          apply d_app_assoc. 
           apply dstate_eq_trans with ((d_app (d_app r1 r) d1)).
           apply d_app_eq. 
          apply dstate_eq_trans with ((d_app r1 r)).
          apply d_app_comm. apply dstate_eq_refl. 
-         apply dstate_eq_refl. apply d_app_assoc'.
+         apply dstate_eq_refl. apply d_app_assoc.
          apply big_dapp_cons. assumption. apply big_dapp_cons.
           assumption. assumption.
           destruct g; destruct td.
@@ -844,7 +844,7 @@ apply H10.
 simpl. apply (dstate_eq_trans _ _ _ _ _ H5).
 apply dstate_eq_trans with ((d_app (d_app ((d_scale_not_0 p0 d))
 (d_scale_not_0 p1 d0)) d2)).
-apply dstate_eq_sym. apply d_app_assoc'. 
+apply dstate_eq_sym. apply d_app_assoc. 
 apply d_app_eq.    
 apply dstate_eq_trans with (d_app (d_scale_not_0 (p0 + p1) (d_scale_not_0 (p0 / (p0 + p1)) d))
 ((d_scale_not_0 (p0 + p1) (d_scale_not_0 (p1 / (p0 + p1)) d0)))).
@@ -1631,15 +1631,15 @@ Proof. intros.
         apply d_app_eq. apply dstate_eq_refl. apply d_app_empty_r.
         apply dstate_eq_trans with  (d_app r5 (d_app r6 (d_empty s e))). assumption.
         apply d_app_eq. apply dstate_eq_refl. apply d_app_empty_r.
-        apply d_app_assoc'. 
+        apply d_app_assoc. 
         apply d_app_eq. apply dstate_eq_refl. 
         apply dstate_eq_sym.
-        apply d_app_assoc'. 
+        apply d_app_assoc. 
         apply d_app_eq. apply dstate_eq_refl. 
         apply d_app_eq. apply d_app_comm. apply dstate_eq_refl.
         apply d_app_eq. apply dstate_eq_refl.
-        apply d_app_assoc'.
-        apply dstate_eq_sym. apply d_app_assoc'.
+        apply d_app_assoc.
+        apply dstate_eq_sym. apply d_app_assoc.
        apply d_app_eq.  
        apply dstate_eq_trans with 
        ((d_scale_not_0 (((r * d_trace mu1 + r0 * d_trace mu2) / (d_trace mu1 + d_trace mu2)) * ((d_trace mu1 + d_trace mu2) / (r * d_trace mu1 + r0 * d_trace mu2))))

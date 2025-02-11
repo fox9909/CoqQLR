@@ -1440,29 +1440,17 @@ Proof. induction qs; intros s0 e0 c q1 q2 q' Hq1 Hq2 Hq'; intros.
        assert((/ Cmod (@trace (2^(e0-s0)) (q1 .+ q2)) > 0)%R).
        apply Rinv_0_lt_compat. apply nz_mixed_state_Cmod_1.
        assumption. lra. 
-       lia. 
-       rewrite <-Reduced_plus.
-       rewrite <-Mscale_plus_distr_r.
-       rewrite Rdiv_unfold. rewrite Rmult_1_l.
-       rewrite <-Reduced_scale. 
-       rewrite <-(Reduced_trace _ _ _ s e).
-       apply nz_Mixed_State_aux_to01.
-       apply nz_Mixed_State_aux_to_nz_Mix_State.
-       apply WF_qstate_Reduced. lia.
-       split. assumption. lia.  
-       lia. apply WF_NZ_Mixed. assumption.
-       assumption. 
-      destruct H.
+       lia. assumption.
       simpl in H0.
-      destruct H0. destruct H0.
-      apply (IHqs1 _ _ _  q1 q2) in H0 .
-      apply (IHqs2 _ _ _  q1 q2) in H1 .
+      destruct H0. destruct H1.
+      apply (IHqs1 _ _ _  q1 q2) in H1 .
+      apply (IHqs2 _ _ _  q1 q2) in H2 .
       
       simpl. split. 
       intuition. intuition. assumption.
-      assumption. assumption. reflexivity.
+      assumption. assumption. assumption. 
       assumption. assumption. assumption.
-      reflexivity. 
+      assumption.
 Qed.
 
 

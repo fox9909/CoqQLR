@@ -1912,20 +1912,25 @@ Qed.
 Lemma nz_mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
 NZ_Mixed_State ρ1 ->
 NZ_Mixed_State ρ2 ->
-NZ_Mixed_State (ρ1 .+  ρ2)->
 Pure_State_Vector φ ->
 ρ1 .+  ρ2= φ  × φ†->  
 exists (p1 p2:R), 
 and (and (0<p1<=1)%R (0<p2<=1)%R)
   (and (ρ1= p1 .* ( φ  × φ† )) (ρ2= p2 .* ( φ  × φ† ))).
-Proof. intros. 
-    rewrite <-(normalize_nz_mixed ρ1) in H3.  
-    rewrite <-(normalize_nz_mixed ρ2) in H3. 
+Proof. intros .
+  assert(NZ_Mixed_State  (ρ1 .+  ρ2) ) as H'.
+  apply nz_Mixed_State_aux_to_nz_Mix_State.
+  split. econstructor; try apply nz_Mixed_State_aux_to_nz_Mix_State;
+  try assumption. intros. 
+  rewrite H2. destruct H1. rewrite trace_mult.
+  rewrite H3. rewrite trace_I. rewrite Cmod_1.  lra.
+    rewrite <-(normalize_nz_mixed ρ1) in H2.  
+    rewrite <-(normalize_nz_mixed ρ2) in H2. 
     remember ((( / Cmod (trace ρ1))%R .* ρ1)).
     remember ((( / Cmod (trace ρ2))%R .* ρ2)).
     assert((exists c : C, c .* m = m0) \/ ~(exists c : C, c .* m = m0)).
     apply Classical_Prop.classic.
-    destruct H4. destruct H4. 
+    destruct H3. destruct H3. 
     assert(x=C1). apply (@solve_1 n  m m0).
     rewrite Heqm. apply nz_Mixed_State_aux_to01;
     apply nz_Mixed_State_aux_to_nz_Mix_State; assumption. 
@@ -1936,12 +1941,12 @@ Proof. intros.
      split; apply nz_normalize_trace;
     apply nz_Mixed_State_aux_to_nz_Mix_State; assumption.
     assumption. 
-    rewrite <-H4 in *. rewrite H5 in *. clear H5. 
+    rewrite <-H3 in *. rewrite H4 in *. clear H4. 
     rewrite Mscale_1_l in *.  
-    rewrite <-Mscale_plus_distr_l in H3.
-    rewrite <-RtoC_plus in H3.
+    rewrite <-Mscale_plus_distr_l in H2.
+    rewrite <-RtoC_plus in H2.
     remember ((Cmod (trace ρ1) + Cmod (trace ρ2) )%R ).
-    rewrite <-H3.
+    rewrite <-H2.
     exists (Cmod (trace ρ1) / r)%R.
     exists (Cmod (trace ρ2)  /r)%R.
     split. split. rewrite Heqr. apply Rdiv_in_01.
@@ -1989,15 +1994,15 @@ Proof. intros.
      assumption. lra.
      assert(Cmod (trace ρ1) > 0). apply nz_mixed_state_Cmod_1.
      assumption. lra.
-     apply H4.
+     apply H3.
     assert(trace (Mmult (φ  × φ†)  (φ  × φ†))=1).
     apply pure_sqrt_trace. econstructor.
-    split. apply H2. reflexivity. 
+    split. apply H1. reflexivity. 
     assert (Cmod (trace (Mmult (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0) (Cmod (trace ρ1) .* m  .+ Cmod (trace ρ2) .* m0)))=
              Cmod (trace (Mmult (φ  × φ†)  (φ  × φ†)))).
-    rewrite H3. reflexivity.
-    rewrite H6  in H7. 
-    rewrite Cmod_1 in H7. 
+    rewrite H2. reflexivity.
+    rewrite H5  in H6. 
+    rewrite Cmod_1 in H6. 
      lra. apply nz_Mixed_State_aux_to_nz_Mix_State.
       assumption. 
       apply nz_Mixed_State_aux_to_nz_Mix_State.

@@ -1783,7 +1783,7 @@ rewrite IHz.  MC.elim_comp. simpl. f_equal.
 Qed.
 
 
-Lemma d_app_assoc': 
+Lemma d_app_assoc: 
 forall {s e : nat} (mu1 mu2 mu3 : dstate s e),
 dstate_eq (d_app (d_app mu1 mu2) mu3) (d_app mu1 (d_app mu2 mu3)).
 Proof.   unfold dstate_eq. unfold d_app. unfold StateMap.map2.
@@ -2191,7 +2191,7 @@ Proof. induction p1; destruct mu_n1;  intros. simpl in *.
        apply d_app_eq. 
        eapply d_scale_eq; try apply H7; try apply H9.
        reflexivity. assumption. apply dstate_eq_sym.
-       apply d_app_assoc'.
+       apply d_app_assoc.
 Qed.
 
 Lemma big_dapp_eq_bound{s e:nat}: forall p_n q_n (mu_n: list (dstate s e)) mu,

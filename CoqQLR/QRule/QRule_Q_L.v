@@ -1149,14 +1149,14 @@ Proof. induction p_n; intros; destruct mu_n1; destruct mu_n2; inversion_clear H0
          apply dstate_eq_trans with ((d_app (d_app r r0) d3)).
          apply dstate_eq_trans with (d_app (d_app (d_app r d1) r0) d2).
          apply dstate_eq_sym.
-         apply d_app_assoc'.
+         apply d_app_assoc.
          apply dstate_eq_trans with (d_app (d_app  r0 (d_app r d1)) d2).
          apply d_app_eq. apply d_app_comm. apply dstate_eq_refl.
          apply dstate_eq_trans with (d_app (d_app (d_app r0 r) d1) d2).
-         apply d_app_eq. apply dstate_eq_sym. apply d_app_assoc'.
+         apply d_app_eq. apply dstate_eq_sym. apply d_app_assoc.
          apply dstate_eq_refl.  
          apply dstate_eq_trans with ( (d_app (d_app r0 r) (d_app d1 d2))).
-         apply d_app_assoc'. apply d_app_eq. apply d_app_comm. assumption.
+         apply d_app_assoc. apply d_app_eq. apply d_app_comm. assumption.
          apply d_app_eq. eapply d_scale_app_distr. apply H3. apply H0. apply H1.
          apply dstate_eq_refl.
 Qed.

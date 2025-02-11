@@ -4,7 +4,7 @@ This is a project about a Hoare Logic for Local reasoning about quantum programs
 
 # Installation 
 
-coqQ_LR is currently compatible with Coq 8.16---8.19.
+coqQ_LR is currently compatible with Coq 8.16.
 
 First, download the project: 
 
