@@ -848,9 +848,6 @@ Fixpoint d_reduced{ s e: nat} (mu:list (cstate * qstate s e)) l r :=
        | nil => nil 
        | (c, q)::mu' =>(c, Reduced q l r):: (d_reduced mu' l r)
        end.
-     
-
-
 
 Lemma d_reduced_assoc{ s e :nat}: forall (mu: list (cstate *qstate s e)) l r l' r',
 s<=l /\ l<=l' /\l' <=r' /\  r'<=r /\ r<=e->
@@ -949,3 +946,7 @@ simpl. econstructor.  inversion_clear H1.
 unfold StateMap.Raw.PX.ltk in *. simpl in *.
 assumption.
 Qed.
+
+
+Definition d_reduced'{ s e: nat} (mu:dstate s e) l r: dstate l r :=
+StateMap.Build_slist (d_reduced_sort (StateMap.this mu) l r (StateMap.sorted mu)).

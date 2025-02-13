@@ -2395,6 +2395,44 @@ Proof.
 Qed.
 
 
+Lemma rule_f': forall  F c s e (mu mu':dstate s e) ,
+(Considered_Formula F )->
+sat_State mu F->
+ceval c mu mu'-> 
+NSet.Equal (NSet.inter (fst (Free_state F)) (fst (MVar c))) (NSet.empty) ->
+(snd (option_free (Free_State F)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
+(option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F))) ->
+sat_State mu' F.
+Proof. intros. destruct mu as [mu IHmu]. 
+       destruct mu' as [mu' IHmu'].
+       inversion_clear H1. inversion_clear H0. simpl in *.
+       econstructor.
+       apply WF_ceval with c mu; try assumption.
+       simpl. 
+       assert((NSet.Empty (snd (Free_state F)))\/
+       (~(NSet.Empty (snd (Free_state F))))).
+       apply Classical_Prop.classic. 
+       destruct H0. 
+       apply rule_f_classic with c mu; try assumption.
+       left. apply option_eqb_eq.
+       apply Classical_Prop.NNPP. intro.
+       apply not_true_iff_false in H7.  
+       apply Free_State_not_empty in H7. destruct H7.
+       rewrite empty_Empty. assumption. assumption.
+       assert(NSet.Equal (snd (MVar c)) NSet.empty \/
+       ~(NSet.Equal (snd (MVar c)) NSet.empty)).
+       apply Classical_Prop.classic. destruct H7.
+       apply rule_f_classic with c mu; try assumption.
+       right. assumption.
+       apply rule_f with c mu; try assumption.
+       split; try assumption.
+       apply Free_State_not_empty; try assumption.
+       rewrite Free_State_not_empty; try assumption.
+       intro. destruct H0. rewrite <-empty_Empty.
+       assumption.
+Qed.
+
+
 Import Sorted.
 Theorem rule_qframe: forall (F1 F2 F3: State_formula) c,
 NSet.Equal (NSet.inter (snd (Free_state F2)) (snd (Free_state F3))) NSet.empty ->
@@ -2404,60 +2442,13 @@ Considered_Formula F3->
 /\ ((snd (option_free (Free_State F3)) <= (option_nat (NSet.min_elt (snd (MVar c))))\/ 
 (option_nat (NSet.max_elt (snd (MVar c)))) < fst (option_free (Free_State F3))))
 -> {{F1 ⊙ F3}} c {{F2 ⊙ F3}}. 
-Proof.  unfold hoare_triple. intros F1 F2 F3 c HF3. intros. destruct H0. 
-        
-        assert(StateMap.this mu= [] \/ StateMap.this mu<>[] ) as H'.
-        apply Classical_Prop.classic. destruct H' as[H'| H'].
+Proof.  unfold hoare_triple. intros F1 F2 F3 c HF3. intros. destruct H0.
         pose H2. apply sat_assert_odot in s0. destruct s0.
-        eapply H0 in H4; try apply H1. 
-        rewrite sat_Assert_to_State in *.
-        apply sat_State_WF_formula in H2. 
-        apply sat_State_WF_formula in H4.
-        inversion_clear H1. rewrite H' in *. 
-        inversion H7; subst. 
-        rewrite <-sat_Assert_to_State. 
-        apply sat_Assert_empty. simpl. split. econstructor.
-        simpl in H2.
-        simpl. split; try assumption. split; try apply  H2; try assumption.
-        econstructor. discriminate. auto. 
-       
-        assert(sat_Assert mu F1 -> sat_Assert mu' F2).
-        apply H0. assumption. 
-        destruct mu as [mu IHmu].
-        destruct mu' as [mu' IHmu']. 
-        
-        inversion_clear H1. simpl in *.
-        repeat rewrite sat_Assert_to_State in *.
-        inversion_clear H2.  simpl in *.
-
-        econstructor. eapply WF_ceval. apply H1. apply H6. 
-        simpl in *. 
-        rewrite State_eval_odot in H7.
-        rewrite State_eval_odot.
-         destruct H7. destruct H7.
-        split. 
-        assert(sat_Assert (StateMap.Build_slist IHmu') F2).
-        apply H0 with (StateMap.Build_slist IHmu).
-        apply E_com. assumption. assumption.  rewrite sat_Assert_to_State.
-        econstructor. assumption. assumption.
-        rewrite sat_Assert_to_State in *.
-        inversion_clear H9. assumption.
-        split. 
-      
-        destruct (option_edc (Free_State F3) None).
-        apply rule_f_classic with c mu; try left;
-        try assumption; try apply H3. 
-
-        assert(NSet.Equal (snd (MVar c)) NSet.empty \/ ~NSet.Equal (snd (MVar c)) NSet.empty ).
-        apply Classical_Prop.classic.  
-        destruct H10. apply rule_f_classic with c mu; try right; try assumption.
-        try apply H3. 
-
-        apply rule_f  with  c mu; try assumption.
-        split. assumption.
-        apply Free_State_not_empty. assumption.
-        rewrite <-option_eqb_neq. intuition. apply H3.
-        apply H3. assumption.
+        apply (H0 _ _ _ mu') in H4; try assumption. destruct H5.
+        apply sat_assert_odot. split. assumption.
+        split. rewrite sat_Assert_to_State in *. 
+        apply rule_f' with c mu; try assumption. 
+        apply H3. apply H3. assumption.
 Qed.
 
 
