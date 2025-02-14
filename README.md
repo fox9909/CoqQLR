@@ -1,10 +1,10 @@
 # Introduction 
 
-This is a project about a Hoare Logic for Local reasoning about quantum programs. 
+This is a project about a Hoare Logic for Local reasoning about classical-quantum programs. 
 
 # Installation 
 
-coqQ_LR is currently compatible with Coq 8.16.
+CoqQLR is currently compatible with Coq 8.16.
 
 First, download the project: 
 
@@ -20,7 +20,7 @@ After that, enter ```make``` in the commandline. If no error message occurs, the
   + **Matrix**: about matrix computations.
   + **Quantum**: about quantum computing. 
 
-* **QState**: A folder about state.
+* **QState**: A folder about states.
 
   + **Basic**:  Definition of basis vector and corresponding lemmas.
 
@@ -36,9 +36,9 @@ After that, enter ```make``` in the commandline. If no error message occurs, the
 
     + **Ceval_Prop**: Some lemmas about the semantics of languages.
 
-* **QAssert**: A folder about state.
+* **QAssert**: A folder about assertions.
 
-    + **QAssert_L**: A docutment about the syntax and semantics of assertion languages, on the syntax and semantics of assertion languages, along with associated lemmas.
+    + **QAssert_L**: A docutment about the syntax and semantics of assertion languages, along with associated lemmas.
 
     + **QSepar**: Additional lemmas for assertions.
 
