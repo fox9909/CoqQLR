@@ -1,6 +1,6 @@
 # Introduction 
 
-This is a project about a Hoare Logic for Local reasoning about classical-quantum programs. 
+This is a project about a Hoare Logic for Local reasoning about classical-quantum programs. The complete work can be found in our paper [Local Reasoning about Probabilistic Behaviour for Classical--Quantum Programs](https://doi.org/10.48550/arXiv.2308.04741).
 
 # Installation 
 
