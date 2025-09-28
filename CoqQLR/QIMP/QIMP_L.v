@@ -17,7 +17,11 @@ From Quan Require Import Basic.
 Delimit Scope C_scope with C.
 Local Open Scope C_scope.
 
+(*In this file, we define the syntax and semantics of classical-quantum languages.*)
+
 (*-------------------------Syntax-----------------------------------*)
+
+(*The syntax of arithmetic expressions*)
 Inductive aexp : Type :=
   | ANum (n : nat)
   | AId (i : nat)            
@@ -34,6 +38,7 @@ Definition X0 : nat := 0.
 Definition X1 : nat := 1.
 Definition X2 : nat := 3.
 
+(*The syntax of boolean expression*)
 Inductive bexp : Type :=
   | BTrue
   | BFalse
@@ -46,6 +51,7 @@ Inductive bexp : Type :=
 
 Coercion ANum : nat >-> aexp.
 
+(*Notation for expressions*)
 Declare Custom Entry com.
 Declare Scope com_scope.
 Local Open Scope com_scope.
@@ -68,6 +74,7 @@ Notation "x && y"  := (BAnd x y) (in custom com at level 80, left associativity)
 Notation "'~' b"   := (BNot b) (in custom com at level 75, right associativity).
 
 
+(*The syntax of commands*)
 Inductive com : Type :=
   | CSkip
   | CAsgn (i:nat) (a : aexp)
@@ -80,7 +87,7 @@ Inductive com : Type :=
   | QUnit_Ctrl (s0 e0 s1 e1:nat) (U: nat->Square (2^(e1-s1)))
   | QMeas (i : nat) (s e:nat).
 
-
+(*Notations for commands*)
 Notation "'skip'"  :=
          CSkip (in custom com at level 0) : com_scope.
 
@@ -133,7 +140,8 @@ Definition fact_in_coq : com :=
        1 := 1 - 1
      end }>.
 
-(*------------------------------FV-----------------------------------------*)
+(*------------------------------the set of variables and the set of modified variables in the command c-----------------------------------------*)
+
 Definition CSet:=NSet.t.
 Fixpoint Free_aexp (a:aexp) : CSet :=
   match a with
@@ -206,6 +214,7 @@ Fixpoint MVar (c:com): (CSet * QSet) :=
 (*-----------------------Semantics------------------------------------*)
 Local Open Scope nat_scope.
 
+(*the semantics for arithmetic expressions*)
 Fixpoint aeval{s e:nat} (st: state s e) 
                (a : aexp) : nat :=
   match a with
@@ -222,7 +231,7 @@ Fixpoint aeval{s e:nat} (st: state s e)
   end.
 
 
-
+(*the semantics for boolean expressions*)
   Fixpoint beval{s e: nat} (st : state s e) 
   (b : bexp) : bool :=
 match b with
@@ -235,6 +244,7 @@ match b with
 | <{~ b1}>      => negb (beval st b1)
 | <{b1 && b2}>  => andb (beval st b1) (beval st b2)
 end.
+
 
 
 Fixpoint exp_U{n:nat} (U:Square (2^n)) (i:nat):(Square (2^n)):=
@@ -257,7 +267,7 @@ Fixpoint big_app{s e:nat} (f : nat -> list (cstate * qstate s e)) (n_0 : nat) : 
   | S n' =>  (big_app f n') +l (f n')
   end.
 
-
+(*A structure used to represent the set of non-zero states after a measurement statement.*)
 Inductive big_app'{s e:nat}: (nat -> (cstate * qstate s e)) -> nat-> list (cstate * qstate s e)-> Prop := 
 |big_app_0: forall f, big_app' f 0 nil 
 |big_app_cons_Zero: forall (f: nat -> (cstate * qstate s e)) n l, 
@@ -333,6 +343,7 @@ Proof. induction n; intros. inversion_clear H1.
        intros. apply H0; try lia.
 Qed.
 
+
 Definition QInit_fun{s0 e0:nat} (s e:nat) (rho:(qstate s0 e0)):=
   @big_sum (Matrix (2^(e0-s0)) (2^(e0-s0))) _ (fun i:nat=>  
   q_update (((I (2^(s-s0))) ⊗ ((∣ 0 ⟩_ (2^(e-s))) × (⟨ i ∣_ (2^(e-s)))) ⊗ (I (2^(e0-e)))))  rho) (2^(e-s)) .
@@ -357,7 +368,7 @@ Definition  QMeas_fun{s' e':nat} (s e j:nat) (rho: qstate s' e'):=
   |Some x => x
    end .
 
-
+(*well formed commands*)
 Fixpoint WF_com (c:com):= 
   match c with
   |Clet i a =>  i=a
@@ -376,6 +387,8 @@ Fixpoint WF_com (c:com):=
        => s < e
   |_=>True
 end.
+
+(*semantics for commands c with domain (s',e'): [[𝑐]](𝜇) *)
 
   Inductive ceval_single{s' e':nat}: com-> list (cstate * (qstate s' e' )) -> list (cstate * (qstate s' e')) -> Prop:=
   |E_nil:  forall c, WF_com c -> NSet.Subset (snd (MVar c)) (Qsys_to_Set s' e') -> ceval_single c nil nil
@@ -436,12 +449,19 @@ end.
                       ->ceval_single (CWhile b c) ((sigma,rho)::mu)  
                        (StateMap.Raw.map2 option_app [(sigma,rho)] mu').
 
+
 Inductive ceval{s e:nat}: com -> dstate s e-> dstate s e->Prop:=
   |E_com:  forall c (mu mu':dstate s e), 
           WF_dstate mu-> (ceval_single c (StateMap.this mu) (StateMap.this mu'))->
           ceval c mu mu'.
 
-(*-----------------------------------Ceval-----------------------------------------------*)
+
+(*-----------------------------------ceval-----------------------------------------------*)
+(* To ensure that the definition of ceval is well-defined, we establish two lemmas: "ceval_sorted" and "WF_ceval". 
+The former ensures the sorted order of the output list, enabling the output distribution to be well-
+defined as a "dstate", while the latter guarantees that the well-formedness of dstate is preserved,
+demonstrating that each statement that terminates successfully maintains the trace.*)
+(*----------------------------------------------------------------------------------------*)
 
 
 Lemma super_0{ m n:nat}: forall (M:Matrix m n),
@@ -1556,6 +1576,8 @@ Lemma S_add_1:forall n:nat, S n=n+1 .
 Proof. lia.
 Qed.
 
+(*---------------------------------WF_ceval-------------------------------------*)
+
 Lemma WWF_qstate_init{s' e'}: forall s e (rho:qstate s' e'),
 s'<=s/\s<=e/\ e<=e'-> 
 WWF_qstate rho-> 
@@ -2145,7 +2167,7 @@ Proof. intros.   apply WWF_dstate_aux_to_WF_dstate_aux.
  rewrite (ceval_trace_eq  c  mu _); intuition.
 Qed.
 
-
+(*---------------------------------ceval_sorted-------------------------------------*)
 Require Import Sorted.
 Lemma big_app_sorted{s e:nat}: forall (f : nat -> list (cstate * qstate s e)) (n_0:nat),
 (forall i, Sorted (StateMap.Raw.PX.ltk (elt:=qstate s e)) (f i))->

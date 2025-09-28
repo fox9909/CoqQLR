@@ -26,6 +26,8 @@ Require Import Basic.
 
 Local Open Scope com_scope.
 
+(*In this file, we formalize inference rules for classical statements except QFrame rule.*)
+
 Definition hoare_triple
    (P:Assertion) (c : com) (Q : Assertion) : Prop :=
             forall (s e :nat)  (mu : dstate s e) (mu': dstate s e),

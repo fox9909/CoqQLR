@@ -16,24 +16,33 @@ From Quan Require Export Quantum.
 From Quan Require Export Complex.
 From Quan Require Import Basic.
 
+(*In this file, we define mixed states along with their corresponding lemmas.*)
+
 (*--------------------------------Mixed State-----------------------------------------*)
 
 Notation Density n := (Matrix n n) (only parsing). 
 
 Definition Classical {n} (ρ : Density n) := forall i j, i <> j -> ρ i j = 0.
 
+(*pure state: vector ∣φ⟩*)
 Definition Pure_State_Vector {n} (φ : Vector n): Prop := 
    WF_Matrix φ /\ φ† × φ = I  1.
 
+(*pure state: density matrix |φ⟩⟨φ|*)
 Definition Pure_State {n} (ρ : Density n) : Prop := 
   exists φ,  Pure_State_Vector φ /\ ρ = (φ × φ†). 
 
+(*mixed state: 
+Recall that in \textbf{QuantumLib}, a mixed state is defined as an ensemble with the sum of traces equal to one, 
+is equivalent to the notion of density operator. 
+Since we mainly work with partial density operators, 
+we define our mixed states by allowing the sum of all traces to be less than one.*)
 Inductive Mixed_State {n} : Matrix n n -> Prop :=
 | Pure_S : forall ρ (p:R), (0 <= p <= 1)-> Pure_State ρ -> Mixed_State (p.* ρ) 
 | Mix_S : forall (p1 p2: R) ρ1 ρ2, 0 <= p1 -> 0 <= p2  -> p1+p2<=1
 -> Mixed_State ρ1 -> Mixed_State ρ2 ->Mixed_State (p1 .* ρ1 .+ p2 .* ρ2).  
 
-
+(*Both pure states and mixed states are well-formed matrices.*)
 Lemma WF_Pure : forall {n} (ρ : Density n), Pure_State ρ -> WF_Matrix ρ.
 Proof. intros. destruct H as [φ [[WFφ IP1] Eρ]]. rewrite Eρ. auto with wf_db. Qed.
 #[export] Hint Resolve WF_Pure : wf_db.
@@ -42,12 +51,13 @@ Lemma WF_Mixed : forall {n} (ρ : Density n), Mixed_State ρ -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
 #[export] Hint Resolve WF_Mixed : wf_db.
 
+(*∣0⟩⟨0∣, ∣1⟩⟨1∣ are all pure states *)
 Lemma pure0 : Pure_State ∣0⟩⟨0∣. 
 Proof. exists ∣0⟩. intuition. split. auto with wf_db. solve_matrix. Qed.
-
 Lemma pure1 : Pure_State ∣1⟩⟨1∣. 
 Proof. exists ∣1⟩. intuition. split. auto with wf_db.
 solve_matrix. Qed.
+
 
 Lemma pure_id1 : Pure_State (I  1).
 Proof. exists (I  1). split. split. auto with wf_db. solve_matrix. solve_matrix. Qed.
@@ -74,6 +84,7 @@ Proof.
     lca.
 Qed.
 
+(*A vector with norm 1 represents a pure state.*)
 Lemma norm_1_pure_vec{n:nat}:  forall (x:Vector n),
 WF_Matrix x -> norm x =1 -> Pure_State_Vector x.
 Proof. intros. econstructor. assumption. unfold norm in *. 
@@ -105,6 +116,7 @@ Proof. intros. econstructor. assumption. unfold norm in *.
        apply inner_product_ge_0. lra.  
 Qed.
 
+(*A basis vector represents a pure state.*)
 Lemma Pure_State_Vector_base{n:nat}: forall i, 
 (i<n)%nat->
 Pure_State_Vector (∣ i ⟩_ n).
@@ -112,18 +124,26 @@ Proof. intros. apply norm_1_pure_vec. apply WF_base. assumption.
 apply norm_base_1. assumption.
 Qed.
 
+(*The outer product |𝑖⟩⟨𝑖| of a basis vector is a pure state.*)
 Lemma Pure_State_base{n:nat}: forall  i, 
 (i<n)%nat-> 
 Pure_State (∣ i ⟩_ n × (adjoint (∣ i ⟩_ n))) .
 Proof. intros. econstructor. split. apply (Pure_State_Vector_base  i H). reflexivity.  
 Qed.
 
+(*A zero matrix is a mixed state.*)
 Lemma zero_mixed{n:nat}:   Mixed_State (@Zero (2^n) (2^n)).
 Proof. intros. assert(@Zero (2^n) (2^n) = 0%R .* (∣ 0 ⟩_ (2^n) × (adjoint (∣ 0 ⟩_ (2^n))))). rewrite Mscale_0_l. 
 reflexivity. intros. rewrite H.  apply Pure_S. lra. apply Pure_State_base. apply pow_gt_0. 
 Qed.
 
+(***************************non-zero mixed state********************************************)
 
+(*When discussing the semantics of programs and the satisfaction relation of assertions, 
+we focus on non-zero states with finite supports. 
+we further define the set of non-zero mixed states: *)
+
+(*The following two definitions are equivalent, as specified by lemma NZ_Mixed_State_equiv.*)
 Definition NZ_Mixed_State'{n:nat} (ρ:Square n ) := Mixed_State ρ /\  ρ<> Zero .
 
 Inductive NZ_Mixed_State {n} : Matrix n n -> Prop := 
@@ -136,6 +156,7 @@ Lemma WF_NZ_Mixed : forall {n} (ρ : Density n), NZ_Mixed_State ρ -> WF_Matrix 
 Proof.  induction 1; auto with wf_db. Qed.
 #[export] Hint Resolve WF_NZ_Mixed : wf_db. 
 
+(*A pure state is a non-zero mixed state.*)
 Lemma Pure_NZ_Mixed{n:nat}: forall ( ρ : Matrix n n),
 Pure_State ρ ->
 NZ_Mixed_State ρ .
@@ -144,9 +165,10 @@ Proof. intros. assert(ρ= C1 .* ρ). rewrite Mscale_1_l. reflexivity.
 Qed.
 #[export] Hint Resolve  Pure_NZ_Mixed: Mixed.
 
+(**Some properties ensure type preservation after certain operations. **)
 
+(*----------------------- U × ρ is mixed state------------------------*)
 
-(*U × ρ is mixed*)
 Lemma pure_state_vector_unitary_pres : forall {n} (ϕ : Vector n) (U : Square n),
   Pure_State_Vector ϕ -> WF_Unitary U -> Pure_State_Vector (U × ϕ).
 Proof. 
@@ -176,7 +198,8 @@ Qed.
 
 #[export] Hint Resolve  nz_mixed_unitary: Mixed.
 
-(*ρ_1⊗ρ_2 is mixed*)
+(*-------------------------------ρ_1⊗ρ_2 is mixed state-------------------------------*)
+
 Lemma pure_state_vector_kron : forall {n m} (ϕ : Vector n) (ψ : Vector m),
   Pure_State_Vector ϕ -> Pure_State_Vector ψ -> Pure_State_Vector (ϕ ⊗ ψ).
 Proof.
@@ -249,7 +272,8 @@ Qed.
 #[export] Hint Resolve Rmult_in01: Rsimpl.
 #[export] Hint Resolve RtoC_mult: Rsimpl.
 
-(*p .* ρ is mixed*)
+(*---------------------------------p .* ρ is mixed state-----------------------------------*)
+
 Lemma nz_Mixed_State_scale: forall n (ρ : Square n) p, NZ_Mixed_State ρ ->
 0 < p <= 1->
 NZ_Mixed_State (p .* ρ).
@@ -279,8 +303,9 @@ Proof. intros. destruct c. simpl in *. rewrite H1.
         assumption.
 Qed.
 
+(**Some properties of the trace of mixed states**)
 
-(*trace of mixed*)
+(*The trace of a pure state is 1.*)
 Lemma pure_state_trace_1 : forall {n} (ρ : Density n), Pure_State ρ -> trace ρ = 1.
 Proof.
   intros n ρ [u [[WFu Uu] E]]. 
@@ -301,6 +326,8 @@ Proof.
   easy.
 Qed.
 
+
+(*The diagonal elements of a mixed state lie between 0 and 1.*)
 Lemma nz_mixed_state_diag_in01 : forall {n} (ρ : Density n) i , NZ_Mixed_State ρ -> 
                                                         0 <= fst (ρ i i) <= 1.
 Proof.
@@ -366,6 +393,7 @@ Proof.
     lra.
 Qed.
 
+(*The trace of a non-zero mixed state satisfies 0 < tr(ρ) ≤ 1.*)
 
 Lemma nz_mixed_state_trace_gt0: forall {n} (ρ : Density n) , NZ_Mixed_State ρ -> 
                                                         0 < fst (trace ρ).
@@ -470,6 +498,7 @@ Proof. intros.  split.
        apply nz_mixed_state_trace_1. intuition.
 Qed.
 
+(*The diagonal elements of a mixed state are real numbers.*)
 Lemma nz_mixed_state_diag_real : forall {n} (ρ : Density n) i , NZ_Mixed_State ρ -> 
                                                         snd (ρ i i) = 0.
 Proof.
@@ -486,6 +515,7 @@ Proof.
     lra.
 Qed.
 
+(*The trace of a mixed state is a real number.*)
 Lemma nz_mixed_state_trace_real : forall {n} (ρ : Density n) , NZ_Mixed_State ρ -> 
                                                         snd (trace ρ) = 0.
 Proof. intros. unfold trace. apply big_sum_snd_0. intros. apply nz_mixed_state_diag_real.
@@ -497,6 +527,7 @@ Proof. intros. unfold Cmod. rewrite H0. unfold pow. repeat rewrite Rmult_0_l.
     rewrite Rplus_0_r. rewrite Rmult_1_r. apply sqrt_square. intuition. 
 Qed.
 
+(*The modulus of the trace of a non-zero mixed state satisfies 0 < |tr(ρ)| ≤ 1.*)
 Lemma nz_mixed_state_Cmod_1 : forall {n} (ρ : Density n), NZ_Mixed_State ρ ->0< Cmod (trace ρ) <=1.
 Proof. intros. rewrite Cmod_snd_0. split.
       apply nz_mixed_state_trace_gt0. intuition.
@@ -505,7 +536,7 @@ Proof. intros. rewrite Cmod_snd_0. split.
       intuition.
 Qed.
 
-
+(*|(tr(𝜌1 + 𝜌2))| = |(tr(𝜌1))| + |(tr(𝜌2))|*)
 Local Open Scope R_scope.
 Lemma nz_mixed_state_Cmod_plus: forall {n} (ρ1  ρ2: Density n), NZ_Mixed_State ρ1 -> NZ_Mixed_State ρ2->  
 Cmod (trace (ρ1 .+ ρ2)) = Cmod (trace ρ1) + Cmod (trace ρ2).
@@ -518,7 +549,8 @@ Proof. intros.
     try intuition.  
 Qed.
 
-(*nz_mixed not Zero*)
+(*----------------------Proof that a non-zero mixed state is not equal to zero.----------------*)
+
 Lemma big_sum_0_R : forall n,
 (Σ (fun _ :nat =>0%R ) n)= 0%R. 
 Proof. 
@@ -572,7 +604,8 @@ Proof. intros.  intro.
 Qed.
 
 
-(*equiv*)
+(*----------------------The definitions of the two non-zero mixed states are equivalent------------------------------*)
+
 Local Open Scope R_scope.
 Lemma Mscale_0: forall (m n:nat) (A:Matrix m n) (p: R), 
 (p <> 0) /\ (p .* A = Zero) -> A = Zero .
@@ -660,12 +693,16 @@ Proof. intros; split; intros. split. apply NZ_Mixed_State_is_Mixed_State. assump
        apply IHMixed_State2.  apply Mscale_not_0' with p2. assumption.
 Qed.
 
-(*----------------------------------Mixed_State_aux-------------------------------------*)
+(*-----------------------------------------------------------------------*)
+(* Mixed_State_aux: a relaxed version of the mixed-state definition,
+ which facilitates the proof of subsequent theorems.                     *)
+(*-----------------------------------------------------------------------*)
 
 Inductive Mixed_State_aux {n} : Matrix n n -> Prop :=
 |Pure_S_aux : forall ρ (p:R), 0 <= p -> Pure_State ρ -> Mixed_State_aux (p.* ρ) 
 |Mix_S_aux : forall  ρ1 ρ2, Mixed_State_aux ρ1 -> Mixed_State_aux ρ2 ->Mixed_State_aux (ρ1 .+ ρ2).  
 
+(*a non-zero Mixed_State_aux*)
 Inductive NZ_Mixed_State_aux {n} : Matrix n n -> Prop :=
 |NZ_Pure_S_aux : forall ρ (p:R), 0 < p -> Pure_State ρ -> NZ_Mixed_State_aux (p.* ρ) 
 |NZ_Mix_S_aux : forall  ρ1 ρ2, NZ_Mixed_State_aux ρ1 -> NZ_Mixed_State_aux ρ2 ->NZ_Mixed_State_aux (ρ1 .+ ρ2).  
@@ -675,7 +712,9 @@ Lemma  Rplus_le_1:forall (r1 r2:R), r1>0->r1+r2<=1 ->r2<=1 .
 Proof. intros. lra.
 Qed.
 
-(*p .* ρ and super U ρ *)
+(**Type preservation of some operations**)
+
+(*p .* ρ*)
 Lemma nz_Mixed_State_scale_aux: forall n (ρ : Square n) p, NZ_Mixed_State_aux ρ ->
 0 < p->
 NZ_Mixed_State_aux (p .* ρ).
@@ -689,7 +728,7 @@ Proof. intros.
         apply NZ_Mix_S_aux; intuition.
 Qed.
 
-
+(* U × ρ *)
 Lemma nz_mixed_unitary_aux : forall {n} (U ρ : Matrix n n), 
 WF_Unitary U -> NZ_Mixed_State_aux ρ -> NZ_Mixed_State_aux (super U ρ).
 Proof.
@@ -706,7 +745,9 @@ induction M.
 Qed.
 #[export] Hint Resolve  nz_mixed_unitary_aux nz_Mixed_State_scale_aux: Mixed.
 
-(*trace*)
+
+(**Some properties about trace.**)
+
 Lemma nz_mixed_state_diag_in01_aux : forall {n} (ρ : Density n) i , NZ_Mixed_State_aux ρ -> 
                                                         0 <= fst (ρ i i).
 Proof.
@@ -810,7 +851,8 @@ Proof. intros. split. apply Rdiv_lt_0_compat.
       assumption. assumption.
 Qed.
 
-(*relation*)
+(*--------------------The relation between (NZ_)Mixed_State and (NZ_)Mixed_State_aux.-----------*)
+
 Local Open Scope R_scope.
 Lemma Rgt_neq_0: forall r, r>0 -> r<>0.
 Proof. intros. lra. Qed.
@@ -913,12 +955,13 @@ Qed.
 #[export] Hint Resolve  nz_Mixed_State_aux_to_nz_Mix_State nz_Mixed_State_scale_c
 nz_Mixed_State_aux_to_01': Mixed.
 
+(*-----------------The relation between Mixed_State_aux and NZ_Mixed_State_aux.--------------*)
 
-(*equiv*)
 Lemma zero_mixed_aux{n:nat}:(0<n)%nat-> Mixed_State_aux (@Zero n n).
 Proof. intros. assert(@Zero n n = 0%R .* (∣ 0 ⟩_ n × (adjoint (∣ 0 ⟩_ n)))). rewrite Mscale_0_l. 
 reflexivity. intros. rewrite H0.  apply Pure_S_aux. lra. apply Pure_State_base. assumption. 
 Qed.
+
 
 Lemma NZ_Mixed_State_aux_is_Mixed_State_aux{n:nat} : forall (ρ:Square n ),
 NZ_Mixed_State_aux ρ -> Mixed_State_aux ρ.
@@ -973,11 +1016,9 @@ Proof. intros; split; intros.
        assumption. rewrite H. apply zero_mixed_aux. apply pow_gt_0. 
 Qed.
 
-Lemma mixed_state_Cmod_ge_0_aux : forall {n} (ρ : Density (2^n)), Mixed_State_aux ρ ->0<= Cmod (trace ρ).
-Proof. intros. rewrite NZ_Mixed_State_aux_equiv' in H. destruct H. 
-      apply nz_mixed_state_Cmod_1_aux in H. lra. rewrite H. rewrite Zero_trace.
-      rewrite Cmod_0. lra.
-Qed. 
+(**Type preservation of more operations**)
+
+(*--------------------q1 + q1 is an NZ_Mixed_State_aux-----------------------*)
 
 Lemma Mix_stated_plus_aux{n:nat}: forall (q1 q2: Density n),
 Mixed_State_aux  q1 ->
@@ -990,7 +1031,8 @@ Proof. intros.
        apply Mix_S_aux; assumption. assumption.
 Qed.
 
-(*Vec is Mix_stated_aux*)
+(*-------for any v:vector, v × (v) † is  an NZ_Mix_stated_aux-----*)
+
 Local Open Scope nat_scope.
 Lemma Vector_State_snd_0: forall n (x: Vector (n)),
 WF_Matrix x-> (snd (((x) † × x) 0%nat 0%nat)= 0)%R.
@@ -1063,7 +1105,8 @@ Proof. intros. assert(x= ( (norm x))%R .* ( (R1 / ( (norm x)))%R .* x )).
           assumption. assumption. assumption. reflexivity.
 Qed.
 
-(*super M ρ is NZ_Mixed_State_aux *)
+
+(*-------- M × ρ-------------------*)
 Lemma nz_mixed_super_aux : forall {m n} (M : Matrix m n) (ρ: Matrix n n), 
 WF_Matrix M-> NZ_Mixed_State_aux ρ ->(super M ρ) <> Zero -> NZ_Mixed_State_aux  (super M ρ).
   Proof.
@@ -1106,7 +1149,7 @@ WF_Matrix M-> NZ_Mixed_State_aux ρ ->(super M ρ) <> Zero -> NZ_Mixed_State_aux
     apply IHNZ_Mixed_State_aux2. assumption.
 Qed.
 
-(*big_sum NZ_Mixed_State_aux*)
+(* The sum (∑ f_i) is an  NZ_Mixed_State_aux  *)
 Local Open Scope nat_scope.
 Lemma big_sum_not_0{n:nat}:forall (f:nat-> Square n) n0,
 (big_sum f n0) <> Zero ->
@@ -1150,7 +1193,16 @@ Proof. induction n0; intros. simpl. intuition.
      lia. assumption. 
 Qed. 
 
-(*big_sum_Cmod*)
+
+(*------------------Modulus-----------------------------------------------*)
+Local Open Scope R_scope.
+Lemma mixed_state_Cmod_ge_0_aux : forall {n} (ρ : Density (2^n)), Mixed_State_aux ρ ->0<= Cmod (trace ρ).
+Proof. intros. rewrite NZ_Mixed_State_aux_equiv' in H. destruct H. 
+      apply nz_mixed_state_Cmod_1_aux in H. lra. rewrite H. rewrite Zero_trace.
+      rewrite Cmod_0. lra.
+Qed. 
+
+(* |tr(∑ (f_i))| = ∑ (|tr(f_i)|) *)
 Lemma  big_sum_Cmod{n:nat}: forall (f:nat-> Square (2^n)) n0,
 (forall i:nat, (i<n0)%nat-> Mixed_State_aux (f i))->
 Cmod (trace (big_sum f n0)) = 
@@ -1204,7 +1256,12 @@ Proof. induction n0.
      assumption.   }
 Qed.
 
-(*--------------------------------nz_mixed_pure--------------------------------------------*)
+(*-----------------------------------------------------------------------------------*)
+(*--------------------------------The proof of 
+ For example, given two non-zero mixed states 𝜌1
+and 𝜌2, if 𝜌1 + 𝜌2 = |𝜙⟩ ⟨𝜙| for some |𝜙⟩, then there exists 𝑝𝑖 such that 0 < 𝑝𝑖 ≤ 1 
+and 𝜌𝑖 = 𝑝𝑖 |𝜙⟩ ⟨𝜙 | for 𝑖 = 1, 2.s-----------------------------------------------------*)
+(*-----------------------------------------------------------------------------------*)
 
 Require Import Complex.
 Lemma real_gt_0_aux:forall a b c : R, 0 < a -> 0 < b -> a = (b * c)%R -> 0 < c.
@@ -1358,6 +1415,7 @@ rewrite trace_mult.
 rewrite inner_trace'. reflexivity.
 Qed.
 
+(*Mixed_State 𝜌1 → Mixed_State 𝜌2 → 0 ≤ |(tr(𝜌1 × 𝜌2))| ≤ 1*)
 Lemma mixed_mult_trace_le_1:forall {n} (ρ1 :Density n),
 Mixed_State ρ1->
 forall (ρ2: Density n),
@@ -1483,7 +1541,8 @@ apply Rmult_in01''. lra. lra.
 lra. 
 Qed.
 
-
+(*NZ_Mixed_State 𝜌1 → NZ_Mixed_State 𝜌2
+→ ¬(∃ 𝑐 ∈ C, 𝑐 ∗ 𝜌1 = 𝜌2) → |(tr(𝜌1 × 𝜌2))| < 1*)
 Lemma nz_mixed_mult_trace_lt_1:forall {n} (ρ1 :Density n),
 NZ_Mixed_State ρ1->
 forall (ρ2: Density n),
@@ -1745,7 +1804,7 @@ Proof. intros n ρ1 Hρ1. induction Hρ1.
       lra. lra. } 
 Qed.
 
-
+(*|tr(𝜌 × 𝜌)| < 1*)
 Lemma nz_mixed_sqrt_trace: forall {n} (ρ1 ρ2: Density n) (p1 p2: R), 
 0<p1<=1->
 0<p2<=1->
@@ -1908,7 +1967,7 @@ rewrite RtoC_inv.
  apply nz_mixed_state_Cmod_1_aux. assumption.
 Qed.
 
-
+(*the main lemma*)
 Lemma nz_mixed_pure: forall {n:nat} (ρ1 ρ2: Density n) (φ:Vector n), 
 NZ_Mixed_State ρ1 ->
 NZ_Mixed_State ρ2 ->

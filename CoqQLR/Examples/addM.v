@@ -28,7 +28,9 @@ From Quan Require Import QSepar.
 From Quan Require Import QFrame.
 Import Basic. Import Ceval_Prop.
 
+(*---------------the correctness of the addM program--------------*)
 
+(**Some premises**)
 
 Lemma Mmult0H: ⟨0∣ × ∣+⟩= / √ 2 .* (I 1).
 Proof. solve_matrix. 
@@ -195,7 +197,7 @@ Definition v1: nat := 0.
 Definition v2: nat := 1. 
 Definition v:nat :=2.
 
-
+(*the definition of addM program *)
 Definition addM : com :=
   <{ [[0 1]] :Q= 0 ;
      [[1 2]] :Q= 0 ; 
@@ -211,6 +213,7 @@ Definition P2_0 (i:nat):Pure_formula :=  (P1 0) /\p (BEq (v2 ') i).
 Definition P2_1 (i:nat):Pure_formula  :=  (P1 1) /\p (BEq (v2 ') i).
 
 
+(**some tactics facilitate the proof of the entailment relationship(=>) in the "Consequence" rule.**)
 Ltac seman_sovle:=
   unfold assert_implies;
   intros; 
@@ -280,6 +283,7 @@ Ltac addM_WF_formula_solve:=
 try rewrite <-base_qubit1; assert(4=2*2) as H'; try lia; try rewrite H'; 
 apply pure_state_vector_kron; try apply Pure_State_Vector_base; try lia |  lia ] ].
 
+(*the correctness of addM program*)
 Local Open Scope nat_scope.
 Lemma correctness_addM:  
 {{ BTrue }}

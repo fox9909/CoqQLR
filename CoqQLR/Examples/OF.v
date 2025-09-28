@@ -23,6 +23,9 @@ From Quan Require Import addM.
 From Quan Require Import HHL.
 From Quan Require Import ContFrac.
 
+(*------------------------------------------------*)
+(*---the correctness of order-finding algorithm---*)
+(*------------------------------------------------*)
 
 Local Open Scope com_scope.
 Local Open Scope assert_scope.
@@ -184,7 +187,7 @@ Proof.  intros.  econstructor.
           apply IZN in H7. destruct H7.   rewrite H7 in *.  
 
         assert(Nat.divide x0 (Nat.gcd m n) )%nat. 
-        apply Nat.gcd_divide_iff. split; unfold Nat.divide.
+        apply Nat.gcd_greatest; unfold Nat.divide.
         exists x3.  apply Nat2Z.inj_iff. rewrite H. rewrite Nat2Z.inj_mul. reflexivity.  
         exists x4. apply Nat2Z.inj_iff. rewrite H0. rewrite Nat2Z.inj_mul. reflexivity. 
         unfold Nat.divide in *.  destruct H9. 
@@ -230,7 +233,7 @@ Parameter f: R-> nat.
 Parameter QFT: Square (2^t).
 Parameter delt_n:nat->nat.
 
-
+(*Some hypothesis*)
 Hypothesis HtL:  (t>0)%nat /\ (L>0)%nat /\ (2 ^ t >= r).
 Hypothesis HNL:  (N < (2^L))%nat. 
 Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ (2^L)) = (∣ 1 ⟩_ (2^L))).
@@ -253,7 +256,7 @@ Definition  P' (s:nat): Pure_formula := (BEq z' ' (s * 2 ^ t / r)%nat).
 
 
 
-
+(*---the definition of order-finding algorithm---*)
 Local Open Scope nat_scope.
 Definition OF :=
     <{ z :=  1 ;
@@ -272,7 +275,7 @@ Definition OF :=
 
 Local Open Scope R_scope.
 
-
+(**Some properties  and tactics facilitate the proof of the entailment relationship(=>) in the "Consequence" rule.**)
 
 Lemma sum_pro: forall n (q:C), 
 q<>C1->
@@ -1053,14 +1056,14 @@ Proof. induction b0; intros; simpl. reflexivity.
        destruct H4. destruct H5. destruct H6.
        assert(Nat.divide n  a). apply divide_trans with x0; try assumption.
         assert(Nat.divide n (Nat.gcd a c)).
-         apply(Nat.gcd_divide_iff). split; assumption.
+         apply(Nat.gcd_greatest); assumption.
          rewrite H1 in *. 
          apply Nat.divide_pos_le in H8.  assert(n=0). lia.
          rewrite H9 in *. apply Nat.divide_0_l in H7. lia. lia.
         assert(Nat.divide x0 c).
         apply divide_trans with n; try assumption. 
         assert(Nat.divide x0 (Nat.gcd a c)).
-         apply(Nat.gcd_divide_iff). split; assumption.
+         apply(Nat.gcd_greatest); assumption.
          rewrite H1 in *. 
          apply Nat.divide_pos_le in H8.  assert(x0=0).  lia.  
          rewrite H9 in *. apply Nat.divide_0_l in H5. lia. lia. 
@@ -1445,7 +1448,7 @@ rewrite base_inner_0. unfold c_to_Vector1.
 Qed.
 
 
-
+(*---the correctess of order-finding algorithm---*)
 Theorem OF_correctness: 
 {{BTrue }} OF {{BEq z ' r}}.
 Proof.

@@ -21,7 +21,13 @@ Local Open Scope com_scope.
 Local Open Scope state_scope.
 Import Sorted.
 
+(* In this file, we  define two key theorems: "ceval_big_dapp" and "Reduced_ceval_swap".
+ "ceval_big_dapp" : the linear behavior of the function [[𝑐]], considering 
+ those coefficients 𝑝𝑖 such that 𝑝𝑖 > 0 ([[𝑐]](∑︁_𝑖 𝑝𝑖 ·𝜇𝑖) =∑︁_𝑖 𝑝𝑖 · [[𝑐]](𝜇𝑖) .). 
+ "Reduced_ceval_swap" : commutativity of the function [[𝑐]] with the restriction of the distribution: [[𝑐]] (𝜇|_𝑉)= ([[𝑐]] 𝜇)|_𝑉.*)
 
+
+(**------------ ([[𝑐]](∑︁_𝑖 𝑝𝑖 ·𝜇𝑖) =∑︁_𝑖 𝑝𝑖 · [[𝑐]](𝜇𝑖) ------------**)
 
 
 Lemma ceval_app_while{s e:nat}: 
@@ -1585,7 +1591,7 @@ Proof. induction mu_n; intros; destruct mu_n'; simpl  in *; inversion H0; subst.
       apply IHmu_n; try assumption.
 Qed.
 
-(*---------------------mv(c)\subseteq S =>[[c]]mu|_{S}= ([[c]]mu)|_{S}---------------------------------------------------------*)
+(*---------------------qmod(𝑐) ⊆ 𝑉 ⊆ dom(𝜇) =>[[𝑐]] (𝜇|_𝑉)= ([[𝑐]] 𝜇)|𝑉---------------------------------------------------------*)
 
 
 Local Open Scope com_scope.

@@ -34,6 +34,9 @@ Require Import Coq.Arith.Arith.
 Require Import Coq.Bool.Bool.
 Require Import Coq.Arith.Arith.
 
+(*-----------------------------------------*)
+(*---the correctness of Shor's algorithm---*)
+(*-----------------------------------------*)
 
 Module Shor (p:Param).
 
@@ -99,6 +102,9 @@ Definition Big_hypose (x z N:nat): Pure_formula:=
   (BNeq (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) 1)) \/p 
   (BAnd (BNeq (AGcd  (APlus (APow x (ADiv z ' 2)) 1) N) N)  
   (BNeq (AGcd (APlus (APow x (ADiv z ' 2)) 1) N) 1)).
+
+
+(**Some properties and tactics facilitate the proof of the entailment relationship(=>) in the "Consequence" rule.**)
 
 (*square variance*)
 Lemma pow_sub: forall x y:nat, (y<=x) -> (x)^2 -(y^2)= (x+y)*(x-y).
@@ -212,10 +218,10 @@ Proof. intros. seman_sovle. unfold Big_hypose. unfold Pure_eval in *.
        rewrite Nat.mod_divide in H13.
        rewrite Nat.mod_divide in H14.
        assert(Nat.divide x2 (Nat.gcd ((p.x ^ (p.r / 2) + 1)) (p.N))).
-       apply Nat.gcd_divide_iff. split; try assumption.
+      apply(Nat.gcd_greatest); assumption.
        apply Nat.divide_pos_le in H15. 
        assert(Nat.divide x3 (Nat.gcd ((p.x ^ (p.r / 2) - 1)) (p.N))).
-       apply Nat.gcd_divide_iff. split; try assumption.
+      apply(Nat.gcd_greatest); try assumption.
        apply Nat.divide_pos_le in H16. 
        destruct ((¬ (p.x ^ (p.r / 2) + 1) mod p.N =? 0)) eqn:E.
        assert(Nat.gcd (p.x ^ (p.r / 2) + 1) p.N <> p.N).
@@ -333,7 +339,7 @@ Ltac classic_slove_2:=
   Pure_eval_solve;
   classic_slove_aux.
 
-
+(*---the correctness of Shor's algorithm---*)
 Theorem Shor_correctness:
 {{(Pre Cop N)}} Shor  {{  (BEq ((AMod N y ')) 0) /\p (BNeq y ' 1) /\p (BNeq y ' (N)) }} .
 Proof. unfold Shor. 

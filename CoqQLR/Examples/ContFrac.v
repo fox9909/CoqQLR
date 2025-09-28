@@ -1,4 +1,6 @@
 Require Import Psatz ZArith Znumtheory Reals QuantumLib.Prelim.
+(*This file is established by the work of SQIR.*)
+
 (* ============================== *)
 (* = Continued Fraction Results = *)
 (* ============================== *)

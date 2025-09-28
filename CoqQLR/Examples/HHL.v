@@ -20,6 +20,12 @@ From Quan Require Import QSepar.
 From Quan Require Import QFrame.
 From Quan Require Import addM.
 
+
+
+(*--------------------------------------*)
+(*---the correctness of HHL algorithm---*)
+(*--------------------------------------*)
+
 Local Open Scope com_scope.
 Local Open Scope assert_scope.
 Local Open Scope nat_scope.
@@ -131,6 +137,7 @@ Parameter QFT: Square (2^n) .
 Parameter t:R. 
 Parameter delt_n:nat->nat.
 
+(*Some Hypothesis*)
 Hypothesis Hmn: ( (n>0)%nat /\ (m>0)%nat).
 Hypothesis HA: WF_Matrix A .
 Hypothesis Hb: WF_Matrix b /\ norm b =1.
@@ -309,8 +316,7 @@ Qed.
 Local Open Scope nat_scope.     
 Local Open Scope com_scope.   
 
-
-
+(*---the definition of HHL algorithm---*)
 Definition HHL :=
     <{ v := 0;
        while  v ' = 0  do 
@@ -327,6 +333,9 @@ Definition HHL :=
        (n ⨂ hadamard) [[ 0 n ]];
         v :=M [[ (n+m) (n+m+1) ]]
        end }>.
+
+
+(**Some properties  and tactics facilitate the proof of the entailment relationship(=>) in the "Consequence" rule.**)
 
 Ltac type_sovle:= 
   try repeat rewrite add_sub_eq; 
@@ -964,7 +973,7 @@ Msimpl. reflexivity.
 Qed.
 
 
-
+(*---the correctness of HHL algorithm---*)
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
 Proof. 
     unfold HHL.  pose Hmn. assert( n<(n+m)). lia. 

@@ -21,6 +21,11 @@ From Quan Require Import Mixed_State.
 From Quan Require Import QSepar.
 From Quan Require Import Ceval_Prop.
 
+(* In the QRule folder, we delineate the formalization of the rules 
+mentioned in Section 4.2 in our work and rigorously establish their soundnes*)
+(*All the rules are formalized as theorems whose names are prefixed with "rule_".*)
+
+(*In this file, we formalize inference rules for entailment reasoning*)
 Local Open Scope nat_scope.
 
 Definition assert_implies (P Q : Assertion) : Prop :=
@@ -133,7 +138,6 @@ Qed.
   
 
 (*Odot*)
-
   Lemma inter_comm:forall x y,
   NSet.Equal (NSet.inter x y)  (NSet.inter y x) .
   Proof.  unfold NSet.Equal. split; intros;

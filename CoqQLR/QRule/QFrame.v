@@ -32,6 +32,8 @@ Local Open Scope com_scope.
 Local Open Scope nat_scope.
 Local Open Scope rule_scope.
 
+(*In this file, we formalize QFrame rule.*)
+
 
 (*---------------------------------------------dstate_Separ preserve-----------------------------------------*)
 
@@ -546,7 +548,8 @@ Qed.
 
 
 
-(* mu is separable in S1 \cup S2 and  mv(C) \subseteq S2 => mu|_{S1} \modes F => [[c]]_{\mu}|_{S1} \models F *)
+(* The distribution μ is separable over S₁ ∪ S₂ and mv(c) ⊆ S₂;
+then μ|_{S₁} ⊨ F implies [[c]]μ|_{S₁} ⊨ F. *)
 
 Lemma Reduced_QInit_r{ s e:nat}: forall c (q:qstate s e) s' e' s0 e0 s1 e1,
 dstate_Separ [(c, q)] s0 e0 s1 e1->
@@ -2394,7 +2397,8 @@ Proof.
 
 Qed.
 
-
+(*free(F): the set of free variables in F. 
+If 𝜇 |= 𝐹 and free(𝐹)∩ mod(𝑐) = ∅, then [[𝑐]](𝜇)|= 𝐹.*)
 Lemma rule_f': forall  F c s e (mu mu':dstate s e) ,
 (Considered_Formula F )->
 sat_State mu F->

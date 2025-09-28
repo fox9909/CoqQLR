@@ -26,6 +26,10 @@ From Quan Require Import QRule_I_L.
 Import Reduced.
 Import Basic.
 Import Ceval_Prop.
+
+(*In this file, we formalize inference rules for quantum statements.*)
+
+
 Local Open Scope nat_scope.
 
 Local Open Scope com_scope.

@@ -29,8 +29,9 @@ Local Open Scope nat_scope.
 
 Local Open Scope com_scope.
 Local Open Scope nat_scope.
+(*Some properties for assertions*)
 
-(*----------------------------separ-------------------*)
+(*If a subsystem is in a pure state, then the total state must be a product state.*)
 
 Lemma big_sum_sum' : forall a b m n (f: nat->Matrix a b), 
   big_sum f (m + n) = big_sum f m .+ big_sum (fun x => f (m + x)%nat) n.
@@ -1978,7 +1979,10 @@ rewrite (Cmult_comm (@trace (2^(e-x)) x1)).
 Qed.
 
 
-(*-----------------------------------------set of free variables------------------------------*)
+(*-----------------------------------------Simplified Definition of free variables------------------------------*)
+(*we focus exclusively on assertions for which the sets of quantum variables
+can be expressed as pair (𝑠, 𝑒), as specified by "Considered_Formula".
+qfree(F): the quantum variables in F*)
 
 Fixpoint Free_QExp'(qs :QExp) := 
 match qs with 
@@ -2263,7 +2267,7 @@ Proof. induction F; intros.
 simpl in *. apply IHF. assumption. assumption. 
 Qed.
 
-(*-------------------------------Prop of set and Qsys-------------------------------------------------------*)
+(*-------------------------------Some properties of set, and Considered_Formula-------------------------------------------------------*)
 Lemma  empty_Empty: forall s, 
 NSet.Equal s NSet.empty <-> NSet.Empty s.
 Proof. unfold NSet.Equal. unfold NSet.Empty.
@@ -3354,7 +3358,9 @@ Qed.
 
 
 
-(*------------------------------eval_dom---------------------------------------------*)
+
+(*-------------------------------(𝜎, 𝜌) |= F => qfree(F) ⊆ dom(𝜌) --------------------------------------------*)
+(*-------------------------------mu |= F => qfree(F) ⊆ dom(mu) ---------------------------------------*)
 
 Lemma QExp_eval_dom{ s e:nat}: forall qs c (q:qstate s e),
 QExp_eval qs (c,q) -> s<= fst (Free_QExp' qs) /\ 
@@ -3501,7 +3507,9 @@ apply State_eval_dom with c q.
 assumption.  
 Qed. 
 
-(*-------------------------------------------------eval pure-------------------------*)
+(*--------------------------------------------eval pure-------------------------*)
+(*if ρ |= F and qfree(F) = V, then there exists pure state |a>_V and p such that
+ ρ_V = p .* |a>_V and 0 < p <=1.*)
 
 Lemma QExp_eval_pure: forall qs s e c (q: qstate s e) ,
 Considered_QExp qs ->
@@ -4094,7 +4102,7 @@ apply H19.    assumption.
 Qed.
 
 
-(*--------------------------------dstate_Separ------------------------------------------*)
+(*--------------------------------𝜇  is separable when every quantum state is separable in 𝜇------------------------------------------*)
 Inductive q_combin'{s0 e0 s1 e1 s2 e2}: (qstate s0 e0) -> (qstate s1 e1)-> (qstate s2 e2)->Prop:=
 |q_combin'': forall q0 q1, e0 = s1-> s0 = s2 -> e1 = e2 -> WF_qstate q0 ->
              WF_qstate q1->
@@ -4111,7 +4119,12 @@ Inductive dstate_Separ{ s e: nat}: (list (cstate *qstate s e)) -> nat -> nat -> 
 dstate_Separ mu' s0 e0 s1 e1->
 dstate_Separ ((c,q)::mu') s0 e0 s1 e1.
 
-(*------------------mu \modes F => mu is separable--------------------*)
+
+
+(*(𝜎, 𝜌) |= 𝐹  => 𝜌 is a product state .
+Formally, if (𝜎, 𝜌) |= 𝐹 , there exist 𝜌1 ∈ D^{-}(H_{qfree(𝐹)}) and 𝜌2 ∈ D^{-}(H_{𝑉 \qfree(𝐹)} ) 
+such that 𝜌 = 𝜌1 ⊗ 𝜌2.*)
+
 Lemma State_eval_separ_r{s e:nat}: forall F r c (q:qstate s e),
 Considered_Formula (F) /\
 (r <= e /\ snd (option_free (Free_State F)) <=r /\ fst (option_free (Free_State F)) < snd (option_free (Free_State F)))->
@@ -4179,6 +4192,8 @@ Proof. intros F l c q H Hw. intros.
        econstructor; try reflexivity; try apply H2.
 Qed.
 
+
+(*------------------ 𝜇 |= 𝐹  =>  𝜇  is separable--------------------*)
 
 Lemma State_eval_dstate_separ_l{s e:nat}: forall (mu : list (cstate *qstate s e)) F l,
 Considered_Formula F /\
@@ -4321,7 +4336,9 @@ Proof. induction mu; intros.
       inversion_clear H1. assumption.  
 Qed. 
 
-(*  ------------------------------mu \models F => mu|_{V} \modesl F -----------*)
+(*-------------------Assertion 𝐹 is restrictive: 𝜇 |= 𝐹 ⇔ 𝜇|_𝑉 |= 𝐹, where  qfree(𝐹 ) ⊆ 𝑉 ⊆ dom(𝜇)(dom(𝜇): the domain of 𝜇)---------------------------------------*)
+
+
 Lemma QExp_free_eval{s e:nat}:forall (qs: QExp) (st: state s e) s' e',
 s<=s'/\ s'<=e' /\ e'<=e ->
 s'<=(fst (Free_QExp' qs)) /\ (snd (Free_QExp' qs))<=e'->
@@ -4732,7 +4749,17 @@ apply Free_State_not_empty; try assumption.
 intro. destruct H3. rewrite<- empty_Empty. assumption.
 pose (min_le_max (snd (Free_state F))). lia. 
 Qed.
-(*---------------------------------seman_eq-------------------------------------------*)
+
+
+(*----------------------------F1 ⊙ F2 characterizes a product state-------------------*)
+(*D^{-} (H_𝑉):  the set of quantum states consists of all partial density operators in
+the space H_𝑉. H_𝑉 is the Hilbert space spanned by tensor products of the individual state spaces of the
+quantum variables in 𝑉.*)
+
+(*Let 𝜎 be a classical state, 𝜌 a quantum state, and 𝐹1, 𝐹2 two assertions. 
+Then (𝜎, 𝜌) |= 𝐹1 ⊙ 𝐹2 if and only if there exist 𝑉1, 𝑉2, 𝜌1, 𝜌2 such that 𝑉1 ∩ 𝑉2 = ∅, 
+𝜌1 ∈ D^{-} (H_𝑉1 ), 𝜌2 ∈ D^{-} (H_𝑉2 ), 
+and 𝜌|_𝑉1∪𝑉2 = 𝜌1 ⊗ 𝜌2 ∧ (𝜎, 𝜌1) |= 𝐹1 ∧ (𝜎, 𝜌2) |= 𝐹2.*)
 
 Lemma Reduced_id{s e : nat}: forall (l r : nat) (q : qstate s e),
 s<=r->
@@ -5049,4 +5076,204 @@ Proof. intros.   split; intros.
 Qed. 
 
 
+ 
 
+(* Let 𝜎 be a classical state, 𝜌 a quantum state, and 𝐹1, 𝐹2 two assertions. 
+If (𝜎, 𝜌) |= 𝐹1 /\ 𝐹2 where qfree(F1) and qfree(F2) overlap, i.e., qfree(F1) = A ∪ B and qfree(F2) = B ∪ C where A, B and C are
+disjoint, then there exist 𝜌1 , 𝜌2, 𝜌3 such that 
+𝜌1 ∈ D^{-} (H_A), 𝜌2 ∈ D^{-} (H_B), 𝜌3 ∈ D^{-} (H_C), 
+and 𝜌|_{A∪B∪C} = 𝜌1 ⊗ 𝜌2 ⊗ 𝜌3 .*)
+Definition F1_le_F2 F1 F2 := 
+(fst (option_free (Free_State F1)) < fst (option_free (Free_State F2)) /\
+fst (option_free (Free_State F2)) < snd (option_free (Free_State F1) ) /\
+(snd (option_free (Free_State F1)) < (snd (option_free (Free_State F2)))) ) .
+
+
+Lemma Mscale_inv{m n}: forall (c:C) (A B:Matrix m n), 
+c <> 0%R ->
+c .* A = B -> A = /c .* B.
+Proof. intros. 
+       assert(/c .* (c .* A)= /c .* B). 
+       rewrite H0.  reflexivity. 
+       rewrite Mscale_assoc in H1.
+        rewrite Cinv_l in H1; try assumption. 
+        rewrite Mscale_1_l in H1.  
+        try assumption. 
+Qed.
+
+Lemma Par_Pure_State_scale{s e}: forall (q:qstate s e),
+@Par_Pure_State (2^(e-s)) q -> @Par_Pure_State (2^(e-s)) (@trace (2^(e-s)) q .* q) .
+Proof. intros. unfold Par_Pure_State in *. destruct H. destruct H. 
+      destruct H. destruct H0.   exists (x * fst (@trace (2^(e-s)) q))%R.
+      exists x0. split. 
+      apply Rmult_in01. assumption.  
+      apply nz_mixed_state_trace_in01. 
+      rewrite H1.
+      apply NZ_Pure_S; try assumption.  
+      split; try assumption. 
+      rewrite Rmult_comm. rewrite<- RtoC_mult.   
+      rewrite <-Mscale_assoc. rewrite <-H1.
+      unfold RtoC. 
+      assert(@trace (2^(e-s)) q = (fst(@trace (2^(e-s)) q), snd(@trace (2^(e-s)) q))). 
+      destruct (@trace (2^(e-s)) q). reflexivity. 
+      rewrite H2. simpl. f_equal. f_equal. 
+      apply nz_mixed_state_trace_real. rewrite H1.  
+      apply NZ_Pure_S; try assumption.
+Qed.
+
+Lemma Free_State_SAnd: forall F1 F2, 
+Free_State (SAnd F1 F2) =None -> 
+Free_State F1 = None \/ Free_State F2 =None.
+Proof. intros. simpl in H. 
+       destruct (option_beq (Free_State F1) None) eqn:E.
+       right. 
+       assumption.
+        destruct (option_beq (Free_State F2) None) eqn:E1.
+       left. 
+       assumption. discriminate.   
+Qed.
+
+
+Lemma Sat_and_separ{s e:nat}: forall c (q: qstate s e) (F1 F2:State_formula),
+Considered_Formula (SAnd F1 F2 )-> F1_le_F2 F1 F2 ->
+WF_qstate q-> State_eval  (SAnd F1 F2 ) (c,q)->
+let a:=fst (option_free(Free_State F1)) in let b:=fst (option_free(Free_State F2)) in 
+let c:=snd (option_free(Free_State F1)) in let d:=snd (option_free(Free_State F2)) in 
+exists (q1:qstate a b) (q2: qstate b c) (q3: qstate c d) , 
+(Reduced q a d =@kron (2^(c-a)) (2^(c-a)) (2^(d-c))  (2^(d-c)) (@kron (2^(b-a)) (2^(b-a)) (2^(c-b))  (2^(c-b)) q1 q2) q3).
+Proof. intros. 
+       pose H2 as H3. destruct H3. 
+       pose H2 as H3'. apply State_eval_dom in H3'. 
+
+       apply State_eval_pure in H2; try simpl; try assumption. 
+       apply State_eval_pure in H3; try simpl; try assumption; try apply H.
+       apply State_eval_pure in H4; try simpl; try assumption; try apply H.
+      
+       simpl in H. unfold F1_le_F2 in H0. 
+       destruct (option_beq (Free_State F1))  eqn:E. 
+       apply Pure_dom in E.  lia. 
+       destruct (option_beq (Free_State F2))  eqn:E1. 
+       apply Pure_dom in E1.  lia.
+       
+       assert(Free_State (F1 /\s F2) <> None ).
+       intro. apply Free_State_SAnd in H5.  
+       destruct H5; apply option_eqb_eq in H5. rewrite E in H5.  discriminate. rewrite E1 in H5. discriminate.  
+       
+       
+       destruct H2. rewrite H2 in H5. destruct H5. reflexivity. destruct H3'. 
+       rewrite H6 in H5. destruct H5. reflexivity. 
+       simpl in H6. rewrite E in H6. rewrite E1 in H6. 
+       simpl in H6. rewrite min_l in H6; try lia.  rewrite max_r in H6; try lia.    
+       destruct H3. apply option_eqb_eq in H3.
+       rewrite E in H3.  discriminate.  
+       destruct H4. apply option_eqb_eq in H4. 
+       rewrite E1 in H4. discriminate.
+       
+       simpl in H2.  rewrite E in H2. rewrite E1 in H2. 
+       simpl in H2. rewrite min_l in H2; try lia.  rewrite max_r in H2; try lia. 
+       
+       remember ((Reduced q
+          (fst (option_free (Free_State F1)))
+          (snd (option_free (Free_State F2))))).
+     remember ((Reduced q
+          (fst (option_free (Free_State F1)))
+          (snd (option_free (Free_State F1))))).
+       remember ((Reduced q
+          (fst (option_free (Free_State F2)))
+          (snd (option_free (Free_State F2))))). 
+
+       assert(WF_qstate q0) as WFq0. rewrite Heqq0. apply WF_qstate_Reduced. lia. assumption.
+       assert(WF_qstate q2) as WFq2. rewrite Heqq2. apply WF_qstate_Reduced. lia. assumption. 
+       
+       assert(q1 =Reduced q0  a c0).  
+       rewrite Heqq1. rewrite Heqq0. rewrite Reduced_assoc; try lia. reflexivity.  
+       rewrite H7 in H3. 
+       apply qstate_Separ_pure_l' in H3; try lia; try apply WFq0.    
+
+        assert(q2 =Reduced q0  b d).  
+       rewrite Heqq2. rewrite Heqq0. rewrite Reduced_assoc; try lia. reflexivity. 
+       rewrite H8 in H4. 
+       apply qstate_Separ_pure_r' in H4; try lia; try apply WFq0. 
+       
+       assert(@Par_Pure_State (2^(d-c0)) (Reduced q0 c0 d)).
+       apply (@Par_Pure_State_reduced a d c0). lia. apply WF_qstate_Reduced. lia. assumption. 
+       
+       exists (@trace (2^(d-a)) q0 .* q0). 
+       exists (Reduced q0 a c0).  split.   
+       split; try lia. apply nz_Mixed_State_scale_c. apply WFq0.    
+       apply nz_mixed_state_trace_in01. apply WFq0.  
+       apply nz_mixed_state_trace_real. apply WFq0. 
+       split. apply WF_qstate_Reduced. lia. assumption.  
+       split. assumption.  apply Par_Pure_State_scale. assumption. 
+       assert(Reduced q2 c0 d = Reduced q0 c0 d). 
+       rewrite Heqq2. rewrite Heqq0. rewrite  Reduced_assoc; try lia.
+       rewrite Reduced_assoc. reflexivity. lia.   
+
+       rewrite <-H10 in H9.  
+       apply qstate_Separ_pure_r' in H9; try lia; try apply WFq2.  
+       
+       exists ( (/(@trace (2^(d-a)) q0)) .* (Reduced q0
+       (fst (option_free (Free_State F1)))
+       (fst (option_free (Free_State F2))))). 
+       exists ((/(@trace (2^(d-b)) q2)) .*Reduced q2
+       (fst (option_free (Free_State F2))) c0). 
+       exists (Reduced q2 c0 d).
+       
+       rewrite Mscale_kron_dist_l. 
+       assert(2^(c0-a)=(2 ^ (b - a) * 2 ^ (c0 - b))). type_sovle'. destruct H11.
+       rewrite Mscale_kron_dist_l.
+       
+       assert(2^(d-a)=(2 ^ (c0 - a) * 2 ^ (d - c0))). type_sovle'. destruct H11.
+       apply (@Mscale_inv (2^(d-a)) (2^(d-a))). apply C0_fst_neq. apply Rgt_neq_0.
+       apply nz_mixed_state_trace_gt0. apply WFq0. 
+
+       assert(Reduced q a d=q0). rewrite Heqq0. reflexivity. rewrite H11. 
+       
+       assert((2 ^ (b - a) * 2 ^ (d - b))=2^(d-a)). type_sovle'. destruct H12. 
+       assert((@trace
+             (2^ ( (snd (option_free (Free_State F2)))-
+                   (fst (option_free (Free_State F1))))) q0)=
+              (@trace (2 ^ (b - a) * 2 ^ (d - b)) q0)). f_equal. type_sovle'. rewrite H12 in H4.  
+       remember ((@scale (2 ^ (b - a) * 2 ^ (d - b)) (2 ^ (b - a) * 2 ^ (d - b)) (@trace (2 ^ (b - a) * 2 ^ (d - b)) q0) q0)). 
+
+       remember ((@scale
+          ((2^ (sub(@fst nat nat (option_free (Free_State F2)))
+                   (@fst nat nat (option_free (Free_State F1)))))*
+            (2^ (sub (@snd nat nat (option_free (Free_State F2)))
+                   (@fst nat nat (option_free (Free_State F2))))))
+          ((2^ (sub(@fst nat nat (option_free (Free_State F2)))
+                   (@fst nat nat (option_free (Free_State F1)))))*
+            (2^ (sub (@snd nat nat (option_free (Free_State F2)))
+                   (@fst nat nat (option_free (Free_State F2))))))
+          (@trace (2 ^ (b - a) * 2 ^ (d - b)) q0) q0)). 
+
+       assert(m=m0). rewrite Heqm. rewrite Heqm0. reflexivity. rewrite H13. rewrite H4. 
+       assert((2 ^ (b - a) * 2 ^ (c0 - b))=2^(c0-a)). type_sovle'. destruct H14.
+       rewrite kron_assoc. f_equal; type_sovle'. rewrite Mscale_kron_dist_l.
+                   
+       remember ((Reduced q2 (fst (option_free (Free_State F2))) c0 ⊗ Reduced q2 c0 d)). 
+
+       remember ((@kron (2^ (c0 - (@fst nat nat (option_free (Free_State F2))))) (2^ (c0- (@fst nat nat  (option_free (Free_State F2))))) (2^ (d-c0)) (2^ (d-c0))
+          (@Reduced  (@fst nat nat (option_free (Free_State F2))) d q2
+             (@fst nat nat (option_free (Free_State F2))) c0)
+          (@Reduced (@fst nat nat (option_free (Free_State F2))) d q2
+             c0 d))).
+             
+        assert(m1=m2). rewrite Heqm1. rewrite Heqm2. 
+        reflexivity. rewrite H14. 
+       rewrite <-H9. rewrite Mscale_assoc. 
+       rewrite Cinv_l. rewrite Mscale_1_l. 
+       rewrite Heqq2. rewrite Heqq0. rewrite Reduced_assoc.  reflexivity. lia.
+       apply C0_fst_neq.  apply Rgt_neq_0. 
+       apply nz_mixed_state_trace_gt0. apply WFq2.  
+       apply WF_NZ_Mixed. apply WF_qstate_Reduced. lia. apply WFq0. apply WF_NZ_Mixed. rewrite <- (Reduced_trace _ _ _ (fst (option_free (Free_State F2))) c0); try lia. apply nz_Mixed_State_aux_to01'. apply nz_Mixed_State_aux_to_nz_Mix_State.  
+       apply WF_qstate_Reduced. lia. apply WFq2. 
+       apply WF_NZ_Mixed. apply WFq2. 
+       apply WF_NZ_Mixed. apply WF_qstate_Reduced. lia. apply WFq2. 
+              simpl in H. unfold F1_le_F2 in H0.    destruct (option_beq (Free_State F1) None) eqn:E. assumption. 
+              destruct (option_beq (Free_State F2) None) eqn:E1. 
+              apply Pure_dom in E1.  lia. apply H.
+              
+              simpl in H. unfold F1_le_F2 in H0.    destruct (option_beq (Free_State F1) None) eqn:E. apply Pure_dom in E.  lia.
+              destruct (option_beq (Free_State F2) None) eqn:E1. assumption.   apply H.
+Qed.

@@ -15,8 +15,14 @@ Import QArith.QOrderedType.
 From Quan Require Import Matrix.
 From Quan Require Import Mixed_State.
 
-(*-----------------------------------Classic State----------------------------------------*)
+(* In this file, we define classical states, quantum states, and distribution states, along with associated lemmas *)
 
+(*-----------------------------------Classic State----------------------------------------*)
+(* In, our work we use subscripts to represent variables.                                 
+     We denote the classical variable 𝑥_𝑖 with 𝑖. 
+    Therefore, We define the type "cstate" as a Coq type of list nat, 
+    representing a classical state where the 𝑖-th element corresponds to
+    the value of variable 𝑥_𝑖 . *)
 
 Module D:=Nat_as_OT.
 
@@ -71,7 +77,9 @@ Fixpoint equal (m m' :cstate) { struct m } : bool :=
       end
    | _, _ => false
   end.
+
 (*--------------------------Cstate_as_OT---------------------------*)
+(* The module Cstate_as_OT defines cstate as an OrderedType. *)
 
 Module Cstate_as_OT  <: OrderedType.
 
@@ -165,6 +173,17 @@ End Cstate_as_OT.
 
 
 (*------------------------------Quantum State----------------------------------------*)
+(*we denote  the set of variables ⟨𝑞_𝑠, 𝑞_𝑠+1, . . . , 𝑞_𝑒 −1⟩ with (𝑠, 𝑒). 
+
+ Syntactically, we represent a quantum state 𝜌 with domain (𝑠, 𝑒) using a
+2(𝑒 −𝑠 )-dimensional matrix, sepecified by type "qstate". 
+
+Semantically. we require that the matrix represents a non-zero mixed state. 
+Thus we define a type "WF_qstate" to further ensure that this matrix is a non-zero mixed state and
+the domain is valid, that is, 𝑠 ≤ 𝑒. 
+We call these well-formed quantum states.*)
+
+(*-----------------------------------------------------------------------------------*)
 Local Open Scope R_scope.
 Module NSet := FSetList.Make Nat_as_OT.
 Definition QSet:=NSet.t.
@@ -184,6 +203,8 @@ Definition qstate (s e :nat):= Density (2^(e-s)).
 Definition WF_qstate{s e :nat} (rho : qstate s e ):=
     @NZ_Mixed_State (2^(e-s)) rho /\ (s<=e)%nat.
 
+(**Some operations for quantum states**)
+
 Definition q_update{s e:nat} (U: Square   (2^(e-s))) (rho :qstate s e): qstate s e:=
   super U rho.
 
@@ -200,6 +221,9 @@ Definition q_trace{s e:nat} (q: qstate s e) :=
 Cmod (@trace (2^(e-s)) q).
 
 #[export] Hint Unfold q_kron q_plus q_scale q_trace:core.
+
+(**The well-formedness of quantum states 
+is preserved under their respective operations.**)
 
 Lemma WF_qstate_update{s e:nat}:forall  (U:Square (2^(e-s))) (q:qstate s e),
 WF_Unitary U-> WF_qstate q->WF_qstate (q_update U q).
@@ -252,6 +276,8 @@ Proof.  unfold WF_qstate. simpl.  intros.
 apply (@NZ_Mixed_not_Zero (2^(e-s))). intuition.
 Qed.
 
+(*--------------------------------------------------------------*)
+
 Definition WWF_qstate{s e:nat} (rho : qstate s e ):=
   @NZ_Mixed_State_aux (2^(e-s)) rho /\ (s<=e)%nat.
 
@@ -295,15 +321,17 @@ Proof. intros.  unfold q_trace. unfold q_scale.
 intuition.
 Qed.
 
-
+(*Well-formed quantum states are well-formed matrices.*)
 Lemma WF_Matrix_qstate : forall {s e:nat} (ρ : Density (2^(e-s))), WF_qstate ρ -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
 
 #[export] Hint Resolve WF_qstate_update WF_qstate_kron : QState.
 
 
-(*----------------------C-Q state------------------------------------------*)
-
+(*----------------------C-Q state-------------------------------------------------------*)
+(*"state": A state is a pair with product type (cstate * (qstate s e)).
+  "WF_state":  A state is considered well-formed if its quantum component is well-formed*)
+(*--------------------------------------------------------------------------------------*)
 
 Local Open Scope R_scope.
 
@@ -311,6 +339,9 @@ Definition state(s e: nat) := (cstate * (qstate s e))%type.
 
 Definition WF_state{s e:nat} (st:state s e): Prop:=
           WF_qstate (snd st).
+
+  
+(**Some operations for states**)
 
 Definition s_update_cstate{s e:nat}  i (v :nat) (m:state s e): state s e:=
   match m with 
@@ -339,6 +370,7 @@ Definition s_trace{s e:nat} (st:state s e): R:=
 
 Local Open Scope R_scope.
 
+(*The well-formedness of states is preserved under their respective operations.*)
 
 Lemma WF_Matrix_state : forall {s e:nat} c (ρ : Density (2^(e-s))), WF_state (c,ρ) -> WF_Matrix ρ.
 Proof.  induction 1; auto with wf_db. Qed.
@@ -364,6 +396,8 @@ Proof.
         intros. destruct H. split. apply (@nz_Mixed_State_scale (2^(e-s))). intuition.
         intuition. intuition. 
 Qed.
+
+(*-------------------------Some other properties for states-----------------------------------*)
 
 Lemma WF_state_in_01{s e:nat}: forall (st:state s e), 
 WF_state st -> 0<s_trace st <=1.
@@ -413,7 +447,7 @@ apply Cstate_as_OT.lt_not_eq in l. unfold not in l.
 apply Cstate_as_OT.eq_sym in H.  apply l in H. intuition. 
 Qed.
 
-
+(*--------------------------------------------------------------------*)
 
 Definition WWF_state{s e:nat} (st:state s e): Prop:=
   WWF_qstate (snd st).
@@ -434,31 +468,53 @@ Proof.
 Qed. 
 
 #[export] Hint Resolve WF_state_cupdate WF_state_qupdate WF_state_qupdate : QState.
+
 (*------------------------Distribution state------------------------------*)
+
+(* We utilize the "FMapList", which employs a list to encapsulate the finite mapping.
+ A finite mapping from type "X.t" to type "elt" can be created with the core "FMapList.Make(X).t(elt)", 
+ with the following internal structure: 
+
+"Record slist (elt:Type) :=
+{this :> list (X.t * elt); sorted: sort (KeyOrderedType X.ltk elt) this}.
+Definition t (elt:Type): Type := slist elt." 
+
+The "this" component uses a list to represent a finite mapping 𝑓. 
+The "sorted" aspect ensures that the list is sorted. This sorted requirement implies that type X must be an OrderedType.*)
+
+(* Consequently, we define the type "dstate" to represent the distribution
+state, a mapping from cstate to qstate *)
+
+(*Type "WF_dstate" guarantee the well-formedness of "dstate". 
+This type is defined with the requirement that any quantum state mapped by an element within
+the support set is a non-zero mixed state, and the sum of their traces must be less than 1.*)
 
 
 Module Import StateMap:= FMapList.Make(Cstate_as_OT).
 
 Definition dstate(s e:nat) := StateMap.t (qstate s e).
 
+(* empty distribution*)
 Definition d_empty(s e:nat) := StateMap.empty (qstate s e).
 
+(*Single state (𝜎,𝜌) is a distribution.*)
 Definition state_to_dstate{s e:nat} (st:state s e): dstate s e:=
    StateMap.add (fst st) (snd st) (d_empty s e).
-
 Coercion state_to_dstate : state >-> dstate.
 
+(*equal disributions: 𝜇_1 = 𝜇_2*)
 Definition dstate_eq{s e:nat} (mu mu': dstate s e): Prop:=
     (StateMap.this mu)= (StateMap.this mu').
 
+(*weight of distributions:  ∥𝜇∥*)
 Fixpoint d_trace_aux{s e:nat} (mu :list(cstate * (qstate s e))): R:=
   match (mu) with
   |nil => 0
   |st::mu' =>  (s_trace st) + d_trace_aux mu'
   end.
-
 Definition d_trace{s e:nat} (mu :dstate s e): R:=
          d_trace_aux (this mu).
+
 
 Local Open Scope R_scope.
 Inductive WF_dstate_aux{s e:nat}: list(cstate * (qstate s e)) -> Prop:=
@@ -486,15 +542,19 @@ Proof. induction mu; intros. econstructor.
       apply H3.       
 Qed.
 
+(**Some operations for distributions**)
+
 Definition option_qstate{s e:nat} (q: option (qstate s e)): (qstate s e) :=
     match q with 
     |None => Zero
     |Some  x => x
 end.
 
+(* 𝜇(𝜎): the quantum state corresponding to 𝜎 in the distribution 𝜇.**)
 Definition d_find{s e:nat} (sigma:cstate) (mu: dstate s e): qstate s e := 
           option_qstate (StateMap.find sigma mu).
  
+(*add (𝜎,𝜌) to 𝜇*)
 Definition d_update{s e:nat} (p: state s e) (m: dstate s e) :=
   StateMap.add (fst p) (snd p) m.
 
@@ -514,6 +574,7 @@ Notation "p *l mu" := (StateMap.Raw.map (fun x => q_scale p x) mu)(at level 70, 
   : state_scope.
 Local Open Scope state_scope.
 
+(* addition of ditributions : 𝜇_1 + 𝜇_2*)
 Definition d_app{s e:nat} (mu1 mu2: dstate s e): dstate s e:=
            StateMap.map2 (option_app) mu1 mu2.
 
@@ -524,6 +585,7 @@ Inductive d_scale_aux{s e:nat}: (R) -> ((list (cstate *qstate s e))) -> ((list (
 |d_scale_0 mu : d_scale_aux 0 mu []
 |d_scale_r r mu:  (r<>0)%R-> d_scale_aux r mu (StateMap.Raw.map (fun i => q_scale r i) mu).
 
+(*scalar multiplication: p .* 𝜇 *)
 Inductive d_scale{s e:nat}: (R) -> (dstate s e) -> (dstate s e) ->Prop :=
 |d_scalar_0 mu : d_scale 0 mu (d_empty s e)
 |d_scalar_r r mu: r<>0-> d_scale r mu (d_scale_not_0 r mu).
@@ -541,7 +603,7 @@ match mu_n with
 |muh::mut=> (StateMap.this muh) :: (dstate_to_list mut)
 end.
 
-
+(* linear combination: ∑_i p_i .* 𝜇_i *)
 Inductive big_dapp'{s e:nat} :list R -> list (dstate s e) -> dstate s e -> Prop :=
 |big_dapp_nil: big_dapp' nil nil (d_empty s e)
 |big_dapp_cons: forall hr hd tr td r d, d_scale hr hd r-> (big_dapp' tr td d)
@@ -568,6 +630,7 @@ Proof.
   reflexivity.
 Qed.
 
+(*-----------------------------------------------------------------------*)
 
 Inductive WWF_dstate_aux{s e:nat}: list(cstate * (qstate s e)) -> Prop:=
 |WF_nil': WWF_dstate_aux nil
@@ -577,7 +640,7 @@ Inductive WWF_dstate_aux{s e:nat}: list(cstate * (qstate s e)) -> Prop:=
 Definition WWF_dstate{s e:nat} (mu: dstate s e):Prop:=
   WWF_dstate_aux (StateMap.this mu).
 
-(*-------------------------------dstate_eq-----------------------------*)
+(*-------------------------------some properties for equal distributions-----------------------------*)
 
 Lemma dstate_eq_refl{ s e:nat}:forall (mu:dstate s e),
  dstate_eq mu mu .
@@ -686,8 +749,9 @@ apply d_scale_eq with hd hd a. apply dstate_eq_refl. assumption.
 assumption. apply IHg with td. assumption. assumption.  
 Qed.
        
-(*---------------------------------------WF--------------------------------------*)
 
+
+(** Some properties about well formed distributions **)
 
 Lemma trace_state_dstate{s e:nat}: forall  (st:state s e), 
 d_trace st= s_trace st .
@@ -805,19 +869,22 @@ reflexivity. rewrite H1.
 apply WF_dstate_in01_aux. assumption.
 Qed.
 
+(* The well-formedness of distributions is preserved under some operations. *)
+
+(* empty distribution is well formed*)
+
 Lemma WWF_dstate_empty: forall s e, WWF_dstate (d_empty s e) .
 Proof. intros. unfold d_empty.  unfold WWF_dstate.
  simpl. unfold StateMap.Raw.empty.
 apply WF_nil'. 
 Qed.
 
-
 Lemma WF_dstate_empty: forall s e, WF_dstate (d_empty s e) .
 Proof. intros. unfold d_empty.  unfold WF_dstate. simpl. unfold Raw.empty.
 apply WF_nil. 
 Qed.
 
-(*WF_d_scale*)
+(* p .* 𝜇 is well formed *)
 
 Local Open Scope R_scope.
 Lemma d_trace_map{s e:nat}: forall (mu:list (cstate * qstate s e)) (p:R),
@@ -854,6 +921,7 @@ Proof.  intros (mu, IHmu) p Hp.
         assumption.
 Qed.
 
+(* ∥𝑝 ∗ 𝜇 ∥ = 𝑝 ∗ ∥𝜇 ∥ *)
 Lemma d_trace_scale{s e:nat}:forall (mu mu': dstate s e) (p:R), 
 (0<=p)->d_scale p mu mu'-> d_trace (mu')= p * (d_trace mu).
 Proof. intros. inversion_clear H0. 
@@ -960,7 +1028,7 @@ Proof. intros. inversion_clear H0. apply WF_dstate_empty.
        apply WF_d_scale_not_0. lra. assumption.
 Qed.
 
-(*WF_d_app*)
+(* 𝜇_1 + 𝜇_2 is well formed *)
 
 Lemma map2_r_refl{s e}: forall (mu: list (cstate * qstate s e)), 
  StateMap.Raw.map2_r option_app (mu) =  mu.
@@ -991,7 +1059,7 @@ Proof. induction mu.
      --destruct a. simpl. rewrite map2_l_refl. reflexivity. 
 Qed.
 
-
+(* 𝜀 + 𝜇 = 𝜇*)
 Lemma d_app_empty_l{s e:nat}: forall (mu:dstate s e), 
 dstate_eq (d_app (d_empty s e) mu)  mu .
 Proof. intros (mu , IHmu).
@@ -1002,6 +1070,7 @@ Proof. intros (mu , IHmu).
        simpl. apply map2_r_refl.
 Qed.
 
+(*𝜇 + 𝜀 = 𝜇*)
 Lemma d_app_empty_r{s e:nat}: forall (mu:dstate s e), 
 dstate_eq (d_app mu (d_empty s e))  mu .
 Proof. intros (mu , IHmu).
@@ -1048,7 +1117,7 @@ Proof. intros mu; induction mu.
      f_equal. apply IHmu'. intuition. intuition. 
 Qed.
 
-
+(* ∥𝜇1 + 𝜇2 ∥ = ∥𝜇1 ∥ + ∥𝜇2 ∥ *)
 Lemma d_trace_app{s e:nat}: forall (mu mu':dstate s e),
 WWF_dstate mu -> WWF_dstate mu'->
 d_trace (d_app  mu mu') = (d_trace mu) + (d_trace mu').
@@ -1179,7 +1248,7 @@ Proof. unfold WF_dstate. unfold d_app. unfold d_trace.
  intros. apply WF_d_app_aux'; try assumption.
 Qed.
 
-(*WF_big_dapp'*)
+(* ∑_i p_i .* 𝜇_i is well formed *)
 
 Lemma WWF_dstate_big_map{s e:nat}: forall (p_n:list R) (mu_n:list (list (state s e))) (mu:list (state s e)), 
 Forall (fun x=> WWF_dstate_aux x) mu_n ->
@@ -1267,7 +1336,7 @@ Proof.  intros. inversion_clear H1.
 Qed.
 
 
-
+(* (∀ 𝑖, 0 < 𝑝_𝑖 ) → ∥ ∑_𝑖 𝑝_𝑖 .* 𝜇_𝑖 ∥ ≤ ∑_𝑖 𝑝_𝑖  *)
 Lemma d_trace_le_1_big_dapp{s e:nat}: forall (p_n:list  R) (mu_n:list (dstate s e)) (mu:dstate s e), 
 Forall_two (fun x y=> 0<y -> WF_dstate x) mu_n p_n->
 big_dapp' (p_n) mu_n mu->
@@ -1325,7 +1394,7 @@ assumption.
 Qed.
 
 
-(*-------------------------d_find---------------------------------------------*)
+(*-------------------------Some properties for 𝜇(𝜎)---------------------------------------------*)
 
 Lemma s_d_find_eq{s e:nat} (x:cstate) (st: state s e): 
 d_find x st = s_find x st.
@@ -1337,12 +1406,14 @@ Proof. unfold d_find. simpl. unfold s_find.
     reflexivity. 
 Qed.
 
+(* 𝜀 (𝜎) = 0 *)
 Lemma d_find_empty{s e:nat}: forall x, d_find x (d_empty s e)=Zero.
 Proof. intros. unfold d_find. simpl. reflexivity. Qed.
 
 Module Import MC := OrderedTypeFacts(Cstate_as_OT).
 
-(*d_find_scale*)
+(*(𝑝 ∗ 𝜇)(𝜎) = 𝑝 ∗ (𝜇 (𝜎))*)
+
 Lemma d_find_map{s e:nat}: forall (mu:list (state s e)) p x, 
  option_qstate (StateMap.Raw.find x (p *l mu))= p .* (option_qstate (StateMap.Raw.find x mu)).
 Proof. intros. induction mu.  simpl.  rewrite Mscale_0_r.  reflexivity.
@@ -1368,7 +1439,7 @@ Proof. intros. inversion H;subst.
 -apply d_find_scale_not_0.
 Qed.
 
-(*d_find_app*)
+(* (𝜇_1 + 𝜇_2)(𝜎) = 𝜇_1 (𝜎) + 𝜇2 (𝜎) *)
 
 Require Import Classical_Prop.
 Lemma DeMoGen:forall P Q, ~(P\/Q) -> (~P/\~Q) .
@@ -1493,8 +1564,10 @@ Proof.
 Qed.
 
 
-(*--------------------------d_scale----------------------------------------*)
+(*--------------------------Some properites for (p .* 𝜇)----------------------------------------*)
+
 (*d_scale exists*)
+
 Lemma d_scale_aux_exsits{s e:nat}: forall r (mu: list (state s e)),
 exists (mu':list (state s e)), d_scale_aux r mu mu' .
 Proof. intros. assert(r=0 \/ r<>0). apply classic. 
@@ -1519,6 +1592,7 @@ Qed.
 
 
 (*d_scale empty or 0*)
+
 Lemma d_scale_not_0_nil{s e:nat}: forall (mu:dstate s e) p, 
 this (d_scale_not_0 p mu) = nil <-> this mu = [].
 Proof. intros (mu, IHmu) p. 
@@ -1553,6 +1627,7 @@ Proof. intros. split; intros. inversion H;subst; try reflexivity.
        left. destruct mu. reflexivity. destruct s0.  simpl in H4. discriminate H4.
 Qed.
 
+(*𝑝 ∗ 𝜇 = 𝜀 → 𝑝 = 0 ∨ 𝜇 = 𝜀*)
 Lemma d_scale_integral{s e:nat}: forall (mu mu':dstate s e) p, 
  (d_scale p mu mu') ->this mu'=[]-> p=0 \/ this mu =[].
 Proof. intros.  inversion H;subst. left. reflexivity.
@@ -1567,6 +1642,7 @@ Proof. intros . unfold d_empty. unfold dstate_eq.
      unfold d_scale_not_0. simpl. unfold Raw.empty. reflexivity.
 Qed.
 
+(* 𝑝 ∗ 𝜀 = 𝜀 *)
 Lemma d_scale_empty{s e:nat}: forall a (mu:dstate s e), 
 d_scale a (d_empty s e) mu->
 dstate_eq mu (d_empty s e).
@@ -1576,7 +1652,8 @@ Proof. intros.
        apply d_scale_not_0_empty.
 Qed.
 
-(*scale 1 *)
+(*d_scale 1 *)
+
 Lemma map_1_l{s e:nat}: forall (mu:list (state s e)), 
 (1 *l mu) = mu.
 Proof.
@@ -1594,6 +1671,7 @@ Proof. intros (mu, IHmu). unfold dstate_eq.
         simpl. apply map_1_l.
 Qed.
 
+(* 1 ∗ 𝜇 = 𝜇 *)
 Lemma d_scale_1_l{s e:nat}: forall (mu mu':dstate s e), 
 d_scale 1 mu mu'->
 dstate_eq (mu') mu.
@@ -1602,7 +1680,8 @@ apply d_scale_not_0_1_l.
 Qed.
 
 
-(*scale assoc *)
+(*d_scale associative *)
+
 Lemma map_assoc{s e:nat}: forall (p1 p2:R) (mu:list (state s e)), 
 (p1 *l (p2 *l mu)) =  ((p1* p2)%R *l  mu).
 Proof. intros. 
@@ -1634,6 +1713,7 @@ Proof.
   - apply map_assoc.
 Qed.
 
+(* 𝑝_1 ∗ (𝑝_2 ∗ 𝜇) = (𝑝_1 ∗ 𝑝_2) ∗ 𝜇 *)
 Lemma d_scale_assoc{s e:nat}: forall (p1 p2:R) (mu mu' mu'' mu''':dstate s e), 
 d_scale p2 mu mu'->
 d_scale p1 mu' mu''->
@@ -1647,7 +1727,7 @@ Qed.
 
 
 
-(*------------------------------d_app-----------------------------*)
+(*------------------------------Some properites for (𝜇_1 + 𝜇_2)-----------------------------*)
 
 Lemma map2_app_not_nil{s e:nat}: forall  (mu mu':list (cstate * qstate s e)),
 mu<>nil \/  mu'<>nil <->
@@ -1681,7 +1761,8 @@ Proof. intros. split; intros. assert(x=[]\/x<>[]).
         destruct H. rewrite H. rewrite H0. simpl. reflexivity.
 Qed.
 
-(*dapp comm*)
+(*dapp commutaion*)
+
 Lemma map2_comm{s e:nat}: forall (mu mu': list (cstate * qstate s e)),
 (StateMap.Raw.map2 option_app mu mu')=
 (StateMap.Raw.map2 option_app mu' mu).
@@ -1715,6 +1796,7 @@ Proof.  induction mu. induction mu'.
         unfold not in l. intuition.   
 Qed.
 
+(*𝜇_1 + 𝜇_2 = 𝜇_2 + 𝜇_1*)
 Lemma d_app_comm{s e:nat}: forall (mu mu':dstate s e),
  dstate_eq ( (d_app mu' mu) )  ( ((d_app mu mu'))).
 Proof. unfold dstate_eq. unfold d_app. unfold map2.
@@ -1730,7 +1812,8 @@ Local Open Scope matrix_scope.
 
 Local Open Scope R_scope.
 
-(*dapp assoc*)
+(*dapp associative*)
+
 Lemma map2_assoc: forall s e (x y z: list (cstate *qstate s e)),
 (x +l (y +l z)) = (x +l y +l z).
 Proof. induction x. simpl; intros. 
@@ -1782,7 +1865,7 @@ simpl in IHz.
 rewrite IHz.  MC.elim_comp. simpl. f_equal. 
 Qed.
 
-
+(*𝜇_1 + 𝜇_2 + 𝜇_3 = 𝜇_1 + (𝜇_2 + 𝜇_3)*)
 Lemma d_app_assoc: 
 forall {s e : nat} (mu1 mu2 mu3 : dstate s e),
 dstate_eq (d_app (d_app mu1 mu2) mu3) (d_app mu1 (d_app mu2 mu3)).
@@ -1791,7 +1874,8 @@ Proof.   unfold dstate_eq. unfold d_app. unfold StateMap.map2.
      simpl.  rewrite map2_assoc. reflexivity.
 Qed.
 
-(*dapp_scale_distr*)
+(*the distribution law*)
+
 Lemma  map_map2_distr:forall {s e : nat} (mu mu' : list( state s e)) (p : R),
  ( StateMap.Raw.map2 (@option_app  s e)
  (StateMap.Raw.map (fun x => p .* x) mu)  (StateMap.Raw.map (fun x => p .* x) mu'))=
@@ -1837,6 +1921,7 @@ Proof. intros. assert(p=0\/p<>0). apply Classical_Prop.classic.
   apply map_map2_distr.
 Qed.
 
+(*𝑝 ∗ (𝜇_1 + 𝜇_2) = 𝑝 ∗ 𝜇_1 + 𝑝 ∗ 𝜇_2*)
 Lemma  d_scale_app_distr:forall {s e : nat} (mu mu' mu1 mu2 mu3: dstate s e) (p : R),
 d_scale p mu mu1->
 d_scale p mu' mu2->
@@ -1850,7 +1935,8 @@ Proof. intros. assert(p=0\/p<>0). apply Classical_Prop.classic.
 Qed.
 
 
-(*-------------------------------dstate equal-------------------------------------*)
+(*------------------Equivalent definitions of equal distributions:
+                     𝜇_1 = 𝜇_2 ↔ (∀ 𝜎), 𝜇_1 (𝜎) = 𝜇_2 (𝜎)-------------------------------------*)
 
 Lemma dstate_1{s e:nat}: forall (mu: list (cstate *qstate s e))
 (t x:cstate) (q:qstate s e),
@@ -2055,7 +2141,7 @@ Proof. split. apply d_eq_1. assumption. assumption.
 Qed. 
 
 
-(*-------------------------some propertiws about big_dapp-------------------------------------------*)
+(*-------------------------Some properties about big_dapp(∑_i p_i .* 𝜇_i)-------------------------------------------*)
 Lemma  big_dapp_exsist {s e:nat} : forall (p_n:list R) (mu_n:list (dstate s e)),
 length p_n = length mu_n ->
 exists mu, big_dapp' p_n mu_n mu.

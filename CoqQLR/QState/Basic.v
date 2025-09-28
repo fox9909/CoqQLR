@@ -15,17 +15,24 @@ From Quan Require Export Matrix.
 From Quan Require Export Quantum.
 From Quan Require Export Complex.
 
-(*Basis Vector*)
 
+(*In this file, we define the notion of the basis vector and provide some useful lemmas.*)
+
+
+(*Basis Vector : 
+Two parameters, n and i of type "nat", 
+represent the basis vector ∣i⟩ in an n-dimensional space.*)
 Definition Base_vec(n:nat) (i:nat): Vector n := 
     fun x y => match x, y with 
             | j, 0 => if j=?i then C1 else C0
             | _, _ => C0
             end.
 
+(*Notations for basis vectors*)
 Notation "∣ i ⟩_ n " := (Base_vec n i) (at level 0) :matrix_scope.
 Notation "⟨ i ∣_ n " := (adjoint (Base_vec n i)) (at level 0) :matrix_scope.
 
+(*Well-formedness of basis vectors*)
 Local Open Scope nat_scope.
 Lemma WF_base: forall n i, i < n -> WF_Matrix (∣ i ⟩_ n) .
 Proof. intros. 
@@ -34,11 +41,17 @@ Proof. intros.
 Qed.
 #[export]Hint Resolve WF_base: wf_db.
 
+(**Some definitions of type "Base_vec" are equivalent to those in the Quantum library.**)
+
+(*The "qubit0" denotes the state ∣0⟩ as defined in QuantumLib.
+We prove that our definition "Base_vec 2 0" is equivalent to qubit0; 
+the case for qubit1 is analogous. *)
 Lemma base_qubit0: Base_vec 2 0= qubit0. Proof. unfold Base_vec. solve_matrix. Qed. 
 Lemma  base_qubit1: Base_vec 2 1= qubit1. Proof. unfold Base_vec. solve_matrix. Qed. 
 #[export] Hint Rewrite @norm_scale @base_qubit0 @base_qubit1  using (auto 100 with wf_db) : M_db.
 
 
+(*∣ 0 ⟩_ 1 is the 1×1 identity scalar.*)
 Lemma base_I: ((∣ 0 ⟩_ 1)= I 1).
 Proof. prep_matrix_equality. 
 unfold Base_vec. unfold I.
@@ -56,6 +69,31 @@ Proof. induction n; destruct i. lia. lia.  intuition.
 intros. simpl. intros. apply IHn. lia. 
 Qed.
 
+Lemma base_e_i: forall n i, i < n -> ∣ i ⟩_ n = @e_i n i.
+Proof. intros. prep_matrix_equality. 
+       destruct x; destruct y; unfold e_i; simpl;
+       destruct i.
+       { rewrite Lt_n_i.  reflexivity.  assumption. }
+       { rewrite Lt_n_i. reflexivity. lia.  }
+       { rewrite Lt_n_i. reflexivity. lia. }  
+       { rewrite Lt_n_i. reflexivity. lia. }
+       simpl. reflexivity.
+       bdestruct (x =? i). destruct H0.
+       { rewrite Lt_n_i.  reflexivity.  assumption. }
+       simpl.
+       reflexivity.
+       simpl. reflexivity.
+       bdestruct (x =? i). destruct H0.
+       { rewrite Lt_n_i.  reflexivity.  assumption.  }
+       simpl. reflexivity.      
+Qed.
+
+
+(** Some properties of basis vectors. **)
+
+
+(*|i⟩_j : the j-th component of the basis vector |i⟩.
+This component equals 1 if j = i and 0 otherwise.*)
 Lemma  base1: forall (n i x:nat), x = i -> ∣ i ⟩_ n x 0= C1.
 Proof. intros. simpl Base_vec. bdestruct (x=?i).
 reflexivity. lia.   
@@ -66,6 +104,7 @@ Proof. intros. simpl Base_vec. bdestruct (x=?i). unfold not in H. intuition.
 reflexivity.   
 Qed.
 
+(*Any vector can be expressed as a linear combination of the basis vectors.*)
 Lemma base_decom{ n:nat}: forall (v:Vector n),
 WF_Matrix v ->
 v= big_sum (fun i:nat=> (v i 0) .* (∣ i ⟩_ n)) n.
@@ -119,26 +158,8 @@ Proof.
  simpl. reflexivity. simpl. intros.   apply IHi. lia. 
 Qed.
 
-Lemma base_e_i: forall n i, i < n -> ∣ i ⟩_ n = @e_i n i.
-Proof. intros. prep_matrix_equality. 
-       destruct x; destruct y; unfold e_i; simpl;
-       destruct i.
-       { rewrite Lt_n_i.  reflexivity.  assumption. }
-       { rewrite Lt_n_i. reflexivity. lia.  }
-       { rewrite Lt_n_i. reflexivity. lia. }  
-       { rewrite Lt_n_i. reflexivity. lia. }
-       simpl. reflexivity.
-       bdestruct (x =? i). destruct H0.
-       { rewrite Lt_n_i.  reflexivity.  assumption. }
-       simpl.
-       reflexivity.
-       simpl. reflexivity.
-       bdestruct (x =? i). destruct H0.
-       { rewrite Lt_n_i.  reflexivity.  assumption.  }
-       simpl. reflexivity.      
-Qed.
 
-
+(*A complex number c corresponds to the 1×1 vector.*)
 Definition c_to_Vector1 (c: C): Vector 1 :=  c .* I 1.
 Coercion c_to_Vector1 : C >-> Vector .
 
@@ -147,6 +168,7 @@ Lemma c_to_Vector1_refl:forall c, (c_to_Vector1 c) 0 0= c.
 Proof. intros. unfold c_to_Vector1. unfold scale.
        unfold I. simpl. Csimpl .   reflexivity. Qed.
 
+(* well-formness of c_to_vector1 *)
 Lemma WF_c_to_Vector1: forall c, WF_Matrix (c_to_Vector1 c).
 Proof. intros. unfold c_to_Vector1. auto_wf. Qed.
 #[export] Hint Resolve WF_c_to_Vector1 : wf_db.
@@ -175,6 +197,9 @@ Local Open Scope nat_scope.
 Lemma  big_sum_i: forall (f:nat-> C) (n i:nat), 
 (forall y, y <> i -> f y = C0)-> ( i < n -> big_sum f n= f i).
 Proof.  intros. apply big_sum_unique. exists i. auto. Qed.
+
+
+(*Some properties regarding the left or right multiplication of basis vectors.*)
 
 Local Open Scope C_scope.
 Lemma base_inner_r: forall (n i:nat) (V:Vector n),
@@ -214,6 +239,7 @@ rewrite id_adjoint_eq in H1. rewrite Cconj_involutive in H1.
 assumption.
 Qed.
 
+
 Lemma C1_Conj: Coquelicot.Complex.Cconj C1=C1.
 Proof. 
 unfold Coquelicot.Complex.Cconj.  unfold C1. simpl. rewrite Ropp_0. reflexivity.
@@ -224,6 +250,7 @@ Proof.
     unfold Coquelicot.Complex.Cconj.  simpl. rewrite Ropp_0. reflexivity.
 Qed.   
 
+(*The diagonal element in the i-th row and i-th column of the matrix: ⟨i|A|i⟩ = Aᵢᵢ.*)
 Lemma base_inner_M{n:nat}: forall (M: Square n) (i:nat), 
   WF_Matrix M-> 
   i<n -> (∣ i ⟩_ n)† × M × (∣ i ⟩_ n) = (M i i) .* I 1.
@@ -259,6 +286,8 @@ Proof . intros. prep_matrix_equality.
      rewrite IHn'. reflexivity.
   Qed.
 
+(*The trace of A is defined as ∑ᵢ ⟨i|A|i⟩, 
+which equals the sum of the diagonal elements of A.*)
 Lemma  trace_base:forall (n:nat) (M:Square n),
 WF_Matrix M-> big_sum (fun i:nat => (∣ i ⟩_ n)† × M × (∣ i ⟩_ n)) n  = (trace M).
 Proof. intros. remember ((fun i : nat => (M i i) .* I 1)).
@@ -269,6 +298,10 @@ intros. rewrite base_inner_M. rewrite Heqm. reflexivity.
 apply H. assumption.
 Qed.
 
+(**The properties of the standard orthogonal basis:
+orthogonality and normalization.**)
+
+(*orthogonality*)
 Lemma base_inner_0{n:nat}:forall i j :nat,
 i<>j-> i<n -> j<n->
 (⟨ i ∣_ (n) × ∣ j ⟩_ (n))= C0.
@@ -277,6 +310,7 @@ Proof. intros. rewrite base_inner_l. simpl.
        assumption. auto_wf. assumption. 
 Qed.
 
+(* for any i, ⟨i|i⟩ = 1 *)
 Lemma base_inner_1: forall i n,
 (i<n)%nat->
 ⟨ i ∣_ (n) × ∣ i ⟩_ (n) = C1.
@@ -291,18 +325,23 @@ Proof. intros. unfold trace. unfold inner_product.
       simpl. rewrite Cplus_0_l. reflexivity. 
 Qed.
 
+(* The trace of one-dimensional identity matrix is C1 *)
 Lemma  trace_I: trace (I 1) = C1.
 Proof. unfold trace. simpl.  
       unfold I. simpl. rewrite Cplus_0_l.
       reflexivity.
 Qed.
 
+(*Normalization: ‖|i⟩‖ = 1*)
 Local Open Scope R_scope.
 Lemma norm_base_1: forall n x, (x<n)%nat ->norm (∣ x ⟩_ (n))=1 .
 Proof. intros.  unfold norm.   rewrite <-inner_trace'. rewrite base_inner_1.
        unfold c_to_Vector1. Msimpl. 
        rewrite trace_I. simpl. rewrite sqrt_1. reflexivity. assumption.
 Qed.
+
+
+(*------------------------------------------------*)
 
 Local Open Scope nat_scope.
 Lemma nat_eq_mod_div: forall a b c, a=b <-> 
@@ -327,6 +366,10 @@ Proof. intros. split. intros.
 Qed.
 
 
+(**Some properties regarding the tensor product of basis vectors**)
+
+(*|i⟩^{m×n} = |i / n⟩^m ⊗ |i % n⟩^n,
+where |i / n⟩^m is m-dimensional and |i % n⟩^n is n-dimensional.*)
 Lemma base_kron: forall x m n,
 ∣ x / n ⟩_ (m) ⊗ ∣ x mod n ⟩_ (n) =
 Base_vec (m*n) x.
@@ -357,6 +400,108 @@ prep_matrix_equality.
        reflexivity. 
 Qed.
 
+
+
+
+Local Open Scope nat_scope.
+Lemma base_3:forall n x,
+x>=n-> x< 2*n-> (x / n) = 1.
+Proof. intros.  
+       symmetry. 
+       apply (Nat.div_unique x n 1 (x-n)).
+       apply Nat.lt_le_trans with (2 * n - n).
+       simpl. lia. simpl. lia. lia.
+Qed.
+
+Lemma base_4:forall n x,
+x>=n-> x< 2*n->
+(x mod n) = x - n .
+Proof. intros. symmetry. 
+       apply (Nat.mod_unique x n 1 (x-n)).
+        lia. lia.   
+Qed.
+
+(* |0⟩ ⊗ |𝑖⟩^{2𝑛} = |𝑖⟩^{2^(𝑛+1)} *)
+Lemma qubit0_base_kron:forall n i,
+i<(2^n)->
+kron (∣ 0 ⟩_ 2) (∣ i ⟩_ (2^n)) = (∣ i ⟩_ (2^(n+1))).
+Proof. intros. prep_matrix_equality. unfold kron.
+       rewrite Nat.div_1_r. rewrite Nat.mod_1_r.
+       bdestruct (x<?(2^n)).
+       rewrite Nat.div_small. rewrite Nat.mod_small. 
+       destruct y. simpl. rewrite Cmult_1_l.
+       reflexivity. 
+       simpl. rewrite Cmult_0_l. reflexivity.
+       assumption. assumption.
+       bdestruct (x<?(2^(n+1))).
+       rewrite base_3. rewrite base_4.
+       destruct y. simpl. rewrite Cmult_0_l.
+       bdestruct (x=? i). destruct H2. lia. reflexivity.
+       simpl. rewrite Cmult_0_l. reflexivity.
+       assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
+      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
+      f_equal.  rewrite <-H2. assumption.
+      assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
+      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
+      f_equal.  rewrite <-H2. assumption.
+      unfold Base_vec.
+      simpl. destruct y. bdestruct (x=?i).
+      destruct H2. lia. 
+      assert(x/2^n >= 2^n / 2^n). 
+      apply Nat.div_le_mono. lia. lia.
+      rewrite Nat.div_same in H3. 
+      bdestruct (x / 2 ^ n =? 0). rewrite H4 in *.
+      lia. rewrite Cmult_0_l. reflexivity. lia.
+      rewrite Cmult_0_l. reflexivity.  
+Qed.
+
+(*|1⟩ ⊗ |𝑖⟩^{2𝑛}= |𝑖 + 2𝑛 ⟩^{2^(𝑛+1)}*)
+Lemma qubit1_base_kron:forall n i,
+i<(2^n)->
+kron (∣ 1 ⟩_ 2) (∣ i ⟩_ (2^n)) = (∣ i+2^n ⟩_ (2^(n+1))).
+Proof. intros. prep_matrix_equality. unfold kron.
+       rewrite Nat.div_1_r. rewrite Nat.mod_1_r.
+       bdestruct (x<?(2^n)).
+       rewrite Nat.div_small. rewrite Nat.mod_small. 
+       destruct y. simpl. rewrite Cmult_0_l.
+       bdestruct (x =? i + 2 ^ n). rewrite H1 in *.
+       lia. reflexivity.
+       simpl. rewrite Cmult_0_l. reflexivity.
+       assumption. assumption.
+       bdestruct (x<?(2^(n+1))).
+       rewrite base_3. rewrite base_4.
+       destruct y. simpl. rewrite Cmult_1_l.
+       bdestruct (x - 2 ^ n =? i). 
+       rewrite <-H2. rewrite Nat.sub_add. 
+       rewrite Nat.eqb_refl. reflexivity. lia.
+       bdestruct (x =? i + 2 ^ n). rewrite H3 in *.
+       lia. reflexivity.
+       simpl. rewrite Cmult_0_l. reflexivity.
+       assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
+      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
+      f_equal.  rewrite <-H2. assumption.
+      assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
+      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
+      f_equal.  rewrite <-H2. assumption.
+      simpl. unfold Base_vec. simpl. destruct y.
+      bdestruct (x =? i + 2 ^ n). rewrite H2.
+      assert(i + 2 ^ n= i+ 1* 2^n). lia. rewrite H3.
+      rewrite Nat.div_add. rewrite Nat.mod_add.
+      rewrite Nat.mod_small. rewrite Nat.div_small.
+      simpl. rewrite Nat.eqb_refl. rewrite Cmult_1_l. reflexivity.
+      lia. lia. lia. lia. 
+      bdestruct (x / 2 ^ n =? 1). 
+      bdestruct (x mod 2 ^ n =? i).
+      assert(x= 2^n * (x / 2 ^ n)+ x mod 2 ^ n ).
+      apply Nat.div_mod_eq. rewrite H3 in H5. 
+      rewrite H4 in H5. rewrite Nat.mul_1_r in H5.
+      rewrite Nat.add_comm in H5. lia.
+       rewrite Cmult_0_r. reflexivity.
+      rewrite Cmult_0_l. reflexivity. 
+      rewrite Cmult_0_l. reflexivity.
+Qed.
+
+(*----------------------the proof of ∑ |𝑖⟩ ⟨𝑖| = 𝐼------------------------------------*)
 Local Open Scope nat_scope.
 Lemma big_sum_I_i: forall n i, 
 i< n -> ∣ i ⟩_ n ×  (adjoint (∣ i ⟩_ n)) =
@@ -391,6 +536,7 @@ Proof. induction n. simpl. lia.
       lia.
 Qed.
 
+(* ∑ |𝑖⟩ ⟨𝑖| = 𝐼 *)
 Lemma  big_sum_I: forall n,
 big_sum (fun i : nat => ∣ i ⟩_ (2^n) × ⟨ i ∣_ (2^n)) (2^n)= I (2^n).
 Proof. intros. 
@@ -441,104 +587,8 @@ Proof. intros.
 Qed.
 
 
-Local Open Scope nat_scope.
-Lemma base_3:forall n x,
-x>=n-> x< 2*n-> (x / n) = 1.
-Proof. intros.  
-       symmetry. 
-       apply (Nat.div_unique x n 1 (x-n)).
-       apply Nat.lt_le_trans with (2 * n - n).
-       simpl. lia. simpl. lia. lia.
-Qed.
-
-Lemma base_4:forall n x,
-x>=n-> x< 2*n->
-(x mod n) = x - n .
-Proof. intros. symmetry. 
-       apply (Nat.mod_unique x n 1 (x-n)).
-        lia. lia.   
-Qed.
-
-Lemma qubit0_base_kron:forall n i,
-i<(2^n)->
-kron (∣ 0 ⟩_ 2) (∣ i ⟩_ (2^n)) = (∣ i ⟩_ (2^(n+1))).
-Proof. intros. prep_matrix_equality. unfold kron.
-       rewrite Nat.div_1_r. rewrite Nat.mod_1_r.
-       bdestruct (x<?(2^n)).
-       rewrite Nat.div_small. rewrite Nat.mod_small. 
-       destruct y. simpl. rewrite Cmult_1_l.
-       reflexivity. 
-       simpl. rewrite Cmult_0_l. reflexivity.
-       assumption. assumption.
-       bdestruct (x<?(2^(n+1))).
-       rewrite base_3. rewrite base_4.
-       destruct y. simpl. rewrite Cmult_0_l.
-       bdestruct (x=? i). destruct H2. lia. reflexivity.
-       simpl. rewrite Cmult_0_l. reflexivity.
-       assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
-      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
-      f_equal.  rewrite <-H2. assumption.
-      assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
-      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
-      f_equal.  rewrite <-H2. assumption.
-      unfold Base_vec.
-      simpl. destruct y. bdestruct (x=?i).
-      destruct H2. lia. 
-      assert(x/2^n >= 2^n / 2^n). 
-      apply Nat.div_le_mono. lia. lia.
-      rewrite Nat.div_same in H3. 
-      bdestruct (x / 2 ^ n =? 0). rewrite H4 in *.
-      lia. rewrite Cmult_0_l. reflexivity. lia.
-      rewrite Cmult_0_l. reflexivity.  
-Qed.
-
-Lemma qubit1_base_kron:forall n i,
-i<(2^n)->
-kron (∣ 1 ⟩_ 2) (∣ i ⟩_ (2^n)) = (∣ i+2^n ⟩_ (2^(n+1))).
-Proof. intros. prep_matrix_equality. unfold kron.
-       rewrite Nat.div_1_r. rewrite Nat.mod_1_r.
-       bdestruct (x<?(2^n)).
-       rewrite Nat.div_small. rewrite Nat.mod_small. 
-       destruct y. simpl. rewrite Cmult_0_l.
-       bdestruct (x =? i + 2 ^ n). rewrite H1 in *.
-       lia. reflexivity.
-       simpl. rewrite Cmult_0_l. reflexivity.
-       assumption. assumption.
-       bdestruct (x<?(2^(n+1))).
-       rewrite base_3. rewrite base_4.
-       destruct y. simpl. rewrite Cmult_1_l.
-       bdestruct (x - 2 ^ n =? i). 
-       rewrite <-H2. rewrite Nat.sub_add. 
-       rewrite Nat.eqb_refl. reflexivity. lia.
-       bdestruct (x =? i + 2 ^ n). rewrite H3 in *.
-       lia. reflexivity.
-       simpl. rewrite Cmult_0_l. reflexivity.
-       assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
-      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
-      f_equal.  rewrite <-H2. assumption.
-      assumption. assert(2 ^ (n + 1)=2 * 2 ^ n). 
-      rewrite Nat.pow_add_r. rewrite Nat.mul_comm.
-      f_equal.  rewrite <-H2. assumption.
-      simpl. unfold Base_vec. simpl. destruct y.
-      bdestruct (x =? i + 2 ^ n). rewrite H2.
-      assert(i + 2 ^ n= i+ 1* 2^n). lia. rewrite H3.
-      rewrite Nat.div_add. rewrite Nat.mod_add.
-      rewrite Nat.mod_small. rewrite Nat.div_small.
-      simpl. rewrite Nat.eqb_refl. rewrite Cmult_1_l. reflexivity.
-      lia. lia. lia. lia. 
-      bdestruct (x / 2 ^ n =? 1). 
-      bdestruct (x mod 2 ^ n =? i).
-      assert(x= 2^n * (x / 2 ^ n)+ x mod 2 ^ n ).
-      apply Nat.div_mod_eq. rewrite H3 in H5. 
-      rewrite H4 in H5. rewrite Nat.mul_1_r in H5.
-      rewrite Nat.add_comm in H5. lia.
-       rewrite Cmult_0_r. reflexivity.
-      rewrite Cmult_0_l. reflexivity. 
-      rewrite Cmult_0_l. reflexivity.
-Qed.
-
-
-(*Forall_two*)
+(**"Forall_two P A B": a structure that describes the relation P between two lists A and B, 
+analogous to the standard "Forall" for one list.**)
 
 Inductive Forall_two{A B:Type}: (A ->B-> Prop)-> (list A) -> (list B) -> Prop:=
 |Forall_two_nil: forall P, Forall_two P [] []

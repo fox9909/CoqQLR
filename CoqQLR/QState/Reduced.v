@@ -18,9 +18,13 @@ Delimit Scope C_scope with C.
 Local Open Scope C_scope.
 
 
-Local Open Scope nat_scope. 
+Local Open Scope nat_scope.
+(*In this file, we formalize the notation ρ|_V using the "Reduced" function 
+and μ|_V using the "d_reduced" function, and provide their corresponding lemmas. *) 
 
 (*---------------------------Partial Trace--------------------------*)
+(*We employ the subscript pair (𝑙, 𝑟) to denote the set of quantum
+variables 𝑉 = ⟨𝑞_𝑙 , 𝑞_𝑙+1, · · · , 𝑞_𝑟 −1⟩. *)
 
 Local Open Scope matrix_scope.
 
@@ -43,7 +47,8 @@ try (repeat rewrite  <-Nat.pow_add_r;  rewrite Nat.mul_1_r ; f_equal ; lia).
 Ltac type_sovle':=
 try (repeat rewrite  <-Nat.pow_add_r;  f_equal ; lia).
 
-(*WF Reduced*)
+(*The matrix produced by the "Reduced" operation is well-formed.*)
+
 Lemma WF_L_reduced{s e:nat}: forall (q:qstate s e)  r,
 s<=r/\r<=e->
 @WF_Matrix (2^(e-s)) (2^(e-s)) q->
@@ -93,7 +98,8 @@ Proof. intros. unfold Reduced. apply WF_R_reduced. lia.
        apply WF_L_reduced. lia. assumption.
 Qed. 
 
-(*Reduced trace*)
+(**Some properties for the trace of "Reduced"**)
+
 Lemma Ptrace_l_r{ s e:nat}: forall (A:qstate s e) l r,
 Reduced A  l r = big_sum (fun i : nat => big_sum
     (fun i0 : nat => ⟨ i ∣_ (2^(l-s)) ⊗ I (2 ^ (r-l))
@@ -157,6 +163,7 @@ trace (big_sum  f  n0)= big_sum (fun i:nat => trace (f i)) n0.
 Proof. intros. induction n0. simpl. apply Zero_trace. 
     simpl. rewrite trace_plus_dist. f_equal. assumption. Qed.
 
+(* tr(𝜌|_𝑉) = tr(𝜌) *)
 Lemma  Reduced_trace: forall s e (A:qstate s e) l r,
 s <= l/\ l<=r /\ r<=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) A->
 @trace (2^(r-l)) (Reduced A  l r) = @trace (2^(e-s)) A.
@@ -199,7 +206,7 @@ Proof. intros. rewrite Ptrace_l_r'.
 Qed.
 
 
-(*WF_qstate Reduced*)
+(*The quantum state produced by the "Reduced" operation is well-formed.*)
 Local Open Scope nat_scope.
 Lemma WF_qstate_Reduced: forall s e l r (q:qstate s e),
 s<=l/\l<=r/\r<=e->
@@ -286,7 +293,9 @@ Proof. intros. unfold WF_qstate in *.
       lia. auto_wf. lia.
 Qed.
 
-(*properties*)
+(**Some other properties for Reduced**)
+
+(* tr(0|_𝑉) = 0 *)
 Lemma Reduced_Zero{s' e'}: forall l r,
 @Reduced s' e' Zero l r = Zero.
 Proof. unfold Reduced.  intros.
@@ -299,6 +308,8 @@ Msimpl. reflexivity.
 intros. Msimpl. reflexivity.
 Qed.
 
+(* dom(𝜌): the domain of 𝜌*)
+(*(𝜌1 ⊗ 𝜌2)|_(dom(𝜌1)) = tr(𝜌2) ∗ 𝜌*)
 Lemma Reduced_tensor_l{s e:nat} : forall r (M1:qstate s r) (M2:qstate r e) (M3:qstate s e),
 @WF_Matrix (2^(r-s))  ((2^(r-s))) M1-> @WF_Matrix (2^(e-r))  ((2^(e-r))) M2-> 
 @WF_Matrix  (2^(e-s))  ((2^(e-s ))) M3->
@@ -319,6 +330,7 @@ rewrite <- big_sum_Mscale_r.
  rewrite kron_1_r. reflexivity.
 Qed.
 
+(*(𝜌1 ⊗ 𝜌2)|_(dom(𝜌2)) = tr(𝜌1) ∗ 𝜌2*)
 Lemma Reduced_tensor_r{s e:nat} :  forall l (M1:qstate s l) (M2:qstate l e) (M3:qstate s e),
 @WF_Matrix (2^(l-s))  ((2^(l-s))) M1-> @WF_Matrix (2^(e-l))  ((2^(e-l))) M2-> 
 @WF_Matrix  (2^(e-s))  ((2^(e-s ))) M3->
@@ -341,7 +353,7 @@ rewrite <- big_sum_Mscale_r.
  rewrite kron_1_l. reflexivity. assumption.
  Qed.
  
-   
+
 Lemma R_reduced_scale: forall s e l c (M:qstate s e),
 (@scale (2^(e-l)) (2^(e-l)) c (R_reduced M l))=
 (@R_reduced s e (scale c  M) l ) .
@@ -466,6 +478,7 @@ Proof. intros.   unfold R_reduced.
     reflexivity. 
 Qed.
 
+
 Lemma L_reduced_plus: forall s e l   (M N:qstate s e) ,
 ((@L_reduced s e (M .+ N) l ))=
 (@L_reduced s e (M) l  ) .+  ((@L_reduced s e (N) l )).
@@ -486,6 +499,7 @@ rewrite Mmult_plus_distr_r.
 reflexivity. 
 Qed.
 
+(* (𝑝 ∗ 𝜌)|_𝑉 = 𝑝 ∗ (𝜌|_𝑉) *)
 Lemma Reduced_scale: forall s e l r c (M:qstate s e) , 
 (@scale (2^(r-l)) (2^(r-l)) c (@Reduced s e M l r))=
 (@Reduced s e ( scale c  M) l r ) .
@@ -493,6 +507,7 @@ Proof. intros. unfold Reduced. rewrite R_reduced_scale.
 rewrite L_reduced_scale. reflexivity.
 Qed.
 
+(* (𝜌1 + 𝜌2)|_𝑉 = (𝜌1|_𝑉) + (𝜌2|_𝑉 ) *)
 Lemma Reduced_plus: forall s e l r  (M N:qstate s e) ,
 ((@Reduced s e (M .+ N) l r))=
 (@Reduced s e (M) l r ) .+  ((@Reduced s e (N) l r )).
@@ -501,6 +516,7 @@ rewrite R_reduced_plus. reflexivity.
 Qed.
 
 
+(* (∑_𝑖 (𝜌𝑖 ))|_𝑉 = ∑_𝑖 ((𝜌𝑖)|_𝑉 )*)
 Lemma big_sum_Reduced{ s e: nat}: forall n (f:nat-> Square (2^(e-s)) ) l r ,
 s<=l/\l<=r/\ r<=e->
 Reduced (big_sum f n) l r=
@@ -671,6 +687,7 @@ Proof. intros. unfold R_reduced.
       reflexivity.
 Qed.
 
+
 Lemma Reduced_comm{ s e :nat}: forall (q:qstate s e) l r ,
 s<=l /\ l<=r /\ r<=e->
 R_reduced (L_reduced q r) l=
@@ -765,7 +782,7 @@ Proof. intros. unfold R_reduced.
 Qed.
 
 
-
+(* 𝑉1 ⊆ 𝑉2 → (𝜌 |_𝑉2)|_𝑉1 = 𝜌 |_𝑉1 *)
 Lemma Reduced_assoc{ s e :nat}: forall (q:qstate s e) l r l' r',
 s<=l /\ l<=l' /\l' <=r' /\  r'<=r /\ r<=e->
 Reduced (Reduced q l r) l' r'=
@@ -811,7 +828,7 @@ Proof. intros. subst. unfold L_reduced.
        reflexivity.   
 Qed.
 
-
+(* 𝜌|_dom(𝜌) = 𝜌 *)
 Lemma Reduced_refl{s e:nat}: forall l r (q: qstate s e),
 l=s/\r=e-> @WF_Matrix (2^(e-s)) (2^(e-s)) q->
 Reduced q l r=q.
@@ -842,6 +859,8 @@ Proof. intros.  subst. unfold Reduced.
        assumption. 
 Qed.
 
+
+(* the definition of d_reduced and properties*)
 
 Fixpoint d_reduced{ s e: nat} (mu:list (cstate * qstate s e)) l r :=
        match mu with 
