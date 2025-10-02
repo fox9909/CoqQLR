@@ -5083,6 +5083,9 @@ If (𝜎, 𝜌) |= 𝐹1 /\ 𝐹2 where qfree(F1) and qfree(F2) overlap, i.e., q
 disjoint, then there exist 𝜌1 , 𝜌2, 𝜌3 such that 
 𝜌1 ∈ D^{-} (H_A), 𝜌2 ∈ D^{-} (H_B), 𝜌3 ∈ D^{-} (H_C), 
 and 𝜌|_{A∪B∪C} = 𝜌1 ⊗ 𝜌2 ⊗ 𝜌3 .*)
+
+(*Noting that we are dealing with continuous quantum variables, 
+we assume—without loss of generality—the following in the proof of this lemma.*)
 Definition F1_le_F2 F1 F2 := 
 (fst (option_free (Free_State F1)) < fst (option_free (Free_State F2)) /\
 fst (option_free (Free_State F2)) < snd (option_free (Free_State F1) ) /\

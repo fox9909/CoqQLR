@@ -74,7 +74,8 @@ Notation "x && y"  := (BAnd x y) (in custom com at level 80, left associativity)
 Notation "'~' b"   := (BNot b) (in custom com at level 75, right associativity).
 
 
-(*The syntax of commands*)
+(*The syntax of commands: To streamline Shor’s proof within our formalization, we extend the syntax with 
+a constructor `Clet` that precisely mirrors Coq’s `let…in…` binding construct.*)
 Inductive com : Type :=
   | CSkip
   | CAsgn (i:nat) (a : aexp)

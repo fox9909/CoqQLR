@@ -167,6 +167,7 @@ Proof. induction a; induction b; intros.
        simpl. injection H. intuition. 
 Qed.
 
+
 Theorem rule_Clet: forall (a b:nat),
 {{BTrue}}
 (Clet a b)
@@ -941,7 +942,7 @@ split; eapply rule_conseq_l; try apply SAnd_PAnd_eq; try apply H.
 unfold hoare_triple. intros. apply H0 in H3. apply sat_Npro_Pro in H3. destruct H3.
 pose (rule_cond P1 P2 P1 P2 c1 c2 b x). eapply h in H1. destruct H3. 
 eapply H1 in H4; try apply H2. apply rule_Oplus in H4. simpl in *.
-apply (@sat_NPro_State' s e) in H4; try assumption. lra.
+apply (@sat_NPro_State' ) in H4; try assumption. lra.
 econstructor; simpl. auto. econstructor. simpl. auto.
 econstructor.
 Qed.

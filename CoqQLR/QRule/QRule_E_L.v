@@ -404,6 +404,7 @@ Theorem  rule_odotT: forall qs1 qs2,
 Proof. rule_solve.   Qed.
  
 
+
 Local Open Scope assert_scope.
 Local Open Scope R_scope.
 Theorem rule_Oplus: forall (pF:pro_formula),
@@ -2243,6 +2244,9 @@ Proof. induction D; intros.
 Qed. 
 
 
+
+
+
 Import Sorted.
 Lemma sat_State_Npro{s e:nat}:forall (mu:dstate s e) F1 F2,
 WF_dstate mu-> 
@@ -2342,7 +2346,10 @@ Proof. intros (mu, IHmu); simpl in *; intros F1 F2 H  HF. intros.
       rewrite H6 in *. apply o. assumption. 
       econstructor. assumption. assumption.    
       eapply WF_dstate_eq. apply H4.  assumption.  
-Qed.
+Qed. 
+
+
+
 
 Lemma sat_Npro_Pro{s e:nat}:forall (mu:dstate s e) F1 F2, 
 sat_Assert mu (ANpro [F1;F2])-> (exists p, 0<=p<=1 /\ sat_Assert mu (APro [(p, F1);(1-p, F2)])).
@@ -2355,7 +2362,7 @@ Proof. intros. inversion_clear H. destruct p_n. discriminate H0. destruct p_n.
       lra.  econstructor; try assumption. discriminate H0.
 Qed.
 
-Lemma sat_NPro_State'{s e:nat}:forall (mu:dstate s e) F, 
+Lemma sat_NPro_State':forall  F, 
 (ANpro [F;F])->> F.
 Proof. unfold assert_implies. intros. rewrite sat_Assert_to_State.
       inversion_clear H. destruct p_n. discriminate H0. destruct p_n.
@@ -2370,7 +2377,7 @@ Proof. unfold assert_implies. intros. rewrite sat_Assert_to_State.
       inversion_clear H2 as [H' H4]. destruct H4 as [H4 H5]. simpl in H5.
       repeat rewrite sum_over_list_cons in *. rewrite sum_over_list_nil in *. rewrite Rplus_0_l in *.
       rewrite Rplus_0_r in *. assumption. subst.  
-      assert( sat_Assert mu0 (APro [(1, F); (0, F)])). econstructor; try assumption.
+      assert( sat_Assert mu (APro [(1, F); (0, F)])). econstructor; try assumption.
       apply (rule_POplusC _ 0) in H4. simpl in H4.
       apply sat_Pro_State' in H4. rewrite sat_Assert_to_State in *. apply H4. 
       
@@ -2388,6 +2395,24 @@ Proof. unfold assert_implies. intros. rewrite sat_Assert_to_State.
       rewrite Rplus_0_r in *. 
       apply d_seman_app; try lra. apply H3; lra. apply H7; lra. 
       inversion_clear H5. inversion_clear H8. inversion_clear H9. discriminate H0.
+Qed. 
+
+Theorem rule_OplusP:forall (F:State_formula) (b:bexp), 
+WF_formula F->
+F <<->> ANpro [F /\s b ; F /\s (BNot b)].
+Proof. split.  rule_solve. assert(StateMap.this mu=[] \/ StateMap.this mu <>[]).
+apply Classical_Prop.classic. destruct H3.
+apply sat_Assert_empty. simpl.
+split. econstructor;simpl. auto. 
+econstructor; simpl; auto; econstructor. discriminate.  assumption.
+apply sat_State_Npro; try  assumption. simpl. auto. 
+intros. apply H2 in H4. simpl in *. destruct (beval (x, d_find x mu) b); simpl;[left|right]; auto.
+
+apply implies_trans with (ANpro [F;F]).
+apply rule_OCon'. simpl.  econstructor. assumption. econstructor. assumption.
+econstructor.  econstructor. apply  rule_Conj_split_l. 
+econstructor. apply rule_Conj_split_l. econstructor. 
+apply sat_NPro_State'.
 Qed.
 
 (*big_oplus*)
