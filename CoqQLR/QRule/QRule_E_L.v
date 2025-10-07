@@ -2397,7 +2397,7 @@ Proof. unfold assert_implies. intros. rewrite sat_Assert_to_State.
       inversion_clear H5. inversion_clear H8. inversion_clear H9. discriminate H0.
 Qed. 
 
-Theorem rule_OplusP:forall (F:State_formula) (b:bexp), 
+Theorem rule_OplusF:forall (F:State_formula) (b:bexp), 
 WF_formula F->
 F <<->> ANpro [F /\s b ; F /\s (BNot b)].
 Proof. split.  rule_solve. assert(StateMap.this mu=[] \/ StateMap.this mu <>[]).
