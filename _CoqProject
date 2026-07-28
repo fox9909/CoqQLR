@@ -19,6 +19,7 @@
 ./CoqQLR/QRule/QRule_Q_L.v
 ./CoqQLR/QRule/QFrame.v
 ./CoqQLR/Examples/addM.v
+./CoqQLR/Examples/Purify.v
 ./CoqQLR/Examples/HHL.v
 ./CoqQLR/Examples/ContFrac.v
 ./CoqQLR/Examples/OF.v
