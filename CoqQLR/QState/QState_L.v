@@ -18,9 +18,9 @@ From Quan Require Import Mixed_State.
 (* In this file, we define classical states, quantum states, and distribution states, along with associated lemmas *)
 
 (*-----------------------------------Classic State----------------------------------------*)
-(* In, our work we use subscripts to represent variables.                                 
+(* In our work, we use subscripts to represent variables.
      We denote the classical variable 𝑥_𝑖 with 𝑖. 
-    Therefore, We define the type "cstate" as a Coq type of list nat, 
+    Therefore, we define the type "cstate" as a Coq type of list nat, 
     representing a classical state where the 𝑖-th element corresponds to
     the value of variable 𝑥_𝑖 . *)
 
@@ -485,7 +485,7 @@ The "sorted" aspect ensures that the list is sorted. This sorted requirement imp
 (* Consequently, we define the type "dstate" to represent the distribution
 state, a mapping from cstate to qstate *)
 
-(*Type "WF_dstate" guarantee the well-formedness of "dstate". 
+(* Type "WF_dstate" guarantees the well-formedness of "dstate". 
 This type is defined with the requirement that any quantum state mapped by an element within
 the support set is a non-zero mixed state, and the sum of their traces must be less than 1.*)
 
@@ -502,7 +502,7 @@ Definition state_to_dstate{s e:nat} (st:state s e): dstate s e:=
    StateMap.add (fst st) (snd st) (d_empty s e).
 Coercion state_to_dstate : state >-> dstate.
 
-(*equal disributions: 𝜇_1 = 𝜇_2*)
+(* Equal distributions: 𝜇_1 = 𝜇_2 *)
 Definition dstate_eq{s e:nat} (mu mu': dstate s e): Prop:=
     (StateMap.this mu)= (StateMap.this mu').
 
@@ -574,7 +574,7 @@ Notation "p *l mu" := (StateMap.Raw.map (fun x => q_scale p x) mu)(at level 70, 
   : state_scope.
 Local Open Scope state_scope.
 
-(* addition of ditributions : 𝜇_1 + 𝜇_2*)
+(* Addition of distributions: 𝜇_1 + 𝜇_2 *)
 Definition d_app{s e:nat} (mu1 mu2: dstate s e): dstate s e:=
            StateMap.map2 (option_app) mu1 mu2.
 
@@ -1564,7 +1564,7 @@ Proof.
 Qed.
 
 
-(*--------------------------Some properites for (p .* 𝜇)----------------------------------------*)
+(*--------------------------Some properties of (p .* 𝜇)----------------------------------------*)
 
 (*d_scale exists*)
 
@@ -1727,7 +1727,7 @@ Qed.
 
 
 
-(*------------------------------Some properites for (𝜇_1 + 𝜇_2)-----------------------------*)
+(*------------------------------Some properties of (𝜇_1 + 𝜇_2)-----------------------------*)
 
 Lemma map2_app_not_nil{s e:nat}: forall  (mu mu':list (cstate * qstate s e)),
 mu<>nil \/  mu'<>nil <->
@@ -1761,7 +1761,7 @@ Proof. intros. split; intros. assert(x=[]\/x<>[]).
         destruct H. rewrite H. rewrite H0. simpl. reflexivity.
 Qed.
 
-(*dapp commutaion*)
+(* Commutativity of dapp. *)
 
 Lemma map2_comm{s e:nat}: forall (mu mu': list (cstate * qstate s e)),
 (StateMap.Raw.map2 option_app mu mu')=
@@ -2287,7 +2287,6 @@ big_dapp' q_n mu_n mu .
 Proof. induction p_n; intros; destruct mu_n; destruct q_n; inversion_clear H0; try econstructor;
         try inversion_clear H. rewrite H0 in *. assumption. auto.
 Qed.
-
 
 
 

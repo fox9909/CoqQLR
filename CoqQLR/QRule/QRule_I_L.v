@@ -395,6 +395,28 @@ inversion_clear H3. inversion_clear H6.
  symmetry. assumption. assumption.
 Qed.
 
+Theorem rule_sum_fun:
+  forall (F1 F2 : nat -> State_formula) (c : com) (p_n : nat -> R) n,
+    (forall i, (i < n)%nat -> (0 < p_n i)%R) ->
+    (forall i, (i < n)%nat -> WF_formula (F2 i)) ->
+    (forall i, (i < n)%nat -> {{F1 i}} c {{F2 i}}) ->
+    {{big_pOplus p_n F1 n}} c {{big_pOplus p_n F2 n}}.
+Proof.
+  intros F1 F2 c p_n n Hpos Hwf Htriple.
+  rewrite <- (pro_npro_swap (big_pOplus p_n F1 n)).
+  rewrite <- (pro_npro_swap (big_pOplus p_n F2 n)).
+  rewrite big_pOplus_get_pro.
+  rewrite big_pOplus_get_npro.
+  rewrite big_pOplus_get_pro.
+  rewrite big_pOplus_get_npro.
+  repeat rewrite <- fun_to_list_big_Oplus_eq.
+  eapply rule_sum.
+  - apply Forall_fun_to_list. exact Hpos.
+  - repeat rewrite fun_to_list_length. reflexivity.
+  - apply Forall_fun_to_list. exact Hwf.
+  - apply Forall_two_forall. exact Htriple.
+Qed.
+
 Local Open Scope R_scope.
 (*Sum_pro*)
 Definition pro_formula_scale (pF: pro_formula ) (p: R): pro_formula:= 
@@ -945,6 +967,36 @@ eapply H1 in H4; try apply H2. apply rule_Oplus in H4. simpl in *.
 apply (@sat_NPro_State' ) in H4; try assumption. lra.
 econstructor; simpl. auto. econstructor. simpl. auto.
 econstructor.
+Qed.
+
+Theorem rule_cond_classic':
+  forall (F1 F2 : State_formula) (c1 c2 : com) (b : bexp),
+    WF_formula F2 ->
+    ({{F1 /\s b}} c1 {{F2}} /\ {{F1 /\s (BNot b)}} c2 {{F2}}) ->
+    {{F1}} if b then c1 else c2 end {{F2}}.
+Proof.
+  intros F1 F2 c1 c2 b Hwf H.
+  assert (F1 ->> ANpro [F1 /\s b; F1 /\s (BNot b)]).
+  rule_solve.
+  assert (StateMap.this mu = [] \/ StateMap.this mu <> []).
+  apply Classical_Prop.classic.
+  destruct H4.
+  apply sat_Assert_empty. simpl. split. econstructor; simpl. auto.
+  econstructor; simpl; auto; econstructor. discriminate. assumption.
+  apply sat_State_Npro; try assumption. simpl. auto.
+  intros. apply H2 in H5. simpl in *.
+  destruct (beval (x, d_find x mu) b); simpl; [left | right]; auto.
+  assert (({{F1 /\s b}} c1 {{F2}}) /\ ({{F1 /\s <{ ~ b }>}} c2 {{F2}})).
+  split; try apply H.
+  unfold hoare_triple. intros. apply H0 in H3.
+  apply sat_Npro_Pro in H3. destruct H3.
+  pose (rule_cond F1 F2 F1 F2 c1 c2 b x). eapply h in H1.
+  destruct H3.
+  eapply H1 in H4; try apply H2; apply rule_Oplus in H4; simpl in *.
+  apply (@sat_NPro_State') in H4. try assumption. lra.
+  destruct H. unfold hoare_triple in *.
+  econstructor; simpl. auto. econstructor. simpl. auto.
+  econstructor.
 Qed.
 
 
@@ -2340,6 +2392,3 @@ eapply rule_conseq. apply rule_while.
 eapply rule_conseq_r. apply H0. eapply rule_conseq_l. apply SAnd_PAnd_eq. assumption.
 assumption.  apply SAnd_PAnd_eq.
 Qed.
-
-
-

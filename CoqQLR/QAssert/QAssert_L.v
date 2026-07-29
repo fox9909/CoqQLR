@@ -18,11 +18,12 @@ From Quan Require Import QState_L.
 Require Import Reduced.
 Require Import Basic.
 
-(* In this file, we define the syntax and semantics of assertion languages, along with associated lemmas*)
+(* This file defines the syntax and semantics of assertion languages,
+   together with their associated lemmas. *)
 
-(*-------------------------------Synatx------------------------------------*)
+(*-------------------------------Syntax------------------------------------*)
 
-(*Syntax of Pure formulas*)
+(* Syntax of pure formulas. *)
 Inductive Pure_formula:Type:=
 |PBexp (b:bexp) 
 |Pre (P: nat-> Prop) (a:aexp) 
@@ -32,12 +33,12 @@ Inductive Pure_formula:Type:=
 |PUniver (i: nat) (P: Pure_formula)
 |PAssn (i:nat) (a:aexp) (P:Pure_formula). 
 
-(*Syantax of Quantum expression*)
+(* Syntax of quantum expressions. *)
 Inductive QExp : Type :=
 |QExp_s (s e:nat) (v: Vector (2^(e-s))): QExp
 |QExp_t (qs1 qs2:QExp) : QExp.
 
-(*State formulas*)
+(* State formulas. *)
 Inductive State_formula :Type:=
 |SPure (P:Pure_formula) 
 |SQuan (qs:QExp)
@@ -45,11 +46,11 @@ Inductive State_formula :Type:=
 |SAnd (F1 F2:State_formula)
 |SAssn (i:nat) (a:aexp) (F:State_formula).
 
-(*Distribution formulas*)
+(* Distribution formulas. *)
 Definition pro_formula := list (R * State_formula).
 Definition npro_formula := list (State_formula).
 
-(*Generate distribution formulas.*)
+(* Generate distribution formulas. *)
 Fixpoint big_pOplus (f : nat -> R) (g : nat -> State_formula) (n_0 : nat) : pro_formula := 
 match n_0 with
 | 0 => []
@@ -61,9 +62,9 @@ match n_0 with
 | S n' =>(big_Oplus g n') ++ [(g n')]  
 end.
 
-(*the list of all probabilities in the the distribution formulas*)
+(* The list of all probabilities in the distribution formula. *)
 Definition get_pro_formula (pF:pro_formula): list R:=map (fun i=> fst i) pF.
-(*the list of all state formulas in the the distribution formulas*)
+(* The list of all state formulas in the distribution formula. *)
 Definition pro_to_npro_formula (pF:pro_formula): npro_formula:=map (fun i=> snd i) pF.
 
 (*Given two lists nF of State formulas and p_n of type R, return their linear combination ⊕ᵢ p_nᵢ · nFᵢ.*)
@@ -256,7 +257,7 @@ State_eval F1 st /\ State_eval F2 st
 |SAssn i a F => State_eval F (s_update_cstate i (aeval st a) st)
 end.
 
-(*well formed quantum expressions and formulas.*)
+(* Well-formed quantum expressions and formulas. *)
 Fixpoint WF_QExp (qs:QExp):=
   match qs with 
   |QExp_t qs1 qs2 => WF_QExp qs1 /\ WF_QExp qs2 /\ NSet.Equal (NSet.inter (Free_Qexp qs1) (Free_Qexp qs2)) (NSet.empty)
@@ -348,7 +349,7 @@ Inductive sat_Assert {s e:nat}: (dstate s e)-> (Assertion)-> Prop:=
                    -> sat_Assert mu (Assn_sub i a D).
 
 
-(*----------------------------Some properties for get_pro_formula, pro_to_npro_formula and npro_to_pro_formula----------------------------------*)
+(*----------------------------Some properties of get_pro_formula, pro_to_npro_formula, and npro_to_pro_formula----------------------------------*)
 
 Lemma get_pro_formula_length: forall pF, 
 length (get_pro_formula pF) = length pF .
@@ -1743,7 +1744,6 @@ simpl.  destruct H. inversion_clear H.
 inversion_clear H0. intuition.
 Qed.
 
-
 Lemma sat_assert_conj: forall s e (mu:dstate s e) (F1 F2:State_formula),
 sat_Assert mu (F1 /\s F2)<->
 sat_Assert mu F1/\ sat_Assert mu F2 .
@@ -1757,7 +1757,6 @@ econstructor. intuition.
 apply State_eval_conj. split; intuition.   
 Qed.
 
-
 Local Open Scope nat_scope.
 Lemma Big_Sand_forall{s e:nat}: forall (mu:dstate s e) (f:nat-> State_formula) n,
 (forall i,  sat_Assert mu (f i))->
@@ -1770,7 +1769,6 @@ simpl. apply sat_assert_conj.
 split. 
 apply H. apply IHn. assumption.
 Qed.
-
 
 
 (* Another equivalent semantics definition of 𝜇 |= ⊕𝑖 𝑝𝑖 · 𝐹𝑖  *)
@@ -1882,9 +1880,6 @@ Proof. intros.  inversion_clear H.  exists (fun i=> nth  i (mu_n0) (d_empty s e)
       rewrite snd_nth_big_pOplus in a;try lia.
       apply a. assumption.
 Qed.
-
-
-
 
 
 (*d_update_cstate a*)
@@ -2024,7 +2019,6 @@ Proof. intros i a r (mu1, IHmu1). unfold dstate_eq. simpl in *.
     apply map_update.
 Qed.
 
-
 Lemma d_scale_update{s e:nat}: forall i a r (mu1 mu2 mu3:dstate s e),
 d_scale r mu1 mu2->
 d_scale r (d_update_cstate i a mu1) mu3->
@@ -2033,7 +2027,6 @@ Proof. intros. inversion H; subst. inversion_clear H. inversion_clear H0.
 apply dstate_eq_sym. apply d_update_cstate_empty. lra. lra.
 inversion H0; subst. lra.  apply d_scale_not_0_update.
 Qed.
-
   
 Lemma big_dapp'_update{s e:nat}: forall p_n (mu_n:list (dstate s e)) mu1 mu2 i a, 
 big_dapp' p_n mu_n mu1->
@@ -2073,7 +2066,6 @@ Proof. intros (mu, IHmu). unfold WWF_dstate.  unfold d_trace. unfold d_update_cs
       apply d_trace_update. assumption. 
 Qed.
 
-
 (*-------𝜇 |= 𝐹1 ⊙ 𝐹2 ⇔ 𝜇 |= 𝐹1 ∧ 𝜇 |= 𝐹2 ∧ qfree(𝐹1) ∩ qfree(𝐹2) = ∅--------*)
 
 Lemma State_eval_odot:forall (s e : nat) (mu : list (cstate * qstate s e)) (F1 F2 : State_formula),
@@ -2112,7 +2104,6 @@ econstructor. intuition.
 apply State_eval_odot. destruct H1.
 inversion_clear H0. split; intuition.  
 Qed.
-
 
 
 

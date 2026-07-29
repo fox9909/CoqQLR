@@ -24,7 +24,7 @@ From Quan Require Import HHL.
 From Quan Require Import ContFrac.
 
 (*------------------------------------------------*)
-(*---the correctness of order-finding algorithm---*)
+(*---the correctness of the order-finding algorithm---*)
 (*------------------------------------------------*)
 
 Local Open Scope com_scope.
@@ -233,7 +233,7 @@ Parameter f: R-> nat.
 Parameter QFT: Square (2^t).
 Parameter delt_n:nat->nat.
 
-(*Some hypothesis*)
+(* Some hypotheses. *)
 Hypothesis HtL:  (t>0)%nat /\ (L>0)%nat /\ (2 ^ t >= r).
 Hypothesis HNL:  (N < (2^L))%nat. 
 Hypothesis HU_plus: WF_Unitary U_plus /\ ( U_plus × (∣ 0 ⟩_ (2^L)) = (∣ 1 ⟩_ (2^L))).
@@ -256,7 +256,7 @@ Definition  P' (s:nat): Pure_formula := (BEq z' ' (s * 2 ^ t / r)%nat).
 
 
 
-(*---the definition of order-finding algorithm---*)
+(*---the definition of the order-finding algorithm---*)
 Local Open Scope nat_scope.
 Definition OF :=
     <{ z :=  1 ;
@@ -1448,7 +1448,7 @@ rewrite base_inner_0. unfold c_to_Vector1.
 Qed.
 
 
-(*---the correctess of order-finding algorithm---*)
+(*---the correctness of the order-finding algorithm---*)
 Theorem OF_correctness: 
 {{BTrue }} OF {{BEq z ' r}}.
 Proof.
@@ -1642,4 +1642,3 @@ Proof.
       apply rule_Conj_split_l. 
 Qed.
 End OF.
-

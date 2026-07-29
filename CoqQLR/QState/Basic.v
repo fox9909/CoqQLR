@@ -168,7 +168,7 @@ Lemma c_to_Vector1_refl:forall c, (c_to_Vector1 c) 0 0= c.
 Proof. intros. unfold c_to_Vector1. unfold scale.
        unfold I. simpl. Csimpl .   reflexivity. Qed.
 
-(* well-formness of c_to_vector1 *)
+(* Well-formedness of c_to_Vector1. *)
 Lemma WF_c_to_Vector1: forall c, WF_Matrix (c_to_Vector1 c).
 Proof. intros. unfold c_to_Vector1. auto_wf. Qed.
 #[export] Hint Resolve WF_c_to_Vector1 : wf_db.

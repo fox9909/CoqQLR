@@ -1031,7 +1031,7 @@ Proof. intros.
        apply Mix_S_aux; assumption. assumption.
 Qed.
 
-(*-------for any v:vector, v × (v) † is  an NZ_Mix_stated_aux-----*)
+(* For any vector v, v × v† is an NZ_Mixed_State_aux. *)
 
 Local Open Scope nat_scope.
 Lemma Vector_State_snd_0: forall n (x: Vector (n)),
@@ -2067,5 +2067,4 @@ Proof. intros .
       apply nz_Mixed_State_aux_to_nz_Mix_State.
       assumption. 
 Qed.
-
 

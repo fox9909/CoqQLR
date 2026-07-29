@@ -17,11 +17,11 @@ From Quan Require Import Basic.
 Delimit Scope C_scope with C.
 Local Open Scope C_scope.
 
-(*In this file, we define the syntax and semantics of classical-quantum languages.*)
+(* This file defines the syntax and semantics of classical-quantum languages. *)
 
 (*-------------------------Syntax-----------------------------------*)
 
-(*The syntax of arithmetic expressions*)
+(* Syntax of arithmetic expressions. *)
 Inductive aexp : Type :=
   | ANum (n : nat)
   | AId (i : nat)            
@@ -215,7 +215,7 @@ Fixpoint MVar (c:com): (CSet * QSet) :=
 (*-----------------------Semantics------------------------------------*)
 Local Open Scope nat_scope.
 
-(*the semantics for arithmetic expressions*)
+(* Semantics of arithmetic expressions. *)
 Fixpoint aeval{s e:nat} (st: state s e) 
                (a : aexp) : nat :=
   match a with

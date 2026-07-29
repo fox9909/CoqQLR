@@ -36,12 +36,7 @@ Local Open Scope assert_scope.
 Local Open Scope matrix_scope.
 Local Open Scope nat_scope.
 
-
-
-
- 
-
-(*----------------------------------Definition-------------------------*)
+(*---------------------------------- Definitions -------------------------*)
 Parameter p: nat->nat->R.
 Hypothesis p_pos : forall a b, (0 < p a b < 1)%R.
 Hypothesis p_sum1 :
@@ -50,7 +45,7 @@ Hypothesis p_sum1 :
 Definition cnot_on_one (i : nat) : Square (2 ^ 1) :=
   if i =? 0 then I 2 else σx.
 
-(*表示对第l个block块的纯化*)
+(* Register allocation for the l-th purification block. *)
 Definition sa (l : nat) : nat := 4 * l.
 Definition sb (l : nat) : nat := 4 * l + 1.
 Definition ta (l : nat) : nat := 4 * l + 2.
@@ -84,18 +79,18 @@ Definition Bell (a b : nat) : Vector 4 :=
   / √ 2 .* big_sum (fun z => ((-C1) ^ (bit b * z) .* ((∣ z ⟩_ 2) ⊗ (∣ bit_xor z a ⟩_ 2)))) 2.
 
 
-(*给定一个i表示局部分支编号，返回对应的a,b,c,d的值*)
+(* The values a, b, c, and d corresponding to the i-th local branch. *)
   Definition idx_a (i : nat) : nat := bit (i / 8).
   Definition idx_b (i : nat) : nat := bit (i / 4).
   Definition idx_c (i : nat) : nat := bit (i / 2).
   Definition idx_d (i : nat) : nat := bit i.
 
 
-(*给定一个i表示局部分支编号，返回w_i即对应的概率系数*)
+(* Branch weight w_i for the local branch indexed by i. *)
 Definition D_in_weight_i (p : nat -> nat -> R) (i : nat) : R :=
     (p (idx_a i) (idx_b i) * p (idx_c i) (idx_d i))%R.
 
-(*给定一个i表示局部分支编号，和 l 表示第几个block块，返回在该分支下lblock块对应的输入状态*)
+(* Input assertion for block l under the local branch indexed by i. *)
 Definition D_in_branch_i (l i: nat)  : State_formula :=
     SQuan (QExp_s (sa l) (S (sb l)) (Bell (idx_a i) (idx_b i))) ⊙
     SQuan (QExp_s (ta l) (S (tb l)) (Bell (idx_c i) (idx_d i))).
@@ -104,7 +99,7 @@ Definition D_in_branch_i (l i: nat)  : State_formula :=
 Definition one_if_eq (a c : nat) : nat :=
   if Nat.eqb (bit a) (bit c) then 1 else 0.
 
-(*给定一个i表示局部分支编号，和 l 表示第几个block块，返回在该分支下lblock块对应的输出状态*)
+(* Output assertion for block l under the local branch indexed by i. *)
 Definition D_out_branch_i (l i : nat) : State_formula :=
     SQuan (QExp_s (sa l) (S (sb l)) (Bell (idx_a i) (bit_xor (idx_b i) (idx_d i)))) /\s
     SPure (BEq (AId (cv l)) (one_if_eq (idx_a i) (idx_c i))).
@@ -119,26 +114,19 @@ Fixpoint big_prod_R (f : nat -> R) (m : nat) : R :=
     | S m' => (big_prod_R f m' * f m')%R
     end.
 
-(*一共有m个分支，给定一个eta表示分支编号，返回对应的概率系数*)
+(* Product weight for the global branch eta over m purification blocks. *)
 Definition D_m_in_weight (p : nat -> nat -> R) (m eta : nat) : R :=
     big_prod_R
       (fun l => D_in_weight_i p (eta_l eta l))
       m.
 
-
-Fixpoint big_odot (F : nat -> State_formula) (m : nat) : State_formula :=
-    match m with
-    | 0 => BTrue
-    | S m' => F m' ⊙ big_odot F m'
-    end.
-
-(*一共有m个分支，给定一个eta表示分支编号，返回对应的分支输入状态*)
+(* Input assertion for the global branch eta over m purification blocks. *)
  Definition D_m_in_branch (m eta: nat) : State_formula :=
     big_odot
       (fun l => D_in_branch_i l (eta_l eta l))
       m.
 
-(*一共有m个分支，给定一个eta表示分支编号，返回对应的分支输出状态*)
+(* Output assertion for the global branch eta over m purification blocks. *)
 Definition D_m_out_branch (m eta: nat) : State_formula :=
   big_odot (fun l => D_out_branch_i l (eta_l eta l)) m. 
 
@@ -148,7 +136,7 @@ Definition D_m_in (p : nat -> nat -> R) (m:nat): pro_formula :=
 Definition D_m_out (p : nat -> nat -> R) (m:nat): pro_formula :=
     big_pOplus (D_m_in_weight p m) (D_m_out_branch m) (16^m).
 
-(*针对单个block分支*)
+(* Merged output distribution for the single-block case. *)
 Definition D_post_q (p : nat -> nat -> R) (a k : nat) : R :=
   (p (bit a) 0%nat * p (bit a) (bit k) +
    p (bit a) 1%nat * p (bit a) (bit (1 + bit k)))%R.
@@ -177,7 +165,7 @@ Definition D_post (p : nat -> nat -> R) : pro_formula :=
   [(p_fail p, SPure (BEq (AId ((cv 0))) 0))].
 
 
-(*--------------------------辅助的引理---------------------------------------*)
+(*-------------------------- Auxiliary lemmas --------------------------*)
 
 Lemma bit_id : forall n, bit (bit n) = bit n.
   Proof.
@@ -290,275 +278,12 @@ Qed.
   Qed.
 
 
-  Theorem rule_cond_classic': forall (F1 F2:State_formula) (c1 c2:com) (b:bexp), WF_formula F2->
-        ({{F1 /\s (b)}} c1 {{F2 }} /\ {{F1 /\s ((BNot b) )}} c2 {{F2 }})
-     -> ({{F1 }}
-        if b then c1 else c2 end
-        {{F2}}).
-Proof. intros F1 F2 c1 c2 b H'. intros.  
-assert(F1 ->> ANpro [F1 /\s b ; F1 /\s (BNot b)]). 
-rule_solve. 
-assert(StateMap.this mu=[] \/ StateMap.this mu <>[]).
-apply Classical_Prop.classic. destruct H4.
-apply sat_Assert_empty. simpl. split. econstructor;simpl. auto.
-econstructor; simpl; auto; econstructor. discriminate. assumption.
+(*------------------------- Branchwise correctness proof:
+     { G_i^(l) } Purify^(l) { H_i^(l) }.
+     Here, l denotes the block index, and i denotes the local branch index.
+  ---------------------------*)
 
-apply sat_State_Npro; try  assumption. simpl. auto.
-
-intros. apply H2 in H5. simpl in *. destruct (beval (x, d_find x mu) b); simpl;[left|right]; auto.
-assert(({{F1 /\s b}} c1 {{F2}}) /\ ({{F1 /\s <{ ~ b }>}} c2 {{F2}})).
-split; try apply H. 
-unfold hoare_triple. intros. apply H0 in H3. apply sat_Npro_Pro in H3. destruct H3.
-pose (rule_cond F1 F2 F1 F2 c1 c2 b x). eapply h in H1. destruct H3. 
-eapply H1 in H4; try apply H2; apply rule_Oplus in H4; simpl in *.
-apply (@sat_NPro_State' ) in H4.  try assumption. lra.
-destruct H. unfold hoare_triple in *. 
-econstructor; simpl.  auto. econstructor. simpl. auto.
-econstructor.
-Qed.
-
-Lemma SAnd_assoc_r :
-    forall F1 F2 F3,
-      (F1 /\s (F2 /\s F3)) ->>
-      ((F1 /\s F2) /\s F3).
-  Proof.
-    intros. rule_solve.  Qed. 
-
-
-Theorem rule_sum_fun:
-  forall (F1 F2 : nat -> State_formula) (c : com) (p_n : nat -> R) n,
-    (forall i, i < n -> (0 < p_n i)%R) ->
-    (forall i, i < n -> WF_formula (F2 i)) ->
-    (forall i, i < n -> {{F1 i}} c {{F2 i}}) ->
-    {{big_pOplus p_n F1 n}} c {{big_pOplus p_n F2 n}}.
-Proof.
-  intros F1 F2 c p_n n Hpos Hwf Htriple.
-  rewrite <- (pro_npro_swap (big_pOplus p_n F1 n)).
-  rewrite <- (pro_npro_swap (big_pOplus p_n F2 n)).
-  rewrite big_pOplus_get_pro.
-  rewrite big_pOplus_get_npro.
-  rewrite big_pOplus_get_pro.
-  rewrite big_pOplus_get_npro.
-  repeat rewrite <- fun_to_list_big_Oplus_eq.
-  eapply rule_sum.
-  - apply Forall_fun_to_list. exact Hpos.
-  - repeat rewrite fun_to_list_length. reflexivity.
-  - apply Forall_fun_to_list. exact Hwf.
-  - apply Forall_two_forall. exact Htriple.
-Qed.
-
-
-Theorem rule_OdotCon :
-    forall F1 F2 F3 F4 : State_formula,
-      NSet.Equal
-        (NSet.inter (snd (Free_state F3)) (snd (Free_state F4)))
-        NSet.empty ->
-      (F1 ->> F3) ->
-      (F2 ->> F4) ->
-      (F1 ⊙ F2) ->> (F3 ⊙ F4).
-  Proof. unfold assert_implies.
-    intros F1 F2 F3 F4 Hdisj H13 H24 s e mu Hsat.
-    rewrite sat_assert_odot in Hsat.
-    rewrite sat_assert_odot.
-    destruct Hsat as [HF1 Hsat].
-    destruct Hsat as [HF2 _].
-    split.
-    - apply H13. exact HF1.
-    - split.
-      + apply H24. exact HF2.
-      + exact Hdisj.
-  Qed.
-
-Theorem rule_Odot_swap_left : forall A B C : State_formula,
-  A ⊙ (B ⊙ C) ->> B ⊙ (A ⊙ C).
-Proof.    
-  unfold assert_implies. 
-  intros A B C s e mu Hsat.
-  rewrite sat_assert_odot in Hsat.
-  destruct Hsat as [HA Hsat].
-  destruct Hsat as [HBC HA_BC].
-  rewrite sat_assert_odot in HBC.
-  destruct HBC as [HB HBC].
-  destruct HBC as [HC HB_C].
-  rewrite sat_assert_odot.
-  split.
-  - exact HB.
-  - split.
-    + rewrite sat_assert_odot.
-      split.
-      * exact HA.
-      * split.
-        -- exact HC.
-        -- simpl in HA_BC.
-           rewrite inter_union_dist in HA_BC.
-           apply union_empty in HA_BC.
-           destruct HA_BC as [_ HA_C].
-           exact HA_C.
-    + simpl.
-      rewrite inter_union_dist.
-      apply union_empty.
-      split.
-      * simpl in HA_BC.
-        rewrite inter_union_dist in HA_BC.
-        apply union_empty in HA_BC.
-        destruct HA_BC as [HA_B _].
-        rewrite inter_comm.
-        exact HA_B.
-      * exact HB_C.
-Qed.
-
-Theorem rule_Odot_swap_pair_frame : forall A B C : State_formula,
-  (A ⊙ B) ⊙ C ->> (B ⊙ A) ⊙ C.
-Proof.
-  unfold assert_implies.
-  intros A B C s e mu Hsat.
-  rewrite sat_assert_odot in Hsat.
-  destruct Hsat as [HAB Hsat].
-  destruct Hsat as [HC HAB_C].
-  rewrite sat_assert_odot in HAB.
-  destruct HAB as [HA HAB].
-  destruct HAB as [HB HA_B].
-  rewrite sat_assert_odot.
-  split.
-  - rewrite sat_assert_odot.
-    split.
-    + exact HB.
-    + split.
-      * exact HA.
-      * rewrite inter_comm. exact HA_B.
-  - split.
-    + exact HC.
-    + simpl in HAB_C.
-      rewrite inter_comm in HAB_C.
-      rewrite inter_union_dist in HAB_C.
-      apply union_empty in HAB_C.
-      destruct HAB_C as [HA_C HB_C].
-      simpl.
-      rewrite inter_comm.
-      rewrite inter_union_dist.
-      apply union_empty.
-      split.
-      * exact HB_C.
-      * exact HA_C.
-Qed.
-
-Lemma big_odot_q_in_index : forall (F : nat -> State_formula) n q,
-  NSet.In q (snd (Free_state (big_odot F n))) ->
-  exists i, i < n /\ NSet.In q (snd (Free_state (F i))).
-Proof.
-  intros F n.
-  induction n; intros q Hq.
-  - simpl in Hq. apply In_empty in Hq. contradiction.
-  - simpl in Hq.
-    apply NSet.union_1 in Hq.
-    destruct Hq as [Hq | Hq].
-    + exists n. split; [lia | exact Hq].
-    + apply IHn in Hq.
-      destruct Hq as [i Hq].
-      destruct Hq as [Hi Hq].
-      exists i. split; [lia | exact Hq].
-Qed.
-
-Lemma big_odot_qframe_disjoint_step :
-  forall (F2 : State_formula) (F3 : nat -> State_formula) n,
-    (forall i, i < S n ->
-      NSet.Equal
-        (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 i))))
-        NSet.empty) ->
-    (forall i j, i < S n -> j < S n -> i <> j ->
-      NSet.Equal
-        (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 j))))
-        NSet.empty) ->
-    NSet.Equal
-      (NSet.inter
-        (snd (Free_state (big_odot F3 n ⊙ F2)))
-        (snd (Free_state (F3 n))))
-      NSet.empty.
-Proof.
-  intros F2 F3 n HF2 Hpair.
-  unfold NSet.Equal.
-  intros q; split; intros Hq.
-  - apply NSet.inter_1 in Hq as Hleft.
-    apply NSet.inter_2 in Hq as Hcur.
-    simpl in Hleft.
-    apply NSet.union_1 in Hleft.
-    destruct Hleft as [Hprev | HF2q].
-    + apply big_odot_q_in_index in Hprev.
-      destruct Hprev as [i Hprev].
-      destruct Hprev as [Hi Hprev].
-      pose proof (Hpair i n ltac:(lia) ltac:(lia) ltac:(lia)) as Hdisj.
-      unfold NSet.Equal in Hdisj.
-      assert (NSet.In q (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 n))))).
-      { apply NSet.inter_3; assumption. }
-      apply Hdisj in H. apply In_empty in H. contradiction.
-    + pose proof (HF2 n ltac:(lia)) as Hdisj.
-      unfold NSet.Equal in Hdisj.
-      assert (NSet.In q (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 n))))).
-      { apply NSet.inter_3; assumption. }
-      apply Hdisj in H. apply In_empty in H. contradiction.
-  - apply In_empty in Hq. contradiction.
-Qed.
-
-Theorem rule_qframe_big_odot' :
-  forall (F1 F2 : State_formula) (F3 : nat -> State_formula) c n,
-    (forall i, i < n ->
-      NSet.Equal
-        (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 i))))
-        NSet.empty) ->
-    (forall i j, i < n -> j < n -> i <> j ->
-      NSet.Equal
-        (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 j))))
-        NSet.empty) ->
-    (forall i, i < n -> Considered_Formula (F3 i)) ->
-    {{ F1 }} c {{ F2 }} ->
-    (forall i, i < n ->
-      NSet.Equal
-        (NSet.inter (fst (Free_state (F3 i))) (fst (MVar c)))
-        NSet.empty) ->
-    (forall i, i < n ->
-      snd (option_free (Free_State (F3 i))) <=
-        option_nat (NSet.min_elt (snd (MVar c))) \/
-      option_nat (NSet.max_elt (snd (MVar c))) <
-        fst (option_free (Free_State (F3 i)))) ->
-    {{ big_odot F3 n ⊙ F1 }} c {{ big_odot F3 n ⊙ F2 }}.
-Proof.
-  intros F1 F2 F3 c n.
-  induction n.
-  - intros HF2 Hpair Hcons Htriple Hc Hside.
-    simpl.
-    eapply rule_conseq.
-    + apply Htriple.
-    + eapply implies_trans.
-      * apply rule_OdotC.
-      * apply rule_OdotE.
-    + eapply implies_trans.
-      * apply rule_OdotE.
-      * apply rule_OdotC.
-  - intros HF2 Hpair Hcons Htriple Hc Hside.
-    simpl.
-    eapply rule_conseq.
-    + eapply rule_qframe'.
-      * eapply (big_odot_qframe_disjoint_step F2 F3 n).
-        -- intros i Hi. apply HF2. lia.
-        -- intros i j Hi Hj Hij. apply Hpair; lia.
-      * apply Hcons. lia.
-      * split.
-        -- apply IHn.
-           ++ intros i Hi. apply HF2. lia.
-           ++ intros i j Hi Hj Hij. apply Hpair; lia.
-           ++ intros i Hi. apply Hcons. lia.
-           ++ exact Htriple.
-           ++ intros i Hi. apply Hc. lia.
-           ++ intros i Hi. apply Hside. lia.
-        -- split.
-           ++ apply Hc. lia.
-           ++ apply Hside. lia.
-    + apply rule_OdotA.
-    + apply rule_OdotA.
-Qed.
-(*-------------------------单个分支正确性证明： {𝐺_i^(𝓁)} 𝐏𝐮𝐫𝐢𝐟𝐲 ^(𝓁) {𝐻_i^(𝓁)}, l 表示第几个block块, i表示对应的局部分支编号---------------------------*)
-
-(*------1: Bell 态经过第一个 CNOT 后的状态变化---------*)
+(*------ Step 1: Bell-state transformation after applying the first CNOT. ------*)
 Definition Purify_after_cnot_a_vec (i : nat) : Vector 16 :=
     (/ 2)%R .* @big_sum (Matrix 16 1) _
       (fun z =>
@@ -637,7 +362,10 @@ Proof.
     rewrite Mscale_assoc. 
     rewrite Mscale_mult_dist_r. 
     f_equal. replace (bit (idx_b i)) with ((idx_b i)) by (unfold idx_b; symmetry;  apply bit_id ). 
-    replace (bit (idx_d i)) with ((idx_d i)) by (unfold idx_d; symmetry;  apply bit_id ).  reflexivity.  simpl. rewrite Mplus_0_l. 
+    replace (bit (idx_d i)) with ((idx_d i))
+      by (unfold idx_d; symmetry; apply bit_id).
+    reflexivity.
+    simpl. rewrite Mplus_0_l. 
    repeat  rewrite kron_1_l; [ | auto_wf  |auto_wf].  
    rewrite Mmult_plus_distr_r. 
    unfold cnot_on_one. simpl.
@@ -650,7 +378,8 @@ Proof.
                           
    replace ((I 4 ⊗ I 2 ⊗ I 2)) with ((I 2 ⊗ I 8)); [ | repeat rewrite id_kron; try reflexivity].
     
-   replace ((I 4 ⊗ σx ⊗ I 2)) with ((I 2 ⊗ (I 2 ⊗  σx ⊗ I 2))); [ | try repeat rewrite <-kron_assoc; auto_wf; try rewrite id_kron; try reflexivity ] .
+   replace ((I 4 ⊗ σx ⊗ I 2)) with ((I 2 ⊗ (I 2 ⊗  σx ⊗ I 2)));
+     [ | try repeat rewrite <-kron_assoc; auto_wf; try rewrite id_kron; try reflexivity ].
    replace (16) with (2*8); try reflexivity. repeat rewrite kron_mixed_product. 
    repeat rewrite Mmult_1_r; [ | auto_wf | auto_wf | auto_wf ]. repeat rewrite Mmult_1_l; [ | auto_wf  ].
    
@@ -666,9 +395,16 @@ Proof.
    repeat  rewrite kron_mixed_product. simpl. repeat rewrite Mmult_1_l; [|try apply WF_base;
   unfold bit; try apply Nat.mod_upper_bound; try lia | try apply WF_base;
   unfold bit; try apply Nat.mod_upper_bound; try lia] .  
-   assert(x=0 \/ x=1) . lia. destruct H1; rewrite H1; Msimpl; rewrite <-base_qubit0; rewrite <-base_qubit1;
-  try simpl; try rewrite base_inner_1; try rewrite  base_inner_0; unfold c_to_Vector1; Msimpl; try lia. rewrite bit_xor_0_r. 
-  replace (bit x0) with (x0).    repeat rewrite kron_assoc; purify_wf_1. reflexivity. unfold bit; rewrite Nat.mod_small by lia; reflexivity.
+   assert(x=0 \/ x=1) . lia.
+   destruct H1; rewrite H1; Msimpl;
+     rewrite <-base_qubit0; rewrite <-base_qubit1;
+     try simpl; try rewrite base_inner_1; try rewrite  base_inner_0;
+     unfold c_to_Vector1; Msimpl; try lia.
+   rewrite bit_xor_0_r. 
+   replace (bit x0) with (x0).
+   repeat rewrite kron_assoc; purify_wf_1.
+   reflexivity.
+   unfold bit; rewrite Nat.mod_small by lia; reflexivity.
    repeat rewrite kron_assoc; purify_wf_1. f_equal. f_equal.
    f_equal.  assert(x0=0 \/ x0=1) . lia. destruct H2; rewrite H2;   solve_matrix. purify_wf_1. purify_wf_1.
 
@@ -688,15 +424,13 @@ Lemma Purify_branch_cnot_a_correct : forall l i,
   {{ Purify_after_cnot_a l i }}.
 Proof.
   intros l i.
-  eapply rule_conseq
-    with (P' := Purify_before_cnot_a_join l i)
-         (Q' := Purify_after_cnot_a_raw l i).
-  - (* 使用 QUnit_Ctrl 规则处理第一个 CNOT。 *)
+  eapply rule_conseq with (P' := Purify_before_cnot_a_join l i).
+  - (* Use the QUnit_Ctrl rule for the first CNOT step. *)
     unfold Purify_before_cnot_a_join.
-    unfold Purify_after_cnot_a_raw.
     apply rule_QUnit_Ctrl.
     unfold sa, ta, tb. lia.
-  - (* 将两个 Bell pair 的分离断言合并成一个 4-qubit 断言。 *)
+  - (* Use the [OdotT] rule to combine the separating assertions for the two Bell pairs
+     into a four-qubit tensor-product state. *)
     unfold D_in_branch_i.
     unfold Purify_before_cnot_a_join.
     eapply implies_trans.
@@ -705,18 +439,18 @@ Proof.
       replace (Bell (idx_a i) (idx_b i) ⊗ Bell (idx_c i) (idx_d i))
         with (@kron (2 ^ (ta l - sa l)) 1 (2 ^ (S (tb l) - ta l)) 1
           (Bell (idx_a i) (idx_b i)) (Bell (idx_c i) (idx_d i))).
-      apply rule_Separ.
+      apply rule_Separ. 
       replace (ta l - sa l) with 2 by (unfold sa, ta; lia).
       replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
       reflexivity.
-  - (* 用矩阵计算等式把 QUnit_Ctrl 的 raw 后置改写成定义好的中间断言。 *)
-    unfold Purify_after_cnot_a_raw.
+  - (* Rewrite the QUnit_Ctrl postcondition into the predefined intermediate assertion.*)
     unfold Purify_after_cnot_a.
     rewrite Purify_after_cnot_a_vec_eq.
     apply implies_refl.
 Qed.
 
-(*------1: 状态经过第二个 CNOT 后的状态变化---------*)
+(*------ Step 2: state transformation after applying the second CNOT. ------*)
+
 Definition Purify_after_cnot_ab_vec (i : nat) : Vector 16 :=
     (/ 2)%R .* @big_sum (Matrix 16 1) _
       (fun z =>
@@ -734,12 +468,6 @@ Definition Purify_after_cnot_ab_vec (i : nat) : Vector 16 :=
 Definition Purify_after_cnot_ab_join (l i : nat) : State_formula :=
   SQuan (QExp_s (sa l) (S (tb l)) (Purify_after_cnot_ab_vec i)).
 
-Definition Purify_after_cnot_ab_raw (l i : nat) : State_formula :=
-  SQuan (QExp_s (sa l) (S (tb l))
-        (@UCtrl_v (sb l) (S (sb l)) (tb l) (S (tb l))
-        (sa l) (S (tb l)) cnot_on_one
-        (Purify_after_cnot_a_vec i))).
-
 Definition Purify_after_cnot_ab (l i : nat) : State_formula :=
   SQuan
     (QExp_s (sa l) (S (sb l))
@@ -755,9 +483,12 @@ Lemma Purify_after_cnot_ab_vec_raw_eq : forall l i,
     (Purify_after_cnot_a_vec i)
   = Purify_after_cnot_ab_vec i.
 Proof. 
-  (* 第二个 CNOT 的矩阵计算，CNOT_{s_b(l) -> t_b(l)}
-    (Purify_after_cnot_a_vec(i) ) = Purify_after_cnot_ab_vec(i）。内部分支显示变化如下：|z, z xor a, w xor z, w xor c>
-              ↦ |z, z xor a, w xor z, w xor z xor a xor c>. *)
+  (* Matrix calculation for the second CNOT:
+   CNOT_{s_b(l) -> t_b(l)} (Purify_after_cnot_a_vec i)  = Purify_after_cnot_ab_vec i.
+
+  At the branch level, the basis vector is transformed as follows:
+   |z, z xor a, w xor z, w xor c>  ↦ |z, z xor a, w xor z, w xor z xor a xor c>.
+  *)
     intros. 
     unfold UCtrl_v. 
     replace (S (sb l) - sb l)%nat with 1%nat by lia.
@@ -792,11 +523,15 @@ replace ((2 + (2 + (2 + (2 + 0)))) ) with (4*2) by lia.
    replace ((I 4) ) with ((I 2 ⊗ I 2 )); [ | repeat rewrite id_kron; try reflexivity].
    
     
-   replace ((I 8 ⊗ σx)) with ((I 2 ⊗ I 2 ⊗ (I 2 ⊗ σx))); [ | try repeat rewrite <-kron_assoc; auto_wf; try repeat  rewrite id_kron; try reflexivity ] .
+   replace ((I 8 ⊗ σx)) with ((I 2 ⊗ I 2 ⊗ (I 2 ⊗ σx)));
+     [ | try repeat rewrite <-kron_assoc; auto_wf; try repeat  rewrite id_kron; try reflexivity ].
    replace (4) with (2*2); try reflexivity. 
     repeat rewrite kron_assoc; try auto_wf. 
-   replace (S (S (S (S (S (S (S (S (S (S (S (S (2 * 2))))))))))))) with (2*(2*(2*2))); try reflexivity. repeat rewrite kron_mixed_product. 
-   repeat rewrite Mmult_1_r; [  | auto_wf | auto_wf | auto_wf ]. repeat rewrite Mmult_1_l; [ | auto_wf  ].
+   replace (S (S (S (S (S (S (S (S (S (S (S (S (2 * 2)))))))))))))
+     with (2*(2*(2*2))); try reflexivity.
+   repeat rewrite kron_mixed_product. 
+   repeat rewrite Mmult_1_r; [  | auto_wf | auto_wf | auto_wf ].
+   repeat rewrite Mmult_1_l; [ | auto_wf  ].
 
   remember ((Base_vec 2 0 × adjoint (Base_vec 2 0))). 
   remember (I 2 ⊗ (Base_vec 2 0 × adjoint (Base_vec 2 0))).
@@ -806,22 +541,41 @@ replace ((2 + (2 + (2 + (2 + 0)))) ) with (4*2) by lia.
   remember (Base_vec 2 x). 
   remember (Base_vec 2 1). 
 
-   assert (m4 ⊗ m1 ⊗ m2 ⊗ m3= (@kron (S (S (S (S (mul (S (S O)) (S (S O))))))) (S O) (S (S O)) (S O)
-           (@kron (mul (S (S O)) (S (S O))) (S O) (S (S O)) (S O) (@kron (S (S O)) (S O) (S (S O)) (S O) m4 m1) m2) m3)).
-  reflexivity. rewrite <- H1.  repeat  rewrite (kron_assoc ); try apply WF_kron; try reflexivity; try auto_wf; try purify_wf_1.
+   assert (m4 ⊗ m1 ⊗ m2 ⊗ m3 =
+           (@kron (S (S (S (S (mul (S (S O)) (S (S O))))))) (S O)
+              (S (S O)) (S O)
+              (@kron (mul (S (S O)) (S (S O))) (S O) (S (S O)) (S O)
+                 (@kron (S (S O)) (S O) (S (S O)) (S O) m4 m1) m2) m3)).
+  reflexivity.
+  rewrite <- H1.
+  repeat rewrite (kron_assoc);
+    try apply WF_kron; try reflexivity; try auto_wf; try purify_wf_1.
 
- replace ((@kron (S (S O)) (S (S O)) (mul (S (S O)) (S (S O))) (mul (S (S O)) (S (S O))) m
-         (@kron (S (S O)) (S (S O)) (S (S O)) (S (S O)) (I (S (S O))) (I (S (S O)))))) with ((m ⊗ (I 2 ⊗ I 2))) by reflexivity.
+ replace ((@kron (S (S O)) (S (S O))
+             (mul (S (S O)) (S (S O))) (mul (S (S O)) (S (S O))) m
+             (@kron (S (S O)) (S (S O)) (S (S O)) (S (S O))
+                (I (S (S O))) (I (S (S O)))))) with ((m ⊗ (I 2 ⊗ I 2)))
+   by reflexivity.
     
-   assert((@Mmult (mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O)))))(mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O))))) (S O) (I 2 ⊗ (m ⊗ (I 2 ⊗ I 2)))
-        (m4 ⊗ (m1 ⊗ (m2 ⊗ m3))))= I 2 ⊗ (m ⊗ (I 2 ⊗ I 2)) × (m4 ⊗ ((m1 ⊗ (m2 ⊗ m3)))) ). reflexivity. rewrite H2.
+   assert((@Mmult
+        (mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O)))))
+        (mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O)))))
+        (S O) (I 2 ⊗ (m ⊗ (I 2 ⊗ I 2)))
+        (m4 ⊗ (m1 ⊗ (m2 ⊗ m3)))) =
+        I 2 ⊗ (m ⊗ (I 2 ⊗ I 2)) ×
+        (m4 ⊗ ((m1 ⊗ (m2 ⊗ m3)))) ).
+   reflexivity. rewrite H2.
            
    assert((@Mmult (mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O)))))
         (mul (S (S O)) (mul (S (S O)) (mul (S (S O)) (S (S O))))) (S O) (I 2 ⊗ (m5 × (m5) † ⊗ (I 2 ⊗ σx)))
-        (m4 ⊗ (m1 ⊗ (m2 ⊗ m3))))= (I 2 ⊗ (m5 × (m5) † ⊗ (I 2 ⊗ σx))) × (m4 ⊗ ((m1 ⊗ (m2 ⊗ m3)))) ). reflexivity. rewrite H3.
+        (m4 ⊗ (m1 ⊗ (m2 ⊗ m3)))) =
+        (I 2 ⊗ (m5 × (m5) † ⊗ (I 2 ⊗ σx))) ×
+        (m4 ⊗ ((m1 ⊗ (m2 ⊗ m3)))) ).
+   reflexivity. rewrite H3.
 
-
-    repeat rewrite kron_mixed_product. rewrite Heqm. rewrite Heqm1. rewrite Heqm2.  rewrite Heqm3. rewrite Heqm4.  rewrite Heqm5. 
+    repeat rewrite kron_mixed_product.
+    rewrite Heqm. rewrite Heqm1. rewrite Heqm2.
+    rewrite Heqm3. rewrite Heqm4. rewrite Heqm5. 
 
      repeat  rewrite Mmult_1_l; try auto_wf; [ | purify_wf_1 | purify_wf_1 ].
 
@@ -830,8 +584,11 @@ replace ((2 + (2 + (2 + (2 + 0)))) ) with (4*2) by lia.
    apply Nat.mod_upper_bound. lia. lia. 
   
    destruct H4; rewrite H4; Msimpl; repeat  rewrite Mmult_assoc; rewrite <-base_qubit0; rewrite <-base_qubit1;
-  try simpl; try rewrite base_inner_1; try rewrite  base_inner_0; unfold c_to_Vector1; Msimpl; try lia.   
-  replace ((bit_xor (bit_xor x0 x) (bit_xor (idx_a i) (idx_c i)))) with (bit_xor x0 (idx_c i)). repeat rewrite kron_assoc; try apply WF_kron; try auto_wf; 
+	  try simpl; try rewrite base_inner_1; try rewrite  base_inner_0;
+    unfold c_to_Vector1; Msimpl; try lia.   
+  replace ((bit_xor (bit_xor x0 x) (bit_xor (idx_a i) (idx_c i))))
+    with (bit_xor x0 (idx_c i)).
+  repeat rewrite kron_assoc; try apply WF_kron; try auto_wf; 
   try apply WF_base; unfold bit; try apply Nat.mod_upper_bound; try lia. reflexivity. 
   
   rewrite bit_xor_assoc. f_equal. rewrite<- bit_xor_assoc.
@@ -851,10 +608,7 @@ replace ((2 + (2 + (2 + (2 + 0)))) ) with (4*2) by lia.
     repeat rewrite <- bit_xor_assoc. f_equal. 
       rewrite bit_xor_com. reflexivity.
 
-  replace (match tb l with
-           | 0 => S (tb l)
-           | S l0 => tb l - l0
-           end) with 1.
+  replace (match tb l with | 0 => S (tb l) | S l0 => tb l - l0 end) with 1.
   - reflexivity.
   - unfold tb.
     replace (4 * l + 3) with (S (4 * l + 2)) by lia. lia.  
@@ -862,8 +616,7 @@ Qed.
 
 Lemma big_sum_2_bit_shift_matrix :
     forall m n (f : nat -> Matrix m n) z,
-      z < 2 ->
-      big_sum f 2 = big_sum (fun i => f (bit_xor i z)) 2.
+      z < 2 -> big_sum f 2 = big_sum (fun i => f (bit_xor i z)) 2.
 Proof.
     intros m n f z Hz.
     assert (Hz01 : z = 0 \/ z = 1) by lia.
@@ -907,10 +660,7 @@ Proof.
 Qed.
 
 Lemma Purify_phase_bit_eq : forall b d x y,
-    b < 2 ->
-    d < 2 ->
-    x < 2 ->
-    y < 2 ->
+    b < 2 -> d < 2 -> x < 2 -> y < 2 ->
     bit (b * x + d * bit_xor y x) =
     bit (bit d * y + bit (bit_xor b d) * x).
 Proof.
@@ -932,12 +682,15 @@ Lemma Purify_after_cnot_ab_vec_bell_eq : forall i,
   Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i)
   = Purify_after_cnot_ab_vec i.
 Proof. 
-(* 变量代换 r = w xor z 后，将显式二重求和：1/2 · Σ_{z=0}^{1} Σ_{w=0}^{1}
-      (-1)^{(idx_b i) z + (idx_d i) w}
-      | z > ⊗ | z ⊕ idx_a i >
-            ⊗ | w ⊕ z >
-            ⊗ | w ⊕ z ⊕ idx_a i ⊕ idx_c i > 重写成
-     |beta_{a,b xor d}>_s ⊗ |beta_{a xor c,d}>_t. *)
+(* After the change of variables r = w xor z, rewrite the explicit double sum
+       1/2 · Σ_{z=0}^{1} Σ_{w=0}^{1}
+         (-1)^{(idx_b i) z + (idx_d i) w}
+         |z> ⊗ |z xor idx_a i>
+             ⊗ |w xor z>
+             ⊗ |w xor z xor idx_a i xor idx_c i>
+     as
+       |beta_{idx_a i, idx_b i xor idx_d i}>_s ⊗ |beta_{idx_a i xor idx_c i, idx_d i}>_t.
+  *)
 intros. unfold Bell. 
        unfold Purify_after_cnot_ab_vec.
        rewrite Mscale_kron_dist_r.
@@ -976,7 +729,9 @@ intros. unfold Bell.
     intros. rewrite Heqm.  replace (bit_xor (bit_xor x0 x) x) with (x0).
     reflexivity.
     
-    rewrite bit_xor_assoc. rewrite (bit_xor_eq_0 x); try reflexivity; try rewrite bit_xor_0_r; unfold bit; try rewrite Nat.mod_small; try lia.
+    rewrite bit_xor_assoc.
+    rewrite (bit_xor_eq_0 x); try reflexivity; try rewrite bit_xor_0_r;
+      unfold bit; try rewrite Nat.mod_small; try lia.
 Qed.
 
 
@@ -1033,20 +788,15 @@ Lemma Purify_branch_cnot_b_correct : forall l i,
     <{ cnot_on_one [[(sb l) (S (sb l))]] [[(tb l) (S (tb l))]] }>
   {{ Purify_after_cnot_ab l i }}.
 Proof.
-  (* 论文中的第二步：对两个 Bell 对的第二个 qubit 做 bilateral CNOT。
-     该步得到 retained source pair 的相位指标 b xor d。 *)
+  (* Apply CNOT to the second qubits of the two Bell pairs. *)
   intros l i.
-  eapply rule_conseq
-    with (P' := Purify_after_cnot_a l i)
-         (Q' := Purify_after_cnot_ab_raw l i).
-  - (* 使用 QUnit_Ctrl 规则处理第二个 CNOT。 *)
+  eapply rule_conseq_r'.
+  - (* Use the QUnit_Ctrl rule for the second CNOT step. *)
     unfold Purify_after_cnot_a.
-    unfold Purify_after_cnot_ab_raw.
     apply rule_QUnit_Ctrl.
     unfold sa, sb, tb. lia.
-  - apply implies_refl.
-  - (* 将 raw 4-qubit 后置先改写成显式向量，再拆成两个 Bell 断言。 *)
-    unfold Purify_after_cnot_ab_raw.
+  - (* Rewrite the QUnit_Ctrl postcondition into the explicit 4-qubit vector,
+     then use rule [OdotT] to recover the two Bell-pair separating assertions. *)
     unfold Purify_after_cnot_ab.
     rewrite Purify_after_cnot_ab_vec_raw_eq.
     rewrite <- Purify_after_cnot_ab_vec_bell_eq.
@@ -1063,24 +813,31 @@ Proof.
         apply Bell_Pure_State_Vector.
       * replace (ta l - sa l) with 2 by (unfold sa, ta; lia).
         apply Bell_Pure_State_Vector.
-    + destruct (rule_odotT
+    + apply (rule_odotT
         (QExp_s (sa l) (ta l)
           (Bell (idx_a i) (bit_xor (idx_b i) (idx_d i))))
         (QExp_s (ta l) (S (tb l))
-          (Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i)))) as [Hodot _].
-      apply Hodot.
+          (Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i)))). 
     replace (ta l - sa l) with 2 by (unfold sa, ta; lia).
     replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
     reflexivity.
 Qed.
 
-(*-----------------------测量 target pair 的第一个 qubit: ta，记录到 x_l--------------------------*)
+(*----------Step 3: Measure the first qubit of the target pair, ta(l),
+  and store the outcome in x_l. --------------------------*)
 Definition Purify_meas_x_P (l : nat) (r : nat) : Pure_formula :=
     BEq (AId (cx l)) r.
 
 Definition Purify_after_meas_x (l i: nat) : pro_formula :=
-   [((/ 2)%R, Purify_meas_x_P l 0 /\s (| ∣0⟩ ⊗ Base_vec 2 (bit_xor 0 (bit_xor (idx_a i) (idx_c i))) >[ ta l, S (tb l)]));
-   ((/ 2)%R, Purify_meas_x_P l 1 /\s (| (- C1) ^ (bit (idx_d i) * 1) .* (∣1⟩ ⊗ Base_vec 2 (bit_xor 1 (bit_xor (idx_a i) (idx_c i)))) >[ta l, S (tb l)]))].
+   [((/ 2)%R,
+     Purify_meas_x_P l 0 /\s
+     (| ∣0⟩ ⊗ Base_vec 2 (bit_xor 0 (bit_xor (idx_a i) (idx_c i)))
+      >[ ta l, S (tb l)]));
+   ((/ 2)%R,
+     Purify_meas_x_P l 1 /\s
+     (| (- C1) ^ (bit (idx_d i) * 1) .*
+        (∣1⟩ ⊗ Base_vec 2 (bit_xor 1 (bit_xor (idx_a i) (idx_c i))))
+      >[ta l, S (tb l)]))].
 
 Lemma norm_kron_base2 : forall a b,
     (a < 2)%nat -> (b < 2)%nat ->
@@ -1093,32 +850,12 @@ Proof.
     lra.
 Qed.
 
-
-Lemma meas_norm0 : forall i,
-    norm
-      (/ √ 2 .*
-        (Base_vec 2 0 ⊗
-         Base_vec 2 (bit_xor 0 (bit_xor (idx_a i) (idx_c i))))) = (/ √ 2)%R.
+Lemma meas_norm_j : forall i n j,
+   j< 2-> norm (/ √ 2 * (- C1) ^ n .*
+        (Base_vec 2 j ⊗
+         Base_vec 2 (bit_xor j (bit_xor (idx_a i) (idx_c i))))) = (/ √ 2)%R.
 Proof.
-    intros i.
-    rewrite norm_scale.
-    rewrite norm_kron_base2 by (unfold bit_xor, bit; try apply Nat.mod_upper_bound; lia).
-    rewrite Cmod_inv.
-    try rewrite Cmod_R.
-    try rewrite Rabs_right; try (apply sqrt_pos).
-    autorewrite with R_db.
-    - reflexivity.
-    - pose proof (sqrt_pos 2); lra.
-    - apply C0_fst_neq. simpl. apply sqrt2_neq_0.
-Qed.
-
-Lemma meas_norm1 : forall i,
-    norm
-      (/ √ 2 * (- C1) ^ idx_d i .*
-        (Base_vec 2 1 ⊗
-         Base_vec 2 (bit_xor 1 (bit_xor (idx_a i) (idx_c i))))) = (/ √ 2)%R.
-Proof.
-    intros i.
+    intros.
     rewrite norm_scale.
     rewrite Cmod_mult.
     rewrite Cmod_pow.
@@ -1128,27 +865,21 @@ Proof.
     rewrite Cmod_inv.
     try rewrite Cmod_R.
     try rewrite Rabs_right; try (apply sqrt_pos).
-    replace (R1 ^ idx_d i)%R with 1%R by (induction (idx_d i); simpl; lra).
+    replace (R1 ^ n)%R with 1%R by (induction (n); simpl; lra).
     autorewrite with R_db.
     - reflexivity.
     - pose proof (sqrt_pos 2); lra.
     - apply C0_fst_neq. simpl. apply sqrt2_neq_0.
 Qed.
 
-  Lemma proj_test_general : forall (r a b : nat) (c : C),
-    (r < 2)%nat ->
-    (a < 2)%nat ->
-    (b < 2)%nat ->
+Lemma proj_test_general : forall (r a b : nat) (c d: C),
+    (r < 2)%nat -> (a < 2)%nat -> (b < 2)%nat ->
     (Base_vec 2 r × adjoint (Base_vec 2 r) ⊗ I 2) ×
-      (Base_vec 2 0 ⊗ Base_vec 2 a .+
-       c .* (Base_vec 2 1 ⊗ Base_vec 2 b))
-    =
-    if r =? 0 then
-      Base_vec 2 0 ⊗ Base_vec 2 a
-    else
-      c .* (Base_vec 2 1 ⊗ Base_vec 2 b).
+    (c .* (Base_vec 2 0 ⊗ Base_vec 2 a) .+ d .* (Base_vec 2 1 ⊗ Base_vec 2 b))
+    = if r =? 0 then c .* (Base_vec 2 0 ⊗ Base_vec 2 a) 
+               else  d .* (Base_vec 2 1 ⊗ Base_vec 2 b).
   Proof.
-    intros r a b c Hr Ha Hb.
+    intros r a b c d Hr Ha Hb.
     destruct r as [|r].
     - destruct a as [|a]; destruct b as [|b];
         try lia;
@@ -1164,22 +895,16 @@ Qed.
   Qed.
 
   Lemma meas_x_proj_norm : forall i j,
-  j<2 ->
-    norm
-      ((Base_vec 2 j × adjoint (Base_vec 2 j) ⊗ I 2)
-         × Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i))
+  j<2 ->  norm ((Base_vec 2 j × adjoint (Base_vec 2 j) ⊗ I 2)
+                × Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i))
     = (/ √ 2)%R.
   Proof.
     intros.
-    unfold Bell. simpl.  rewrite Mplus_0_l. rewrite mul_0_r. simpl. rewrite Mscale_1_l. 
+    unfold Bell. simpl.  rewrite Mplus_0_l. 
     rewrite Mscale_mult_dist_r.
     rewrite (proj_test_general j).
-    destruct j. simpl.     
-    apply meas_norm0. 
-    assert (S j=1). lia. rewrite H0. simpl. 
-    rewrite Mscale_assoc. rewrite mul_1_r. 
-     rewrite idx_d_bit. 
-    apply meas_norm1. lia.    
+    destruct j; simpl; rewrite Mscale_assoc;
+    rewrite (meas_norm_j); try lra; try lia. try auto.     
   all: unfold bit_xor, bit; try apply Nat.mod_upper_bound; lia.  
   Qed.
 
@@ -1188,7 +913,6 @@ Qed.
     <{ (cx l) :=M [[(ta l) (S (ta l))]] }>
   {{ Purify_after_meas_x l i }}.
 Proof.
-  (* 论文中的第三步：测量 target pair 的第一个 qubit，记录到 x_l。 *)
    intros.
    eapply rule_conseq_l with  (P' :=
           | Bell (bit_xor (idx_a i) (idx_c i)) (idx_d i) >[ ta l, S (tb l)]
@@ -1217,24 +941,35 @@ Proof.
         simpl.  unfold U_v. 
        replace ((ta l - ta l)) with 0 by (unfold ta; lia). repeat  rewrite kron_1_l. 
         replace ((S (tb l) - S (ta l))) with 1 by (unfold ta; unfold tb; lia).  
-        replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia). rewrite(meas_x_proj_norm ) by lia. rewrite meas_x_proj_norm by lia. simpl. 
+        replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
+        rewrite(meas_x_proj_norm ) by lia.
+        rewrite meas_x_proj_norm by lia.
+        simpl. 
 unfold Bell. simpl. rewrite Mplus_0_l. rewrite mul_0_r. simpl. rewrite Mscale_1_l. 
 
 repeat rewrite Mscale_mult_dist_r.
 repeat rewrite Mscale_assoc. repeat rewrite <-RtoC_inv. rewrite <-RtoC_mult.  
 autorewrite with R_db. 
-repeat rewrite <-Rinv_mult_distr_depr; try (apply sqrt2_neq_0;   lra). autorewrite with R_db; try ( apply sqrt_neq_0_compat;  lra).      
+repeat rewrite <-Rinv_mult_distr_depr; try (apply sqrt2_neq_0; lra).
+autorewrite with R_db; try ( apply sqrt_neq_0_compat; lra).      
 
 repeat rewrite Mmult_plus_distr_l. repeat   rewrite Mscale_mult_dist_r.
  Msimpl. 
-repeat rewrite Mmult_assoc. repeat rewrite <-base_qubit0. repeat rewrite <-base_qubit1. repeat  rewrite base_inner_1; try lia. repeat rewrite base_inner_0; try lia. unfold c_to_Vector1. Msimpl.  apply implies_refl. purify_wf_1. purify_wf_1.
+repeat rewrite Mmult_assoc.
+repeat rewrite <-base_qubit0.
+repeat rewrite <-base_qubit1.
+repeat rewrite base_inner_1; try lia.
+repeat rewrite base_inner_0; try lia.
+unfold c_to_Vector1. Msimpl.
+apply implies_refl.
+purify_wf_1. purify_wf_1.
 
 apply Rinv_neq_0_compat. apply sqrt2_neq_0.
 apply sqrt2_neq_0.
 auto_wf. auto_wf.  
 Qed.
 
-(*-----------------------测量 target pair 的第二个 qubit: tb，记录到 y_l--------------------------*)
+(*----------Step 4: Measure the second qubit of the target pair and store the outcome in y_l.-------------- *)
 
 Definition Purify_after_meas_y (l i: nat) : pro_formula :=
 [((/ 2)%R,
@@ -1266,17 +1001,11 @@ Definition Purify_meas_xy_P (l xval yval : nat) : Pure_formula :=
     PBexp <{ (AId (cy l)) = (ANum yval) }>.
 
 
-
-  Lemma proj_second_general : forall (r x y : nat) (c : C),
-    (r < 2)%nat ->
-    (x < 2)%nat ->
-    (y < 2)%nat ->
-    (I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
+Lemma proj_second_general : forall (r x y : nat) (c : C),
+    (r < 2)%nat -> (x < 2)%nat ->
+    (y < 2)%nat -> (I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
       (c .* (Base_vec 2 x ⊗ Base_vec 2 y))
-    =
-    if r =? y then
-      c .* (Base_vec 2 x ⊗ Base_vec 2 y)
-    else
+    = if r =? y then c .* (Base_vec 2 x ⊗ Base_vec 2 y) else
       Zero.
   Proof.
     intros r x0 y0 c Hr Hx Hy.
@@ -1292,20 +1021,11 @@ Definition Purify_meas_xy_P (l xval yval : nat) : Pure_formula :=
     solve_matrix.
   Qed.
 
-  Lemma norm_zero_vec4 : norm (@Zero 4 1) = 0%R.
-  Proof.
-    apply norm_zero_iff_zero.
-    auto_wf.
-    reflexivity.
-  Qed.
-
   Lemma meas_y_norm_x0 : forall i r,
     (r < 2)%nat ->
-    norm
-      ((I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
+    norm ((I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
         (∣0⟩ ⊗ Base_vec 2 (bit (bit_xor (idx_a i) (idx_c i)))))
-    =
-    if r =? bit (bit_xor (idx_a i) (idx_c i)) then 1%R else 0%R.
+    = if r =? bit (bit_xor (idx_a i) (idx_c i)) then 1%R else 0%R.
   Proof.
     intros i r Hr.
     rewrite <- base_qubit0.
@@ -1319,13 +1039,12 @@ Definition Purify_meas_xy_P (l xval yval : nat) : Pure_formula :=
       rewrite norm_kron_base2 by
         (unfold bit_xor, bit; try apply Nat.mod_upper_bound; lia).
       reflexivity.
-    - apply norm_zero_vec4.
+    - apply norm_zero_iff_zero. auto_wf. reflexivity.
   Qed.
 
   Lemma meas_y_norm_x1 : forall i r,
     (r < 2)%nat ->
-    norm
-      ((I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
+    norm ((I 2 ⊗ (Base_vec 2 r × adjoint (Base_vec 2 r))) ×
         (((- C1) ^ bit (idx_d i)) .*
           (∣1⟩ ⊗ Base_vec 2 (bit (S (bit (bit_xor (idx_a i) (idx_c i))))))))
     =
@@ -1345,7 +1064,7 @@ Definition Purify_meas_xy_P (l xval yval : nat) : Pure_formula :=
       replace (R1 ^ bit (idx_d i))%R with 1%R
         by (induction (bit (idx_d i)); simpl; lra).
       lra.
-    - apply norm_zero_vec4.
+   - apply norm_zero_iff_zero. auto_wf. reflexivity.
   Qed.
 
 Lemma rule_Oplus_l : forall F0 F1, APro [(1%R, F0); (0%R, F1)] ->> F0.
@@ -1371,151 +1090,179 @@ Proof.
     apply sat_Pro_State' in H. apply H.
 Qed.
 
+Ltac meas_prob_simpl :=
+  simpl; repeat rewrite Rmult_0_l; repeat rewrite Rmult_1_l;
+  rewrite Rinv_1; repeat rewrite Mscale_1_l.
+
+Ltac finish_meas_y :=
+  unfold Purify_meas_xy_P;
+  try rewrite <- base_qubit0; try rewrite <- base_qubit1;
+  rewrite Mmult_assoc; rewrite base_inner_1; try lia;
+  unfold c_to_Vector1; Msimpl;
+  apply rule_ConjCon; [apply SAnd_PAnd_eq | apply implies_refl].
+
 Lemma Purify_branch_meas_y_correct : forall l i,
   {{ Purify_after_meas_x l i }}
     <{ (cy l) :=M [[(tb l) (S (tb l))]] }>
   {{ Purify_after_meas_y l i }}.
 Proof.
-  (* 论文中的第四步：测量 target pair 的第二个 qubit，记录到 y_l。 *)
-intros. rewrite <-(pro_npro_swap (Purify_after_meas_x l i)). 
-rewrite <-(pro_npro_swap (Purify_after_meas_y l i)).
-unfold Purify_after_meas_x. 
-unfold Purify_after_meas_y.
-eapply rule_sum; simpl;  try lia. 
-econstructor. lra. econstructor. lra. econstructor. 
+  intros.
+  rewrite <-(pro_npro_swap (Purify_after_meas_x l i)).
+  rewrite <-(pro_npro_swap (Purify_after_meas_y l i)).
+  unfold Purify_after_meas_x.
+  unfold Purify_after_meas_y.
 
-{ econstructor. simpl. split. auto. split. purify_wf_1. 
+  eapply rule_sum; simpl; try lia.
+  econstructor. lra. econstructor. lra. econstructor.
+
+  { econstructor.
+    split. simpl. auto.
+    split.
+    - purify_wf_1.
+      unfold ta, tb.
+      replace (4 * l + 2) with (S (4 * l + 1)) by lia.
+      replace (S (4 * l + 3) - S (4 * l + 1)) with (2) by lia.
+      reflexivity.
+    - unfold ta. unfold tb. lia.
+    - econstructor.
+      split. simpl. auto.
+      split.
+      + replace (2 ^ (S (tb l) - (ta l))) with (4).
+        apply WF_scale. purify_wf_1.
         unfold ta, tb.
         replace (4 * l + 2) with (S (4 * l + 1)) by lia.
-        simpl. 
-        match goal with
-        | |- 2 ^ ?n = 2 * 2 => replace n with 2 by lia; reflexivity
-        | |- 2 ^ ?n = 4 => replace n with 2 by lia; reflexivity
-        | |- 4 = 2 ^ ?n => replace n with 2 by lia; reflexivity
-        end. 
-        unfold ta. unfold tb. lia.
-        econstructor. simpl. split. auto. 
-        split. replace (2 ^ match ta l with
-                             | 0 => S (tb l)
-                             | S l0 => tb l - l0
-                             end) with (4). apply WF_scale.
-        purify_wf_1. 
-        unfold ta, tb.
-        replace (4 * l + 2) with (S (4 * l + 1)) by lia.
-        simpl.
-        match goal with
-        | |- 2 ^ ?n = 4 => replace n with 2 by lia; reflexivity
-        | |- 4 = 2 ^ ?n => replace n with 2 by lia; reflexivity
-        end. unfold ta. unfold tb. lia.
-        econstructor. } 
-econstructor. 
-    eapply rule_conseq_r'.
- { eapply rule_conseq_l with (P' :=
-      | ∣0⟩ ⊗ Base_vec 2 (bit (bit_xor (idx_a i) (idx_c i)))
-      >[ ta l, S (tb l)] /\s big_Sand (fun r : nat =>
-                PAssn (cy l) (ANum r)
-             (Purify_meas_xy_P l 0 r)) (2 ^ (S (tb l) - tb l))). 
-eapply implies_trans.  apply rule_ConjC. apply rule_ConjCon. rewrite bit_xor_0_l. apply implies_refl. 
-        replace ((S (tb l) - tb l)) with (1); unfold tb; try lia.  
-        simpl. unfold Purify_meas_x_P. unfold Purify_meas_xy_P.
-        rule_solve. rewrite c_update_find_not. auto. unfold cx; unfold cy. lia. 
-        rewrite c_update_find_eq.  auto. rewrite c_update_find_not. auto. unfold cx; unfold cy. lia.  rewrite c_update_find_eq.  auto.  
-eapply rule_QMeas. unfold ta. unfold tb. lia. 
-replace (2 ^ (S (tb l) - ta l)) with (2*2).
-apply pure_state_vector_kron. rewrite<- base_qubit0. apply Pure_State_Vector_base.
-lia.  apply Pure_State_Vector_base. unfold bit. apply Nat.mod_upper_bound. lia. 
- replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
-  reflexivity. }
-    
-2: econstructor. 2: eapply rule_conseq_r'.
-2: { eapply rule_conseq_l with
-    (P' :=
-      | ((- C1) ^ bit (idx_d i)) .*
-        (∣1⟩ ⊗ Base_vec 2 (bit (S (bit (bit_xor (idx_a i) (idx_c i))))))
-      >[ ta l, S (tb l)]
-      /\s big_Sand  (fun r : nat =>
-           PAssn (cy l) (ANum r)
-             (Purify_meas_xy_P l 1 r))
-        (2 ^ (S (tb l) - tb l))). eapply implies_trans.  apply rule_ConjC. apply rule_ConjCon. rewrite bit_xor_1_l. rewrite (Nat.mul_1_r (bit (idx_d i))). apply implies_refl. 
-        replace ((S (tb l) - tb l)) with (1); unfold tb; try lia.  
-        simpl. unfold Purify_meas_x_P. unfold Purify_meas_xy_P.
-        rule_solve. rewrite c_update_find_not. auto. unfold cx; unfold cy. lia. 
-        rewrite c_update_find_eq.  auto. rewrite c_update_find_not. auto. unfold cx; unfold cy. lia.  rewrite c_update_find_eq.  auto. 
-	   
-	eapply rule_QMeas. unfold ta. unfold tb. lia.
-	apply norm_1_pure_vec. 
-	- replace (2 ^ (S (tb l) - ta l)) with (2*2). apply WF_scale. apply WF_kron; try lia.
-	  + rewrite <-base_qubit1. apply WF_base. lia.
-	  + apply WF_base. unfold bit. apply Nat.mod_upper_bound. lia. replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
-  reflexivity. 
-	- replace (2 ^ (S (tb l) - ta l)) with (2*2).  rewrite norm_scale.
-	  rewrite Cmod_pow.
-	  rewrite Cmod_opp.
-	  rewrite Cmod_1.
-	  replace (R1 ^ bit (idx_d i))%R with 1%R
-	    by (induction (bit (idx_d i)); simpl; lra). rewrite Rmult_1_l.
-      rewrite <-base_qubit1. 
-	  rewrite norm_kron_base2 by
-	    (unfold bit_xor, bit; try apply Nat.mod_upper_bound; lia).
-	  lra. replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
-  reflexivity.  }
+        replace (S (4 * l + 3) - S (4 * l + 1)) with (2) by lia.
+        reflexivity.
+      + unfold ta. unfold tb. lia.
+      + econstructor. }
+
+  econstructor.
+  eapply rule_conseq_r'.
+  { eapply rule_conseq_l with
+      (P' := | ∣0⟩ ⊗ Base_vec 2 (bit (bit_xor (idx_a i) (idx_c i)))
+        >[ ta l, S (tb l)] /\s
+        big_Sand  (fun r : nat =>  PAssn (cy l) (ANum r) (Purify_meas_xy_P l 0 r))
+          (2 ^ (S (tb l) - tb l))).
+    eapply implies_trans. apply rule_ConjC. apply rule_ConjCon.
+    rewrite bit_xor_0_l. apply implies_refl.
+    replace ((S (tb l) - tb l)) with (1); unfold tb; try lia.
+    simpl. unfold Purify_meas_x_P. unfold Purify_meas_xy_P.
+    rule_solve;
+      try rewrite c_update_find_eq; try rewrite c_update_find_not;
+      try auto; unfold cx; unfold cy; lia.
+    eapply rule_QMeas.
+    unfold ta. unfold tb. lia.
+    replace (2 ^ (S (tb l) - ta l)) with (2*2).
+    apply pure_state_vector_kron.
+    rewrite<- base_qubit0. apply Pure_State_Vector_base.
+    lia.
+    apply Pure_State_Vector_base.
+    unfold bit. apply Nat.mod_upper_bound. lia.
+    replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
+    reflexivity. }
+
+  2: econstructor.
+  2: eapply rule_conseq_r'.
+  2: { eapply rule_conseq_l with
+      (P' := | ((- C1) ^ bit (idx_d i)) .*
+          (∣1⟩ ⊗ Base_vec 2 (bit (S (bit (bit_xor (idx_a i) (idx_c i)))))) >[ ta l, S (tb l)] /\s
+        big_Sand (fun r : nat =>
+             PAssn (cy l) (ANum r) (Purify_meas_xy_P l 1 r))
+          (2 ^ (S (tb l) - tb l))).
+    eapply implies_trans. apply rule_ConjC. apply rule_ConjCon.
+    rewrite bit_xor_1_l. rewrite (Nat.mul_1_r (bit (idx_d i))).
+    apply implies_refl.
+    replace ((S (tb l) - tb l)) with (1); unfold tb; try lia.
+    simpl. unfold Purify_meas_x_P. unfold Purify_meas_xy_P.
+    rule_solve;
+      try rewrite c_update_find_eq; try rewrite c_update_find_not;
+      try auto; unfold cx; unfold cy; lia.
+
+    eapply rule_QMeas.
+    unfold ta. unfold tb. lia.
+    apply norm_1_pure_vec.
+    - replace (2 ^ (S (tb l) - ta l)) with (2*2).
+      apply WF_scale. apply WF_kron; try lia. auto_wf.
+      + apply WF_base. unfold bit. apply Nat.mod_upper_bound. lia.
+        replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
+        reflexivity.
+    - replace (2 ^ (S (tb l) - ta l)) with (2*2).
+      rewrite norm_scale.
+      rewrite Cmod_pow. rewrite Cmod_opp. rewrite Cmod_1.
+      replace (R1 ^ bit (idx_d i))%R with 1%R
+        by (induction (bit (idx_d i)); simpl; lra).
+      rewrite Rmult_1_l.
+      rewrite <-base_qubit1.
+      rewrite norm_kron_base2 by
+        (unfold bit_xor, bit; try apply Nat.mod_upper_bound; lia).
+      lra.
+      replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia).
+      reflexivity. }
 
   3: econstructor.
 
-  all:  replace (S (tb l) - tb l) with 1 by (unfold tb; lia);
-  replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia);
-        simpl;  unfold U_v; 
-       replace ((S (tb l) - S (tb l))) with 0 by (unfold tb; lia); simpl ((2 ^ 0)); repeat  rewrite kron_1_r;  
-        replace ((tb l - ta l)) with 1 by (unfold ta; unfold tb; lia);   
-        replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia); simpl;
-       
-        repeat rewrite meas_y_norm_x0 by lia;
-        repeat rewrite meas_y_norm_x1 by lia. 
+  all:
+    replace (S (tb l) - tb l) with 1 by (unfold tb; lia);
+    replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia);
+    simpl; unfold U_v;
+    replace ((S (tb l) - S (tb l))) with 0 by (unfold tb; lia);
+    simpl ((2 ^ 0)); repeat rewrite kron_1_r;
+    replace ((tb l - ta l)) with 1 by (unfold ta; unfold tb; lia);
+    replace (S (tb l) - ta l) with 2 by (unfold ta, tb; lia); simpl;
+    repeat rewrite meas_y_norm_x0 by lia;
+    repeat rewrite meas_y_norm_x1 by lia;
+    bdestruct (0 =? bit (bit_xor (idx_a i) (idx_c i))); try
+      rewrite <-H;
+      [ meas_prob_simpl;
+        try rewrite bit_xor_0_l; try rewrite bit_xor_1_l;
+        rewrite <-H;
+        try replace (bit 1) with (1) by (unfold bit; reflexivity);
+        repeat rewrite Mscale_mult_dist_r; Msimpl |].
+  eapply implies_trans. apply rule_Oplus_l. finish_meas_y.
+  2: { eapply implies_trans. apply rule_Oplus_r. finish_meas_y. }
 
-        bdestruct (0 =? bit (bit_xor (idx_a i) (idx_c i))).
-         rewrite <-H. simpl. 
-         repeat rewrite Rmult_0_l.   repeat rewrite Rmult_1_l.  rewrite Rinv_1. repeat rewrite Mscale_1_l. 
-         rewrite bit_xor_0_l. rewrite <-H. 
-         Msimpl. eapply implies_trans. apply rule_Oplus_l.   
-          unfold Purify_meas_xy_P. rewrite <-base_qubit0. rewrite Mmult_assoc. rewrite base_inner_1; try lia. 
-          unfold c_to_Vector1. Msimpl. 
-         apply rule_ConjCon. apply SAnd_PAnd_eq. apply implies_refl.
+  all: assert(1= bit (bit_xor (idx_a i) (idx_c i))).
+  assert (Hb : bit (bit_xor (idx_a i) (idx_c i)) < 2).
+  { unfold bit. apply Nat.mod_upper_bound. lia. }
+  lia.
+  rewrite <-H0. meas_prob_simpl. rewrite bit_xor_0_l. rewrite <-H0.
+  Msimpl. eapply implies_trans. apply rule_Oplus_r. finish_meas_y.
 
-
-           assert(1= bit (bit_xor (idx_a i) (idx_c i))). assert (Hb : bit (bit_xor (idx_a i) (idx_c i)) < 2). { unfold bit. apply Nat.mod_upper_bound. lia. }
-  lia.  rewrite <-H0. 
-  simpl.  repeat rewrite Rmult_0_l.  repeat rewrite Rmult_1_l.  rewrite Rinv_1. repeat rewrite Mscale_1_l.   rewrite bit_xor_0_l. rewrite <-H0.    Msimpl. eapply implies_trans. apply rule_Oplus_r.   
-          unfold Purify_meas_xy_P. rewrite <-base_qubit1. rewrite Mmult_assoc. rewrite base_inner_1; try lia. 
-          unfold c_to_Vector1. Msimpl. 
-         apply rule_ConjCon. apply SAnd_PAnd_eq. apply implies_refl.
-         
-         
-          bdestruct (0 =? bit (bit_xor (idx_a i) (idx_c i))).
-          rewrite <-H. simpl.  
-          repeat rewrite Rmult_0_l.   repeat rewrite Rmult_1_l.  rewrite Rinv_1. repeat rewrite Mscale_1_l.  
-         rewrite bit_xor_1_l. rewrite <-H.  assert (bit 1=1). unfold bit. simpl. reflexivity. rewrite H0. 
-        repeat  rewrite Mscale_mult_dist_r. 
-         Msimpl.  eapply implies_trans. apply rule_Oplus_r.    
-          unfold Purify_meas_xy_P. rewrite <-base_qubit1. rewrite Mmult_assoc. rewrite base_inner_1; try lia. 
-          unfold c_to_Vector1. Msimpl. 
-         apply rule_ConjCon. apply SAnd_PAnd_eq. apply implies_refl. 
-
-           assert(1= bit (bit_xor (idx_a i) (idx_c i))). assert (Hb : bit (bit_xor (idx_a i) (idx_c i)) < 2). { unfold bit. apply Nat.mod_upper_bound. lia. }
-  lia.  rewrite <-H0.  
-  simpl. repeat rewrite Rmult_0_l.   repeat rewrite Rmult_1_l.  rewrite Rinv_1. repeat rewrite Mscale_1_l.  
-         rewrite bit_xor_1_l. rewrite <-H0.  assert (bit 2=0). unfold bit. simpl. reflexivity. rewrite H1. 
-        repeat  rewrite Mscale_mult_dist_r. 
-         Msimpl.  eapply implies_trans. apply rule_Oplus_l.    
-          unfold Purify_meas_xy_P. rewrite <-base_qubit0. rewrite Mmult_assoc. rewrite base_inner_1; try lia. 
-          unfold c_to_Vector1. Msimpl. 
-         apply rule_ConjCon. apply SAnd_PAnd_eq. apply implies_refl.      
+  assert (Hb : bit (bit_xor (idx_a i) (idx_c i)) < 2).
+  { unfold bit. apply Nat.mod_upper_bound. lia. }
+  lia. rewrite <-H0. meas_prob_simpl.
+  rewrite bit_xor_1_l. rewrite <-H0.
+  assert (bit 2=0). unfold bit. simpl. reflexivity. rewrite H1.
+  repeat rewrite Mscale_mult_dist_r.
+  Msimpl. eapply implies_trans. apply rule_Oplus_l. finish_meas_y.
 Qed.
 
 
-(*---------------------------------------------证明if语句的正确性--------------------------------------------*)
+(*---------------Step 5: Correctness of the conditional branch in Purify. --------------------------------------------*)
 
 Definition  Purify_after_cond (l i:nat):= 
 <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }>.
+
+Ltac idx_bit_neq H i :=
+  symmetry; apply Nat.eqb_neq; intro Heq; apply H;
+  replace (idx_a i) with (bit (idx_a i));
+  replace (idx_c i) with (bit (idx_c i)); auto;
+  unfold bit; try apply bit_id.
+
+Ltac cond_contra l x Hx0 Hxy0 Hy0 xv yv :=
+  destruct (c_find (cx l) x =? xv) eqn:Hx;
+  simpl in Hx0; try contradiction;
+  destruct (c_find (cy l) x =? yv) eqn:Hy;
+  simpl in Hy0; try contradiction;
+  destruct (c_find (cx l) x =? c_find (cy l) x) eqn:Hxy;
+  simpl in Hxy0; try contradiction;
+  apply Nat.eqb_eq in Hx; apply Nat.eqb_eq in Hy;
+  match goal with
+  | Hxy : (_ =? _) = true |- _ =>
+      apply Nat.eqb_eq in Hxy; lia
+  | Hxy : (_ =? _) = false |- _ =>
+      apply Nat.eqb_neq in Hxy; apply Hxy; rewrite Hx, Hy; reflexivity
+  end.
 
 Lemma Purify_branch_set_v_correct : forall l i,
   {{ Purify_after_meas_y l i }}
@@ -1526,110 +1273,84 @@ Lemma Purify_branch_set_v_correct : forall l i,
        end }>
   {{ Purify_after_cond l i }}.
 Proof.
-  (* 论文中的第五步：由测量结果的等同性设置 v_l。
-     这里对应证明 x_l = y_l 当且仅当 idx_a i = idx_c i。 *)
+ (* Set v_l according to whether the two measurement outcomes are equal.
+ This step proves that x_l = y_l holds exactly when a = c for the local branch i *)
      intros.
       eapply rule_conseq_r'. 
         rewrite <-(pro_npro_swap (Purify_after_meas_y l i)). unfold Purify_after_meas_y.  
-        eapply rule_sum with (nF2:= [ SPure <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }>; ( SPure <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }>)]); simpl; try reflexivity. econstructor. lra. econstructor. lra. econstructor.  econstructor; [| econstructor]; simpl; auto.
-        econstructor.  eapply rule_cond_classic'. simpl. auto.
-        split. 
-        
-        eapply rule_conseq. eapply rule_PAssgn  with (P:= <{ (AId (cv l)) = 1 }> /\p <{ 1 = (one_if_eq (idx_a i) (idx_c i)) }>).
-        
-         classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  rewrite H in *. rewrite Nat.eqb_refl in *. auto. 
-         replace (bit (idx_a i) =? bit (idx_c i)) with false. apply bit_xor_neq_1 in H; unfold bit; try apply bit_id.   rewrite H in H3. rewrite bit_xor_neq_1 in H3; try unfold bit; try reflexivity; try lia. 
+        eapply rule_sum with
+          (nF2:= [ SPure <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }>;
+                   SPure <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }> ]);
+          simpl; try reflexivity.
+        econstructor. lra. econstructor. lra. econstructor.
+        econstructor; [| econstructor]; simpl; auto.
 
-        destruct (c_find (cx l) x =? 0) eqn:Hx;
-    simpl in H0; try contradiction.
-  destruct (c_find (cy l) x =? 1) eqn:Hy;
-    simpl in H3; try contradiction.
-  destruct (c_find (cx l) x =? c_find (cy l) x) eqn:Hxy;
-    simpl in H1; try contradiction.
-  apply Nat.eqb_eq in Hx.
-  apply Nat.eqb_eq in Hy.
-  apply Nat.eqb_eq in Hxy.
-  rewrite Hx in Hxy.
-  rewrite Hy in Hxy.
-  lia. symmetry.
-        apply Nat.eqb_neq.
-        intro Heq.
-         apply H.  replace (idx_a i) with (bit (idx_a i));replace (idx_c i) with (bit (idx_c i)); auto; unfold bit; try apply bit_id.
+        econstructor.  
+        eapply rule_cond_classic'. simpl. auto. split. 
+         eapply rule_conseq.
+         eapply rule_PAssgn with
+           (P:= <{ (AId (cv l)) = 1 }>  /\p <{ 1 = (one_if_eq (idx_a i) (idx_c i)) }>).
+         classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  
+         rewrite H in *. rewrite Nat.eqb_refl in *. auto. 
+         replace (bit (idx_a i) =? bit (idx_c i)) with false.
+         apply bit_xor_neq_1 in H; unfold bit; 
+         try apply bit_id.   rewrite H in H3. 
+         rewrite bit_xor_neq_1 in H3; try unfold bit; try reflexivity; try lia. 
+        cond_contra l x H0 H1 H3 0 1.
+        idx_bit_neq H i.
+        classic_slove_aux. rewrite <-H1. auto.   
          
-          classic_slove_aux. rewrite <-H1. auto.   
-         
-       
-        eapply rule_conseq. eapply rule_PAssgn  with (P:= <{ (AId (cv l)) = 0 }> /\p <{ 0 = (one_if_eq (idx_a i) (idx_c i)) }>). 
-        
-        
-        classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  rewrite H in *. rewrite Nat.eqb_refl in *. rewrite (bit_xor_eq_0 ((idx_c i)) ) in H3; try unfold bit; try apply bit_xor_eq_0; try apply bit_id; try reflexivity. rewrite bit_xor_eq_0 in H3; unfold bit; simpl; try lia.    
+        eapply rule_conseq.
+        eapply rule_PAssgn with
+          (P:= <{ (AId (cv l)) = 0 }> /\p <{ 0 = (one_if_eq (idx_a i) (idx_c i)) }>). 
+        classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  
+        rewrite H in *. rewrite Nat.eqb_refl in *. 
+        rewrite (bit_xor_eq_0 ((idx_c i)) ) in H3;
+          try unfold bit; try apply bit_xor_eq_0;
+          try apply bit_id; try reflexivity.
+        rewrite bit_xor_eq_0 in H3; unfold bit; simpl; try lia.    
+        cond_contra l x H0 H1 H3 0 0.
+        replace (bit (idx_a i) =? bit (idx_c i)) with false. auto.
+        idx_bit_neq H i.
+        classic_slove_aux. rewrite <-H1. auto.
 
-  destruct (c_find (cx l) x =? 0) eqn:Hx;
-    simpl in H0; try contradiction;
-  destruct (c_find (cy l) x =? 0) eqn:Hy;
-    simpl in H3; try contradiction;
-  destruct (c_find (cx l) x =? c_find (cy l) x) eqn:Hxy;
-    simpl in H1; try contradiction;
-  apply Nat.eqb_eq in Hx.
-  apply Nat.eqb_eq in Hy.
-  apply Nat.eqb_neq in Hxy.
-  apply Hxy.
-  rewrite Hx, Hy.
-  reflexivity. 
-
-        replace (bit (idx_a i) =? bit (idx_c i)) with false. auto.  symmetry.
-        apply Nat.eqb_neq.
-        intro Heq.
-         apply H.  replace (idx_a i) with (bit (idx_a i));replace (idx_c i) with (bit (idx_c i)); auto; unfold bit; try apply bit_id.  
-  
-         classic_slove_aux. rewrite <-H1. auto.
-
-        econstructor.  eapply rule_cond_classic' with (F2:= <{ (AId (cv l)) = (one_if_eq (idx_a i) (idx_c i)) }>). simpl. auto.
-        split. 
-        
-        eapply rule_conseq. eapply rule_PAssgn  with (P:= <{ (AId (cv l)) = 1 }> /\p <{ 1 = (one_if_eq (idx_a i) (idx_c i)) }>). 
-        
-        classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  rewrite H in *. rewrite Nat.eqb_refl in *. auto. 
-         replace (bit (idx_a i) =? bit (idx_c i)) with false. apply bit_xor_neq_1 in H; unfold bit; try apply bit_id.   rewrite H in H3. rewrite bit_xor_eq_0 in H3; try unfold bit; try reflexivity.   
-        destruct (c_find (cx l) x =? 1) eqn:Hx; simpl in H0; try contradiction;
-        destruct (c_find (cy l) x =? 0) eqn:Hy; simpl in H3; try contradiction;
-        destruct (c_find (cx l) x =? c_find (cy l) x) eqn:Hxy; simpl in H1; try contradiction; apply Nat.eqb_eq in Hx; apply Nat.eqb_eq in Hy;
-        apply Nat.eqb_eq in Hxy;
-        lia. symmetry.
-        apply Nat.eqb_neq.
-        intro Heq.
-         apply H.  replace (idx_a i) with (bit (idx_a i));replace (idx_c i) with (bit (idx_c i)); auto; unfold bit; try apply bit_id. 
-  
-         classic_slove_aux. rewrite <-H1. auto.  
+        econstructor.  
+        eapply rule_cond_classic'. simpl. auto. split. 
+        eapply rule_conseq.
+        eapply rule_PAssgn with
+          (P:= <{ (AId (cv l)) = 1 }> /\p <{ 1 = (one_if_eq (idx_a i) (idx_c i)) }>). 
+         classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  
+        rewrite H in *. rewrite Nat.eqb_refl in *. auto. 
+         replace (bit (idx_a i) =? bit (idx_c i)) with false. 
+         apply bit_xor_neq_1 in H; unfold bit; try apply bit_id.  
+          rewrite H in H3.
+          rewrite bit_xor_eq_0 in H3; try unfold bit; try reflexivity.   
+          cond_contra l x H0 H1 H3 1 0.
+          idx_bit_neq H i.
+          classic_slove_aux. rewrite <-H1. auto.  
       
-        eapply rule_conseq. eapply rule_PAssgn   with (P:= <{ (AId (cv l)) = 0 }> /\p <{ 0 = (one_if_eq (idx_a i) (idx_c i)) }>).
+        eapply rule_conseq.
+        eapply rule_PAssgn with
+          (P:= <{ (AId (cv l)) = 0 }> /\p <{ 0 = (one_if_eq (idx_a i) (idx_c i)) }>).
 
-        classic_slove_aux. unfold one_if_eq. bdestruct( (idx_a i) =? (idx_c i)).  rewrite H in *. rewrite Nat.eqb_refl in *. rewrite (bit_xor_eq_0 ((idx_c i)) ) in H3; try unfold bit; try apply bit_xor_eq_0; try apply bit_id; try reflexivity. rewrite bit_xor_neq_1 in H3; unfold bit; simpl; try lia.   
+        classic_slove_aux. unfold one_if_eq.
+        bdestruct( (idx_a i) =? (idx_c i)).
+        rewrite H in *. rewrite Nat.eqb_refl in *.
+        rewrite (bit_xor_eq_0 ((idx_c i)) ) in H3;
+          try unfold bit; try apply bit_xor_eq_0;
+          try apply bit_id; try reflexivity.
+        rewrite bit_xor_neq_1 in H3; unfold bit; simpl; try lia.   
 
-  destruct (c_find (cx l) x =? 1) eqn:Hx;
-    simpl in H0; try contradiction;
-  destruct (c_find (cy l) x =? 1) eqn:Hy;
-    simpl in H3; try contradiction;
-  destruct (c_find (cx l) x =? c_find (cy l) x) eqn:Hxy;
-    simpl in H1; try contradiction;
-  apply Nat.eqb_eq in Hx.
-  apply Nat.eqb_eq in Hy.
-  apply Nat.eqb_neq in Hxy.
-  apply Hxy.
-  rewrite Hx, Hy.
-  reflexivity. 
-
-         replace (bit (idx_a i) =? bit (idx_c i)) with false. auto.  symmetry.
-        apply Nat.eqb_neq.
-        intro Heq.
-         apply H.  replace (idx_a i) with (bit (idx_a i));replace (idx_c i) with (bit (idx_c i)); auto; unfold bit; try apply bit_id.  
-  
-         classic_slove_aux. rewrite <-H1. auto.
+        cond_contra l x H0 H1 H3 1 1.
+        replace (bit (idx_a i) =? bit (idx_c i)) with false. auto.
+        idx_bit_neq H i.
+        classic_slove_aux. rewrite <-H1. auto.
         
         econstructor. 
 
         simpl. eapply implies_trans. apply rule_OMerg.  lra.
-        replace ((/ 2 + / 2)%R) with 1%R by lra. simpl. apply rule_Oplus.   
+        replace ((/ 2 + / 2)%R) with 1%R by lra.
+        simpl. apply rule_Oplus.   
 Qed.
 
   Lemma min_union_nonempty :
@@ -1651,10 +1372,10 @@ Theorem Purify_branch_correct (l i: nat) :
   {{ D_out_branch_i l i}}.
 Proof.
   unfold Purify.
-  (*证明第一个语句：source/target 的第一个 qubit 上做 CNOT。*)
+  (* Step 1: apply CNOT to the first qubits of the source and target pairs. *)
   eapply rule_seq.
   - apply Purify_branch_cnot_a_correct.
-  (*证明第二个语句：source/target 的第二个 qubit 上做 CNOT。*)
+  (* Step 2: apply CNOT to the second qubits of the source and target pairs. *)
   - eapply rule_seq.
     + apply Purify_branch_cnot_b_correct. 
       unfold Purify_after_cnot_ab.
@@ -1663,7 +1384,7 @@ Proof.
       eapply implies_trans; [| apply rule_ConjC].  
       apply rule_OdotOP.
       eapply rule_conseq_r. apply rule_OdotC.
-      (*使用Qframe规则进行局部推理*)
+	      (* Use QFrame to keep the untouched target-pair assertion local. *)
 	      apply rule_qframe'. 
 	      { simpl. intros a. split; intros Hin.
 	        - apply NSet.inter_1 in Hin. apply In_empty in Hin. contradiction.
@@ -1699,11 +1420,11 @@ Proof.
               * apply NSet.union_1 in Hq.
                 destruct Hq as [Hq | Hq]; apply In_empty in Hq; contradiction. } 
         rewrite Hmin. simpl. unfold sb, ta. lia.  }
-    (*证明第三个语句：测量 target 第一个 qubit 到 x_l。*)
+	    (* Step 3: measure the first qubit of the target pair into x_l. *)
     + eapply rule_seq. apply Purify_branch_meas_x_correct. 
-    (*证明第4个语句：测量 target 第二个 qubit 到 y_l。*)
+	    (* Step 4: measure the second qubit of the target pair into y_l. *)
       eapply rule_seq. apply Purify_branch_meas_y_correct.
-    (*最后证明条件分支的正确性*)
+	    (* Step 5: prove the conditional assignment that sets v_l. *)
      apply Purify_branch_set_v_correct.
 Qed.
 
@@ -1715,7 +1436,7 @@ Proof.
     lia.
 Qed.
 
-(*-----------------------------------假设只有一个block的情况---------------------------------------------*)
+(*----------------------------The single-block case---------------------------------------------*)
 
 Lemma D_out_branch_i_WF : forall l i,
   WF_formula (D_out_branch_i l i).
@@ -1848,24 +1569,6 @@ Definition Purify_post_success (a k : nat) : State_formula :=
 Definition Purify_post_fail : State_formula :=
   SPure (BEq (AId (cv 0)) 0).
 
-Definition D_m_out_1_standard (p : nat -> nat -> R) : pro_formula :=
-  [((p 0%nat 0%nat * p 0%nat 0%nat)%R, Purify_post_success 0 0);
-   ((p 0%nat 0%nat * p 0%nat 1%nat)%R, Purify_post_success 0 1);
-   ((p 0%nat 0%nat * p 1%nat 0%nat)%R, Purify_post_fail);
-   ((p 0%nat 0%nat * p 1%nat 1%nat)%R, Purify_post_fail);
-   ((p 0%nat 1%nat * p 0%nat 0%nat)%R, Purify_post_success 0 1);
-   ((p 0%nat 1%nat * p 0%nat 1%nat)%R, Purify_post_success 0 0);
-   ((p 0%nat 1%nat * p 1%nat 0%nat)%R, Purify_post_fail);
-   ((p 0%nat 1%nat * p 1%nat 1%nat)%R, Purify_post_fail);
-   ((p 1%nat 0%nat * p 0%nat 0%nat)%R, Purify_post_fail);
-   ((p 1%nat 0%nat * p 0%nat 1%nat)%R, Purify_post_fail);
-   ((p 1%nat 0%nat * p 1%nat 0%nat)%R, Purify_post_success 1 0);
-   ((p 1%nat 0%nat * p 1%nat 1%nat)%R, Purify_post_success 1 1);
-   ((p 1%nat 1%nat * p 0%nat 0%nat)%R, Purify_post_fail);
-   ((p 1%nat 1%nat * p 0%nat 1%nat)%R, Purify_post_fail);
-   ((p 1%nat 1%nat * p 1%nat 0%nat)%R, Purify_post_success 1 1);
-   ((p 1%nat 1%nat * p 1%nat 1%nat)%R, Purify_post_success 1 0)].
-
 Lemma p_weight_pos : forall a b c d,
   (0 < p a b * p c d < 1)%R.
 Proof.
@@ -1905,20 +1608,16 @@ Ltac purify_prob :=
   nra.
 
 Ltac pswap n :=
-  eapply implies_trans;
-  [ apply (rule_POplusC _ n) | simpl ].
+  eapply implies_trans; [ apply (rule_POplusC _ n) | simpl ].
 
 Ltac pmerge_weight :=
-  eapply implies_trans;
-  [ apply rule_OMerg; split; apply p_weight_pos | simpl ].
+  eapply implies_trans; [ apply rule_OMerg; split; apply p_weight_pos | simpl ].
 
 Ltac pmerge_prob :=
-  eapply implies_trans;
-  [ apply rule_OMerg; split; purify_prob | simpl ].
+  eapply implies_trans;[ apply rule_OMerg; split; purify_prob | simpl ].
 
 Ltac pmerge_cons_weight :=
-  eapply implies_trans;
-  [ apply rule_OMerg_cons; split; apply p_weight_pos | simpl ].
+  eapply implies_trans; [ apply rule_OMerg_cons; split; apply p_weight_pos | simpl ].
 
 Ltac pull_to_second_5 :=
   pswap 4; pswap 3; pswap 2; pswap 1.
@@ -1938,14 +1637,33 @@ Proof.
   unfold D_post_weight, D_post_branch.
   unfold one_if_eq, eta_l, D_in_weight_i.
   unfold idx_a, idx_b, idx_c, idx_d, out_a, out_k.
-  simpl.
   unfold bit, bit_xor.
-  simpl.
+  simpl. unfold bit. simpl.
   repeat rewrite Rmult_1_l.
-  eapply implies_trans with (D1 := APro (D_m_out_1_standard p)).
-  - apply rule_OCon''.
-    + unfold D_m_out_1_standard, Purify_post_success, Purify_post_fail.
-      simpl.
+  (* First merge the successful branches with the same retained Bell pair. *)
+  pull_to_second_5; pmerge_weight.
+  pswap 3; pswap 2; pmerge_cons_weight.
+  pswap 12; pswap 11; pswap 10; pswap 9;
+  pswap 7; pswap 8; pswap 6; pswap 7;
+  pswap 5; pswap 6; pswap 4; pswap 5;
+  pswap 3; pswap 4; pswap 2; pswap 3;
+  pswap 1; pswap 2; pswap 0; pswap 1;
+  pmerge_weight.
+  pswap 11; pswap 10; pswap 8; pswap 9;
+  pswap 7; pswap 8; pswap 6; pswap 7;
+  pswap 5; pswap 6; pswap 4; pswap 5;
+  pswap 3; pswap 4; pswap 2; pswap 3;
+  pswap 1; pswap 2; pswap 0; pswap 1;
+  pmerge_weight. 
+  eapply implies_trans with
+    (D1 := APro
+      [(_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_);
+       (_ ,_) ; (_ ,_) ; (_ ,_) ; (_ ,_)]).
+  - apply rule_OCon''. 3: { simpl.  
+     repeat constructor;
+        try apply Purify_fail_branch_to_post; try apply Purify_success_branch_to_post. }
+    2: { reflexivity. } 
+      simpl. 
       repeat match goal with
       | |- Forall _ [] => constructor
       | |- Forall _ (_ :: _) =>
@@ -1954,32 +1672,7 @@ Proof.
             try apply (proj1 (Bell_Pure_State_Vector _ _)); try lia
           | ]
       end.
-    + simpl. reflexivity.
-    + unfold D_m_out_1_standard, Purify_post_success, Purify_post_fail.
-      simpl.
-      repeat constructor;
-        try apply Purify_success_branch_to_post;
-        try apply Purify_fail_branch_to_post.
-  - unfold D_m_out_1_standard.
-    simpl.
-    (* First merge the two successful branches for Bell 0 0. *)
-    pull_to_second_5; pmerge_weight.
-    (* Merge the two successful branches for Bell 0 1. *)
-    pswap 3; pswap 2; pmerge_cons_weight.
-    (* Merge the two successful branches for Bell 1 0. *)
-    pswap 12; pswap 11; pswap 10; pswap 9;
-    pswap 7; pswap 8; pswap 6; pswap 7;
-    pswap 5; pswap 6; pswap 4; pswap 5;
-    pswap 3; pswap 4; pswap 2; pswap 3;
-    pswap 1; pswap 2; pswap 0; pswap 1;
-    pmerge_weight.
-    (* Merge the two successful branches for Bell 1 1. *)
-    pswap 11; pswap 10; pswap 8; pswap 9;
-    pswap 7; pswap 8; pswap 6; pswap 7;
-    pswap 5; pswap 6; pswap 4; pswap 5;
-    pswap 3; pswap 4; pswap 2; pswap 3;
-    pswap 1; pswap 2; pswap 0; pswap 1;
-    pmerge_weight.
+  - simpl.
     (* Merge all failure branches. *)
     pull_failure_pair; pmerge_weight.
     pull_to_second_5; pmerge_prob.
@@ -1993,14 +1686,10 @@ Proof.
     pswap 3; pswap 2; pswap 1;
     pswap 3; pswap 2; pswap 3.
     unfold Purify_post_success, Purify_post_fail.
-    unfold D_post_q, p_fail, p_succ, bit.
-    simpl.
-    replace
-      (1 -
-       ((p 0%nat 0%nat + p 0%nat 1%nat) *
-        (p 0%nat 0%nat + p 0%nat 1%nat) +
-        (p 1%nat 0%nat + p 1%nat 1%nat) *
-        (p 1%nat 0%nat + p 1%nat 1%nat)))%R
+    unfold D_post_q, bit. 
+    simpl. unfold p_fail.  
+    replace 
+      (1 - p_succ p)%R
       with
       ((((((((p 0%nat 0%nat * p 1%nat 0%nat +
               p 0%nat 0%nat * p 1%nat 1%nat) +
@@ -2010,9 +1699,9 @@ Proof.
           p 1%nat 0%nat * p 0%nat 1%nat) +
          p 1%nat 1%nat * p 0%nat 0%nat) +
         p 1%nat 1%nat * p 0%nat 1%nat))%R
-      by purify_prob.
+      by purify_prob. 
     apply implies_refl.
-Qed.
+Qed. 
 
 Theorem Purify_single_correct:
   {{ D_m_in p 1 }}
@@ -2026,10 +1715,15 @@ Qed.
 
  
 (*-----------------------------------------------------------------------*)
-(*----------------在有m个block块中，对第k个block纯化的正确性：
- -------------------{𝐹_𝜂 ^(𝑘−1)} 𝐏𝐮𝐫𝐢𝐟𝐲^(𝑘) {𝐹_𝜂 ^(𝑘)})， 由 主定理证明：Purify_F_eta_step给出----*)(*---------------------------------------------------------------------*)
+(* Branchwise correctness for the k-th purification block among m blocks:
+     { F_eta eta k m } Purify k { F_eta eta (S k) m }.
 
-(*先给出一些定义*)
+     Mathematically, F_eta eta k m represents
+       (⨀_{l=0}^{k-1} H_{eta_l}^{(l)}) ⊙ (⨀_{l=k}^{m-1} G_{eta_l}^{(l)}).
+   This is stated and proved below as Purify_F_eta_step. *)
+(*-----------------------------------------------------------------------*)
+
+(* Auxiliary definitions for the partially processed global branch. *)
 Definition F_eta (eta r m : nat) : State_formula :=
   big_odot (fun l => D_out_branch_i l (eta_l eta l)) r ⊙
   big_odot (fun k => D_in_branch_i (r + k) (eta_l eta (r + k))) (m - r).
@@ -2048,9 +1742,11 @@ Definition F_eta_step_post (eta k m : nat) : State_formula :=
       (fun j => D_in_branch_i (S k + j) (eta_l eta (S k + j)))
       (m - S k).
 
-(*-------证明 引理 D_in_big_odot_shift_head， 
-该引理用于odot的拆分，
-表示 ⨀_{𝓁=1}^{k} 𝐻_{𝜂𝓁}^(𝓁) =  ⨀_{𝓁=1}^{k-1} 𝐻_{𝜂𝓁}^(𝓁) ⊙ 𝐻_{𝜂𝑘}(𝑘),-----------------------------*)
+(* Decompose the input tail of a global branch into its head block and
+   the remaining unprocessed blocks:
+
+   ⨀_{j=0}^{m-k-1} G_{eta_{k+j}}^{(k+j)} ->> G_{eta_k}^{(k)} ⊙ (⨀_{j=0}^{m-k-2} G_{eta_{S k+j}}^{(S k+j)}).
+ *)
 
 Lemma D_in_branch_i_q_range : forall l i q,
   NSet.In q (snd (Free_state (D_in_branch_i l i))) ->
@@ -2150,7 +1846,8 @@ Proof.
     + apply rule_Odot_swap_left.
 Qed.
 
-(*------证明：Purify_F_eta_step（即 主定理{𝐹_𝜂 ^(𝑘−1)} 𝐏𝐮𝐫𝐢𝐟𝐲^(𝑘) {𝐹_𝜂 ^(𝑘)}）中使用Qframe规则需要的边界条件 ----*)
+(* Disjointness conditions required by QFrame in the proof of
+   Purify_F_eta_step. *)
 
 Lemma F_eta_step_pre_disjoint : forall eta k m,
   k < m ->
@@ -2570,7 +2267,7 @@ Proof.
     + apply In_empty in Hcur. contradiction.
 Qed.
 
-(* 正式证明 主定理{𝐹_𝜂 ^(𝑘−1)} 𝐏𝐮𝐫𝐢𝐟𝐲^(𝑘) {𝐹_𝜂 ^(𝑘)} ----*)
+(* Main branchwise step: { F_eta eta k m } Purify k { F_eta eta (S k) m }.*)
 Theorem Purify_F_eta_step (eta k m : nat) :
   k < m ->
   {{ F_eta eta k m }}
@@ -2612,7 +2309,15 @@ Proof.
     simpl. apply rule_Odot_swap_pair_frame.
 Qed.
 
-(*----------------------------最后证明m个block块纯化的正确性-------------------------*)
+(* Correctness of bounded purification over the first m blocks:
+
+     { F_eta eta 0 m } Purify_loop m { F_eta eta m m }.
+
+   This corresponds to
+     { ⨀_{l=0}^{m-1} G_{eta_l}^{(l)} }
+       Purify 0; ...; Purify (m-1)
+     { ⨀_{l=0}^{m-1} H_{eta_l}^{(l)} }.
+ *)
 
 Fixpoint Purify_loop (m : nat) : com :=
   match m with

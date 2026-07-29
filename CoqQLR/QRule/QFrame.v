@@ -2471,6 +2471,121 @@ Proof. intros.
  apply rule_OdotC.
 Qed.
 
+Lemma big_odot_q_in_index : forall (F : nat -> State_formula) n q,
+  NSet.In q (snd (Free_state (big_odot F n))) ->
+  exists i, i < n /\ NSet.In q (snd (Free_state (F i))).
+Proof.
+  intros F n.
+  induction n; intros q Hq.
+  - simpl in Hq. apply In_empty in Hq. contradiction.
+  - simpl in Hq.
+    apply NSet.union_1 in Hq.
+    destruct Hq as [Hq | Hq].
+    + exists n. split; [lia | exact Hq].
+    + apply IHn in Hq.
+      destruct Hq as [i Hq].
+      destruct Hq as [Hi Hq].
+      exists i. split; [lia | exact Hq].
+Qed.
+
+Lemma big_odot_qframe_disjoint_step :
+  forall (F2 : State_formula) (F3 : nat -> State_formula) n,
+    (forall i, i < S n ->
+      NSet.Equal
+        (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 i))))
+        NSet.empty) ->
+    (forall i j, i < S n -> j < S n -> i <> j ->
+      NSet.Equal
+        (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 j))))
+        NSet.empty) ->
+    NSet.Equal
+      (NSet.inter
+        (snd (Free_state (big_odot F3 n ⊙ F2)))
+        (snd (Free_state (F3 n))))
+      NSet.empty.
+Proof.
+  intros F2 F3 n HF2 Hpair.
+  unfold NSet.Equal.
+  intros q; split; intros Hq.
+  - apply NSet.inter_1 in Hq as Hleft.
+    apply NSet.inter_2 in Hq as Hcur.
+    simpl in Hleft.
+    apply NSet.union_1 in Hleft.
+    destruct Hleft as [Hprev | HF2q].
+    + apply big_odot_q_in_index in Hprev.
+      destruct Hprev as [i Hprev].
+      destruct Hprev as [Hi Hprev].
+      pose proof (Hpair i n ltac:(lia) ltac:(lia) ltac:(lia)) as Hdisj.
+      unfold NSet.Equal in Hdisj.
+      assert (NSet.In q (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 n))))).
+      { apply NSet.inter_3; assumption. }
+      apply Hdisj in H. apply In_empty in H. contradiction.
+    + pose proof (HF2 n ltac:(lia)) as Hdisj.
+      unfold NSet.Equal in Hdisj.
+      assert (NSet.In q (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 n))))).
+      { apply NSet.inter_3; assumption. }
+      apply Hdisj in H. apply In_empty in H. contradiction.
+  - apply In_empty in Hq. contradiction.
+Qed.
+
+Theorem rule_qframe_big_odot' :
+  forall (F1 F2 : State_formula) (F3 : nat -> State_formula) c n,
+    (forall i, i < n ->
+      NSet.Equal
+        (NSet.inter (snd (Free_state F2)) (snd (Free_state (F3 i))))
+        NSet.empty) ->
+    (forall i j, i < n -> j < n -> i <> j ->
+      NSet.Equal
+        (NSet.inter (snd (Free_state (F3 i))) (snd (Free_state (F3 j))))
+        NSet.empty) ->
+    (forall i, i < n -> Considered_Formula (F3 i)) ->
+    {{ F1 }} c {{ F2 }} ->
+    (forall i, i < n ->
+      NSet.Equal
+        (NSet.inter (fst (Free_state (F3 i))) (fst (MVar c)))
+        NSet.empty) ->
+    (forall i, i < n ->
+      snd (option_free (Free_State (F3 i))) <=
+        option_nat (NSet.min_elt (snd (MVar c))) \/
+      option_nat (NSet.max_elt (snd (MVar c))) <
+        fst (option_free (Free_State (F3 i)))) ->
+    {{ big_odot F3 n ⊙ F1 }} c {{ big_odot F3 n ⊙ F2 }}.
+Proof.
+  intros F1 F2 F3 c n.
+  induction n.
+  - intros HF2 Hpair Hcons Htriple Hc Hside.
+    simpl.
+    eapply rule_conseq.
+    + apply Htriple.
+    + eapply implies_trans.
+      * apply rule_OdotC.
+      * apply rule_OdotE.
+    + eapply implies_trans.
+      * apply rule_OdotE.
+      * apply rule_OdotC.
+  - intros HF2 Hpair Hcons Htriple Hc Hside.
+    simpl.
+    eapply rule_conseq.
+    + eapply rule_qframe'.
+      * eapply (big_odot_qframe_disjoint_step F2 F3 n).
+        -- intros i Hi. apply HF2. lia.
+        -- intros i j Hi Hj Hij. apply Hpair; lia.
+      * apply Hcons. lia.
+      * split.
+        -- apply IHn.
+           ++ intros i Hi. apply HF2. lia.
+           ++ intros i j Hi Hj Hij. apply Hpair; lia.
+           ++ intros i Hi. apply Hcons. lia.
+           ++ exact Htriple.
+           ++ intros i Hi. apply Hc. lia.
+           ++ intros i Hi. apply Hside. lia.
+        -- split.
+           ++ apply Hc. lia.
+           ++ apply Hside. lia.
+    + apply rule_OdotA.
+    + apply rule_OdotA.
+Qed.
+
 
 Theorem rule_qframe_P: forall (P1 P2 P3: Pure_formula) c,
 ({{P1}} c {{P2}}) /\ (NSet.Equal (NSet.inter (fst (Free_state P3)) (fst (MVar c))) NSet.empty) 

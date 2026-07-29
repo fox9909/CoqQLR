@@ -96,7 +96,7 @@ Definition F_2(y x N:nat): Pure_formula := ((BEq y ' (((Nat.gcd (x ^ (r / 2) + 1
 (*gcd x N is a nontrivial factor of N*)
 Definition F_3(y x N:nat): Pure_formula := ((BEq y ' (Nat.gcd x N)) /\p (BNeq y ' N)).
 
-(*either（gcd (x^(z/2)-1)  N） or （gcd (x^(z/2)+1)  N） is a nontrivial factor of N*)
+(* Either (gcd (x^(z/2)-1) N) or (gcd (x^(z/2)+1) N) is a nontrivial factor of N. *)
 Definition Big_hypose (x z N:nat): Pure_formula:= 
   (BAnd (BNeq (AGcd  (AMinus (APow x (ADiv z ' 2)) 1) N) N)  
   (BNeq (AGcd (AMinus (APow x (ADiv z ' 2)) 1) N) 1)) \/p 

@@ -28,7 +28,7 @@ From Quan Require Import QSepar.
 From Quan Require Import QFrame.
 Import Basic. Import Ceval_Prop.
 
-(*---------------the correctness of the addM program--------------*)
+(*---------------The correctness of the addM program--------------*)
 
 (**Some premises**)
 
@@ -197,7 +197,7 @@ Definition v1: nat := 0.
 Definition v2: nat := 1. 
 Definition v:nat :=2.
 
-(*the definition of addM program *)
+(* The definition of the addM program. *)
 Definition addM : com :=
   <{ [[0 1]] :Q= 0 ;
      [[1 2]] :Q= 0 ; 
@@ -283,7 +283,7 @@ Ltac addM_WF_formula_solve:=
 try rewrite <-base_qubit1; assert(4=2*2) as H'; try lia; try rewrite H'; 
 apply pure_state_vector_kron; try apply Pure_State_Vector_base; try lia |  lia ] ].
 
-(*the correctness of addM program*)
+(* The correctness of the addM program. *)
 Local Open Scope nat_scope.
 Lemma correctness_addM:  
 {{ BTrue }}
@@ -568,4 +568,3 @@ apply Rinv_neq_0_compat.
 apply sqrt_neq_0_compat. lra. 
 rewrite <-sqrt_inv. assert((0<=√ (/ 2))%R). apply sqrt_pos. lra.
 Qed. 
-

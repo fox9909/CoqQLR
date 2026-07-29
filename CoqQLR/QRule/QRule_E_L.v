@@ -21,11 +21,12 @@ From Quan Require Import Mixed_State.
 From Quan Require Import QSepar.
 From Quan Require Import Ceval_Prop.
 
-(* In the QRule folder, we delineate the formalization of the rules 
-mentioned in Section 4.2 in our work and rigorously establish their soundnes*)
-(*All the rules are formalized as theorems whose names are prefixed with "rule_".*)
+(* The QRule folder formalizes the inference rules introduced in Section 4.2
+   and proves their soundness. *)
+(* All inference rules are formalized as theorems whose names are prefixed
+   with "rule_". *)
 
-(*In this file, we formalize inference rules for entailment reasoning*)
+(* This file contains inference rules for entailment reasoning. *)
 Local Open Scope nat_scope.
 
 Definition assert_implies (P Q : Assertion) : Prop :=
@@ -89,7 +90,7 @@ apply BTrue_true.  apply WF_sat_Assert in H. assumption.
 Qed.
 
 
-(*Conj*)
+(* Conjunction rules. *)
 Lemma rule_ConjT: forall (F:State_formula),
 F ->> F /\s BTrue .
 Proof. rule_solve.  Qed.
@@ -134,10 +135,18 @@ Lemma SAnd_PAnd_eq: forall (P1 P2:Pure_formula),
 Proof. rule_solve.
 Qed.
 
+Lemma SAnd_assoc_r :
+  forall F1 F2 F3,
+    (F1 /\s (F2 /\s F3)) ->>
+    ((F1 /\s F2) /\s F3).
+Proof.
+  intros. rule_solve.
+Qed.
+
 #[export] Hint Resolve rule_Conj_split_l rule_Conj_split_r: rea_db.
   
 
-(*Odot*)
+(* Separating-conjunction rules. *)
   Lemma inter_comm:forall x y,
   NSet.Equal (NSet.inter x y)  (NSet.inter y x) .
   Proof.  unfold NSet.Equal. split; intros;
@@ -201,6 +210,107 @@ Qed.
   split; rewrite inter_comm; intuition.
   split;[ | rewrite inter_comm]; intuition.
   split;[ | rewrite inter_comm]; intuition.  
+Qed.
+
+Fixpoint big_odot (F : nat -> State_formula) (m : nat) : State_formula :=
+  match m with
+  | 0 => BTrue
+  | S m' => F m' ⊙ big_odot F m'
+  end.
+
+Theorem rule_OdotCon :
+  forall F1 F2 F3 F4 : State_formula,
+    NSet.Equal
+      (NSet.inter (snd (Free_state F3)) (snd (Free_state F4)))
+      NSet.empty ->
+    (F1 ->> F3) ->
+    (F2 ->> F4) ->
+    (F1 ⊙ F2) ->> (F3 ⊙ F4).
+Proof.
+  unfold assert_implies.
+  intros F1 F2 F3 F4 Hdisj H13 H24 s e mu Hsat.
+  rewrite sat_assert_odot in Hsat.
+  rewrite sat_assert_odot.
+  destruct Hsat as [HF1 Hsat].
+  destruct Hsat as [HF2 _].
+  split.
+  - apply H13. exact HF1.
+  - split.
+    + apply H24. exact HF2.
+    + exact Hdisj.
+Qed.
+
+Theorem rule_Odot_swap_left : forall A B C : State_formula,
+  A ⊙ (B ⊙ C) ->> B ⊙ (A ⊙ C).
+Proof.
+  unfold assert_implies.
+  intros A B C s e mu Hsat.
+  rewrite sat_assert_odot in Hsat.
+  destruct Hsat as [HA Hsat].
+  destruct Hsat as [HBC HA_BC].
+  rewrite sat_assert_odot in HBC.
+  destruct HBC as [HB HBC].
+  destruct HBC as [HC HB_C].
+  rewrite sat_assert_odot.
+  split.
+  - exact HB.
+  - split.
+    + rewrite sat_assert_odot.
+      split.
+      * exact HA.
+      * split.
+        -- exact HC.
+        -- simpl in HA_BC.
+           rewrite inter_union_dist in HA_BC.
+           apply union_empty in HA_BC.
+           destruct HA_BC as [_ HA_C].
+           exact HA_C.
+    + simpl.
+      rewrite inter_union_dist.
+      apply union_empty.
+      split.
+      * simpl in HA_BC.
+        rewrite inter_union_dist in HA_BC.
+        apply union_empty in HA_BC.
+        destruct HA_BC as [HA_B _].
+        rewrite inter_comm.
+        exact HA_B.
+      * exact HB_C.
+Qed.
+
+Theorem rule_Odot_swap_pair_frame : forall A B C : State_formula,
+  (A ⊙ B) ⊙ C ->> (B ⊙ A) ⊙ C.
+Proof.
+  unfold assert_implies.
+  intros A B C s e mu Hsat.
+  rewrite sat_assert_odot in Hsat.
+  destruct Hsat as [HAB Hsat].
+  destruct Hsat as [HC HAB_C].
+  rewrite sat_assert_odot in HAB.
+  destruct HAB as [HA HAB].
+  destruct HAB as [HB HA_B].
+  rewrite sat_assert_odot.
+  split.
+  - rewrite sat_assert_odot.
+    split.
+    + exact HB.
+    + split.
+      * exact HA.
+      * rewrite inter_comm. exact HA_B.
+  - split.
+    + exact HC.
+    + simpl in HAB_C.
+      rewrite inter_comm in HAB_C.
+      rewrite inter_union_dist in HAB_C.
+      apply union_empty in HAB_C.
+      destruct HAB_C as [HA_C HB_C].
+      simpl.
+      rewrite inter_comm.
+      rewrite inter_union_dist.
+      apply union_empty.
+      split.
+      * exact HB_C.
+      * exact HA_C.
 Qed.
 
 

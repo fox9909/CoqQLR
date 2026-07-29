@@ -23,7 +23,7 @@ From Quan Require Import addM.
 
 
 (*--------------------------------------*)
-(*---the correctness of HHL algorithm---*)
+(*---the correctness of the HHL algorithm---*)
 (*--------------------------------------*)
 
 Local Open Scope com_scope.
@@ -316,7 +316,7 @@ Qed.
 Local Open Scope nat_scope.     
 Local Open Scope com_scope.   
 
-(*---the definition of HHL algorithm---*)
+(*---the definition of the HHL algorithm---*)
 Definition HHL :=
     <{ v := 0;
        while  v ' = 0  do 
@@ -973,7 +973,7 @@ Msimpl. reflexivity.
 Qed.
 
 
-(*---the correctness of HHL algorithm---*)
+(*---the correctness of the HHL algorithm---*)
 Theorem correctness_HHL: {{BTrue}} HHL {{QExp_s n (n+m) x}}. 
 Proof. 
     unfold HHL.  pose Hmn. assert( n<(n+m)). lia. 
@@ -1157,4 +1157,3 @@ try apply Hx. rewrite Nat.sub_0_r. repeat rewrite Nat.pow_add_r.
 Qed.
     
 End HHL. 
-
