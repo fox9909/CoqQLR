@@ -2,6 +2,8 @@
 *.glob
 .*.aux
 .lia.cache
+.nia.cache
+.nra.cache
 .DS_Store
 .vscode/
 
@@ -9,3 +11,4 @@ Makefile
 .Makefile.d
 Makefile.conf
 CoqMakefile.conf
+Makefile.local
