@@ -923,6 +923,9 @@ apply H0.  assumption. assumption.
 Qed.
 
 
+(* The mechanized [Sum] and [OMerg] lemmas use strictly positive weights.
+   Zero-weight branches are semantically inert and may be omitted, as
+   captured by sat_Pro_State' for well-formed formulas. *)
 Theorem rule_OMerg:forall (p0 p1:R) (F:State_formula) (pF:pro_formula),
 0< p0<1/\ 0< p1 <1->
 APro ((p0 , F) :: ( p1, F) :: pF) ->> APro (((p0+p1), F):: pF).

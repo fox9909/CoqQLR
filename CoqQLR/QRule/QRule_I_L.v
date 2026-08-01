@@ -344,6 +344,9 @@ Proof. induction f; intros; destruct g. econstructor.
 Qed.
 
 Import Ceval_Prop.
+
+(* As noted for [OMerg], the mechanized [Sum] lemma is stated for strictly
+   positive weights; zero-weight branches may be omitted. *)
 Theorem rule_sum: forall (nF1 nF2: npro_formula ) c  (p_n:list R),
             (Forall (fun x=> 0 < x %R) p_n)->
              length nF1 = length p_n -> 

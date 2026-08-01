@@ -37,6 +37,13 @@ Local Open Scope matrix_scope.
 Local Open Scope nat_scope.
 
 (*---------------------------------- Definitions -------------------------*)
+(* As a proof-engineering convention, the distribution-level proofs below
+   assume strictly positive branch weights, matching the premises of the
+   mechanized [Sum] and [OMerg] lemmas. This causes no loss of generality:
+   zero-weight branches contribute nothing and can be omitted before lifting
+   and merging; for well-formed formulas, this equivalence is captured by
+   sat_Pro_State'. *)
+
 Parameter p: nat->nat->R.
 Hypothesis p_pos : forall a b, (0 < p a b < 1)%R.
 Hypothesis p_sum1 :
